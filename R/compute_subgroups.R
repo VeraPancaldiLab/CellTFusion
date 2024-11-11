@@ -1,3 +1,21 @@
+#' Compute deconvolution subgroups
+#'
+#' @param deconvolution A matrix with unprocessed cell deconvolution results
+#' @param thres_corr A numeric value with the minimum correlation allowed to group cell deconvolution features
+#' @param file_name Base name for subgroup
+#'
+#' @return A list containing
+#'
+#' - A matrix with the processed deconvolution features
+#' - Cell subgroups obtained by linear correlation
+#' - Cell subgroups obtained by proportionality correlation
+#' - Discard cell features either because of low variance or high zero number
+#' @export
+#'
+#' @examples
+#'
+#' x = compute_subgroups(B_cells, file_name = "B.cells", thres_corr = 0.7)
+#'
 compute_subgroups = function(deconvolution, thres_corr, file_name){
   data = data.frame(deconvolution)
   cell_subgroups = list()

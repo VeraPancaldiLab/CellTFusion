@@ -1,3 +1,27 @@
+#' Compute machine learning models across different splits of train and test
+#'
+#' @param raw.counts A matrix with raw counts (genes symbols as rows and samples as columns)
+#' @param normalized A boolean value to specify if raw counts have to be normalized (this should always be true unless the provided raw.counts are already the normalized ones)
+#' @param clinical A data frame with the clinical data containing the target variable to analyze
+#' @param trait Column name of target variable
+#' @param trait.positive Value of target consider as positive for prediction
+#' @param partition Proportion of data going to train
+#' @param metric Metric to based the methods choice during cross validation (CV). Either accuracy or AUC
+#' @param iterations Number of iterations to perform
+#' @param feature.selection If feature selection using Boruta algorithm needs to be computed
+#' @param stack If stacking needs to be applied
+#' @param deconv_methods Deconvolution methods to run during CellTFusion
+#' @param workers Number of workers to use for parallelization
+#' @param file.name File name for plots
+#' @param return Return the plots printed during each iteration
+#'
+#' @return Machine learning models are saved in Results/ folder as .rds files
+#' @export
+#'
+#' @examples
+#'
+#' compute.bootstrap.ML(raw.counts, normalized = T, clinical, trait = "Response", trait.positive = "YES", partition = 0.8, metric = "Accuracy", iterations = 20, feature.selection = F, stack = T, workers = 4, file.name = "Test", return = F)
+#'
 compute.bootstrap.ML = function(raw.counts, normalized = F, clinical, trait, trait.positive, partition = 0.8, metric = "Accuracy", iterations, feature.selection = F, stack, deconv_methods = c("Quantiseq", "MCP", "xCell", "CBSX", "Epidish", "DeconRNASeq", "DWLS"), workers = NULL, file.name = NULL, return = F){
 
   dir.create(file.path(getwd(), "Results/ML_models"))
