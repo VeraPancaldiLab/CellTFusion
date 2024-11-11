@@ -1,9 +1,9 @@
 Package: CellTFusion
-Title: What the Package Does (One Line, Title Case)
+Title: Integration of immune-cell type deconvolution features and prior-knowledge networks of TFs-gene interactions to characterize potential cell states of the tumor microenvironment using bulk RNAseq data.
 Version: 0.0.0.9000
 Authors@R: 
-    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"),
-           comment = c(ORCID = "YOUR-ORCID-ID"))
+    person("Marcelo", "Hurtado", , "marcelo.hurt137@gmail.com", role = c("aut", "cre"),
+           comment = c(ORCID = "0009-0004-6712-0864"))
 Description: What the package does (one paragraph).
 License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
     license
