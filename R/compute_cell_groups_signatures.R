@@ -1,3 +1,19 @@
+#' Compute cell groups projection
+#'
+#' @param deconv_res Output from compute.deconvolution.analysis()
+#' @param network_res Output from compute.WTCNA()
+#' @param cell_groups Output from cell.groups.computation()
+#' @param features Cell groups to compute
+#' @param deconvolution_test A matrix of unprocessed deconvolution from independent cohort
+#' @param TFs_test A matrix of TF activities scores from independent cohort
+#'
+#' @return A matrix with the projected cell group scores
+#' @export
+#'
+#' @examples
+#'
+#' cell.groups.projected = compute_cell_groups_signatures(dt, network, cell.groups, features, deconv_test, tfs_test)
+#'
 compute_cell_groups_signatures = function(deconv_res, network_res, cell_groups, features, deconvolution_test, TFs_test){
 
   #Remove colors indicatives from deconvolution features to be able to project them in the raw deconvolution results

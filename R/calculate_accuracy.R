@@ -1,6 +1,6 @@
 #' Calculates accuracy values from prediction
 #'
-#' @param metrics A Dataframe with metrics obtained using get_sensitivity_specificity() function
+#' @param metrics A Dataframe with metrics obtained using get_sensitivity_specificity()
 #' @param target A character vector containing the true values from the target variable
 #'
 #' @return A numeric vector with the accuracy values

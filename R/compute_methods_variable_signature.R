@@ -1,3 +1,21 @@
+#' Compute deconvolution methods with variable signatures
+#'
+#' @param TPM_matrix A matrix with TPM normalized counts (samples as columns and genes symbols as rows)
+#' @param signatures A path with a directory where signatures are located
+#' @param methods A character vector with the methods to compute (Default methods are CBSX, Epidish, DeconRNASeq and DWLS)
+#' @param exclude (Optional) A character vector with the signature to exclude
+#' @param cbsx.name Cibersortx credential mail if CBSX will be run
+#' @param cbsx.token Cibersortx credential token if CBSX will be run
+#' @param doParallel Boolean value to specify if DWLS and CBSX should run in parallel (default is False)
+#' @param workers Number of worker process to run during parallelization (default is NULL)
+#'
+#' @return A matrix with the deconvolution features corresponding to all combinations of methods-signatures specified
+#' @export
+#'
+#' @examples
+#'
+#' deconvolution = compute_methods_variable_signature(TPM_matrix, "~/src/signatures", methods = c("CBSX", "Epidish", "DeconRNASeq", "DWLS"), exclude = "BPRNACan", cbsx.name = "XXX", cbsx.token = "XXX", doParallel = T, workers = 4)
+#'
 compute_methods_variable_signature = function(TPM_matrix, signatures, methods = c("CBSX", "Epidish", "DeconRNASeq", "DWLS"), exclude = NULL, cbsx.name, cbsx.token, doParallel = F, workers = NULL){
 
   db=list.files(signatures, full.names = T, pattern = "\\.txt$")

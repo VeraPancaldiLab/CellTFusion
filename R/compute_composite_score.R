@@ -1,3 +1,18 @@
+#' Compute composite score for cell groups
+#'
+#' @param cell_group A matrix with the cell deconvolution features from cell group
+#' @param color_group A character vector with the TF module group colors corresponding to the cell group (parameter can be obtained with extract_colors())
+#' @param tfs.module.matrix A matrix with the TF module matrix. It corresponds to the first element of the output from compute.WTCNA()
+#' @param prop_var A numeric value with the minimum variance that should be explained by the PCs (Default is 0.7)
+#'
+#' @return A numeric vector with the scores across samples
+#' @export
+#'
+#' @examples
+#'
+#' color = extract_colors(module_colors, names(cell.dendrograms)[1])
+#' compute_composite_score(pca_group, color, tfs.modules)
+#'
 compute_composite_score = function(cell_group, color_group, tfs.module.matrix, prop_var = 0.7){
 
   module_group = paste0("ME", color_group) #To match with columns of TFs modules

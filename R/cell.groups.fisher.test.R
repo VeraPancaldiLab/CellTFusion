@@ -1,3 +1,17 @@
+#' Fisher test using cell groups scores
+#'
+#' @param cell.groups A list of cell groups obtained from cell.groups.computation()
+#' @param coldata A data frame containing the trait column to test with Fisher
+#' @param trait Name of the column to test from coldata
+#' @param pval pvalue to consider significant (default 0.05)
+#'
+#' @return A list containing the significant cell groups after Fisher test. Additionally it saves in the Results/ folder its respective plots
+#' @export
+#'
+#' @examples
+#'
+#' res_fisher = cell.groups.fisher.test(cell.groups, clinical.data, "Response")
+#'
 cell.groups.fisher.test = function(cell.groups, coldata, trait, pval = 0.05){
 
   sig = c()

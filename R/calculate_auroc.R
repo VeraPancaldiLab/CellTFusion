@@ -1,3 +1,16 @@
+#' Calculates AUC from ROC curve
+#'
+#' @param fpr A numeric column with the false positive rate values obtained from get_sensitivity_specificity()
+#' @param sensitivity A numeric column with the sensitivity values obtained from get_sensitivity_specificity()
+#'
+#' @return A numeric value corresponding to the AUC from the precision-recall curve
+#' @export
+#'
+#' @examples
+#'
+#' sens_spec = get_sensitivity_specificity(predict, target, model)
+#' auroc = calculate_auroc(sens_spec$fpr, sens_spec$sensitivity)
+#'
 calculate_auroc <- function(fpr, sensitivity) {
   #tpr is sensitivity
 

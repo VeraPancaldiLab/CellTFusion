@@ -1,3 +1,22 @@
+#' Compute second-generation deconvolution methods
+#'
+#' @param raw_counts A matrix with raw counts (samples as columns and genes symbols as rows)
+#' @param sc_object A matrix with the counts from scRNAseq object (genes as rows and cells as columns)
+#' @param cell_annotations A character vector with the cell labels (need to be of the same order as in the sc_object)
+#' @param samples_ids A character vector with the samples labels (need to be of the same order as in the sc_object)
+#' @param name_object Signature name to use in the generated single cell signature for deconvolving the bulk RNAseq data
+#' @param normalized Boolean value to specify if raw_counts need to be normalized (If no raw_counts are available and argument corresponds to already normalized counts this arguments needs to be set to False)
+#' @param n_cores Number of cores to use for paralellization. If no number is set, detectCores() - 1 will be set as the number.
+#' @param cbsx_name Cibersortx credential mail if CBSX will be run
+#' @param cbsx_token Cibersortx credential token if CBSX will be run
+#'
+#' @return A matrix of deconvolution features across samples from your bulk counts based on the second generation methods
+#' @export
+#'
+#' @examples
+#'
+#' deconv_sc = compute_sc_deconvolution_methods(raw.counts, sc_matrix, cell_annotations, cell_samples, name_sc_signature, normalized = T, n_cores = 4, cbsx_name = "XXX", cbsx_token = "XXX")
+#'
 compute_sc_deconvolution_methods = function(raw_counts, sc_object, cell_annotations, samples_ids, name_object, normalized = T,
                                             n_cores = NULL, cbsx_name = NULL, cbsx_token = NULL){
 

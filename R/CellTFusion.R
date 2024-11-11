@@ -1,3 +1,26 @@
+#' Compute one-step CellTFusion
+#'
+#' @param raw.counts A matrix with the raw counts with samples as columns and genes symbols as rows.
+#' @param coldata (Optional) A data frame with the clinical data to use if the user wants to compute the metadata association of the TF modules and the clinical data.
+#' @param cbsx.mail (Optional) Credential email for running CibersortX. If not provided, cibersortX method will not be run.
+#' @param cbsx.token  (Optional) Credential token for running CibersortX. If not provided, cibersortX method will not be run.
+#' @param file_name  (Optional) File name for plots saved in Results/ folder.
+#'
+#' @return A list containing as elements
+#' - The deconvolution matrix (samples as rows, cell deconvolution features as columns)
+#' - A matrix with the TFs activity (samples as rows, TFs as columns)
+#' - A list with the TFs module network
+#' - A matrix with the pathway scores
+#' - An object with the processed deconvolution
+#' - A list with the cell dendrograms corresponding to each TF-module group
+#' - A matrix with the cell groups scores
+#' @export
+#'
+#' @examples
+#'
+#' res = CellTFusion(raw.counts, cbsx.mail = "XXXXXXX", cbsx.token = "XXXXX", file_name = "Test")
+#'
+
 CellTFusion = function(raw.counts, coldata = NULL, cbsx.mail = NULL, cbsx.token = NULL, file_name = NULL){
 
   #Normalize counts

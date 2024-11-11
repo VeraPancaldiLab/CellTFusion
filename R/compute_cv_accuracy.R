@@ -1,3 +1,22 @@
+#' Compute Accuracy values for each machine learning model
+#'
+#' @param models List of trained models
+#' @param file_name (Optional) File name for plot
+#' @param base_models Boolean value to specify if base models for stacking need to be chosen or not
+#' @param return Boolean value to specify if plot the accuracy values across models should be saved or not
+#'
+#' @return A list containing
+#'
+#' - Accuracy values for each model
+#' - Top model with best accuracy
+#' - If base_models = T, it returns a character vector with the chosen base models (see choose_base_models())
+#'
+#' @export
+#'
+#' @examples
+#'
+#' res = compute_cv_accuracy(ml_models, base_models = T, file_name = "Test", return = T)
+#'
 compute_cv_accuracy = function(models, file_name = NULL, base_models = F, return = T){
 
   #Bind accuracy values from each model

@@ -7,7 +7,7 @@
 calculate_accuracy(metrics, target)
 }
 \arguments{
-\item{metrics}{A Dataframe with metrics obtained using get_sensitivity_specificity() function}
+\item{metrics}{A Dataframe with metrics obtained using get_sensitivity_specificity()}
 
 \item{target}{A character vector containing the true values from the target variable}
 }

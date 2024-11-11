@@ -1,3 +1,16 @@
+#' Calculate dendrogram cuts
+#'
+#' @param cell.group.dendrogram List with the cell dendrograms corresponding to each TF module obtained from identify.cell.groups()
+#' @param n_cuts Optional parameter to limit the number of cuts the dendrogram needs to be cut (Default is NULL). If no parameter is set, number of cuts will be proportional to the height of the dendrogram.
+#'
+#' @return A list with the sequence of numbers where each dendrogram will be cut
+#' @export
+#'
+#' @examples
+#'
+#' cuts = calculate_dendrogram_cuts(cell.dendrograms, n_cuts = NULL)
+#' cuts = calculate_dendrogram_cuts(cell.dendrograms, n_cuts = 5)
+#'
 calculate_dendrogram_cuts = function(cell.group.dendrogram, n_cuts = NULL){
 
   cuts = list()

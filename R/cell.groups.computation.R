@@ -1,3 +1,17 @@
+#' Computation of cell groups scores
+#'
+#' @param deconvolution A dataframe containing the deconvolution features after processing. It corresponds to the first element of the list obtained from compute.deconvolution.analysis()
+#' @param tfs.module.network A list with the network information of TF modules obtained from compute.WTCNA()
+#' @param cell.dendrograms A list with the cell dendrograms corresponding to each TF module obtained from identify.cell.groups()
+#' @param return
+#'
+#' @return A matrix with the cell groups scores across samples
+#' @export
+#'
+#' @examples
+#'
+#' cell.groups = cell.groups.computation(deconvolution, network, cell_dendrograms)
+#'
 cell.groups.computation = function(deconvolution, tfs.module.network, cell.dendrograms, return = T){
 
   cuts = calculate_dendrogram_cuts(cell.dendrograms) #Identify dendrograms cuts

@@ -1,3 +1,16 @@
+#' Choose three base models for stacking based either in Accuracy or AUC scores
+#'
+#' @param models List with trained machine learning models
+#' @param metric Metric to choose the top base models (either Accuracy or AUC). Default is Accuracy
+#'
+#' @return A character vector with the base models
+#' @export
+#'
+#' @examples
+#'
+#' models <- list(BAG = fit.treebag,RF = fit.rf, C50 = fit.c50, GLM = fit.glm, LDA = fit.lda, KNN = fit.knn, CART = fit.cart)
+#' base_models = choose_base_models(models, metric = "Accuracy")
+#'
 choose_base_models = function(models, metric = "Accuracy"){
 
   #Bind accuracy values from each model

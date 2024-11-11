@@ -1,3 +1,16 @@
+#' Compute weighted feature importance from base models and meta-learner for stacking models
+#'
+#' @param base_importance A matrix of feature importance from base models
+#' @param base_models A character vector with chosen base models
+#' @param meta_learner A caret object with the meta-learner model trained using base models
+#'
+#' @return A matrix of feature importance weighted from the base models and the meta-learner
+#' @export
+#'
+#' @examples
+#'
+#' var_importance = calculate_feature_importance_stacking(variable_importance, base_models, meta-learner)
+#'
 calculate_feature_importance_stacking = function(base_importance, base_models, meta_learner){
 
   #Extract features importance values within each base model for the meta-learner

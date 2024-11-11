@@ -1,3 +1,17 @@
+#' Calculates AUC values for each resampling during cross-validation (CV)
+#'
+#' @param obs A character vector with observed values (grountruth)
+#' @param pred A character vector with predicted values
+#'
+#' @return A numeric value corresponding to the AUC score
+#' @export
+#'
+#' @examples
+#'
+#' obs = c("yes", "no", "yes", "no")
+#' yes = c("yes", "yes", "yes", "no")
+#' AUC = calculate_auc_resample(obs, yes)
+#'
 calculate_auc_resample = function(obs, pred){
 
   prob_obs = data.frame("yes" = pred, "obs" = obs)
