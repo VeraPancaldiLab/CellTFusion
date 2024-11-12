@@ -1,3 +1,22 @@
+#' Compute survival analysis
+#'
+#' Computes univariate and multivariate cox proportional hazards (coxPH) models and Kaplan-Meier curves to evaluate across cell type groups. After ﬁtting the CoxPH models to different cell type groups combinations, patient are stratiﬁed based on the linear predictors of the model (risk scores) from which we deﬁne as ‘high’ the patients with risk scores above the median value of the cox model’s linear predictors and as ‘low’ the patients below it. It then performes a Kaplan Meier analysis and plotted the survival curves for each risk group. Finally both survival curves are assessed via a log rank test.
+#'
+#' @param features A matrix with the cell groups scores
+#' @param survival.data Survival information containing progression free survival information (named as 'PFS') and the binary value indicating death/progression/recurrence (named as 'DRP_st')
+#' @param time_unit Time unit for variables (either days/months/years)
+#' @param p.value pvalue for significance. Default is 0.05
+#' @param thres Threshold for classifying the risk scores. Default is 0.5 (median).
+#' @param max_factors Maximum number of covariables in the lineal model to consider. Default is Inf, meaning it will test all possible combinations and keep only the significant ones.
+#'
+#' @return A list with the significant combinations formulas along with their survival curves saved in the Results/ directory.
+#'
+#' @export
+#'
+#' @examples
+#'
+#' survival_groups = compute.survival.analysis(features = cell_groups, survival_data, time_unit = "days", p.value = 0.01, max_factors = 3)
+#'
 compute.survival.analysis = function(features, survival.data, time_unit, p.value = 0.05, thres = 0.5, max_factors = Inf) {
   n_features <- ncol(features)
   significant_combinations <- list() # To store significant feature combinations

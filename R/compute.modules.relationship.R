@@ -1,3 +1,32 @@
+#' Compute modules relationship
+#'
+#' Performs linear correlation between two matrices of features across samples
+#'
+#' @param tfs_network TFs module matrix (samples x modules).
+#' @param matB matrix B to correlate (samples x features).
+#' @param file_name string indicating the name of the figure to save.
+#' @param width integer indicating the width of the figure, default is 8.
+#' @param height integer indicating the height of the figure, default is 8.
+#' @param pval p value to use as threshold to differentiate between significant and no significant variables. Default is 0.05.
+#' @param padj logical value indicating correction of p-value by Bonferroni method has to be applied. Default is false.
+#' @param cor_type type of correlation to be used. Default is pearson “p”.
+#' @param return logical value indicating if significant features have to be returned. Default is False.
+#' @param vertical logical value indicating if function should return a horizontal or vertical plot (this can be useful when looking at several deconvolution features).
+#' @param plot whether to saved or not the plots.
+#'
+#' @return
+#'
+#' A heatmap showing the level of correlation between TFs modules and corresponding features. Only significant features are being shown. If return = TRUE it will return a list with two elements: the correlation matrix between the TFs modules and the other features and a character vector containing the names of the significant associated features. Note that features not significantly associated with any module are not returned.
+#' @export
+#'
+#' @examples
+#'
+#' pathways = compute.pathway.activity(counts.norm)
+#' compute.modules.relationship(tfs_modules, pathways, "Pathways_Progeny-TFs_Modules", width = 15)
+#' dt = compute.deconvolution.analysis(deconv, corr = 0.7, seed = 123)
+#' compute.modules.relationship(tfs_modules, deconvolution_matrix, "Deconvolution-TFs_Modules", vertical = T, height = 30, width = 10, pval = 0.05)
+#'
+#'
 compute.modules.relationship <- function(tfs_network, matB, file_name, width = 8, height = 8, pval=0.05, padj = F, cor_type = "p", return = F, vertical=F, plot = T){
 
   tfs_network = data.frame(tfs_network)

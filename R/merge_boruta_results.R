@@ -1,3 +1,26 @@
+#' Merge boruta results
+#'
+#' Merge boruta results after performing several iterations of the algorithm.
+#'
+#' @param importance_values A matrix with the importance values along each iteration.
+#' @param decisions A matrix with the decision labels along each iteration.
+#' @param file_name File name for plots.
+#' @param iterations Number of iterations performed.
+#' @param threshold A numeric value with the threshold for considering final labels (e.g. features labeled as 'confirmed' more than > threshold are final considered as 'confirmed')
+#' @param return Whether to save or not the plots in Results/ directory
+#'
+#' @return A list containing:
+#'
+#' - Confirmed features
+#' - Tentative features
+#' - Matrix of feature importance
+#'
+#' @export
+#'
+#' @examples
+#'
+#' res = merge_boruta_results(matrix_of_importance, features_labels, file_name = "Test", iterations = 100, threshold = 0.8, return = T)
+#'
 merge_boruta_results = function(importance_values, decisions, file_name, iterations, threshold, return = T){
 
   ### Construct matrix of importance

@@ -1,3 +1,17 @@
+#' Module enrichment
+#'
+#' @param tpm.counts A matrix with normalized counts (genes as rows and samples as columns)
+#' @param module_color A character vector with TF module colors.
+#' @param hub_genes List of hub TFs per module.
+#' @param tfs_universe A matrix with TF-gene interactions
+#'
+#' @return Reactome results
+#' @export
+#'
+#' @examples
+#'
+#' reactome = module_enrich(as.matrix(RNA.tpm), color, hub_tfs, interactions)
+#'
 module_enrich = function(tpm.counts, module_color, hub_genes, tfs_universe){
   # genes = colnames(TFs.matrix)
   # inModule = is.finite(match(module_colors,module))

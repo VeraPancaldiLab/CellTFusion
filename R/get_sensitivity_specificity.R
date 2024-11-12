@@ -1,3 +1,18 @@
+#' Calculate prediction metrics
+#'
+#' Calculate sensitivity and specificity values from prediction values
+#'
+#' @param predictions A character vector with the prediction values
+#' @param observed A character vector with the true labels
+#' @param ml.model Trained machine learning model
+#'
+#' @return A matrix with the prediction metrics
+#' @export
+#'
+#' @examples
+#'
+#' prediction_metrics = get_sensitivity_specificity(predict, target, model)
+#'
 get_sensitivity_specificity = function(predictions, observed, ml.model){
   prob_obs = bind_cols(predictions, observed = observed)
 

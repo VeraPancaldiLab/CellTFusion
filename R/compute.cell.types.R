@@ -1,3 +1,18 @@
+#' Cell types split from deconvolution
+#'
+#' @param data A matrix with the deconvolution results
+#'
+#' @return A list containing:
+#' - A sublist with each cell type features as an element recover from the different signatures
+#' - Discarded cell types (this will happen if the cell types are not supported. See the READme for more information about this)
+#' @export
+#'
+#' @examples
+#'
+#'   cells_types = compute.cell.types(deconvolution)
+#'   cells = cells_types[[1]]
+#'   cells_discarded = cells_types[[2]]
+#'
 compute.cell.types = function(data){
   ##### B cells
   B = grep("B.cells", colnames(data))

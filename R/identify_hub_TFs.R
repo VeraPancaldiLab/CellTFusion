@@ -1,3 +1,21 @@
+#' Identify hub TFs
+#'
+#' Identifies hub TFs per module using values of module membership and degree.
+#'
+#' @param datExpr A matrix of TF activity (TFs as rows and samples as columns).
+#' @param TF.network TF network obtained from compute.WTCNA().
+#' @param MM_thresh Threshold for module membership.
+#' @param degree_thresh Threshold for degree.
+#'
+#' TFs with high module membership (r>MM_thresh) and belonging to the top 10% (e.g. degree_thresh = 0.9) of genes with high degree are selected as hub TFs.
+#'
+#' @return A list with hub TFs per module.
+#' @export
+#'
+#' @examples
+#'
+#' hub_tfs = identify_hub_TFs(t(tfs), network, MM_thresh = 0.8, degree_thresh = 0.9)
+#'
 identify_hub_TFs <- function(datExpr, TF.network, MM_thresh = 0.8, degree_thresh = 0.9) {
   moduleEigengenes = TF.network[[1]]
   moduleColors = TF.network[[2]]

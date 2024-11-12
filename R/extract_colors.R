@@ -1,3 +1,17 @@
+#' Extract colors
+#'
+#' Extract TF module colors from cell type groups
+#'
+#' @param module_colors A character vector with the TF module colors. This can be found as an element from the output of compute.WTCNA()
+#' @param cell_group_name Cell type group name
+#'
+#' @return A character vector with the module colors
+#' @export
+#'
+#' @examples
+#'
+#' color = extract_colors(module_colors, cell.dendrogram.group.1)
+#'
 extract_colors <- function(module_colors, cell_group_name) {
   module_colors = c(module_colors, "all")
   matches <- c() # For storing the matches

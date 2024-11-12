@@ -1,3 +1,14 @@
+#' Extract cells from cell type groups
+#'
+#' @param groups Cell type groups obtained from cell.groups.computation()
+#'
+#' @return Cell types composition ignoring method and signature
+#' @export
+#'
+#' @examples
+#'
+#' cells_names = extract_cells(cell_group)
+#'
 extract_cells = function(groups){
   names_cells = c("B.cells", "B.naive", "B.memory", "Macrophages.cells", "Macrophages.M0", "Macrophages.M1", "Macrophages.M2", "Monocytes", "Neutrophils", "NK.cells", "NK.activated",
                   "NK.resting", "NKT.cells", "CD4.cells", "CD4.memory.activated", "CD4.memory.resting", "CD4.naive", "CD8.cells", "T.cells.regulatory", "T.cells.non.regulatory","T.cells.helper",

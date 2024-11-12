@@ -1,3 +1,14 @@
+#' Perform pairwise correlation across all features
+#'
+#' @param data Matrix with features to correlate
+#'
+#' @return Dataframe containing all significant correlations (pvalue < 0.05)
+#' @export
+#'
+#' @examples
+#'
+#' df = correlation(data)
+#'
 correlation <- function(data) {
 
   M <- Hmisc::rcorr(as.matrix(data), type = "pearson")

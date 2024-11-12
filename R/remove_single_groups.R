@@ -1,3 +1,19 @@
+#' Remove cell groups with only one feature
+#'
+#' @param cell.values Cell groups scores
+#' @param cell.composition Cell groups composition
+#'
+#' @return A list containing
+#'
+#' - Cell groups scores after removal of single cell groups
+#' - Cell groups composition after removal of single cell groups
+#'
+#' @export
+#'
+#' @examples
+#'
+#' cell.groups = remove_single_groups(cell.values, cell.composition)
+#'
 remove_single_groups = function(cell.values, cell.composition){
 
   message("Removing cell groups composed of one single feature..............................................................................")

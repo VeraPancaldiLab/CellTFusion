@@ -1,3 +1,37 @@
+#' Compute CellTFusion machine learning pipeline
+#'
+#' @param raw.counts A matrix with the raw counts with samples as columns and genes symbols as rows.
+#' @param normalized Boolean value to specify if raw_counts need to be normalized (If no raw_counts are available and argument corresponds to already normalized counts this arguments needs to be set to False)
+#' @param clinical A data frame with the clinical data containing the target variable to analyze
+#' @param trait Column name of target variable
+#' @param trait.positive Value of target consider as positive for prediction
+#' @param partition Proportion of data going to train
+#' @param metric Metric to based the methods choice during cross validation (CV). Either accuracy or AUC
+#' @param stack If stacking needs to be applied
+#' @param feature.selection If feature selection using Boruta algorithm needs to be computed
+#' @param deconv_methods A character vector with the deconvolution methods to run. Default are "Quantiseq", "MCP", "xCell", "CBSX", "Epidish", "DeconRNASeq", "DWLS"
+#' @param doParallel Whether to do or not parallelization. Only CBSX and DWLS methods will run in parallel.
+#' @param workers Number of processes available to run on parallel. If no number is set, this will correspond to detectCores() - 1
+#' @param seed Seed to ensure reproducibility regarding the train/test split
+#' @param file_name File name for the csv files and plots saved in the Results/ directory
+#' @param return Return the plots printed during each iteration
+#'
+#' @return A list containing
+#'
+#' - Trained model
+#' - Features used to train the model
+#' - Feature importance matrix
+#' - Cell groups
+#' - Prediction metrics
+#' - AUROC and AUPRC
+#' - Predictions
+#'
+#' @export
+#'
+#' @examples
+#'
+#' res_ml = compute.ML(raw.counts, normalized = T, clinical, trait = "Response",trait.positive = "CR", partition = 0.8, metric = "AUC", stack = T, feature.selection = F,seed = 1234, doParallel = T,  workers = 2, file_name = "Test", return = T)
+#'
 compute.ML = function(raw.counts, normalized = F, clinical, trait, trait.positive, partition, metric = "Accuracy", stack, feature.selection = F, deconv_methods = c("Quantiseq", "MCP", "xCell", "CBSX", "Epidish", "DeconRNASeq", "DWLS"), doParallel = F, workers = NULL, seed, file_name = NULL, return = F){
   set.seed(seed)
 

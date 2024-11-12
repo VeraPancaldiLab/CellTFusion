@@ -1,3 +1,14 @@
+#' Computes XCell
+#'
+#' @param TPM_matrix A matrix with TPM normalized counts (genes symbols as rows and samples as columns).
+#'
+#' @return A matrix with cell enrichment scores from XCell.
+#' @export
+#'
+#' @examples
+#'
+#' xcell = computeXCell(TPM_matrix)
+#'
 computeXCell <- function(TPM_matrix) {
   require(immunedeconv)
 

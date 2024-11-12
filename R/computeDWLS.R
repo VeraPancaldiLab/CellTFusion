@@ -1,3 +1,16 @@
+#' Computes DWLS
+#'
+#' @param TPM_matrix A matrix with TPM normalized counts (genes symbols as rows and samples as columns).
+#' @param signature_file The signature file to use.
+#' @param name_signature Signature name to set for the deconvolution results.
+#'
+#' @return A matrix with cell abundance deconvolve with DWLS
+#' @export
+#'
+#' @examples
+#'
+#' dwls <- computeDWLS(TPM_matrix, signature, signature_name)
+#'
 computeDWLS = function(TPM_matrix, signature_file, name_signature){
   require(DWLS)
   genes = rownames(signature_file)

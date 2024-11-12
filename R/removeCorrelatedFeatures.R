@@ -1,3 +1,24 @@
+#' Remove high correlated cell deconvolution features
+#'
+#' If two deconvolution features within a specific cell type are found to be highly correlated, one feature is kept randomly for further analysis.
+#'
+#' @param data Deconvolution matrix
+#' @param threshold Threshold for defined high correlated features
+#' @param name Cell type name corresponding to the given matrix in 'data'
+#' @param n_seed Seed to ensure reproducibility regarding the choice of the feature.
+#'
+#' @return A list containing
+#'
+#' - Deconvolution matrix with only one deconvolution feature per high-correlated pair.
+#' - Highly correlated features found
+#' - Cell type name
+#'
+#' @export
+#'
+#' @examples
+#'
+#' data = removeCorrelatedFeatures(deconvolution_B_cells, high_corr, "B_cells", seed = 123)
+#'
 removeCorrelatedFeatures <- function(data, threshold, name, n_seed) {
 
   features_high_corr = c()

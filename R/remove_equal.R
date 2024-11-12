@@ -1,3 +1,18 @@
+#' Remove cell groups with equal composition
+#'
+#' @param cell.values Cell groups scores
+#' @param cell.composition Cell groups composition
+#'
+#' @return A list containing
+#'
+#' - Cell groups scores after removal of equal cell groups
+#' - Cell groups composition after removal of equal cell groups
+#' @export
+#'
+#' @examples
+#'
+#' cell.groups = remove_equal(cell.groups.values, cell.groups.composition)
+#'
 remove_equal = function(cell.values, cell.composition){
 
   #Sorted list to avoid no recognizing vectors with equal composition but different order of cells

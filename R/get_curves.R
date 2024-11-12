@@ -1,3 +1,25 @@
+#'
+#' Get performance curves
+#'
+#' Get ROC and precision-recall curves
+#'
+#' @param data A matrix with the prediction metrics
+#' @param spec Name of column with the specificity values
+#' @param sens Name of column with the sensitivity values
+#' @param reca Name of column with the recall values
+#' @param prec Name of column with the precision values
+#' @param color Name of column with the cohort names. Each cohort will have a color. If several cohorts are present, different curves will be plot.
+#' @param auc_roc AUC-ROC value
+#' @param auc_prc AUC-PRC value
+#' @param plot_title Title for the plots
+#'
+#' @return ROC and precision-recall curves saved in Results/ directory.
+#' @export
+#'
+#' @examples
+#'
+#' get_curves(metrics, "specificity", "sensitivity", "recall", "precision", "model", auc_roc_score, auc_prc_score, "Test")
+#'
 get_curves = function(data, spec, sens, reca, prec, color, auc_roc, auc_prc, plot_title){
 
   data = data %>%

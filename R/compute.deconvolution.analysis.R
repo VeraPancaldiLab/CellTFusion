@@ -1,3 +1,31 @@
+#' Compute deconvolution processing
+#'
+#' @param deconvolution A matrix with unprocessed cell deconvolution results
+#' @param corr A numeric value with the minimum correlation allowed to group cell deconvolution features
+#' @param zero A numeric value with the maximum proportion of zeros values allowed the deconvolution features to have. Features with higher number of zeros across samples (>zero) will be discarded. Default is 0.9
+#' @param high_corr A numeric value with the threshold for pairwise correlation. Pair of features correlated with more than this threshold are classify as 'high correlated' and choose randomly one of them. Default is 0.9
+#' @param seed A numeric value to specificy the seed. This ensures reproducibility during the choice step of high correlated features.
+#' @param return Boolean value to whether return and saved the plot and csv files of deconvolution generated during the run inside the Results/ directory.
+#'
+#'
+#'
+#' @return A list containing
+#'
+#' - A matrix with the deconvolution after processing
+#' - The deconvolution subgroups per cell type
+#' - The deconvolution groups discarded caused they are all belonging to the same method
+#' - The discarded features because they contain a high number of zeros across samples (> zero)
+#' - Discarded features due to low variance across samples
+#' - Discarded cell types because they are not supported in the pipeline
+#' - High correlated deconvolution pairs (>high_corr)
+#'
+#' @export
+
+
+#' @examples
+#'
+#' dt = compute.deconvolution.analysis(deconvolution, corr = 0.7, seed = 123, return = T)
+#'
 compute.deconvolution.analysis <- function(deconvolution, corr, zero = 0.9, high_corr = 0.9, seed = NULL, return = T){
   deconvolution.mat = deconvolution
 
@@ -138,9 +166,9 @@ compute.deconvolution.analysis <- function(deconvolution, corr, zero = 0.9, high
 
   message("Deconvolution features subgroupped")
 
-  results = list(dt, res, groups, groups_similarity, groups_discard, zero_features, low_variance_features, cells_discarded, features_high_corr)
-  names(results) = c("Deconvolution matrix", "Deconvolution groups per cell types", "Deconvolution groups - Linear-based correlation", "Deconvolution groups - Proportionality-based correlation",
-                     "Discarded groups with equal method", "Discarded features with high number of zeros", "Discarded features with low variance", "Discarded cell types",
+  results = list(dt, res, groups_discard, zero_features, low_variance_features, cells_discarded, features_high_corr)
+  names(results) = c("Deconvolution matrix", "Deconvolution groups per cell types", "Discarded groups with equal method",
+                     "Discarded features with high number of zeros", "Discarded features with low variance", "Discarded cell types",
                      "High correlated deconvolution groups (>0.9) per cell type")
   return(results)
 

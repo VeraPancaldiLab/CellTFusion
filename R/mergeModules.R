@@ -1,3 +1,22 @@
+#' Merge TFs modules
+#'
+#' Identify high correlated TFs modules and merge.
+#'
+#' @param data TFs modules matrix
+#' @param colors TFs modules colors
+#' @param corr Correlation value above which two modules are merge.
+#'
+#' @return A list containing
+#'
+#' - Merge modules
+#' - TFs module colors
+#'
+#' @export
+#'
+#' @examples
+#'
+#' merge = mergeModules(TFs_modules, colors, 0.9)
+#'
 mergeModules = function(data, colors, corr){
   df = correlation(data)
   idx = which(round(df$r,2) > corr)

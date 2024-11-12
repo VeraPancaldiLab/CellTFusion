@@ -1,3 +1,18 @@
+#' Remove low variance deconvolution features
+#'
+#' @param data Deconvolution features
+#' @param plot Whether to save or not the plot of variance distribution in the Results/ directory.
+#'
+#' @return A list containing
+#'
+#' - Deconvolution matrix after removal of low variance.
+#' - Discarded low variance features.
+#' @export
+#'
+#' @examples
+#'
+#' variance = remove_low_variance(deconvolution, plot = return)
+#'
 remove_low_variance <- function(data, plot = T) {
   vars <- apply(data, 2, var)
   threshold = summary(vars)[[2]]

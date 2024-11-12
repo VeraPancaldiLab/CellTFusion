@@ -1,3 +1,23 @@
+#' Compute prediction using stacking approach
+#'
+#' @param super.learner Meta-learner model
+#' @param test_data A matrix with the testing dataset
+#' @param target Character vector with the true values
+#' @param ml.models Machine learning models
+#' @param base.models A character vector with the base models for the meta-learner
+#'
+#' @return A list containing
+#'
+#' - Prediction metrics
+#' - AUROC and AUPRC
+#' - Prediction values
+#'
+#' @export
+#'
+#' @examples
+#'
+#' prediction = compute.prediction.stacked(model, testing_set, target, ML_models, base_models)
+#'
 compute.prediction.stacked = function(super.learner, test_data, target, ml.models, base.models){
 
   #Learning from simple meta-learner

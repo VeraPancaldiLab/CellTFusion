@@ -1,3 +1,21 @@
+#' Compute prediction
+#'
+#' @param model Trained machine learning model
+#' @param test_data A matrix with the testing dataset
+#' @param target Character vector with the true values
+#'
+#' @return A list containing
+#'
+#' - Prediction metrics
+#' - AUROC and AUPRC
+#' - Prediction values
+#'
+#' @export
+#'
+#' @examples
+#'
+#' prediction = compute.prediction(model, testing_set, target)
+#'
 compute.prediction = function(model, test_data, target){
 
   cat("Predicting target variable using provided ML model")

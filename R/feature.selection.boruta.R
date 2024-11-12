@@ -1,3 +1,26 @@
+#' Compute feature selection using repeated Boruta algorithm
+#'
+#' @param data A dataframe with the target column name as "target" and the features to test.
+#' @param iterations Number of iterations to run Boruta.
+#' @param fix Parameter from Boruta(). It tests whether the features classified as 'Tentative' need to be judge with an additional test to either confirm then or not (See TentativeRoughFix() from Boruta package for more information)
+#' @param doParallel Whether to do or not parallelization.
+#' @param workers Number of processes available to run on parallel. If no number is set, this will correspond to detectCores() - 1
+#' @param file_name File name for the csv files and plots saved in the Results/ directory
+#' @param threshold Threshold to consider the features as confirmed after several iterations of Boruta. If boruta_threshold = 0.8, features labeled as confirmed in more than 80% of the times will be finally considered as confirmed.
+#' @param return Whether to save or not the plots in the Results/ directory.
+#'
+#' @return A list containing
+#'
+#' - Confirmed features
+#' - Tentative features
+#' - Matrix of feature importance
+#'
+#' @export
+#'
+#' @examples
+#'
+#' res_boruta = feature.selection.boruta(training_set, iterations = 100, fix = F, doParallel = T, workers = 4, threshold = 0.8, file_name = "Test", return = T)
+#'
 feature.selection.boruta <- function(data, iterations = NULL, fix, doParallel = F, workers=NULL, file_name = NULL, threshold = NULL, return) {
   if(doParallel){
     if(is.null(iterations) == T){

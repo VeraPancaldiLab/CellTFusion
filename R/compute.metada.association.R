@@ -1,3 +1,20 @@
+#' Compute metadata association between TF-modules and clinical data
+#'
+#' It tests if there is an association between the TF modules scores and the available clinical traits. It does a pearson correlation for quantitative traits and an anova test for the qualitative ones.
+#'
+#' @param tfs.modules A matrix of TF modules scores across samples obtained from compute.WTCNA()
+#' @param coldata A matrix with the clinical data to test
+#' @param pval A numeric value to set if a test it is significant or not (default is 0.05)
+#' @param width A numeric value to set the width of the labeled heatmap to plot.
+#' @param height A numeric value to set the height of the labeled heatmap to plot.
+#'
+#' @return A labeled heatmap with the pearson correlations and violin plots for the Anova tests are saved in the Results/ directory.
+#' @export
+#'
+#' @examples
+#'
+#' compute.metada.association(tf_modules, traitData, pval = 0.05)
+#'
 compute.metada.association = function(tfs.modules, coldata, pval = 0.05, width = 20, height = 8){
   ###Association with categorical variables
   coldata_categorical = coldata %>%

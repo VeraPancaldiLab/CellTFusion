@@ -1,3 +1,16 @@
+#' Pool performance curves
+#'
+#' Plot boxplots from pooled metrics from different iterations, mean AUC-ROC and AUC-PRC are calculated.
+#'
+#' @param file.name String with the file name to saved the plots
+#'
+#' @return Boxplots in the Results/ directory.
+#' @export
+#'
+#' @examples
+#'
+#' get_pooled_roc_curves("Test")
+#'
 get_pooled_roc_curves = function(file.name){
 
   # Get a list of all RDS files in the folder

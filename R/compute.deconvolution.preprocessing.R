@@ -1,3 +1,18 @@
+#' Compute deconvolution preprocessing
+#'
+#' Give consistent names and patterns following the method_signature_cell structure to the deconvolution features
+#'
+#' @param deconv A dataframe with the unprocessed deconvolution features
+#'
+#' @return A matrix of the preprocessed deconvolution features with fixed and consistent names across the different methods and signatures
+#'
+#' @export
+#'
+#' @examples
+#'
+#' deconvolution = compute.deconvolution.preprocessing(raw_deconvolution)
+#'
+#'
 compute.deconvolution.preprocessing = function(deconv){
   cat("Preprocessing deconvolution features...............................................................\n\n")
 

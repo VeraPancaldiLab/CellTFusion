@@ -1,3 +1,30 @@
+#' Compute Weighted TF-coactivity network analysis (WTCNA)
+#'
+#' Construct a weighted signed or unsigned network using TFs activity to cluster protein regulators into modules that share similar activity patterns based on the expression of their target genes. Each TFs module will have a score per sample represented by the eigenvalue of the module.
+#'
+#' @param TFs.matrix TFs activity matrix with samples as rows and TFs as columns.
+#' @param network.type Network type. Allowed values are “signed”, “unsigned”, “signed hybrid”, “distance”. Default value is “signed”.
+#' @param clustering.method Character string specifying the function to be used to calculate co-expression similarity for distance networks. Defaults to the function dist. Default method is “ward.D2”.
+#' @param minMod Integer indicating the minimum number of TFs allowed for each module. Default is 30.
+#'
+#' For more information about these parameters we invited the user to read the documentation in [1]. minMod must be carefully used as it will impact how many modules the user will have. Default value of 30 might hide modules composed of just a few TFs (around 10) that are giving an explanation of your dataset, so we invited the user to explore different options of values for this parameter.
+#'
+#' @param corr_mod Value from 0 to 1 used for merge modules in a second iteration. After the first TF-module construction, a correlation will take place between modules and modules correlated by a value higher than this threshold will be merged. Default value is 0.8.
+#' @param cor_type Type of correlation to be used for calculation of adjacency matrix and merging modules. Default is pearson “p”, other alternatives are spearman “s”.
+#' @param return Whether to save the plots or not in Results/ directory.
+#'
+#' @return A list containing two elements:
+#' - Matrix of TFs-modules with samples as rows and eigenvalues of TF-modules as columns.
+#' - Colors of TFs modules.
+#' - Named list of TFs and their respective module color assignment.
+#' - Proportion of variance explained by each eigenvalue of each TFs module.
+#'
+#' @export
+#'
+#' @examples
+#'
+#' network = compute.WTCNA(tfs, corr_mod = 0.9, clustering.method = "ward.D2", return = T)
+#'
 compute.WTCNA <- function(TFs.matrix, network.type = "unsigned", clustering.method = "ward.D2", minMod = 15, corr_mod = 0.9, cor_type = "p", return = T){
 
   cat("Creating weighted TF-coactivity network......................................................................\n\n")

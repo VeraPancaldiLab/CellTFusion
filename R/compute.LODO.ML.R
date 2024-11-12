@@ -1,3 +1,38 @@
+#' Compute Leaving-one-dataset-out approach
+#'
+#'If we are training different cohorts and trying to predict in independent ones, CellTFusion needs to be compute individually to avoid data leakage. For this, the implemented function eases this workflow to the user.
+#'
+#' @param raw.counts A matrix with the raw counts with samples as columns and genes symbols as rows.
+#' @param normalized Boolean value to specify if raw_counts need to be normalized (If no raw_counts are available and argument corresponds to already normalized counts this arguments needs to be set to False)
+#' @param clinical A data frame with the clinical data containing the target variable to analyze
+#' @param trait Column name of target variable
+#' @param trait.positive Value of target consider as positive for prediction
+#' @param trait.out Column name indicating the column from which dataset need to be subset (e.g. cohort = c(A, B, C, D, A, A) this parameter should be "cohort")
+#' @param out Value to use for subsetting the matrix. If cohort = "A" is going to be leave out, this parameter should be "A".
+#' @param metric Metric to based the methods choice during cross validation (CV). Either accuracy or AUC
+#' @param stack If stacking needs to be applied
+#' @param feature.selection If feature selection using Boruta algorithm needs to be computed
+#' @param doParallel Whether to do or not parallelization. Only CBSX and DWLS methods will run in parallel.
+#' @param workers Number of processes available to run on parallel. If no number is set, this will correspond to detectCores() - 1
+#' @param deconv_methods A character vector with the deconvolution methods to run. Default are "Quantiseq", "MCP", "xCell", "CBSX", "Epidish", "DeconRNASeq", "DWLS"
+#' @param file_name File name for the csv files and plots saved in the Results/ directory
+#' @param return Return the plots printed during each iteration
+#'
+#' @return A list containing
+#'
+#' - Trained model
+#' - Features used to train the model
+#' - Cell groups
+#' - Prediction metrics
+#' - AUROC and AUPRC
+#' - Predictions
+#'
+#' @export
+#'
+#' @examples
+#'
+#' res_ml = compute.LODO.ML(raw.counts, normalized = T, clinical, trait = "Response",trait.positive = "R", trait.out = "Cohort", out = "Dupont", metric = "Accuracy", stack = T, feature.selection = F, doParallel = T, workers = 4, file_name = "Test", return = F)
+#'
 compute.LODO.ML = function(raw.counts, normalized = F, clinical, trait, trait.positive, trait.out, out, metric = "Accuracy", stack, feature.selection = T, doParallel = F, workers = NULL, deconv_methods = c("Quantiseq", "MCP", "xCell", "CBSX", "Epidish", "DeconRNASeq", "DWLS"), file_name = NULL, return = T){
 
   clinical = clinical %>%

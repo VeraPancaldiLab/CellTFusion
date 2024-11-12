@@ -1,3 +1,23 @@
+#' Identify cell groups
+#'
+#' Identifies cell dendrograms corresponding to each TF module group.
+#'
+#' @param features Significant deconvolution features associated with TF modules (pvalue < 0.05)
+#' @param tfs.modules.groups TF modules groups obtained from compute.TF.network.classification()
+#' @param cor_type Type of correlation. Either pearson "p" or spearman "s"
+#' @param clustering.method Clustering method. Default is "ward.D2", see hclust() for all methods available.
+#' @param distance.method Distance method. Default is "euclidean", see dist() for all methods available.
+#' @param width Numeric value to define the width of plots saved in Results/ directory.
+#' @param height Numeric value to define the height of plots saved in Results/ directory.
+#' @param return Whether to save or not the plots in the Results/ folder.
+#'
+#' @return A list with the cell dendrograms per TF module group.
+#' @export
+#'
+#' @examples
+#'
+#' cell_dendrograms = identify.cell.groups(corr_modules, tfs.modules.clusters, height = 20, return = T)
+#'
 identify.cell.groups = function(features, tfs.modules.groups, cor_type = "p", clustering.method = "ward.D2", distance.method = "euclidean", width = 12, height = 18, return = T){
 
   moduleTraitCor = features[[1]]

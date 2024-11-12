@@ -1,3 +1,18 @@
+#' Compute TF network classification
+#'
+#' Use the pathways information to classify TF modules into different clusters based on their association values across samples.
+#'
+#' @param tf.network List with the TF network information obtained from compute.WTCNA()
+#' @param pathways.features A matrix with the pathway activities obtained from compute.pathway.activity()
+#' @param return Whether to return the intermediate plots generated
+#'
+#' @return A list containing the clusters of TF modules
+#' @export
+#'
+#' @examples
+#'
+#' tfs.modules.clusters = compute.TF.network.classification(network, pathways, return = T)
+#'
 compute.TF.network.classification = function(tf.network, pathways.features, return = T){
 
   tf.network = data.frame(tf.network[[1]])

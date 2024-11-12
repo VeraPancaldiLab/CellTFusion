@@ -1,3 +1,36 @@
+#' Compute k fold cross validation
+#'
+#' Perfoms a repeated and stratified k fold cross validation on a dataset in order to train and tune hyperparameters of 13 machine learning methods based either on the Accuracy or AUC scores from their predictions.
+#'
+#' @param model A dataframe with the features and a target column named 'target' corresponding to the trait to predict
+#' @param k_folds Number of k folds to perform during cross validation (Default is 5)
+#' @param n_rep Number of repeated folds to perform during cross validation (Default is 100)
+#' @param stacking Either to do or not stacking
+#' @param metric Metric to be used for tuning the hyperparameters and selecting the base models (if stacking = T). Metrics supported are Accuracy and AUC.
+#' @param boruta Whether to do or not Boruta for feature selection before training the model. Take into account that many ML models already give a weight to the features so no previous feature selection approach is necessarily (unless there are features with multicollinearity)
+#' @param boruta_iterations Number of iterations Boruta needs to be run. Boruta applies random number generator in each run so to be consistent regarding the confirmed features we advised to do several iterations of the algorithm (Default is 100)
+#' @param fix_boruta Parameter from Boruta(). See compute.boruta() for more information
+#' @param tentative Whether to consider the tentative features as part of the dataframe to train or not.
+#' @param boruta_threshold Threshold to consider the features as confirmed after several iterations of Boruta. If boruta_threshold = 0.8, features labeled as confirmed in more than 80% of the times will be finally considered as confirmed.
+#' @param file_name File name for the plots to be saved in the Results/ directory.
+#' @param return Whether to return and save the plots generated during the function
+#'
+#' @return A list containing
+#' - Features used during training
+#' - The selected machine learning model
+#' - All the machine learning models trained.
+#'
+#' If stacking = T, list will also include
+#' - Base models
+#' - Meta-learner
+#' - Matrix of weighted feature importance. See calculate_feature_importance_stacking() for more information.
+#'
+#' @export
+#'
+#' @examples
+#'
+#'  training = compute.k_fold_CV(train_data, k_folds = 5, n_rep = 100, metric = "Accuracy", stacking = T, boruta = F, boruta_iterations = 100, fix_boruta = F, boruta_threshold = 0.8, file_name = "Test", return= T)
+#'
 compute.k_fold_CV = function(model, k_folds, n_rep, stacking = F, metric = "Accuracy", boruta, boruta_iterations = NULL, fix_boruta = NULL, tentative = F, boruta_threshold = NULL, file_name = NULL, return){
 
   if(!(metric %in% c("AUC","Accuracy"))){

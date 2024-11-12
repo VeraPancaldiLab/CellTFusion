@@ -1,3 +1,20 @@
+#' Remove high correlated cell groups
+#'
+#' @param data List with cell groups containing cell groups values and cell groups composition respectively.
+#' @param colors TF module colors
+#' @param threshold Threshold for defined high correlated features
+#'
+#' @return A list containing
+#'
+#' - Cell groups scores after removal of high correlated cell groups
+#' - Cell groups composition after removal of high correlated cell groups
+#'
+#' @export
+#'
+#' @examples
+#'
+#' cell.groups = remove.cell.groups.corr(cell.groups, module_colors, threshold = 0.9)
+#'
 remove.cell.groups.corr <- function(data, colors, threshold = 0.9) {
 
   features_high_corr = c()
