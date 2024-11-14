@@ -216,7 +216,6 @@ create_tfs_modules = function(TF.matrix, network_tfs){
 #' @param cells.groups Cell groups corresponding to a specific cell type.
 #'
 #' @return Maximum subgroupping iteration
-#' @export
 #'
 #' @examples
 #'
@@ -250,7 +249,6 @@ find.maximum.iteration = function(cells.groups){
 #' - Merge modules
 #' - TFs module colors
 #'
-#' @export
 #'
 #' @examples
 #'
@@ -285,7 +283,6 @@ mergeModules = function(data, colors, corr){
 #'
 #' - Cell groups scores after removal of equal cell groups
 #' - Cell groups composition after removal of equal cell groups
-#' @export
 #'
 #' @examples
 #'
@@ -343,7 +340,6 @@ remove_equal = function(cell.values, cell.composition){
 #' - Cell groups scores after removal of single cell groups
 #' - Cell groups composition after removal of single cell groups
 #'
-#' @export
 #'
 #' @examples
 #'
@@ -378,7 +374,6 @@ remove_single_groups = function(cell.values, cell.composition){
 #' @param n_cuts Optional parameter to limit the number of cuts the dendrogram needs to be cut (Default is NULL). If no parameter is set, number of cuts will be proportional to the height of the dendrogram.
 #'
 #' @return A list with the sequence of numbers where each dendrogram will be cut
-#' @export
 #'
 #' @examples
 #'
@@ -447,7 +442,6 @@ calculate_dendrogram_cuts = function(cell.group.dendrogram, n_cuts = NULL){
 #' - Cell groups scores after removal of high correlated cell groups
 #' - Cell groups composition after removal of high correlated cell groups
 #'
-#' @export
 #'
 #' @examples
 #'
@@ -525,7 +519,6 @@ remove.cell.groups.corr <- function(data, colors, threshold = 0.9) {
 #' @param tfs_universe A matrix with TF-gene interactions
 #'
 #' @return Reactome results
-#' @export
 #'
 #' @examples
 #'
@@ -615,7 +608,6 @@ compute_composite_score = function(cell_group, color_group, tfs.module.matrix, p
 #' Unregister workers
 #'
 #' @return Clean parallelization
-#' @export
 #'
 #' @examples
 #'

@@ -1250,7 +1250,6 @@ calculate_accuracy <- function(metrics, target) {
 #' @param pred A character vector with predicted values
 #'
 #' @return A numeric value corresponding to the AUC score
-#' @export
 #'
 #' @examples
 #'
@@ -1450,7 +1449,7 @@ calculate_precision <- function(metrics, target) {
   return(precision)
 }
 
-#' Cakculate recall values
+#' Calculate recall values
 #'
 #' @param metrics A Dataframe with metrics obtained using get_sensitivity_specificity()
 #' @param target A character vector containing the true values from the target variable
@@ -1553,7 +1552,6 @@ choose_base_models = function(models, metric = "Accuracy"){
 #' - Top model with best accuracy
 #' - If base_models = T, it returns a character vector with the chosen base models (see choose_base_models())
 #'
-#' @export
 #'
 #' @examples
 #'
@@ -1616,7 +1614,6 @@ compute_cv_accuracy = function(models, file_name = NULL, base_models = F, return
 #' - Top model with best AUC
 #' - If base_models = T, it returns a character vector with the chosen base models (see choose_base_models())
 #'
-#' @export
 #'
 #' @examples
 #'
@@ -2113,7 +2110,6 @@ get_sensitivity_specificity = function(predictions, observed, ml.model){
 #' - Tentative features
 #' - Matrix of feature importance
 #'
-#' @export
 #'
 #' @examples
 #'

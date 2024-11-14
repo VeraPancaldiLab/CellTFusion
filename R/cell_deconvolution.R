@@ -372,7 +372,6 @@ compute_sc_deconvolution_methods = function(raw_counts, sc_object, cell_annotati
 #' - Cell subgroups obtained by linear correlation
 #' - Cell subgroups obtained by proportionality correlation
 #' - Discard cell features either because of low variance or high zero number
-#' @export
 #'
 #' @examples
 #'
@@ -588,7 +587,6 @@ compute_subgroups = function(deconvolution, thres_corr, file_name){
 #' @return A list containing:
 #' - A sublist with each cell type features as an element recover from the different signatures
 #' - Discarded cell types (this will happen if the cell types are not supported. See the READme for more information about this)
-#' @export
 #'
 #' @examples
 #'
@@ -903,7 +901,6 @@ compute.deconvolution.analysis <- function(deconvolution, corr, zero = 0.9, high
 #'
 #' @return A matrix of the preprocessed deconvolution features with fixed and consistent names across the different methods and signatures
 #'
-#' @export
 #'
 #' @examples
 #'
@@ -1159,7 +1156,6 @@ compute.deconvolution.preprocessing = function(deconv){
 #' @param workers Number of processes available to run on parallel.
 #'
 #' @return A matrix with cell abundance deconvolve with CBSX
-#' @export
 #'
 #' @examples
 #'
@@ -1191,7 +1187,6 @@ computeCBSX_parallel = function(TPM_matrix, signatures, name, password, workers)
 #' @param name_signature Signature name to set for the deconvolution results.
 #'
 #' @return A matrix with cell abundance deconvolve with CBSX
-#' @export
 #'
 #' @examples
 #'
@@ -1215,7 +1210,6 @@ computeCBSX = function(TPM_matrix, signature_file, name, password, name_signatur
 #' @param name_signature Signature name to set for the deconvolution results.
 #'
 #' @return A matrix with cell abundance deconvolve with DeconRNASeq
-#' @export
 #'
 #' @examples
 #'
@@ -1242,7 +1236,6 @@ computeDeconRNASeq = function(TPM_matrix, signature_file, name_signature){
 #'
 #' @return A matrix with cell abundance deconvolve with DWLS
 #'
-#' @export
 #'
 #' @examples
 #'
@@ -1272,7 +1265,6 @@ computeDWLS_parallel = function(TPM_matrix, signatures, workers){
 #' @param name_signature Signature name to set for the deconvolution results.
 #'
 #' @return A matrix with cell abundance deconvolve with DWLS
-#' @export
 #'
 #' @examples
 #'
@@ -1305,7 +1297,6 @@ computeDWLS = function(TPM_matrix, signature_file, name_signature){
 #' @param name_signature Signature name to set for the deconvolution results.
 #'
 #' @return A matrix with cell abundance deconvolve with EpiDISH
-#' @export
 #'
 #' @examples
 #'
@@ -1329,7 +1320,6 @@ computeEpiDISH = function(TPM_matrix, signature_file, name_signature){
 #' @param genes_path Path containing the MCP genes
 #'
 #' @return A matrix with cell enrichment scores from MCP
-#' @export
 #'
 #' @examples
 #'
@@ -1353,7 +1343,6 @@ computeMCP <- function(TPM_matrix, genes_path) {
 #' @param TPM_matrix A matrix with TPM normalized counts (genes symbols as rows and samples as columns).
 #'
 #' @return A matrix with cell abundance deconvolve with QuanTIseq
-#' @export
 #'
 #' @examples
 #'
@@ -1379,7 +1368,6 @@ computeQuantiseq <- function(TPM_matrix) {
 #' @param TPM_matrix A matrix with TPM normalized counts (genes symbols as rows and samples as columns).
 #'
 #' @return A matrix with cell enrichment scores from XCell.
-#' @export
 #'
 #' @examples
 #'
@@ -1404,7 +1392,6 @@ computeXCell <- function(TPM_matrix) {
 #' @param data Matrix with features to correlate
 #'
 #' @return Dataframe containing all significant correlations (pvalue < 0.05)
-#' @export
 #'
 #' @examples
 #'
@@ -1443,7 +1430,6 @@ correlation <- function(data) {
 #'
 #' - Deconvolution matrix after removal of low variance.
 #' - Discarded low variance features.
-#' @export
 #'
 #' @examples
 #'
@@ -1485,7 +1471,6 @@ remove_low_variance <- function(data, plot = T) {
 #' @param groups Cell groups of features within cell types.
 #'
 #' @return List of position of groups which have features of same method.
-#' @export
 #'
 #' @examples
 #'
@@ -1523,7 +1508,6 @@ remove_subgroups = function(groups){
 #' - Highly correlated features found
 #' - Cell type name
 #'
-#' @export
 #'
 #' @examples
 #'
