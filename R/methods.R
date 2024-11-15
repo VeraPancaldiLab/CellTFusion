@@ -24,7 +24,7 @@
 CellTFusion = function(raw.counts, coldata = NULL, cbsx.mail = NULL, cbsx.token = NULL, file_name = NULL){
 
   #Normalize counts
-  counts.norm = data.frame(ADImpute::NormalizeTPM(raw.counts, log = T))
+  counts.norm = data.frame(NormalizeTPM(raw.counts, log = T))
   #Deconvolution
   cat("Calculating cell type deconvolution............................................................\n")
   if(is.null(cbsx.mail)==T || is.null(cbsx.token)==T){
