@@ -13,4 +13,26 @@ Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Imports: 
-    ADImpute
+    ADImpute,
+    Biobase,
+    data.table,
+    DeconRNASeq,
+    doParallel,
+    dplyr,
+    EpiDISH,
+    foreach,
+    Hmisc,
+    immunedeconv (>= 2.1.0),
+    MatrixGenerics,
+    matrixStats,
+    MCPcounter,
+    omnideconv (>= 0.1.0),
+    parallel,
+    purrr,
+    stats,
+    stringr,
+    tibble,
+    tidyr,
+    utils
+Remotes: 
+    omnideconv/immunedeconv
