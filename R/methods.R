@@ -141,7 +141,7 @@ cell.groups.computation = function(deconvolution, tfs.module.network, cell.dendr
   cell.groups = remove.cell.groups.corr(cell.groups, module_colors, threshold = 0.9)
 
   cat("Removing low variance features (if present)........................\n")
-  zero = nearZeroVar(cell.groups[[1]], saveMetrics = TRUE)
+  zero = caret::nearZeroVar(cell.groups[[1]], saveMetrics = TRUE)
   cell.groups[[1]] = cell.groups[[1]][, !zero$nzv]
   cell.groups[[2]] = cell.groups[[2]][!zero$nzv]
 
@@ -318,8 +318,8 @@ compute.metada.association = function(tfs.modules, coldata, pval = 0.05, width =
     dplyr::select(where(is.numeric))
 
   if(ncol(coldata_quantitative)!=0){
-    moduleTraitCor = cor(tfs.modules, coldata_quantitative, method = "p");
-    moduleTraitPvalue = corPvalueStudent(moduleTraitCor, nrow(tfs.modules))
+    moduleTraitCor = WGCNA::cor(tfs.modules, coldata_quantitative, method = "p");
+    moduleTraitPvalue = WGCNA::corPvalueStudent(moduleTraitCor, nrow(tfs.modules))
 
     textMatrix = paste(signif(moduleTraitCor, 2), "\n(", signif(moduleTraitPvalue, 2), ")", sep = "")
     dim(textMatrix) = dim(moduleTraitCor)
@@ -339,17 +339,17 @@ compute.metada.association = function(tfs.modules, coldata, pval = 0.05, width =
 
     pdf("Results/TF.modules_metadata", width = width, height = height)
     par(mar = c(25, 15, 3, 3))
-    labeledHeatmap(Matrix = moduleTraitCor,
-                   xLabels = colnames(moduleTraitCor),
-                   yLabels = rownames(moduleTraitCor),
-                   ySymbols = rownames(moduleTraitCor),
-                   colorLabels = FALSE,
-                   colors = blueWhiteRed(50),
-                   textMatrix = textMatrix,
-                   setStdMargins = FALSE,
-                   cex.text = 0.5,
-                   zlim = c(-1,1),
-                   main = paste0("Clinical associations with TFs modules\nOnly showing significant associations (pvalue < ", pval, ")"))
+    WGCNA::labeledHeatmap(Matrix = moduleTraitCor,
+                          xLabels = colnames(moduleTraitCor),
+                          yLabels = rownames(moduleTraitCor),
+                          ySymbols = rownames(moduleTraitCor),
+                          colorLabels = FALSE,
+                          colors = WGCNA::blueWhiteRed(50),
+                          textMatrix = textMatrix,
+                          setStdMargins = FALSE,
+                          cex.text = 0.5,
+                          zlim = c(-1,1),
+                          main = paste0("Clinical associations with TFs modules\nOnly showing significant associations (pvalue < ", pval, ")"))
     dev.off()
   }
 
@@ -373,7 +373,7 @@ compute.metada.association = function(tfs.modules, coldata, pval = 0.05, width =
 #' compute.modules.enrichment(counts.norm, hub_tfs)
 #'
 compute.modules.enrichment <- function(RNA.tpm, hub_tfs){
-  net = get_collectri(organism = 'human', split_complexes = F) #Get universe
+  net = decoupleR::get_collectri(organism = 'human', split_complexes = F) #Get universe
   res = list()
   pathways = list()
 
@@ -386,7 +386,7 @@ compute.modules.enrichment <- function(RNA.tpm, hub_tfs){
     names(pathways)[i] = color
   }
 
-  ItemsList <- venn(pathways, show.plot = FALSE)
+  ItemsList <- gplots::venn(pathways, show.plot = FALSE)
   x = attributes(ItemsList)
 
   #Keep only unique pathways
@@ -400,7 +400,7 @@ compute.modules.enrichment <- function(RNA.tpm, hub_tfs){
         print(paste0("No enrichment for module ", color))
       }else{
         pdf(paste0("Results/Enrichment by Reactome\nModule ", color))
-        print(dotplot(res[[i]],  title=paste0("Enrichment by Reactome\nModule ", color)))
+        print(enrichplot::dotplot(res[[i]],  title=paste0("Enrichment by Reactome\nModule ", color)))
         dev.off()
       }
     }
@@ -448,8 +448,8 @@ compute.modules.relationship <- function(tfs_network, matB, file_name, width = 8
   }
 
 
-  moduleTraitCor = cor(tfs_network, matB, method = cor_type)
-  moduleTraitPvalue = corPvalueStudent(moduleTraitCor, nrow(tfs_network))
+  moduleTraitCor = WGCNA::cor(tfs_network, matB, method = cor_type)
+  moduleTraitPvalue = WGCNA::corPvalueStudent(moduleTraitCor, nrow(tfs_network))
 
   rev = which(colSums(moduleTraitPvalue > pval)==nrow(moduleTraitPvalue)) #check if there are features no significant with any module
 
@@ -460,7 +460,7 @@ compute.modules.relationship <- function(tfs_network, matB, file_name, width = 8
 
   if(padj == T){
     for (i in 1:ncol(moduleTraitPvalue)) {
-      moduleTraitPvalue[,i] = p.adjust(moduleTraitPvalue[,i], method = 'bonferroni')
+      moduleTraitPvalue[,i] = stats::p.adjust(moduleTraitPvalue[,i], method = 'bonferroni')
     }
   }
 
@@ -478,8 +478,8 @@ compute.modules.relationship <- function(tfs_network, matB, file_name, width = 8
         retu = list(moduleTraitCor, sig)
         return(retu)
       }else{
-        d <- dist(t(moduleTraitCor), method = "manhattan")
-        hc1 <- hclust(d, method = "ward.D2")
+        d <- stats::dist(t(moduleTraitCor), method = "manhattan")
+        hc1 <- stats::hclust(d, method = "ward.D2")
         vec = hc1[["order"]]
         textMatrix = paste(signif(moduleTraitCor, 2), "\n(", signif(moduleTraitPvalue, 2), ")", sep = "")
         dim(textMatrix) = dim(moduleTraitCor)
@@ -492,15 +492,15 @@ compute.modules.relationship <- function(tfs_network, matB, file_name, width = 8
         if(plot){
           pdf(paste0("Results/",file_name), width = width, height = height)
           par(mar = c(3, 25, 5, 3))
-          labeledHeatmap(Matrix = moduleTraitCor[vec,],
-                         xLabels = colnames(moduleTraitCor),
-                         yLabels = rownames(moduleTraitCor[vec,]),
-                         xLabelsPosition = "top",
-                         colors = blueWhiteRed(50),
-                         textMatrix = textMatrix[vec,],
-                         setStdMargins = F,
-                         cex.text = 0.5,
-                         zlim = c(-1,1))
+          WGCNA::labeledHeatmap(Matrix = moduleTraitCor[vec,],
+                                xLabels = colnames(moduleTraitCor),
+                                yLabels = rownames(moduleTraitCor[vec,]),
+                                xLabelsPosition = "top",
+                                colors = WGCNA::blueWhiteRed(50),
+                                textMatrix = textMatrix[vec,],
+                                setStdMargins = F,
+                                cex.text = 0.5,
+                                zlim = c(-1,1))
           dev.off()
         }
       }}else{
@@ -525,15 +525,15 @@ compute.modules.relationship <- function(tfs_network, matB, file_name, width = 8
           if(plot){
             pdf(paste0("Results/",file_name), width = width, height = height)
             par(mar = c(25, 15, 3, 3))
-            labeledHeatmap(Matrix = moduleTraitCor,
-                           xLabels = colnames(moduleTraitCor),
-                           yLabels = rownames(moduleTraitCor),
-                           xLabelsPosition = "top",
-                           colors = blueWhiteRed(50),
-                           textMatrix = textMatrix,
-                           setStdMargins = F,
-                           cex.text = 0.5,
-                           zlim = c(-1,1))
+            WGCNA::labeledHeatmap(Matrix = moduleTraitCor,
+                                  xLabels = colnames(moduleTraitCor),
+                                  yLabels = rownames(moduleTraitCor),
+                                  xLabelsPosition = "top",
+                                  colors = WGCNA::blueWhiteRed(50),
+                                  textMatrix = textMatrix,
+                                  setStdMargins = F,
+                                  cex.text = 0.5,
+                                  zlim = c(-1,1))
             dev.off()
           }
         }}}
@@ -552,8 +552,8 @@ compute.modules.relationship <- function(tfs_network, matB, file_name, width = 8
         retu = list(moduleTraitCor, sig)
         return(retu)
       }else{
-        d <- dist(t(moduleTraitCor), method = "manhattan")
-        hc1 <- hclust(d, method = "ward.D2")
+        d <- stats::dist(t(moduleTraitCor), method = "manhattan")
+        hc1 <- stats::hclust(d, method = "ward.D2")
         vec = hc1[["order"]]
         textMatrix = paste(signif(moduleTraitCor, 2), "\n(", signif(moduleTraitPvalue, 2), ")", sep = "")
         dim(textMatrix) = dim(moduleTraitCor)
@@ -565,17 +565,17 @@ compute.modules.relationship <- function(tfs_network, matB, file_name, width = 8
         if(plot){
           pdf(paste0("Results/",file_name), width = width, height = height)
           par(mar = c(25, 15, 3, 3))
-          labeledHeatmap(Matrix = moduleTraitCor[,vec],
-                         xLabels = names(moduleTraitCor[,vec]),
-                         yLabels = rownames(moduleTraitCor),
-                         ySymbols = rownames(moduleTraitCor),
-                         colorLabels = FALSE,
-                         colors = blueWhiteRed(50),
-                         textMatrix = textMatrix[,vec],
-                         setStdMargins = FALSE,
-                         cex.text = 0.5,
-                         zlim = c(-1,1),
-                         main = paste("Module-trait relationships"))
+          WGCNA::labeledHeatmap(Matrix = moduleTraitCor[,vec],
+                                xLabels = names(moduleTraitCor[,vec]),
+                                yLabels = rownames(moduleTraitCor),
+                                ySymbols = rownames(moduleTraitCor),
+                                colorLabels = FALSE,
+                                colors = WGCNA::blueWhiteRed(50),
+                                textMatrix = textMatrix[,vec],
+                                setStdMargins = FALSE,
+                                cex.text = 0.5,
+                                zlim = c(-1,1),
+                                main = paste("Module-trait relationships"))
           dev.off()
         }
       }}else{
@@ -600,17 +600,17 @@ compute.modules.relationship <- function(tfs_network, matB, file_name, width = 8
           if(plot){
             pdf(paste0("Results/",file_name), width = width, height = height)
             par(mar = c(25, 15, 3, 3))
-            labeledHeatmap(Matrix = moduleTraitCor,
-                           xLabels = names(moduleTraitCor),
-                           yLabels = rownames(moduleTraitCor),
-                           ySymbols = rownames(moduleTraitCor),
-                           colorLabels = FALSE,
-                           colors = blueWhiteRed(50),
-                           textMatrix = textMatrix,
-                           setStdMargins = FALSE,
-                           cex.text = 0.5,
-                           zlim = c(-1,1),
-                           main = paste("Module-trait relationships"))
+            WGCNA::labeledHeatmap(Matrix = moduleTraitCor,
+                                  xLabels = names(moduleTraitCor),
+                                  yLabels = rownames(moduleTraitCor),
+                                  ySymbols = rownames(moduleTraitCor),
+                                  colorLabels = FALSE,
+                                  colors = WGCNA::blueWhiteRed(50),
+                                  textMatrix = textMatrix,
+                                  setStdMargins = FALSE,
+                                  cex.text = 0.5,
+                                  zlim = c(-1,1),
+                                  main = paste("Module-trait relationships"))
             dev.off()
           }
         }}}
@@ -637,11 +637,11 @@ compute.pathway.activity <- function(RNA.tpm, gene_sets = NULL, paths = NULL){
   RNA.tpm = as.matrix(RNA.tpm)
   #Get universe
   if(is.null(paths)){
-    paths <- get_progeny(organism = 'human', top = 500)
+    paths <- decoupleR::get_progeny(organism = 'human', top = 500)
   }
 
   # Run mlm
-  progeny <- run_mlm(mat=RNA.tpm, net=paths, .source='source', .target='target', .mor='weight', minsize = 5)
+  progeny <- decoupleR::run_mlm(mat=RNA.tpm, net=paths, .source='source', .target='target', .mor='weight', minsize = 5)
 
   #Remove variable
   rm(paths)
@@ -649,16 +649,16 @@ compute.pathway.activity <- function(RNA.tpm, gene_sets = NULL, paths = NULL){
 
   # Transform to wide matrix
   sample_acts_progeny <- progeny %>%
-    pivot_wider(id_cols = 'condition', names_from = 'source',
-                values_from = 'score') %>%
-    column_to_rownames('condition') %>%
+    tidyr::pivot_wider(id_cols = 'condition', names_from = 'source',
+                       values_from = 'score') %>%
+    tibble::column_to_rownames('condition') %>%
     as.matrix()
 
   if(is.null(gene_sets)==F){
 
     cat("Computing GSVA analysis using provided gene sets.....................................................\n")
 
-    gsva_results <- gsva(
+    gsva_results <- GSVA::gsva(
       RNA.tpm,
       gene_sets,
       method = "gsva",
@@ -705,7 +705,7 @@ compute.survival.analysis = function(features, survival.data, time_unit, p.value
   # Generate all possible combinations of the features
   contador = 1
   for (n in 1:min(n_features, max_factors)) {
-    combinations <- combn(1:n_features, n, simplify = FALSE)
+    combinations <- utils::combn(1:n_features, n, simplify = FALSE)
 
     for (comb in combinations) {
       # Create a formula dynamically based on the combination
@@ -718,20 +718,20 @@ compute.survival.analysis = function(features, survival.data, time_unit, p.value
       data_for_model = cbind(data_for_model, features[,comb, drop=F])
 
       # Fit the Cox PH model with the combination of features (cox PH take into account covariates and measure the impact of each variable in the survival time)
-      cox <- cph(formula, data = data_for_model)
+      cox <- rms::cph(formula, data = data_for_model)
       data_for_model$CoxPredictors <- cox$linear.predictors #linear predictors is the risk score for each individual in the dataset
 
       # Check that the model is significant as a predictor (maybe not useful?, it gives the same linear.predictos - to be check)
-      cphmodel <- coxph(Surv(time, status) ~ CoxPredictors, data = data_for_model)
+      cphmodel <- survival::coxph(survival::Surv(time, status) ~ CoxPredictors, data = data_for_model)
       data_for_model$CoxPredictors <- cphmodel$linear.predictors
 
-      quantiles <- quantile(data_for_model$CoxPredictors, thres)
+      quantiles <- stats::quantile(data_for_model$CoxPredictors, thres)
 
       # Binarize the Cox model output to draw two KM lines (linear predictors are used to stratify between high-risk and low-risk groups)
       data_for_model$coxHL <- ifelse(cphmodel$linear.predictors >= quantiles, 'High', "Low")
 
       # Perform Kaplan-Meier based on coxHL
-      km_fit <- survfit(Surv(time, status) ~ coxHL, data = data_for_model)
+      km_fit <- survival::survfit(Surv(time, status) ~ coxHL, data = data_for_model)
 
       pval <- surv_pvalue(km_fit, data = data_for_model)$pval #Performs log-rank test to see whether both survival curves are significantly different
 

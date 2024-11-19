@@ -19,7 +19,7 @@ cell.groups.anova.test = function(cell.groups, coldata, trait, pval = 0.05){
 
   for (j in 1:ncol(cell.groups[[1]])) {
     data = data.frame("Value" = cell.groups[[1]][,j], "Trait" = coldata[,trait])
-    model  <- lm(Value ~ Trait, data = data)
+    model  <- stats::lm(Value ~ Trait, data = data)
     res.aov <- data %>% rstatix::anova_test(Value ~ Trait)
 
     ##Extract only significant features
@@ -75,11 +75,11 @@ cell.groups.fisher.test = function(cell.groups, coldata, trait, pval = 0.05){
 
   for (j in 1:ncol(cell.groups[[1]])) {
     coldata = coldata %>%
-      mutate(level = cell.groups[[1]][,j],
-             Cells_level = ifelse(level > summary(level)[3], 'High', 'Low'))
+      dplyr::mutate(level = cell.groups[[1]][,j],
+                    Cells_level = ifelse(level > summary(level)[3], 'High', 'Low'))
 
     contingency = table(coldata[,"Cells_level"], coldata[,trait])
-    test = fisher.test(contingency)
+    test = stats::fisher.test(contingency)
 
     ##Extract only significant features
     if(round(test$p.value, 5) <= pval){
@@ -202,11 +202,11 @@ create_tfs_modules = function(TF.matrix, network_tfs){
   }
 
   tfs_colors = tfs.modules %>%
-    pull(Module)
+    dplyr::pull(Module)
 
-  MEList = moduleEigengenes(TF.matrix, colors = tfs_colors, scale = F) #Data already scale
+  MEList = WGCNA::moduleEigengenes(TF.matrix, colors = tfs_colors, scale = F) #Data already scale
   MEs = MEList$eigengenes
-  MEs = orderMEs(MEs)
+  MEs = WGCNA::orderMEs(MEs)
 
   return(MEs)
 }
@@ -264,7 +264,7 @@ mergeModules = function(data, colors, corr){
       if((module1 %in% colnames(data)) && (module2 %in% colnames(data))){
         colors[which(colors%in%c(substring(module1, 3), substring(module2, 3)))] = substring(module1, 3)
         data <- data %>%
-          mutate(new_column = rowMeans(dplyr::select(., module1, module2))) %>%
+          dplyr::mutate(new_column = rowMeans(dplyr::select(., module1, module2))) %>%
           dplyr::rename(module1 = new_column) %>%
           dplyr::select(., -module1, -module2)
       }
@@ -451,15 +451,15 @@ remove.cell.groups.corr <- function(data, colors, threshold = 0.9) {
 
   features_high_corr = c()
   # Compute correlation matrix
-  corr_matrix <- cor(data[[1]])
+  corr_matrix <- stats::cor(data[[1]])
   # Find highly correlated features
   contador = 1
   while(nrow(corr_matrix)>0){
     color_features = c()
     feature = data.frame(corr_matrix[1, , drop = FALSE]) #Extract first row feature
     feature = feature %>%                                #Take only high corr above threshold
-      mutate_all(~ifelse(. > threshold, ., NA)) %>%
-      select_if(~all(!is.na(.)))
+      dplyr::mutate_all(~ifelse(. > threshold, ., NA)) %>%
+      dplyr::select_if(~all(!is.na(.)))
 
     corr_matrix = corr_matrix[-which(rownames(corr_matrix)%in%colnames(feature)),-which(colnames(corr_matrix)%in%colnames(feature)), drop = F] #Remove already joined features
     color_features = list()
@@ -532,15 +532,15 @@ module_enrich = function(tpm.counts, module_color, hub_genes, tfs_universe){
   targets = unique(targets$target) #Keep only unique targets from TFs
 
   targets_genes = tpm.counts[rownames(tpm.counts)%in%targets,] #Extract gene expression from targets
-  targets_genes = targets_genes[order(rowVars(targets_genes), decreasing = T),][1:round(0.2*nrow(targets_genes)),] #Keep only highly variable targets (20%)
+  targets_genes = targets_genes[order(matrixStats::rowVars(targets_genes), decreasing = T),][1:round(0.2*nrow(targets_genes)),] #Keep only highly variable targets (20%)
 
   entrz <- AnnotationDbi::select(org.Hs.eg.db, keys = rownames(targets_genes), columns = "ENTREZID", keytype = "SYMBOL") #Change to EntrezID
   universe = AnnotationDbi::select(org.Hs.eg.db, keys = rownames(tpm.counts), columns = "ENTREZID", keytype = "SYMBOL") #Change to EntrezID
 
-  reac <- enrichPathway(gene    = entrz$ENTREZID,
-                        organism     = 'human',
-                        universe = universe$ENTREZID,
-                        pvalueCutoff = 0.05)
+  reac <- ReactomePA::enrichPathway(gene    = entrz$ENTREZID,
+                                    organism     = 'human',
+                                    universe = universe$ENTREZID,
+                                    pvalueCutoff = 0.05)
 
   reac@result = reac@result[reac@result$p.adjust<0.05,]
 
@@ -578,7 +578,7 @@ compute_composite_score = function(cell_group, color_group, tfs.module.matrix, p
   aveg_group = rowMeans(pca_group) #Consider average expression to aligned direction of components
 
   for (i in 1:ncol(PCs)) {
-    cor_group = cor(aveg_group, PCs[,i], use = "p")
+    cor_group = WGCNA::cor(aveg_group, PCs[,i], use = "p")
 
     # Check if the correlation is finite; if not, set it to 0
     if (!is.finite(cor_group)) {

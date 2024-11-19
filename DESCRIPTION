@@ -15,12 +15,19 @@ RoxygenNote: 7.3.2
 Imports: 
     ADImpute,
     Biobase,
+    broom,
+    caret,
     data.table,
     DeconRNASeq,
+    dendextend,
     doParallel,
     dplyr,
+    enrichplot,
     EpiDISH,
     foreach,
+    ggplot2,
+    gplots,
+    GSVA,
     Hmisc,
     immunedeconv (>= 2.1.0),
     MatrixGenerics,
@@ -29,10 +36,14 @@ Imports:
     omnideconv (>= 0.1.0),
     parallel,
     purrr,
+    ReactomePA,
+    rstatix,
     stats,
     stringr,
+    survival,
     tibble,
     tidyr,
-    utils
+    utils,
+    WGCNA
 Remotes: 
     omnideconv/immunedeconv
