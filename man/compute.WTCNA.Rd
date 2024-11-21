@@ -23,7 +23,7 @@ compute.WTCNA(
 
 \item{minMod}{Integer indicating the minimum number of TFs allowed for each module. Default is 30.
 
-For more information about these parameters we invited the user to read the documentation in \link{1}. minMod must be carefully used as it will impact how many modules the user will have. Default value of 30 might hide modules composed of just a few TFs (around 10) that are giving an explanation of your dataset, so we invited the user to explore different options of values for this parameter.}
+For more information about these parameters we invited the user to read the documentation in Langfelder, P et al, 2008. minMod must be carefully used as it will impact how many modules the user will have. Default value of 30 might hide modules composed of just a few TFs (around 10) that are giving an explanation of your dataset, so we invited the user to explore different options of values for this parameter.}
 
 \item{corr_mod}{Value from 0 to 1 used for merge modules in a second iteration. After the first TF-module construction, a correlation will take place between modules and modules correlated by a value higher than this threshold will be merged. Default value is 0.8.}
 
@@ -47,4 +47,7 @@ Construct a weighted signed or unsigned network using TFs activity to cluster pr
 
 network = compute.WTCNA(tfs, corr_mod = 0.9, clustering.method = "ward.D2", return = T)
 
+}
+\references{
+Langfelder, P., Horvath, S. WGCNA: an R package for weighted correlation network analysis. BMC Bioinformatics 9, 559 (2008). https://doi.org/10.1186/1471-2105-9-559
 }

@@ -19,8 +19,8 @@ cell.groups.anova.test = function(cell.groups, coldata, trait, pval = 0.05){
 
   for (j in 1:ncol(cell.groups[[1]])) {
     data = data.frame("Value" = cell.groups[[1]][,j], "Trait" = coldata[,trait])
-    model  <- stats::lm(Value ~ Trait, data = data)
-    res.aov <- data %>% rstatix::anova_test(Value ~ Trait)
+    model  <- stats::lm(.data$Value ~ .data$Trait, data = data)
+    res.aov <- data %>% rstatix::anova_test(.data$Value ~ .data$Trait)
 
     ##Extract only significant features
     if(round(res.aov$p, 5) <= pval){
@@ -75,7 +75,7 @@ cell.groups.fisher.test = function(cell.groups, coldata, trait, pval = 0.05){
 
   for (j in 1:ncol(cell.groups[[1]])) {
     coldata = coldata %>%
-      dplyr::mutate(level = cell.groups[[1]][,j],
+      dplyr::mutate(level = .data$cell.groups[[1]][,j],
                     Cells_level = ifelse(level > summary(level)[3], 'High', 'Low'))
 
     contingency = table(coldata[,"Cells_level"], coldata[,trait])
@@ -137,7 +137,7 @@ extract_cells = function(groups){
   })
 
   extracted_names <- unname(extracted_names)
-  extracted_names <- unique(na.omit(extracted_names))
+  extracted_names <- unique(stats::na.omit(extracted_names))
   return(extracted_names)
 }
 
@@ -384,12 +384,12 @@ calculate_dendrogram_cuts = function(cell.group.dendrogram, n_cuts = NULL){
 
   cuts = list()
   for (i in 1:length(cell.group.dendrogram)) {
-    dend_heights <- dendextend::heights_per_k.dendrogram(as.dendrogram(cell.group.dendrogram[[i]])) #Calculate dendrogram heights
+    dend_heights <- dendextend::heights_per_k.dendrogram(stats::as.dendrogram(cell.group.dendrogram[[i]])) #Calculate dendrogram heights
 
     sorted_heights <- sort(dend_heights) # Sort heights
     height_diffs <- diff(sorted_heights) # Calculate differences between consecutive heights
 
-    buffer <- max(median(height_diffs[height_diffs > 0]), 1) # Buffer: take the median of the non-zero differences
+    buffer <- max(stats::median(height_diffs[height_diffs > 0]), 1) # Buffer: take the median of the non-zero differences
 
     # Add and rest the buffer to the minimum and maximum height respectively to avoid trivial cuts (clusters with 1 feature and cluster with all features)
     min_height <- min(sorted_heights) + buffer
@@ -534,8 +534,8 @@ module_enrich = function(tpm.counts, module_color, hub_genes, tfs_universe){
   targets_genes = tpm.counts[rownames(tpm.counts)%in%targets,] #Extract gene expression from targets
   targets_genes = targets_genes[order(matrixStats::rowVars(targets_genes), decreasing = T),][1:round(0.2*nrow(targets_genes)),] #Keep only highly variable targets (20%)
 
-  entrz <- AnnotationDbi::select(org.Hs.eg.db, keys = rownames(targets_genes), columns = "ENTREZID", keytype = "SYMBOL") #Change to EntrezID
-  universe = AnnotationDbi::select(org.Hs.eg.db, keys = rownames(tpm.counts), columns = "ENTREZID", keytype = "SYMBOL") #Change to EntrezID
+  entrz <- AnnotationDbi::select(org.Hs.eg.db::org.Hs.eg.db, keys = rownames(targets_genes), columns = "ENTREZID", keytype = "SYMBOL") #Change to EntrezID
+  universe = AnnotationDbi::select(org.Hs.eg.db::org.Hs.eg.db, keys = rownames(tpm.counts), columns = "ENTREZID", keytype = "SYMBOL") #Change to EntrezID
 
   reac <- ReactomePA::enrichPathway(gene    = entrz$ENTREZID,
                                     organism     = 'human',

@@ -18,7 +18,7 @@ cell.groups.computation(
 
 \item{cell.dendrograms}{A list with the cell dendrograms corresponding to each TF module obtained from identify.cell.groups()}
 
-\item{return}{}
+\item{return}{Boolean value whether to return or not the .csv files with cell groups composition}
 }
 \value{
 A matrix with the cell groups scores across samples

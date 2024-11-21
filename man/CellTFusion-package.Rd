@@ -3,9 +3,9 @@
 \docType{package}
 \name{CellTFusion-package}
 \alias{CellTFusion-package}
-\title{CellTFusion: Integration of immune-cell type deconvolution features and prior-knowledge networks of TFs-gene interactions to characterize potential cell states of the tumor microenvironment using bulk RNAseq data.}
+\title{CellTFusion: Integration of immune-cell type deconvolution features and prior-knowledge networks of TFs-gene interactions to characterize potential cell states of the tumor microenvironment using bulk RNAseq data}
 \description{
-CellTFusion is an approach that its based on the notion that gene regulation is heavily affected by the action of transcription factors and that transition and maintenance of cell biological states is usually controlled by these proteins. Capturing these different cell states via deconvolution can help in predicting response to therapies. CellTFusion looks to characterize immune patient profiles based on coordinated TF activity profiles, estimating the cell states, in complement to the cell types abundance estimated by immune deconvolution.
+CellTFusion is an approach to characterize immune patient profiles based on coordinated TF activity profiles, estimating the cell states, in complement to the cell types abundance estimated by immune deconvolution
 }
 \author{
 \strong{Maintainer}: Marcelo Hurtado \email{marcelo.hurt137@gmail.com} (\href{https://orcid.org/0009-0004-6712-0864}{ORCID})

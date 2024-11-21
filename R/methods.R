@@ -76,7 +76,7 @@ CellTFusion = function(raw.counts, coldata = NULL, cbsx.mail = NULL, cbsx.token 
 #' @param deconvolution A dataframe containing the deconvolution features after processing. It corresponds to the first element of the list obtained from compute.deconvolution.analysis()
 #' @param tfs.module.network A list with the network information of TF modules obtained from compute.WTCNA()
 #' @param cell.dendrograms A list with the cell dendrograms corresponding to each TF module obtained from identify.cell.groups()
-#' @param return
+#' @param return Boolean value whether to return or not the .csv files with cell groups composition
 #'
 #' @return A matrix with the cell groups scores across samples
 #' @export
@@ -136,7 +136,7 @@ cell.groups.computation = function(deconvolution, tfs.module.network, cell.dendr
   cell.groups[[1]] = cell.groups[[1]] %>%
     data.frame() %>%
     mutate("Samples" = rownames(deconvolution)) %>%
-    column_to_rownames("Samples")
+    tibble::column_to_rownames("Samples")
 
   cell.groups = remove.cell.groups.corr(cell.groups, module_colors, threshold = 0.9)
 
@@ -214,7 +214,7 @@ compute_cell_groups_signatures = function(deconv_res, network_res, cell_groups, 
 
     deconv_subgroups_values = c()
     for (i in 1:length(base_groups)) {
-      deconv_subgroups_values = cbind(deconv_subgroups_values, rowMedians(as.matrix(deconvolution_test[,base_groups[[i]]]))) #Compute median using base groups
+      deconv_subgroups_values = cbind(deconv_subgroups_values, Biobase::rowMedians(as.matrix(deconvolution_test[,base_groups[[i]]]))) #Compute median using base groups
     }
     colnames(deconv_subgroups_values) = names(base_groups)
     deconvolution_test = cbind(deconv_subgroups_values, deconvolution_test) # Join cell subgroups and deconv features
@@ -269,7 +269,7 @@ compute_cell_groups_signatures = function(deconv_res, network_res, cell_groups, 
 compute.metada.association = function(tfs.modules, coldata, pval = 0.05, width = 20, height = 8){
   ###Association with categorical variables
   coldata_categorical = coldata %>%
-    dplyr::select(where(is.character)|where(is.factor))
+    dplyr::select(dplyr::where(is.character)|dplyr::where(is.factor))
 
   if(ncol(coldata_categorical)!=0){
     data = cbind(tfs.modules, coldata_categorical)
@@ -280,7 +280,7 @@ compute.metada.association = function(tfs.modules, coldata, pval = 0.05, width =
       for (j in (ncol(tfs.modules)+1):ncol(data)) {
         module <- names(data[i])
         trait <- names(data[j])
-        avz <- broom::tidy(aov(data[,i] ~ data[,j], data = data))
+        avz <- broom::tidy(stats::aov(data[,i] ~ data[,j], data = data))
         pvals[i,contador] = avz$p.value[1]
         fvals[i,contador] = avz$statistic[1]
         contador = contador + 1
@@ -315,7 +315,7 @@ compute.metada.association = function(tfs.modules, coldata, pval = 0.05, width =
 
   ###Association with quantitative variables
   coldata_quantitative = coldata %>%
-    dplyr::select(where(is.numeric))
+    dplyr::select(dplyr::where(is.numeric))
 
   if(ncol(coldata_quantitative)!=0){
     moduleTraitCor = WGCNA::cor(tfs.modules, coldata_quantitative, method = "p");
@@ -327,7 +327,7 @@ compute.metada.association = function(tfs.modules, coldata, pval = 0.05, width =
     if(ncol(coldata_categorical)!=0){
       textMatrix = cbind(textMatrix, textMatrix2)
       moduleTraitPvalue = cbind(moduleTraitPvalue, pvals)
-      simulated_corr = matrix(runif(n=nrow(pvals)*ncol(pvals), min=-0.1, max=0.1), nrow = nrow(pvals), ncol = ncol(pvals))
+      simulated_corr = matrix(stats::runif(n=nrow(pvals)*ncol(pvals), min=-0.1, max=0.1), nrow = nrow(pvals), ncol = ncol(pvals))
       colnames(simulated_corr) = colnames(pvals)
       moduleTraitCor = cbind(moduleTraitCor, simulated_corr)
     }
@@ -618,15 +618,20 @@ compute.modules.relationship <- function(tfs_network, matB, file_name, width = 8
 
 #' Computes TF-modules pathway activities
 #'
-#'Pathways activity computation is done by using a multivariate linear model (mlm) and a resource that leverages a large compendium of publicly available signaling perturbation experiments to yield a common core of pathway responsive genes for human PROGENy. Users can also select to do an additional Gene Set Variation Analysis (GSVA) using hallmark signatures or predefined gene sets.
+#'Pathways activity computation is done by using a multivariate linear model (mlm) and a resource that leverages a large compendium of publicly available signaling perturbation experiments to yield a common core of pathway responsive genes for human PROGENy (Schubert M et al, 2018). Users can also select to do an additional Gene Set Variation Analysis (GSVA) using hallmark signatures or predefined gene sets.
 #'
 #' @param RNA.tpm gene expression matrix normalized with genes as rows and samples as columns.
-#' @param gene_sets either hallmark signatures extracted from the Molecular Signature Database (MSigDB) [2] or predefined gene sets signatures. Default is NULL.
+#' @param gene_sets either hallmark signatures extracted from the Molecular Signature Database (MSigDB) or predefined gene sets signatures. Default is NULL.
 #' @param paths whether external database wants to be provided for computing the pathway activities
 #'
 #' @return A matrix with PRGENy pathway activities (samples as rows and pathways as columns). If gene_sets is not NULL it will also return a matrix containing the signatures scores (samples as rows and signatures as columns).
 #'
 #' @export
+#'
+#' @references
+#'
+#' Schubert M, Klinger B, Klünemann M, Sieber A, Uhlitz F, Sauer S, Garnett MJ, Blüthgen N, Saez-Rodriguez J. 2018. Perturbation-response genes reveal signaling footprints in cancer gene expression. Nature Communications: 10.1038/s41467-017-02391-6.
+#'
 #'
 #' @examples
 #'
@@ -731,28 +736,28 @@ compute.survival.analysis = function(features, survival.data, time_unit, p.value
       data_for_model$coxHL <- ifelse(cphmodel$linear.predictors >= quantiles, 'High', "Low")
 
       # Perform Kaplan-Meier based on coxHL
-      km_fit <- survival::survfit(Surv(time, status) ~ coxHL, data = data_for_model)
+      km_fit <- survival::survfit(survival::Surv(time, status) ~ coxHL, data = data_for_model)
 
-      pval <- surv_pvalue(km_fit, data = data_for_model)$pval #Performs log-rank test to see whether both survival curves are significantly different
+      pval <- survminer::surv_pvalue(km_fit, data = data_for_model)$pval #Performs log-rank test to see whether both survival curves are significantly different
 
       if (!is.na(pval) && pval < p.value) {
         significant_combinations[[contador]] <- formula
         names(significant_combinations)[contador] = paste0("Formula_", contador)
 
         pdf(paste0("Results/SurvPlot_", names(significant_combinations)[contador]), width = 10, height = 5, onefile = FALSE)
-        print(ggsurvplot(km_fit,
-                         data = data_for_model,
-                         size = 1,
-                         palette = c("#E7B800", "#2E9FDF"),
-                         conf.int.style = "step",
-                         pval = TRUE,
-                         risk.table = TRUE,
-                         risk.table.col = "strata",
-                         legend.labs = c("High", "Low"),
-                         risk.table.height = 0.3,
-                         ggtheme = theme_grey(),
-                         title = paste0("Cox PH for ", names(significant_combinations)[contador]),
-                         xlab = paste0("Time to death/recurrence/progression (", time_unit, ")")
+        print(survminer::ggsurvplot(km_fit,
+                                    data = data_for_model,
+                                    size = 1,
+                                    palette = c("#E7B800", "#2E9FDF"),
+                                    conf.int.style = "step",
+                                    pval = TRUE,
+                                    risk.table = TRUE,
+                                    risk.table.col = "strata",
+                                    legend.labs = c("High", "Low"),
+                                    risk.table.height = 0.3,
+                                    ggtheme = theme_grey(),
+                                    title = paste0("Cox PH for ", names(significant_combinations)[contador]),
+                                    xlab = paste0("Time to death/recurrence/progression (", time_unit, ")")
         ))
         dev.off()
         contador = contador + 1
@@ -788,7 +793,7 @@ compute.TF.network.classification = function(tf.network, pathways.features, retu
   tf.network = data.frame(tf.network[[1]])
   pathways.features = data.frame(pathways.features)
 
-  moduleTraitCor = cor(tf.network, pathways.features, method = "p")
+  moduleTraitCor = WGCNA::cor(tf.network, pathways.features, method = "p")
   # moduleTraitPvalue = corPvalueStudent(moduleTraitCor, nrow(tf.network))
   # significance_threshold <- 0.05
   #
@@ -800,7 +805,7 @@ compute.TF.network.classification = function(tf.network, pathways.features, retu
   # moduleTraitCor <- moduleTraitCor[, non_constant_columns] # Filter out the columns that are constant or all zeros
 
   ### Find clusters
-  silhouette = fviz_nbclust(moduleTraitCor, hcut, method = "silhouette", k.max = nrow(moduleTraitCor)-1)
+  silhouette = factoextra::fviz_nbclust(moduleTraitCor, hcut, method = "silhouette", k.max = nrow(moduleTraitCor)-1)
   k_cluster = as.numeric(silhouette$data$clusters[which.max(silhouette$data$y)])
 
   if(return){
@@ -809,21 +814,21 @@ compute.TF.network.classification = function(tf.network, pathways.features, retu
     dev.off()
   }
 
-  hc_modules = hclust(dist(moduleTraitCor), method = "ward.D2")
-  dend_pathways = as.dendrogram(hc_modules)
+  hc_modules = stats::hclust(stats::dist(moduleTraitCor), method = "ward.D2")
+  dend_pathways = stats::as.dendrogram(hc_modules)
 
   if(return){
     pdf(paste0("Results/TFs_modules_clusters"))
     plot(dend_pathways, cex = 0.6)
-    rect.hclust(hc_modules, k = k_cluster, border = 2:5)
+    stats::rect.hclust(hc_modules, k = k_cluster, border = 2:5)
     dev.off()
   }
 
   ### Extract clusters
-  sub_grp <- cutree(hc_modules, k = k_cluster)
+  sub_grp <- dendextend::cutree(hc_modules, k = k_cluster)
 
   ### Plot PCA and biplot
-  p = fviz_cluster(list(data = moduleTraitCor, cluster = sub_grp))
+  p = factoextra::fviz_cluster(list(data = moduleTraitCor, cluster = sub_grp))
 
   if(return){
     pdf(paste0("Results/PCA_TFs_modules_clusters"))
@@ -831,8 +836,8 @@ compute.TF.network.classification = function(tf.network, pathways.features, retu
     dev.off()
   }
 
-  res.pca <- prcomp(moduleTraitCor,  scale = F)
-  p = fviz_pca_biplot(res.pca, label="all", select.var = list(contrib = 6), addEllipses=TRUE, ellipse.level=0.75)
+  res.pca <- stats::prcomp(moduleTraitCor,  scale = F)
+  p = factoextra::fviz_pca_biplot(res.pca, label="all", select.var = list(contrib = 6), addEllipses=TRUE, ellipse.level=0.75)
 
   if(return){
     pdf(paste0("Results/PCA_Biplot_TFs_modules_clusters"))
@@ -845,8 +850,8 @@ compute.TF.network.classification = function(tf.network, pathways.features, retu
   contribution <- (loadings^2)*100
   features = contribution %>%
     data.frame() %>%
-    rownames_to_column("Features") %>%
-    arrange(desc(PC1))
+    tibble::rownames_to_column("Features") %>%
+    dplyr::arrange(desc(PC1))
 
   if(return){
     pdf("Results/Pathways_contribution_pca.pdf", width = 12, height = 8)
@@ -872,10 +877,10 @@ compute.TF.network.classification = function(tf.network, pathways.features, retu
 
 #' Compute TF activity
 #'
-#' The function infers TFs activity based on a gene expression matrix using the VIPER algorithm from [1] and a collection of TF-genes interactions (CollecTRI or Dorothea) from the OmnipathR package [2]. Users can also input TFs-gene interactions from ARACNE [4,5].
+#' The function infers TFs activity based on a gene expression matrix using the VIPER algorithm from Alvarez et al. and a collection of TF-genes interactions (CollecTRI or Dorothea) from the OmnipathR package (Türei D et al. 2016). Users can also input TFs-gene interactions from ARACNE [4,5].
 #'
 #' @param RNA.counts Gene expression matrix with genes as rows and samples as columns, normalized either by TPM or other type of normalization.
-#' @param TF.collection TF-gene interactions collection matrix used to infer the TFs activity. Default argument is “CollecTRI”, other arguments accepted are “Dorothea” [3] or “ARACNE” [4,5] for input your own TF-gene collection.
+#' @param TF.collection TF-gene interactions collection matrix used to infer the TFs activity. Default argument is “CollecTRI”, other arguments accepted are “Dorothea” (Garcia-Alonso L et al. 2019) or “ARACNE” (Lachmann A et al. 2016, Margolin AA et al. 2006) for input your own TF-gene collection.
 #'
 #' If TF.collection = “ARACNE”, the user will need to specify the path where the network file is located. This should be a 3 columns text file, with the “regulator” in the first column, “target” in the second and “mutual information” in the third one. If TF.collection = “Dorothea” the list of confidence levels to return from regulons when selecting will be A, B, C and D.
 #'
@@ -887,10 +892,23 @@ compute.TF.network.classification = function(tf.network, pathways.features, retu
 #' @return A scaled matrix of inferred protein activity with samples as rows and TFs as columns.
 #' @export
 #'
+#' @references
+#' Alvarez, M., Shen, Y., Giorgi, F. et al. Functional characterization of somatic mutations in cancer using network-based inference of protein activity. Nat Genet 48, 838–847 (2016). https://doi.org/10.1038/ng.3593
+#'
+#' Türei D, Korcsmáros T, Saez-Rodriguez J. OmniPath: guidelines and gateway for literature-curated signaling pathway resources. Nat Methods. 2016 Nov 29;13(12):966-967. doi: 10.1038/nmeth.4077. PMID: 27898060.
+#'
+#' Garcia-Alonso L, Holland CH, Ibrahim MM, Turei D, Saez-Rodriguez J. Benchmark and integration of resources for the estimation of human transcription factor activities. Genome Research. 2019. DOI: 10.1101/gr.240663.118.
+#'
+#' Lachmann A, Giorgi FM, Lopez G, Califano A. ARACNe-AP: gene network reverse engineering through adaptive partitioning inference of mutual information. Bioinformatics. 2016 Jul 15;32(14):2233-5. doi: 10.1093/bioinformatics/btw216. Epub 2016 Apr 23.
+#'
+#' Margolin AA, Nemenman I, Basso K, Wiggins C, Stolovitzky G, Dalla Favera R, Califano A. ARACNE: an algorithm for the reconstruction of gene regulatory networks in a mammalian cellular context. BMC Bioinformatics. 2006 Mar 20;7 Suppl 1:S7. doi: 10.1186/1471-2105-7-S1-S7.
+#'
 #' @examples
 #'
 #' tfs = compute.TFs.activity(counts.normalized)
 #'
+#'
+
 compute.TFs.activity <- function(RNA.counts, TF.collection = "CollecTRI", min_targets_size = 5, tfs.pruned = FALSE){
 
   tfs2viper_regulons <- function(df){
@@ -917,14 +935,14 @@ compute.TFs.activity <- function(RNA.counts, TF.collection = "CollecTRI", min_ta
   if(TF.collection == "ARACNE"){
     cat("For ARACNE analysis you need to specify the path of your network file. Remember this file should be a 3 columns text file, with regulator in the first column, target in the second and mutual information in the third column")
     network_file = readline(prompt = "Path for network file from aracne (no quotes): ")
-    net_regulons <- aracne2regulon(network_file, as.matrix(RNA.counts), format = "3col")
+    net_regulons <- viper::aracne2regulon(network_file, as.matrix(RNA.counts), format = "3col")
   }
 
   if(tfs.pruned == TRUE){
-    net_regulons = pruneRegulon(net_regulons, cutoff = max_size_targets)
+    net_regulons = viper::pruneRegulon(net_regulons, cutoff = max_size_targets)
   }
 
-  sample_acts <- viper(as.matrix(RNA.counts), net_regulons, minsize = min_targets_size, verbose=F, method = "scale")
+  sample_acts <- viper::viper(as.matrix(RNA.counts), net_regulons, minsize = min_targets_size, verbose=F, method = "scale")
   message("TFs scores computed")
 
   return(data.frame(t(sample_acts)))
@@ -940,7 +958,7 @@ compute.TFs.activity <- function(RNA.counts, TF.collection = "CollecTRI", min_ta
 #' @param clustering.method Character string specifying the function to be used to calculate co-expression similarity for distance networks. Defaults to the function dist. Default method is “ward.D2”.
 #' @param minMod Integer indicating the minimum number of TFs allowed for each module. Default is 30.
 #'
-#' For more information about these parameters we invited the user to read the documentation in [1]. minMod must be carefully used as it will impact how many modules the user will have. Default value of 30 might hide modules composed of just a few TFs (around 10) that are giving an explanation of your dataset, so we invited the user to explore different options of values for this parameter.
+#' For more information about these parameters we invited the user to read the documentation in Langfelder, P et al, 2008. minMod must be carefully used as it will impact how many modules the user will have. Default value of 30 might hide modules composed of just a few TFs (around 10) that are giving an explanation of your dataset, so we invited the user to explore different options of values for this parameter.
 #'
 #' @param corr_mod Value from 0 to 1 used for merge modules in a second iteration. After the first TF-module construction, a correlation will take place between modules and modules correlated by a value higher than this threshold will be merged. Default value is 0.8.
 #' @param cor_type Type of correlation to be used for calculation of adjacency matrix and merging modules. Default is pearson “p”, other alternatives are spearman “s”.
@@ -954,6 +972,10 @@ compute.TFs.activity <- function(RNA.counts, TF.collection = "CollecTRI", min_ta
 #'
 #' @export
 #'
+#' @references
+#'
+#' Langfelder, P., Horvath, S. WGCNA: an R package for weighted correlation network analysis. BMC Bioinformatics 9, 559 (2008). https://doi.org/10.1186/1471-2105-9-559
+#'
 #' @examples
 #'
 #' network = compute.WTCNA(tfs, corr_mod = 0.9, clustering.method = "ward.D2", return = T)
@@ -963,15 +985,15 @@ compute.WTCNA <- function(TFs.matrix, network.type = "unsigned", clustering.meth
   cat("Creating weighted TF-coactivity network......................................................................\n\n")
   #####Choose parameter for scale-free network topology
   powers = c(c(1:10), seq(from = 12, to=20, by=1))
-  sft = pickSoftThreshold(TFs.matrix, powerVector = powers, verbose = 0, networkType = network.type)
+  sft = WGCNA::pickSoftThreshold(TFs.matrix, powerVector = powers, verbose = 0, networkType = network.type)
 
   if(return){
     pdf("Results/Soft Threshold")
     plot(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2],
          xlab="Soft Threshold (power)",ylab="Scale Free Topology Model Fit,signed R^2",type="n",
          main = paste("Scale independence"))
-    text(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2], labels=powers,cex=0.9,col="red");
-    abline(h=0.90,col="red")
+    graphics::text(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2], labels=powers,cex=0.9,col="red");
+    graphics::abline(h=0.90,col="red")
     dev.off()
   }
 
@@ -984,16 +1006,16 @@ compute.WTCNA <- function(TFs.matrix, network.type = "unsigned", clustering.meth
 
   #####Co-expression matrix using nodes adjacency and topological overlapping nodes
   cat("Calculating nodes adjacency and topological overlapping nodes.................................................\n\n")
-  adjacency = adjacency(TFs.matrix, power =softPower, type=network.type, corFnc = "cor", corOptions = list(use = cor_type))
-  TOM = TOMsimilarity(adjacency, TOMType = network.type)
+  adjacency = WGCNA::adjacency(TFs.matrix, power =softPower, type=network.type, corFnc = "cor", corOptions = list(use = cor_type))
+  TOM = WGCNA::TOMsimilarity(adjacency, TOMType = network.type)
   dissTOM = 1-TOM
 
   #####Unsupervised hierarchical clustering using dissimilarity matrix
-  geneTree = hclust(dist(dissTOM), method = clustering.method)
-  dynamicMods = cutreeDynamic(dendro = geneTree, distM = dissTOM,
-                              deepSplit = 2, pamRespectsDendro = FALSE,
-                              minClusterSize = minMod);
-  dynamicColors = labels2colors(dynamicMods)
+  geneTree = stats::hclust(stats::dist(dissTOM), method = clustering.method)
+  dynamicMods = dynamicTreeCut::cutreeDynamic(dendro = geneTree, distM = dissTOM,
+                                              deepSplit = 2, pamRespectsDendro = FALSE,
+                                              minClusterSize = minMod);
+  dynamicColors = WGCNA::labels2colors(dynamicMods)
 
   #####Remove variables and clean garbage
   rm(adjacency, TOM, dissTOM)
@@ -1001,18 +1023,18 @@ compute.WTCNA <- function(TFs.matrix, network.type = "unsigned", clustering.meth
 
   if(return){
     pdf("Results/Gene dendrogram and module colors")
-    plotDendroAndColors(geneTree, dynamicColors, "Dynamic Tree Cut",
-                        dendroLabels = FALSE, hang = 0.03,
-                        addGuide = TRUE, guideHang = 0.05,
-                        main = "Gene dendrogram and module colors")
+    WGCNA::plotDendroAndColors(geneTree, dynamicColors, "Dynamic Tree Cut",
+                               dendroLabels = FALSE, hang = 0.03,
+                               addGuide = TRUE, guideHang = 0.05,
+                               main = "Gene dendrogram and module colors")
     dev.off()
   }
 
   #####Calculate eigenvectors from modules
   cat("Calculating eigenvectors from modules.................................................\n\n")
-  MEList = moduleEigengenes(TFs.matrix, colors = dynamicColors, scale = F) #Data already scale
+  MEList = WGCNA::moduleEigengenes(TFs.matrix, colors = dynamicColors, scale = F) #Data already scale
   MEs = MEList$eigengenes
-  MEs = orderMEs(MEs)
+  MEs = WGCNA::orderMEs(MEs)
 
   print(paste0("Merging modules significantly correlated with ", corr_mod, "........"))
   merge = mergeModules(MEs, dynamicColors, corr_mod)
@@ -1029,14 +1051,14 @@ compute.WTCNA <- function(TFs.matrix, network.type = "unsigned", clustering.meth
 
   if(return){
     pdf("Results/Gene dendrogram and module colors after merging")
-    plotDendroAndColors(geneTree, dynamicColors, "Dynamic Tree Cut",
-                        dendroLabels = FALSE, hang = 0.03,
-                        addGuide = TRUE, guideHang = 0.05,
-                        main = "Gene dendrogram and module colors")
+    WGCNA::plotDendroAndColors(geneTree, dynamicColors, "Dynamic Tree Cut",
+                               dendroLabels = FALSE, hang = 0.03,
+                               addGuide = TRUE, guideHang = 0.05,
+                               main = "Gene dendrogram and module colors")
     dev.off()
   }
 
-  TFspropVar = propVarExplained(TFs.matrix, dynamicColors, MEs, corFnc = "cor", corOptions = "use = 'p'")
+  TFspropVar = WGCNA::propVarExplained(TFs.matrix, dynamicColors, MEs, corFnc = "cor", corOptions = "use = 'p'")
 
   output = list(MEs, dynamicColors, modtfs, TFspropVar)
   names(output) = c("TFs module matrix", "TFs colors", "TFs per module", "Proportion of variance")
@@ -1083,14 +1105,14 @@ identify_hub_TFs <- function(datExpr, TF.network, MM_thresh = 0.8, degree_thresh
   moduleMemberships <- sapply(unique(moduleColors), function(module) {
     genesInModule <- which(moduleColors == module)
     eigengene <- moduleEigengenes[, paste0("ME", module)]
-    cor(t(datExpr[genesInModule, ]), eigengene)
+    WGCNA::cor(t(datExpr[genesInModule, ]), eigengene)
   })
 
   # Calculate adjacency matrices and degrees
   adjacencyList <- lapply(unique(moduleColors), function(module) {
     genesInModule <- which(moduleColors == module)
     moduleData <- datExpr[genesInModule, ]
-    adjacency <- cor(t(moduleData))
+    adjacency <- WGCNA::cor(t(moduleData))
     adjacency[lower.tri(adjacency)] <- 0
     adjacency
   })
@@ -1122,7 +1144,7 @@ identify_hub_TFs <- function(datExpr, TF.network, MM_thresh = 0.8, degree_thresh
     allMemberships <- c(allMemberships, memberships)
 
     # Calculate the cutoff for the top 10% by degree
-    degreeCutoff <- quantile(degrees, degree_thresh)
+    degreeCutoff <- stats::quantile(degrees, degree_thresh)
 
     # Plot distribution of Degrees for the current module
     # degree_plot_data <- data.frame(Degree = degrees)
@@ -1222,9 +1244,9 @@ identify.cell.groups = function(features, tfs.modules.groups, cor_type = "p", cl
     TFmoduleTraitcor = TFmoduleTraitcor[rownames(TFmoduleTraitcor)%in%tfs.modules.groups[[i]], , drop=F]
     data_scaled = scale(t(TFmoduleTraitcor)) #Scale per TF module
     ###Dendogram by Module
-    d <- dist(data_scaled, method = distance.method)
+    d <- stats::dist(data_scaled, method = distance.method)
     d = d/sqrt(ncol(data_scaled)) #Adjust/Scale distance matrix for number of features to make dendrograms comparable
-    dendrogram <- hclust(d, method = clustering.method)
+    dendrogram <- stats::hclust(d, method = clustering.method)
     if(return){
       pdf(paste0("Results/Dendogram_cell_types_", names(features_vec)[[i]]), width = width, height = height)
       par(mar = c(5, 2, 4, 35)) #bottom, left, top, right

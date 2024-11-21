@@ -1,49 +1,62 @@
 Package: CellTFusion
-Title: Integration of immune-cell type deconvolution features and prior-knowledge networks of TFs-gene interactions to characterize potential cell states of the tumor microenvironment using bulk RNAseq data.
+Title: Integration of immune-cell type deconvolution features and prior-knowledge networks of TFs-gene interactions to characterize potential cell states of the tumor microenvironment using bulk RNAseq data
 Version: 0.0.0.9000
 Authors@R: 
     person("Marcelo", "Hurtado", , "marcelo.hurt137@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0009-0004-6712-0864"))
-Description: CellTFusion is an approach that its based on the notion that gene regulation is heavily affected by the action of transcription factors 
-             and that transition and maintenance of cell biological states is usually controlled by these proteins. Capturing these different cell states 
-             via deconvolution can help in predicting response to therapies. CellTFusion looks to characterize immune patient profiles based on coordinated 
-             TF activity profiles, estimating the cell states, in complement to the cell types abundance estimated by immune deconvolution.
+Description: CellTFusion is an approach to characterize immune patient profiles based on coordinated TF activity profiles, estimating the cell states, in complement to the cell types abundance estimated by immune deconvolution
 License: GPL (>= 3)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Imports: 
     ADImpute,
+    AnnotationDbi,
     Biobase,
+    Boruta,
     broom,
+    C50,
     caret,
     data.table,
     DeconRNASeq,
+    decoupleR,
     dendextend,
     doParallel,
     dplyr,
+    DWLS (>= 0.4),
+    dynamicTreeCut,
     enrichplot,
     EpiDISH,
+    factoextra,
     foreach,
     ggplot2,
     gplots,
+    graphics,
+    grDevices,
     GSVA,
     Hmisc,
     immunedeconv (>= 2.1.0),
     MatrixGenerics,
     matrixStats,
-    MCPcounter,
+    MCPcounter (>= 1.2.0),
     omnideconv (>= 0.1.0),
+    org.Hs.eg.db,
     parallel,
     purrr,
+    randomForest,
     ReactomePA,
+    rlang,
     rstatix,
     stats,
     stringr,
     survival,
+    survminer,
     tibble,
     tidyr,
     utils,
+    viper,
     WGCNA
 Remotes: 
-    omnideconv/immunedeconv
+    omnideconv/immunedeconv,
+    omnideconv/DWLS,
+    grst/MCPcounter

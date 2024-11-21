@@ -167,7 +167,7 @@ compute_methods_variable_signature = function(TPM_matrix, signatures, methods = 
     }
 
     for (i in 1:length(db)) {
-      signature <- read.delim(db[[i]], row.names=1)
+      signature <- utils::read.delim(db[[i]], row.names=1)
       signature_name =  stringr::str_split(basename(db[[i]]), "\\.")[[1]][1]
       if(!is.null(exclude) && signature_name %in% exclude) {
         next
@@ -401,7 +401,7 @@ compute_subgroups = function(deconvolution, thres_corr, file_name){
     }
     upper_tri <- get_upper_tri(similarity_matrix)
     x <- data.table::melt(upper_tri) %>%
-      data.table::na.omit() %>%
+      stats::na.omit() %>%
       dplyr::mutate_all(as.character)
     indice = 1
     subgroup = list()
@@ -436,7 +436,7 @@ compute_subgroups = function(deconvolution, thres_corr, file_name){
         data_sub = c()
         for(i in 1:length(cell_groups_similarity)){ #Create data frame with features subgroupped
           sub = data.frame(data[,colnames(data)%in%cell_groups_similarity[[i]]]) #Map features that are inside each subgroup from input (deconvolution)
-          sub$median = rowMedians(as.matrix(sub), useNames = FALSE) #Compute median of subgroups across patients
+          sub$median = Biobase::rowMedians(as.matrix(sub), useNames = FALSE) #Compute median of subgroups across patients
           data_sub = data.frame(cbind(data_sub, sub$median)) #Save median in a new data frame
           colnames(data_sub)[i] = names(cell_groups_similarity)[i]
           name = colnames(data)[which(!(colnames(data)%in%cell_groups_similarity[[i]]))]
@@ -523,7 +523,7 @@ compute_subgroups = function(deconvolution, thres_corr, file_name){
             #Take median expression of subgroups
             for(i in 1:length(subgroup)){ #Create data frame with features subgroupped
               sub = data.frame(data[,colnames(data)%in%subgroup[[i]]]) #Map features that are inside each subgroup from input (deconvolution)
-              sub$median = rowMedians(as.matrix(sub), useNames = FALSE) #Compute median of subgroup across patients
+              sub$median = Biobase::rowMedians(as.matrix(sub), useNames = FALSE) #Compute median of subgroup across patients
               data_sub = data.frame(cbind(data_sub, sub$median)) #Save median in a new data frame
               colnames(data_sub)[i] = names(subgroup)[i]
               name = colnames(data)[which(!(colnames(data)%in%subgroup[[i]]))]
@@ -1167,7 +1167,7 @@ computeCBSX_parallel = function(TPM_matrix, signatures, name, password, workers)
 
   cbsx = foreach::foreach (i=1:length(signatures), .combine=cbind) %dopar% {
     source("src/environment_set.R")
-    signature <- read.delim(signatures[[i]], row.names=1)
+    signature <- utils::read.delim(signatures[[i]], row.names=1)
     signature_name = stringr::str_split(basename(signatures[[i]]), "\\.")[[1]][1]
     computeCBSX(TPM_matrix, signature, name, password, signature_name)
   }
@@ -1216,7 +1216,6 @@ computeCBSX = function(TPM_matrix, signature_file, name, password, name_signatur
 #' deconrnaseq <- computeDeconRNASeq(TPM_matrix, signature, signature_name)
 #'
 computeDeconRNASeq = function(TPM_matrix, signature_file, name_signature){
-  require(DeconRNASeq)
   decon <- DeconRNASeq::DeconRNASeq(TPM_matrix, data.frame(signature_file))
   deconRNAseq = decon$out.all
   rownames(deconRNAseq) = colnames(TPM_matrix)
@@ -1247,7 +1246,7 @@ computeDWLS_parallel = function(TPM_matrix, signatures, workers){
 
   dwls = foreach::foreach (i=1:length(signatures), .combine=cbind) %dopar% {
     source("src/environment_set.R")
-    signature <- read.delim(signatures[[i]], row.names=1)
+    signature <- utils::read.delim(signatures[[i]], row.names=1)
     signature_name = stringr::str_split(basename(signatures[[i]]), "\\.")[[1]][1]
     computeDWLS(TPM_matrix, signature, signature_name)
   }
@@ -1271,7 +1270,6 @@ computeDWLS_parallel = function(TPM_matrix, signatures, workers){
 #' dwls <- computeDWLS(TPM_matrix, signature, signature_name)
 #'
 computeDWLS = function(TPM_matrix, signature_file, name_signature){
-  require(DWLS)
   genes = rownames(signature_file)
 
   signature_file <- signature_file %>%
@@ -1303,7 +1301,6 @@ computeDWLS = function(TPM_matrix, signature_file, name_signature){
 #' epidish <- computeEpiDISH(TPM_matrix, signature, signature_name)
 #'
 computeEpiDISH = function(TPM_matrix, signature_file, name_signature){
-  require(EpiDISH)
   epi <- EpiDISH::epidish(TPM_matrix, as.matrix(signature_file), method = "RPC", maxit = 200)
   epidish = epi$estF
 
@@ -1326,9 +1323,9 @@ computeEpiDISH = function(TPM_matrix, signature_file, name_signature){
 #' mcp = computeMCP(TPM_matrix, path_signatures)
 #'
 computeMCP <- function(TPM_matrix, genes_path) {
-  require(MCPcounter)
-  genes <- read.table(paste0(genes_path, "/MCPcounter/MCPcounter-genes.txt"), sep = "\t", stringsAsFactors = FALSE, header = TRUE, colClasses = "character", check.names = FALSE)
-  mcp <- MCPcounter.estimate(TPM_matrix, genes = genes, featuresType = "HUGO_symbols", probesets = NULL) %>%
+
+  genes <- utils::read.table(paste0(genes_path, "/MCPcounter/MCPcounter-genes.txt"), sep = "\t", stringsAsFactors = FALSE, header = TRUE, colClasses = "character", check.names = FALSE)
+  mcp <- MCPcounter::MCPcounter.estimate(TPM_matrix, genes = genes, featuresType = "HUGO_symbols", probesets = NULL) %>%
     t()
 
   colnames(mcp) = paste0("MCP_", colnames(mcp))
@@ -1349,7 +1346,7 @@ computeMCP <- function(TPM_matrix, genes_path) {
 #' quantiseq = computeQuantiseq(TPM_matrix)
 #'
 computeQuantiseq <- function(TPM_matrix) {
-  require(immunedeconv)
+
   TPM_matrix = TPM_matrix[rownames(TPM_matrix)%in%rownames(immunedeconv::dataset_racle$expr_mat),] #To avoid problems regarding gene names (quantiseq error)
 
   quantiseq = immunedeconv::deconvolute(TPM_matrix, "quantiseq", tumor = T) %>%
@@ -1374,7 +1371,6 @@ computeQuantiseq <- function(TPM_matrix) {
 #' xcell = computeXCell(TPM_matrix)
 #'
 computeXCell <- function(TPM_matrix) {
-  require(immunedeconv)
 
   xcell = immunedeconv::deconvolute(TPM_matrix, "xcell") %>%
     tibble::column_to_rownames("cell_type") %>%
@@ -1412,7 +1408,7 @@ correlation <- function(data) {
                   p_if_sig = ifelse(sig_p, p, NA),
                   r_if_sig = ifelse(sig_p, r, NA))
 
-  corr_df = na.omit(corr_df)  #remove the ones that are the same TFs (pval = NA)
+  corr_df = stats::na.omit(corr_df)  #remove the ones that are the same TFs (pval = NA)
   corr_df <- corr_df[which(corr_df$sig_p==T),]  #remove not significant
   corr_df <- corr_df[order(corr_df$r, decreasing = T),]
   corr_df$AbsR =  abs(corr_df$r)

@@ -14,7 +14,7 @@ compute.TFs.activity(
 \arguments{
 \item{RNA.counts}{Gene expression matrix with genes as rows and samples as columns, normalized either by TPM or other type of normalization.}
 
-\item{TF.collection}{TF-gene interactions collection matrix used to infer the TFs activity. Default argument is “CollecTRI”, other arguments accepted are “Dorothea” \link{3} or “ARACNE” \link{4,5} for input your own TF-gene collection.
+\item{TF.collection}{TF-gene interactions collection matrix used to infer the TFs activity. Default argument is “CollecTRI”, other arguments accepted are “Dorothea” (Garcia-Alonso L et al. 2019) or “ARACNE” (Lachmann A et al. 2016, Margolin AA et al. 2006) for input your own TF-gene collection.
 
 If TF.collection = “ARACNE”, the user will need to specify the path where the network file is located. This should be a 3 columns text file, with the “regulator” in the first column, “target” in the second and “mutual information” in the third one. If TF.collection = “Dorothea” the list of confidence levels to return from regulons when selecting will be A, B, C and D.}
 
@@ -28,10 +28,22 @@ Pruned the regulons will help to deal with statistical bias produced by TFs that
 A scaled matrix of inferred protein activity with samples as rows and TFs as columns.
 }
 \description{
-The function infers TFs activity based on a gene expression matrix using the VIPER algorithm from \link{1} and a collection of TF-genes interactions (CollecTRI or Dorothea) from the OmnipathR package \link{2}. Users can also input TFs-gene interactions from ARACNE \link{4,5}.
+The function infers TFs activity based on a gene expression matrix using the VIPER algorithm from Alvarez et al. and a collection of TF-genes interactions (CollecTRI or Dorothea) from the OmnipathR package (Türei D et al. 2016). Users can also input TFs-gene interactions from ARACNE \link{4,5}.
 }
 \examples{
 
 tfs = compute.TFs.activity(counts.normalized)
 
+
+}
+\references{
+Alvarez, M., Shen, Y., Giorgi, F. et al. Functional characterization of somatic mutations in cancer using network-based inference of protein activity. Nat Genet 48, 838–847 (2016). https://doi.org/10.1038/ng.3593
+
+Türei D, Korcsmáros T, Saez-Rodriguez J. OmniPath: guidelines and gateway for literature-curated signaling pathway resources. Nat Methods. 2016 Nov 29;13(12):966-967. doi: 10.1038/nmeth.4077. PMID: 27898060.
+
+Garcia-Alonso L, Holland CH, Ibrahim MM, Turei D, Saez-Rodriguez J. Benchmark and integration of resources for the estimation of human transcription factor activities. Genome Research. 2019. DOI: 10.1101/gr.240663.118.
+
+Lachmann A, Giorgi FM, Lopez G, Califano A. ARACNe-AP: gene network reverse engineering through adaptive partitioning inference of mutual information. Bioinformatics. 2016 Jul 15;32(14):2233-5. doi: 10.1093/bioinformatics/btw216. Epub 2016 Apr 23.
+
+Margolin AA, Nemenman I, Basso K, Wiggins C, Stolovitzky G, Dalla Favera R, Califano A. ARACNE: an algorithm for the reconstruction of gene regulatory networks in a mammalian cellular context. BMC Bioinformatics. 2006 Mar 20;7 Suppl 1:S7. doi: 10.1186/1471-2105-7-S1-S7.
 }

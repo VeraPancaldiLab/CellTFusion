@@ -9,7 +9,7 @@ compute.pathway.activity(RNA.tpm, gene_sets = NULL, paths = NULL)
 \arguments{
 \item{RNA.tpm}{gene expression matrix normalized with genes as rows and samples as columns.}
 
-\item{gene_sets}{either hallmark signatures extracted from the Molecular Signature Database (MSigDB) \link{2} or predefined gene sets signatures. Default is NULL.}
+\item{gene_sets}{either hallmark signatures extracted from the Molecular Signature Database (MSigDB) or predefined gene sets signatures. Default is NULL.}
 
 \item{paths}{whether external database wants to be provided for computing the pathway activities}
 }
@@ -17,10 +17,13 @@ compute.pathway.activity(RNA.tpm, gene_sets = NULL, paths = NULL)
 A matrix with PRGENy pathway activities (samples as rows and pathways as columns). If gene_sets is not NULL it will also return a matrix containing the signatures scores (samples as rows and signatures as columns).
 }
 \description{
-Pathways activity computation is done by using a multivariate linear model (mlm) and a resource that leverages a large compendium of publicly available signaling perturbation experiments to yield a common core of pathway responsive genes for human PROGENy. Users can also select to do an additional Gene Set Variation Analysis (GSVA) using hallmark signatures or predefined gene sets.
+Pathways activity computation is done by using a multivariate linear model (mlm) and a resource that leverages a large compendium of publicly available signaling perturbation experiments to yield a common core of pathway responsive genes for human PROGENy (Schubert M et al, 2018). Users can also select to do an additional Gene Set Variation Analysis (GSVA) using hallmark signatures or predefined gene sets.
 }
 \examples{
 
 pathways = compute.pathway.activity(counts.norm)
 
+}
+\references{
+Schubert M, Klinger B, Klünemann M, Sieber A, Uhlitz F, Sauer S, Garnett MJ, Blüthgen N, Saez-Rodriguez J. 2018. Perturbation-response genes reveal signaling footprints in cancer gene expression. Nature Communications: 10.1038/s41467-017-02391-6.
 }

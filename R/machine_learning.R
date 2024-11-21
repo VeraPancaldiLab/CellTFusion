@@ -36,7 +36,7 @@ compute.ML = function(raw.counts, normalized = F, clinical, trait, trait.positiv
   set.seed(seed)
 
   # Do stratified partition
-  index = createDataPartition(clinical[,trait], times = 1, p = partition, list = FALSE)
+  index = caret::createDataPartition(clinical[,trait], times = 1, p = partition, list = FALSE)
 
   # Normalize counts
   if(normalized == T){
@@ -78,8 +78,8 @@ compute.ML = function(raw.counts, normalized = F, clinical, trait, trait.positiv
   #Set training set
   train_data = cell.groups[[1]] %>%
     data.frame() %>%
-    mutate(Trait = traitData_train[,trait],
-           target = as.factor(ifelse(Trait == trait.positive, 'yes', 'no'))) %>%
+    dplyr::mutate(Trait = traitData_train[,trait],
+                  target = as.factor(ifelse(Trait == trait.positive, 'yes', 'no'))) %>%
     dplyr::select(-Trait)
 
   train_data$target <- factor(train_data$target, levels = c("no", "yes"))  # Order, just in case to ensure positive class is not well defined
@@ -95,8 +95,8 @@ compute.ML = function(raw.counts, normalized = F, clinical, trait, trait.positiv
     testing_set = compute_cell_groups_signatures(dt, network, cell.groups, features, deconv_test, tfs_test) #Cell groups projection
     #Extract target variable
     target = traitData_test %>%
-      mutate(target = ifelse(traitData_test[,trait] == trait.positive, "yes", "no")) %>%
-      pull(target)
+      dplyr::mutate(target = ifelse(traitData_test[,trait] == trait.positive, "yes", "no")) %>%
+      dplyr::pull(target)
 
     target = factor(target, levels = c("no", "yes"))
 
@@ -107,7 +107,7 @@ compute.ML = function(raw.counts, normalized = F, clinical, trait, trait.positiv
 
     }else{
       model = training[["Model"]] #Save best ML model based on the Accuracy/AUC from CV per partition
-      var_importance = varImp(model, scale = F) #Retrieve variable importance
+      var_importance = caret::varImp(model, scale = F) #Retrieve variable importance
       prediction = compute.prediction(model, testing_set, target)
     }
 
@@ -177,7 +177,7 @@ compute.bootstrap.ML = function(raw.counts, normalized = F, clinical, trait, tra
     stop("No iterations specified, please set a number")
   }else{
     if(is.null(workers)==T){
-      num_cores <- detectCores() - 1
+      num_cores <- parallel::detectCores() - 1
     }else{
       num_cores <- workers
     }
@@ -232,7 +232,7 @@ compute.bootstrap.ML = function(raw.counts, normalized = F, clinical, trait, tra
 
 
     # Run foreach loop using each random seed directly
-    foreach(iteration = seq_len(iterations), random.seed = sample.int(100000, iterations)) %dopar% {
+    foreach::foreach(iteration = seq_len(iterations), random.seed = sample.int(100000, iterations)) %dopar% {
 
       # Use absolute path for the source file to avoid path issues
       source("src/environment_set.R")
@@ -399,8 +399,8 @@ compute.k_fold_CV = function(model, k_folds, n_rep, stacking = F, metric = "Accu
 
   ######### Stratify K fold cross-validation
   #folds <- createFolds(train_data[,'target'], k = k_folds, returnTrain = T, list = T) #this for single folds
-  multifolds <- createMultiFolds(train_data[,'target'], k = k_folds, times = n_rep) #repeated folds
-  trainControl <- trainControl(index = multifolds, method="repeatedcv", number=k_folds, repeats=n_rep, verboseIter = F, allowParallel = F, classProbs = TRUE, savePredictions=T)
+  multifolds <- caret::createMultiFolds(train_data[,'target'], k = k_folds, times = n_rep) #repeated folds
+  trainControl <- caret::trainControl(index = multifolds, method="repeatedcv", number=k_folds, repeats=n_rep, verboseIter = F, allowParallel = F, classProbs = TRUE, savePredictions=T)
 
   ######### Feature selection across folds (DEPRECATED)
   # if(boruta == T){
@@ -424,11 +424,9 @@ compute.k_fold_CV = function(model, k_folds, n_rep, stacking = F, metric = "Accu
   fit.treebag <- train(target~., data = train_data, method = "treebag", metric = "Accuracy",trControl = trainControl)
 
   ################## RF
-  require(randomForest)
   fit.rf <- train(target~., data = train_data, method = "rf", metric = "Accuracy",trControl = trainControl)
 
   ################## C5.0
-  require(C50)
   fit.c50 <- train(target~., data = train_data, method = "C5.0", metric = "Accuracy",trControl = trainControl)
 
   ################## LG - Logistic Regression
@@ -1019,16 +1017,16 @@ compute.k_fold_CV = function(model, k_folds, n_rep, stacking = F, metric = "Accu
     #Save variable importance of each base model
     importance = list()
     for (i in 1:length(base_models$Base_models)) {
-      importance[[i]] = varImp(ensembleResults[[base_models$Base_models[i]]], scale = F)
+      importance[[i]] = caret::varImp(ensembleResults[[base_models$Base_models[i]]], scale = F)
       names(importance)[i] = base_models$Base_models[i]
     }
 
     features_predictions = model_predictions %>%
       t() %>%
       data.frame() %>%
-      rownames_to_column("Models") %>%
+      tibble::rownames_to_column("Models") %>%
       filter(grepl(paste0("\\b(", paste(base_models$Base_models, collapse = "|"), ")\\b"), Models)) %>%
-      column_to_rownames("Models") %>%
+      tibble::column_to_rownames("Models") %>%
       t() %>%
       data.frame()
 
@@ -1262,14 +1260,14 @@ calculate_auc_resample = function(obs, pred){
   prob_obs = data.frame("yes" = pred, "obs" = obs)
 
   prob_obs = prob_obs %>%
-    arrange(desc(pred)) %>% #need to be arrange for apply cumulative sum
-    mutate(is_yes = (obs == "yes"),
+    arrange(desc(.data$pred)) %>% #need to be arrange for apply cumulative sum
+    mutate(is_yes = (.data$obs == "yes"),
            tp = cumsum(is_yes), #true positive above the threshold - cumulative sum to refer to the threshold
            fp = cumsum(!is_yes), #false positive above the threshold - cumulative sum to refer to the threshold
-           fpr = fp/sum(obs == 'no'),
-           tpr = tp/sum(obs == 'yes'))
+           fpr = fp/sum(.data$obs == 'no'),
+           tpr = tp/sum(.data$obs == 'yes'))
 
-  auc_value = calculate_auc(prob_obs$fpr, prob_obs$tpr)
+  auc_value = calculate_auroc(prob_obs$fpr, prob_obs$tpr)
 
   return(auc_value)
 }
@@ -1383,19 +1381,19 @@ calculate_feature_importance_stacking = function(base_importance, base_models, m
     check = ncol(base_importance[[base_models[i]]][["importance"]])
     if(check > 1){ #Means importance is given for each class
       base_importance_list[[i]] = base_importance[[base_models[i]]][["importance"]] %>%
-        rownames_to_column("features") %>%
-        dplyr::select(features, yes) %>% #Take only importance for positive class
-        dplyr::rename(importance = yes)
+        tibble::rownames_to_column("features") %>%
+        dplyr::select(.data$features, .data$yes) %>% #Take only importance for positive class
+        dplyr::rename(importance = .data$yes)
     }else{
       base_importance_list[[i]] = base_importance[[base_models[i]]][["importance"]] %>%
-        rownames_to_column("features") %>%
-        dplyr::rename(importance = Overall)
+        tibble::rownames_to_column("features") %>%
+        dplyr::rename(importance = .data$Overall)
     }
     names(base_importance_list)[i] = base_models[i]
   }
 
   #Combine all base model importances in one data frame and add the model name
-  combined_importance <- bind_rows(
+  combined_importance <- dplyr::bind_rows(
     lapply(names(base_importance_list), function(model) {
       base_importance_list[[model]] %>%
         data.frame() %>%
@@ -1404,8 +1402,8 @@ calculate_feature_importance_stacking = function(base_importance, base_models, m
   )
 
   #Calculate base-models importance for the meta-learner
-  meta_importance = varImp(meta_learner, scale = F)$importance %>%
-    rownames_to_column("model")
+  meta_importance = caret::varImp(meta_learner, scale = F)$importance %>%
+    tibble::rownames_to_column("model")
 
   #Normalize the meta-learner's importance scores so they sum to 1
   meta_importance$Overall <- meta_importance$Overall / sum(meta_importance$Overall)
@@ -1501,32 +1499,32 @@ choose_base_models = function(models, metric = "Accuracy"){
   if(metric == "Accuracy"){
     #Prepare data frame for ploting
     resample_df <- resample_df %>%
-      group_by(model) %>%
-      summarise(Accuracy = mean(Accuracy))
+      group_by(.data$model) %>%
+      summarise(Accuracy = mean(.data$Accuracy))
   }else if(metric == "AUC"){
     #Prepare data frame for ploting
     resample_df <- resample_df %>%
-      group_by(model) %>%
-      summarise(AUC = mean(AUC))
+      group_by(.data$model) %>%
+      summarise(AUC = mean(.data$AUC))
   }
 
   resample_df <- resample_df %>%
     mutate(Category = case_when(
-      model %in% c("BAG", "C50", "CART", "RF") ~ "Tree-based Methods",
-      model %in% c("GLM", "LDA", "GLMNET", "LASSO", "RIDGE") ~ "Linear Models",
-      model %in% c("KNN", "SVM_linear", "SVM_radial") ~ "Instance-based Methods",
+      .data$model %in% c("BAG", "C50", "CART", "RF") ~ "Tree-based Methods",
+      .data$model %in% c("GLM", "LDA", "GLMNET", "LASSO", "RIDGE") ~ "Linear Models",
+      .data$model %in% c("KNN", "SVM_linear", "SVM_radial") ~ "Instance-based Methods",
       TRUE ~ "Other"  # In case there are models not in the above lists
     ))
 
   if(metric == "Accuracy"){
     groupped_df <- resample_df %>%
-      group_by(Category) %>%
-      filter(Accuracy == max(Accuracy)) %>%
+      group_by(.data$Category) %>%
+      filter(Accuracy == max(.data$Accuracy)) %>%
       ungroup()
   }else if(metric == "AUC"){
     groupped_df <- resample_df %>%
-      group_by(Category) %>%
-      filter(AUC == max(AUC)) %>%
+      group_by(.data$Category) %>%
+      filter(AUC == max(.data$AUC)) %>%
       ungroup()
   }else{
     stop("No metric defined")
@@ -1534,7 +1532,7 @@ choose_base_models = function(models, metric = "Accuracy"){
 
   #Retrieve top model based on accuracy/auc
   base_models <- groupped_df %>%
-    pull(model)
+    pull(.data$model)
 
   return(base_models)
 }
@@ -1683,19 +1681,19 @@ compute_cv_AUC = function(models, file_name = NULL, base_models = F, return = T)
 compute.boruta <- function(data, seed, fix = TRUE) {
 
   set.seed(seed)
-  boruta_output <- Boruta(target ~ ., data = data, doTrace = 0)
+  boruta_output <- Boruta::Boruta(target ~ ., data = data, doTrace = 0)
 
   if (fix) {
-    roughFixMod <- TentativeRoughFix(boruta_output)
+    roughFixMod <- Boruta::TentativeRoughFix(boruta_output)
     boruta_output <- roughFixMod
   }
 
-  imps <- attStats(boruta_output)
+  imps <- Boruta::attStats(boruta_output)
   decision <- as.character(imps$decision)
 
   res <- imps %>%
     data.frame() %>%
-    rownames_to_column("Variable") %>%
+    tibble::rownames_to_column("Variable") %>%
     dplyr::select(-decision)
 
 
@@ -1829,7 +1827,7 @@ feature.selection.boruta <- function(data, iterations = NULL, fix, doParallel = 
       stop("No iterations specified for running in parallel, please set a number. If you want to run feature selection once consider setting doParallel = F")
     }else{
       if(is.null(workers)==T){
-        num_cores <- detectCores() - 1
+        num_cores <- parallel::detectCores() - 1
       }else{
         num_cores <- workers
       }
@@ -1845,7 +1843,7 @@ feature.selection.boruta <- function(data, iterations = NULL, fix, doParallel = 
       #   }, mc.cores = num_cores)
       # })
 
-      res <- foreach(seed = sample.int(100000, iterations)) %dopar% {
+      res <- foreach::foreach(seed = sample.int(100000, iterations)) %dopar% {
 
         source("src/environment_set.R")
 
@@ -1998,12 +1996,12 @@ get_pooled_roc_curves = function(file.name){
                     "Cohort" = file.name)
 
   mean_auc_roc = data %>%
-    group_by(Cohort) %>%
-    dplyr::summarize(meanAUROC = mean(AUC_roc))
+    group_by(.data$Cohort) %>%
+    dplyr::summarize(meanAUROC = mean(.data$AUC_roc))
 
   mean_auc_prc = data %>%
-    group_by(Cohort) %>%
-    dplyr::summarize(meanAUPRC = mean(AUC_prc))
+    group_by(.data$Cohort) %>%
+    dplyr::summarize(meanAUPRC = mean(.data$AUC_prc))
 
   # Plot boxplot with mean AUC annotations
   plot_roc = ggplot(data, aes(x = Cohort, y = AUC_roc, fill = Cohort)) +
