@@ -40,6 +40,7 @@ Imports:
     matrixStats,
     MCPcounter (>= 1.2.0),
     omnideconv (>= 0.1.0),
+    OmnipathR (>= 3.10.1),
     org.Hs.eg.db,
     parallel,
     purrr,
@@ -56,7 +57,11 @@ Imports:
     utils,
     viper,
     WGCNA
-Remotes: 
+Remotes:  
     omnideconv/immunedeconv,
     omnideconv/DWLS,
-    grst/MCPcounter
+    grst/MCPcounter,
+    saezlab/OmnipathR
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
