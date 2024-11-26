@@ -4,13 +4,7 @@
 \alias{compute.prediction.stacked}
 \title{Compute prediction using stacking approach}
 \usage{
-compute.prediction.stacked(
-  super.learner,
-  test_data,
-  target,
-  ml.models,
-  base.models
-)
+\method{compute}{prediction.stacked}(super.learner, test_data, target, ml.models, base.models)
 }
 \arguments{
 \item{super.learner}{Meta-learner model}

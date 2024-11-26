@@ -25,10 +25,17 @@ Upload CellTFusion functions
 source("../src/environment_set.R")
 ```
 
+Read test files
+```{r}
+raw.counts = read.csv("Counts_test.csv", row.names = 1) 
+traitData = read.csv("TraitData_test.csv", row.names = 1)
+```
+
 0.2. TFs inference: Needs normalized counts
 ```{r}
 counts.norm = data.frame(ADImpute::NormalizeTPM(raw.counts, log = T)) 
 tfs = compute.TFs.activity(counts.norm)
+write.csv(tfs, "TFs_test.csv")
 ```
 
 Once features have been calculated we can start analyzing our data using CellTFusion
@@ -36,6 +43,7 @@ Once features have been calculated we can start analyzing our data using CellTFu
 1. TFs network construction
 ```{r}
 network = compute.WTCNA(tfs, corr_mod = 0.9, clustering.method = "ward.D2", return = T) 
+saveRDS(network, "network.rds")
 #Association of TFs modules with clinical data
 compute.metada.association(network[[1]], traitData, pval = 0.05, width = 10) 
 ```
@@ -43,12 +51,14 @@ compute.metada.association(network[[1]], traitData, pval = 0.05, width = 10)
 1.2. Modules characterization
 ```{r}
 hub_tfs = identify_hub_TFs(t(tfs), network, MM_thresh = 0.8, degree_thresh = 0.9)
+saveRDS(hub_tfs, "hubTFs.rds")
 compute.modules.enrichment(counts.norm, hub_tfs)
 ```
 
 2. Pathways activity inference
 ```{r}
 pathways = compute.pathway.activity(counts.norm)
+write.csv(pathways, "Pathways_test.csv")
 #Association of TFs modules with pathways
 compute.modules.relationship(network[[1]], pathways, "Pathways_Progeny-TFs_Modules", width = 15)
 ```
@@ -63,6 +73,7 @@ compute.modules.relationship(network[[1]], dt[[1]], "Deconvolution-TFs_Modules",
 4. Cell groups identification
 ```{r}
 tfs.modules.clusters = compute.TF.network.classification(network, pathways, return = T)
+saveRDS(tfs.modules.clusters, "TF_clusters.rds")
 corr_modules = compute.modules.relationship(network[[1]], dt[[1]], return = T, plot = F)
 cell_dendrograms = identify.cell.groups(corr_modules, tfs.modules.clusters, height = 20, return = T)
 ```

@@ -4,13 +4,7 @@
 \alias{compute.metada.association}
 \title{Compute metadata association between TF-modules and clinical data}
 \usage{
-compute.metada.association(
-  tfs.modules,
-  coldata,
-  pval = 0.05,
-  width = 20,
-  height = 8
-)
+\method{compute}{metada.association}(tfs.modules, coldata, pval = 0.05, width = 20, height = 8)
 }
 \arguments{
 \item{tfs.modules}{A matrix of TF modules scores across samples obtained from compute.WTCNA()}

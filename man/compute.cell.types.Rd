@@ -4,7 +4,7 @@
 \alias{compute.cell.types}
 \title{Cell types split from deconvolution}
 \usage{
-compute.cell.types(data)
+\method{compute}{cell.types}(data)
 }
 \arguments{
 \item{data}{A matrix with the deconvolution results}

@@ -4,7 +4,7 @@
 \alias{compute.modules.relationship}
 \title{Compute modules relationship}
 \usage{
-compute.modules.relationship(
+\method{compute}{modules.relationship}(
   tfs_network,
   matB,
   file_name,

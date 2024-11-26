@@ -4,7 +4,7 @@
 \alias{compute.deconvolution.preprocessing}
 \title{Compute deconvolution preprocessing}
 \usage{
-compute.deconvolution.preprocessing(deconv)
+\method{compute}{deconvolution.preprocessing}(deconv)
 }
 \arguments{
 \item{deconv}{A dataframe with the unprocessed deconvolution features}

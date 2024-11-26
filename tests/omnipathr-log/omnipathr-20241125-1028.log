@@ -1,0 +1,221 @@
+[2024-11-25 10:28:14] [INFO]    [OmnipathR] Welcome to OmnipathR!
+[2024-11-25 10:28:14] [TRACE]   [OmnipathR] Reading JSON from `/home/marcelo.hurtado/.cache/OmnipathR/cache.json` (encoding: UTF-8).
+[2024-11-25 10:28:14] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2024-11-25 10:28:14] [INFO]    [OmnipathR] Initialized cache: `/home/marcelo.hurtado/.cache/OmnipathR`.
+[2024-11-25 10:28:14] [TRACE]   [OmnipathR] Reading JSON from `/home/marcelo.hurtado/.cache/R/renv/library/CellTFusion-1e1035fa/R-4.3/x86_64-pc-linux-gnu/OmnipathR/db/db_def.json` (encoding: UTF-8).
+[2024-11-25 10:28:14] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2024-11-25 10:28:14] [TRACE]   [OmnipathR] Reading JSON from `/home/marcelo.hurtado/.cache/R/renv/library/CellTFusion-1e1035fa/R-4.3/x86_64-pc-linux-gnu/OmnipathR/internal/magic_bytes.json` (encoding: UTF-8).
+[2024-11-25 10:28:14] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2024-11-25 10:28:14] [TRACE]   [OmnipathR] Reading JSON from `/home/marcelo.hurtado/.cache/R/renv/library/CellTFusion-1e1035fa/R-4.3/x86_64-pc-linux-gnu/OmnipathR/internal/urls.json` (encoding: UTF-8).
+[2024-11-25 10:28:14] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2024-11-25 10:28:14] [TRACE]   [OmnipathR] Reading JSON from `/home/marcelo.hurtado/.cache/R/renv/library/CellTFusion-1e1035fa/R-4.3/x86_64-pc-linux-gnu/OmnipathR/internal/id_types.json` (encoding: UTF-8).
+[2024-11-25 10:28:14] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2024-11-25 10:45:37] [INFO]    [OmnipathR] Loading database `Ensembl and OMA organism names`.
+[2024-11-25 10:45:37] [TRACE]   [OmnipathR] Reading JSON from `/home/marcelo.hurtado/.cache/OmnipathR/cache.json` (encoding: UTF-8).
+[2024-11-25 10:45:37] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2024-11-25 10:45:37] [INFO]    [OmnipathR] Looking up in cache `https://www.ensembl.org/info/about/species.html`: key=7332486db7400730697234bad76ca0c8e4d00799, no version available.
+[2024-11-25 10:45:37] [TRACE]   [OmnipathR] Reading JSON from `/home/marcelo.hurtado/.cache/OmnipathR/cache.json` (encoding: UTF-8).
+[2024-11-25 10:45:37] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2024-11-25 10:45:37] [INFO]    [OmnipathR] Created new version for cache record 7332486db7400730697234bad76ca0c8e4d00799: version 1.
+[2024-11-25 10:45:37] [TRACE]   [OmnipathR] Cache file path: /home/marcelo.hurtado/.cache/OmnipathR/7332486db7400730697234bad76ca0c8e4d00799-1.html
+[2024-11-25 10:45:37] [INFO]    [OmnipathR] Retrieving URL: `https://www.ensembl.org/info/about/species.html`
+[2024-11-25 10:45:37] [TRACE]   [OmnipathR] Attempt 1/3: `https://www.ensembl.org/info/about/species.html`
+[2024-11-25 10:45:37] [TRACE]   [OmnipathR] HTTP 200
+[2024-11-25 10:45:37] [INFO]    [OmnipathR] Download ready [key=7332486db7400730697234bad76ca0c8e4d00799, version=1]
+[2024-11-25 10:45:37] [TRACE]   [OmnipathR] Reading JSON from `/home/marcelo.hurtado/.cache/OmnipathR/cache.json` (encoding: UTF-8).
+[2024-11-25 10:45:37] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2024-11-25 10:45:37] [INFO]    [OmnipathR] Cache item `7332486db7400730697234bad76ca0c8e4d00799` version 1: status changed from `unknown` to `ready`.
+[2024-11-25 10:45:38] [TRACE]   [OmnipathR] Looking up in cache: `https://omabrowser.org/All/oma-species.txt`.
+[2024-11-25 10:45:38] [INFO]    [OmnipathR] Cache record does not exist: `https://omabrowser.org/All/oma-species.txt`
+[2024-11-25 10:45:38] [TRACE]   [OmnipathR] Could not find in cache, initiating download: `https://omabrowser.org/All/oma-species.txt`.
+[2024-11-25 10:45:38] [TRACE]   [OmnipathR] Reading JSON from `/home/marcelo.hurtado/.cache/OmnipathR/cache.json` (encoding: UTF-8).
+[2024-11-25 10:45:38] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2024-11-25 10:45:38] [TRACE]   [OmnipathR] Reading JSON from `/home/marcelo.hurtado/.cache/OmnipathR/cache.json` (encoding: UTF-8).
+[2024-11-25 10:45:38] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2024-11-25 10:45:38] [INFO]    [OmnipathR] Cache item `30e690cbb55dfc63b5903ab337f34ffc2f4be397` version 1: status changed from `unknown` to `started`.
+[2024-11-25 10:45:38] [TRACE]   [OmnipathR] Exporting object to RDS: `/home/marcelo.hurtado/.cache/OmnipathR/30e690cbb55dfc63b5903ab337f34ffc2f4be397-1.rds`.
+[2024-11-25 10:45:38] [INFO]    [OmnipathR] Retrieving URL: `https://omabrowser.org/All/oma-species.txt`
+[2024-11-25 10:45:38] [TRACE]   [OmnipathR] Attempt 1/3: `https://omabrowser.org/All/oma-species.txt`
+[2024-11-25 10:45:38] [TRACE]   [OmnipathR] Exported RDS to `/home/marcelo.hurtado/.cache/OmnipathR/30e690cbb55dfc63b5903ab337f34ffc2f4be397-1.rds`.
+[2024-11-25 10:45:38] [INFO]    [OmnipathR] Download ready [key=30e690cbb55dfc63b5903ab337f34ffc2f4be397, version=1]
+[2024-11-25 10:45:38] [TRACE]   [OmnipathR] Reading JSON from `/home/marcelo.hurtado/.cache/OmnipathR/cache.json` (encoding: UTF-8).
+[2024-11-25 10:45:38] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2024-11-25 10:45:38] [INFO]    [OmnipathR] Cache item `30e690cbb55dfc63b5903ab337f34ffc2f4be397` version 1: status changed from `started` to `ready`.
+[2024-11-25 10:45:38] [INFO]    [OmnipathR] Loaded database `Ensembl and OMA organism names`.
+[2024-11-25 10:45:38] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=evidences,sources,references,curation_effort&license=academic`
+[2024-11-25 10:45:38] [INFO]    [OmnipathR] Cache record does not exist: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=evidences,sources,references,curation_effort&license=academic`
+[2024-11-25 10:45:38] [TRACE]   [OmnipathR] Looking up in cache: `http://no-tls.omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=evidences,sources,references,curation_effort&license=academic`
+[2024-11-25 10:45:38] [INFO]    [OmnipathR] Cache record does not exist: `http://no-tls.omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=evidences,sources,references,curation_effort&license=academic`
+[2024-11-25 10:45:38] [TRACE]   [OmnipathR] Attempting `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=evidences,sources,references,curation_effort&license=academic`
+[2024-11-25 10:45:38] [INFO]    [OmnipathR] Retrieving URL: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=evidences,sources,references,curation_effort&license=academic`
+[2024-11-25 10:45:38] [TRACE]   [OmnipathR] Attempt 1/3: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=evidences,sources,references,curation_effort&license=academic`
+[2024-11-25 10:45:45] [INFO]    [OmnipathR] Successfully retrieved: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=evidences,sources,references,curation_effort&license=academic`
+[2024-11-25 10:45:45] [TRACE]   [OmnipathR] Reading JSON from `/home/marcelo.hurtado/.cache/OmnipathR/cache.json` (encoding: UTF-8).
+[2024-11-25 10:45:45] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2024-11-25 10:45:45] [TRACE]   [OmnipathR] Reading JSON from `/home/marcelo.hurtado/.cache/OmnipathR/cache.json` (encoding: UTF-8).
+[2024-11-25 10:45:45] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2024-11-25 10:45:45] [INFO]    [OmnipathR] Cache item `099e7af92f71a88d7560d65cea14c1970f66c0b6` version 1: status changed from `unknown` to `started`.
+[2024-11-25 10:45:45] [TRACE]   [OmnipathR] Exporting object to RDS: `/home/marcelo.hurtado/.cache/OmnipathR/099e7af92f71a88d7560d65cea14c1970f66c0b6-1.rds`.
+[2024-11-25 10:45:45] [TRACE]   [OmnipathR] Exported RDS to `/home/marcelo.hurtado/.cache/OmnipathR/099e7af92f71a88d7560d65cea14c1970f66c0b6-1.rds`.
+[2024-11-25 10:45:45] [INFO]    [OmnipathR] Download ready [key=099e7af92f71a88d7560d65cea14c1970f66c0b6, version=1]
+[2024-11-25 10:45:45] [TRACE]   [OmnipathR] Reading JSON from `/home/marcelo.hurtado/.cache/OmnipathR/cache.json` (encoding: UTF-8).
+[2024-11-25 10:45:45] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2024-11-25 10:45:45] [INFO]    [OmnipathR] Cache item `099e7af92f71a88d7560d65cea14c1970f66c0b6` version 1: status changed from `started` to `ready`.
+[2024-11-25 10:45:45] [TRACE]   [OmnipathR] Converting JSON column `evidences` to list.
+[2024-11-25 10:46:20] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=evidences,sources,references,curation_effort&license=academic`
+[2024-11-25 10:46:20] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/099e7af92f71a88d7560d65cea14c1970f66c0b6-1.rds`.
+[2024-11-25 10:46:20] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=evidences,sources,references,curation_effort&license=academic`
+[2024-11-25 10:46:20] [TRACE]   [OmnipathR] Converting JSON column `evidences` to list.
+[2024-11-25 10:46:22] [TRACE]   [OmnipathR] Restricting interaction records to datasets: collectri; and resources: any
+[2024-11-25 10:46:25] [TRACE]   [OmnipathR] Filtering evidence columns: positive, negative, directed, undirected; to datasets: collectri; and resources: any
+[2024-11-25 10:46:53] [SUCCESS] [OmnipathR] Downloaded 64495 interactions.
+[2024-11-25 11:04:23] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=evidences,sources,references,curation_effort&license=academic`
+[2024-11-25 11:04:24] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/099e7af92f71a88d7560d65cea14c1970f66c0b6-1.rds`.
+[2024-11-25 11:04:24] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=evidences,sources,references,curation_effort&license=academic`
+[2024-11-25 11:04:24] [TRACE]   [OmnipathR] Converting JSON column `evidences` to list.
+[2024-11-25 11:04:26] [TRACE]   [OmnipathR] Restricting interaction records to datasets: collectri; and resources: any
+[2024-11-25 11:04:29] [TRACE]   [OmnipathR] Filtering evidence columns: positive, negative, directed, undirected; to datasets: collectri; and resources: any
+[2024-11-25 11:04:53] [SUCCESS] [OmnipathR] Downloaded 64495 interactions.
+[2024-11-25 11:06:34] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=evidences,sources,references,curation_effort&license=academic`
+[2024-11-25 11:06:34] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/099e7af92f71a88d7560d65cea14c1970f66c0b6-1.rds`.
+[2024-11-25 11:06:34] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=evidences,sources,references,curation_effort&license=academic`
+[2024-11-25 11:06:34] [TRACE]   [OmnipathR] Converting JSON column `evidences` to list.
+[2024-11-25 11:06:36] [TRACE]   [OmnipathR] Restricting interaction records to datasets: collectri; and resources: any
+[2024-11-25 11:06:38] [TRACE]   [OmnipathR] Filtering evidence columns: positive, negative, directed, undirected; to datasets: collectri; and resources: any
+[2024-11-25 11:07:07] [SUCCESS] [OmnipathR] Downloaded 64495 interactions.
+[2024-11-25 11:07:28] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=evidences,sources,references,curation_effort&license=academic`
+[2024-11-25 11:07:28] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/099e7af92f71a88d7560d65cea14c1970f66c0b6-1.rds`.
+[2024-11-25 11:07:28] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=evidences,sources,references,curation_effort&license=academic`
+[2024-11-25 11:07:28] [TRACE]   [OmnipathR] Converting JSON column `evidences` to list.
+[2024-11-25 11:07:30] [TRACE]   [OmnipathR] Restricting interaction records to datasets: collectri; and resources: any
+[2024-11-25 11:07:32] [TRACE]   [OmnipathR] Filtering evidence columns: positive, negative, directed, undirected; to datasets: collectri; and resources: any
+[2024-11-25 11:08:00] [SUCCESS] [OmnipathR] Downloaded 64495 interactions.
+[2024-11-25 11:11:02] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=evidences,sources,references,curation_effort&license=academic`
+[2024-11-25 11:11:02] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/099e7af92f71a88d7560d65cea14c1970f66c0b6-1.rds`.
+[2024-11-25 11:11:02] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=evidences,sources,references,curation_effort&license=academic`
+[2024-11-25 11:11:02] [TRACE]   [OmnipathR] Converting JSON column `evidences` to list.
+[2024-11-25 11:11:04] [TRACE]   [OmnipathR] Restricting interaction records to datasets: collectri; and resources: any
+[2024-11-25 11:11:05] [TRACE]   [OmnipathR] Filtering evidence columns: positive, negative, directed, undirected; to datasets: collectri; and resources: any
+[2024-11-25 11:11:29] [SUCCESS] [OmnipathR] Downloaded 64495 interactions.
+[2024-11-25 11:14:34] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=evidences,sources,references,curation_effort&license=academic`
+[2024-11-25 11:14:34] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/099e7af92f71a88d7560d65cea14c1970f66c0b6-1.rds`.
+[2024-11-25 11:14:34] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=evidences,sources,references,curation_effort&license=academic`
+[2024-11-25 11:14:34] [TRACE]   [OmnipathR] Converting JSON column `evidences` to list.
+[2024-11-25 11:14:36] [TRACE]   [OmnipathR] Restricting interaction records to datasets: collectri; and resources: any
+[2024-11-25 11:14:38] [TRACE]   [OmnipathR] Filtering evidence columns: positive, negative, directed, undirected; to datasets: collectri; and resources: any
+[2024-11-25 11:15:08] [SUCCESS] [OmnipathR] Downloaded 64495 interactions.
+[2024-11-25 11:33:05] [TRACE]   [OmnipathR] Reading JSON from `https://omnipathdb.org/resources` (encoding: UTF-8).
+[2024-11-25 11:33:05] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2024-11-25 11:33:06] [TRACE]   [OmnipathR] Reading JSON from `https://omnipathdb.org/resources` (encoding: UTF-8).
+[2024-11-25 11:33:06] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2024-11-25 11:33:06] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/annotations?resources=PROGENy&license=academic`
+[2024-11-25 11:33:06] [INFO]    [OmnipathR] Cache record does not exist: `https://omnipathdb.org/annotations?resources=PROGENy&license=academic`
+[2024-11-25 11:33:06] [TRACE]   [OmnipathR] Looking up in cache: `http://no-tls.omnipathdb.org/annotations?resources=PROGENy&license=academic`
+[2024-11-25 11:33:06] [INFO]    [OmnipathR] Cache record does not exist: `http://no-tls.omnipathdb.org/annotations?resources=PROGENy&license=academic`
+[2024-11-25 11:33:06] [TRACE]   [OmnipathR] Attempting `https://omnipathdb.org/annotations?resources=PROGENy&license=academic`
+[2024-11-25 11:33:06] [INFO]    [OmnipathR] Retrieving URL: `https://omnipathdb.org/annotations?resources=PROGENy&license=academic`
+[2024-11-25 11:33:06] [TRACE]   [OmnipathR] Attempt 1/3: `https://omnipathdb.org/annotations?resources=PROGENy&license=academic`
+[2024-11-25 11:33:13] [INFO]    [OmnipathR] Successfully retrieved: `https://omnipathdb.org/annotations?resources=PROGENy&license=academic`
+[2024-11-25 11:33:13] [TRACE]   [OmnipathR] Reading JSON from `/home/marcelo.hurtado/.cache/OmnipathR/cache.json` (encoding: UTF-8).
+[2024-11-25 11:33:13] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2024-11-25 11:33:13] [TRACE]   [OmnipathR] Reading JSON from `/home/marcelo.hurtado/.cache/OmnipathR/cache.json` (encoding: UTF-8).
+[2024-11-25 11:33:13] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2024-11-25 11:33:13] [INFO]    [OmnipathR] Cache item `3492392585ba05414edfae46801492076437d7e7` version 1: status changed from `unknown` to `started`.
+[2024-11-25 11:33:13] [TRACE]   [OmnipathR] Exporting object to RDS: `/home/marcelo.hurtado/.cache/OmnipathR/3492392585ba05414edfae46801492076437d7e7-1.rds`.
+[2024-11-25 11:33:14] [TRACE]   [OmnipathR] Exported RDS to `/home/marcelo.hurtado/.cache/OmnipathR/3492392585ba05414edfae46801492076437d7e7-1.rds`.
+[2024-11-25 11:33:14] [INFO]    [OmnipathR] Download ready [key=3492392585ba05414edfae46801492076437d7e7, version=1]
+[2024-11-25 11:33:14] [TRACE]   [OmnipathR] Reading JSON from `/home/marcelo.hurtado/.cache/OmnipathR/cache.json` (encoding: UTF-8).
+[2024-11-25 11:33:14] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2024-11-25 11:33:14] [INFO]    [OmnipathR] Cache item `3492392585ba05414edfae46801492076437d7e7` version 1: status changed from `started` to `ready`.
+[2024-11-25 11:33:14] [SUCCESS] [OmnipathR] Downloaded 700239 annotation records.
+[2024-11-25 11:45:04] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=evidences,sources,references,curation_effort&license=academic`
+[2024-11-25 11:45:05] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/099e7af92f71a88d7560d65cea14c1970f66c0b6-1.rds`.
+[2024-11-25 11:45:05] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=evidences,sources,references,curation_effort&license=academic`
+[2024-11-25 11:45:05] [TRACE]   [OmnipathR] Converting JSON column `evidences` to list.
+[2024-11-25 11:45:06] [TRACE]   [OmnipathR] Restricting interaction records to datasets: collectri; and resources: any
+[2024-11-25 11:45:08] [TRACE]   [OmnipathR] Filtering evidence columns: positive, negative, directed, undirected; to datasets: collectri; and resources: any
+[2024-11-25 11:45:32] [SUCCESS] [OmnipathR] Downloaded 64495 interactions.
+[2024-11-25 11:45:35] [TRACE]   [OmnipathR] Reading JSON from `https://omnipathdb.org/resources` (encoding: UTF-8).
+[2024-11-25 11:45:35] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2024-11-25 11:45:35] [TRACE]   [OmnipathR] Reading JSON from `https://omnipathdb.org/resources` (encoding: UTF-8).
+[2024-11-25 11:45:35] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2024-11-25 11:45:35] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/annotations?resources=PROGENy&license=academic`
+[2024-11-25 11:45:36] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/3492392585ba05414edfae46801492076437d7e7-1.rds`.
+[2024-11-25 11:45:36] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/annotations?resources=PROGENy&license=academic`
+[2024-11-25 11:45:36] [SUCCESS] [OmnipathR] Loaded 700239 annotation records from cache.
+[2024-11-25 11:48:44] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=evidences,sources,references,curation_effort&license=academic`
+[2024-11-25 11:48:44] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/099e7af92f71a88d7560d65cea14c1970f66c0b6-1.rds`.
+[2024-11-25 11:48:44] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=evidences,sources,references,curation_effort&license=academic`
+[2024-11-25 11:48:44] [TRACE]   [OmnipathR] Converting JSON column `evidences` to list.
+[2024-11-25 11:48:46] [TRACE]   [OmnipathR] Restricting interaction records to datasets: collectri; and resources: any
+[2024-11-25 11:48:48] [TRACE]   [OmnipathR] Filtering evidence columns: positive, negative, directed, undirected; to datasets: collectri; and resources: any
+[2024-11-25 11:49:17] [SUCCESS] [OmnipathR] Downloaded 64495 interactions.
+[2024-11-25 11:49:21] [TRACE]   [OmnipathR] Reading JSON from `https://omnipathdb.org/resources` (encoding: UTF-8).
+[2024-11-25 11:49:21] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2024-11-25 11:49:21] [TRACE]   [OmnipathR] Reading JSON from `https://omnipathdb.org/resources` (encoding: UTF-8).
+[2024-11-25 11:49:21] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2024-11-25 11:49:21] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/annotations?resources=PROGENy&license=academic`
+[2024-11-25 11:49:22] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/3492392585ba05414edfae46801492076437d7e7-1.rds`.
+[2024-11-25 11:49:22] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/annotations?resources=PROGENy&license=academic`
+[2024-11-25 11:49:22] [SUCCESS] [OmnipathR] Loaded 700239 annotation records from cache.
+[2024-11-25 11:50:40] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=evidences,sources,references,curation_effort&license=academic`
+[2024-11-25 11:50:40] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/099e7af92f71a88d7560d65cea14c1970f66c0b6-1.rds`.
+[2024-11-25 11:50:40] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=evidences,sources,references,curation_effort&license=academic`
+[2024-11-25 11:50:40] [TRACE]   [OmnipathR] Converting JSON column `evidences` to list.
+[2024-11-25 11:50:42] [TRACE]   [OmnipathR] Restricting interaction records to datasets: collectri; and resources: any
+[2024-11-25 11:50:44] [TRACE]   [OmnipathR] Filtering evidence columns: positive, negative, directed, undirected; to datasets: collectri; and resources: any
+[2024-11-25 11:51:08] [SUCCESS] [OmnipathR] Downloaded 64495 interactions.
+[2024-11-25 11:51:17] [TRACE]   [OmnipathR] Reading JSON from `https://omnipathdb.org/resources` (encoding: UTF-8).
+[2024-11-25 11:51:17] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2024-11-25 11:51:17] [TRACE]   [OmnipathR] Reading JSON from `https://omnipathdb.org/resources` (encoding: UTF-8).
+[2024-11-25 11:51:17] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2024-11-25 11:51:17] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/annotations?resources=PROGENy&license=academic`
+[2024-11-25 11:51:18] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/3492392585ba05414edfae46801492076437d7e7-1.rds`.
+[2024-11-25 11:51:18] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/annotations?resources=PROGENy&license=academic`
+[2024-11-25 11:51:18] [SUCCESS] [OmnipathR] Loaded 700239 annotation records from cache.
+[2024-11-25 11:56:00] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=evidences,sources,references,curation_effort&license=academic`
+[2024-11-25 11:56:00] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/099e7af92f71a88d7560d65cea14c1970f66c0b6-1.rds`.
+[2024-11-25 11:56:00] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=evidences,sources,references,curation_effort&license=academic`
+[2024-11-25 11:56:00] [TRACE]   [OmnipathR] Converting JSON column `evidences` to list.
+[2024-11-25 11:56:02] [TRACE]   [OmnipathR] Restricting interaction records to datasets: collectri; and resources: any
+[2024-11-25 11:56:03] [TRACE]   [OmnipathR] Filtering evidence columns: positive, negative, directed, undirected; to datasets: collectri; and resources: any
+[2024-11-25 11:56:28] [SUCCESS] [OmnipathR] Downloaded 64495 interactions.
+[2024-11-25 11:56:36] [TRACE]   [OmnipathR] Reading JSON from `https://omnipathdb.org/resources` (encoding: UTF-8).
+[2024-11-25 11:56:36] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2024-11-25 11:56:37] [TRACE]   [OmnipathR] Reading JSON from `https://omnipathdb.org/resources` (encoding: UTF-8).
+[2024-11-25 11:56:37] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2024-11-25 11:56:37] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/annotations?resources=PROGENy&license=academic`
+[2024-11-25 11:56:38] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/3492392585ba05414edfae46801492076437d7e7-1.rds`.
+[2024-11-25 11:56:38] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/annotations?resources=PROGENy&license=academic`
+[2024-11-25 11:56:38] [SUCCESS] [OmnipathR] Loaded 700239 annotation records from cache.
+[2024-11-25 12:05:06] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=evidences,sources,references,curation_effort&license=academic`
+[2024-11-25 12:05:06] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/099e7af92f71a88d7560d65cea14c1970f66c0b6-1.rds`.
+[2024-11-25 12:05:06] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=evidences,sources,references,curation_effort&license=academic`
+[2024-11-25 12:05:06] [TRACE]   [OmnipathR] Converting JSON column `evidences` to list.
+[2024-11-25 12:05:09] [TRACE]   [OmnipathR] Restricting interaction records to datasets: collectri; and resources: any
+[2024-11-25 12:05:10] [TRACE]   [OmnipathR] Filtering evidence columns: positive, negative, directed, undirected; to datasets: collectri; and resources: any
+[2024-11-25 12:05:33] [SUCCESS] [OmnipathR] Downloaded 64495 interactions.
+[2024-11-25 12:05:42] [TRACE]   [OmnipathR] Reading JSON from `https://omnipathdb.org/resources` (encoding: UTF-8).
+[2024-11-25 12:05:42] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2024-11-25 12:05:42] [TRACE]   [OmnipathR] Reading JSON from `https://omnipathdb.org/resources` (encoding: UTF-8).
+[2024-11-25 12:05:42] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2024-11-25 12:05:42] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/annotations?resources=PROGENy&license=academic`
+[2024-11-25 12:05:43] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/3492392585ba05414edfae46801492076437d7e7-1.rds`.
+[2024-11-25 12:05:43] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/annotations?resources=PROGENy&license=academic`
+[2024-11-25 12:05:43] [SUCCESS] [OmnipathR] Loaded 700239 annotation records from cache.
+[2024-11-25 13:18:38] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=evidences,sources,references,curation_effort&license=academic`
+[2024-11-25 13:18:38] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/099e7af92f71a88d7560d65cea14c1970f66c0b6-1.rds`.
+[2024-11-25 13:18:38] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=evidences,sources,references,curation_effort&license=academic`
+[2024-11-25 13:18:38] [TRACE]   [OmnipathR] Converting JSON column `evidences` to list.
+[2024-11-25 13:18:40] [TRACE]   [OmnipathR] Restricting interaction records to datasets: collectri; and resources: any
+[2024-11-25 13:18:42] [TRACE]   [OmnipathR] Filtering evidence columns: positive, negative, directed, undirected; to datasets: collectri; and resources: any
+[2024-11-25 13:19:05] [SUCCESS] [OmnipathR] Downloaded 64495 interactions.
+[2024-11-25 13:19:13] [TRACE]   [OmnipathR] Reading JSON from `https://omnipathdb.org/resources` (encoding: UTF-8).
+[2024-11-25 13:19:13] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2024-11-25 13:19:14] [TRACE]   [OmnipathR] Reading JSON from `https://omnipathdb.org/resources` (encoding: UTF-8).
+[2024-11-25 13:19:14] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2024-11-25 13:19:14] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/annotations?resources=PROGENy&license=academic`
+[2024-11-25 13:19:14] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/3492392585ba05414edfae46801492076437d7e7-1.rds`.
+[2024-11-25 13:19:14] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/annotations?resources=PROGENy&license=academic`
+[2024-11-25 13:19:14] [SUCCESS] [OmnipathR] Loaded 700239 annotation records from cache.
+[2024-11-25 16:19:17] [TRACE]   [OmnipathR] Removing database `Ensembl and OMA organism names` (not used in the past 10800 seconds)

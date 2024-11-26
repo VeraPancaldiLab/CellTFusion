@@ -4,7 +4,7 @@
 \alias{compute.boruta}
 \title{Compute boruta algorithm}
 \usage{
-compute.boruta(data, seed, fix = TRUE)
+\method{compute}{boruta}(data, seed, fix = TRUE)
 }
 \arguments{
 \item{data}{A dataframe with the target column name as "target" and the features to test}

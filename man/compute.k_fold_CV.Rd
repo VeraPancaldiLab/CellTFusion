@@ -4,7 +4,7 @@
 \alias{compute.k_fold_CV}
 \title{Compute k fold cross validation}
 \usage{
-compute.k_fold_CV(
+\method{compute}{k_fold_CV}(
   model,
   k_folds,
   n_rep,

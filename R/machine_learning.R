@@ -484,7 +484,7 @@ compute.k_fold_CV = function(model, k_folds, n_rep, stacking = F, metric = "Accu
 
     fit.treebag$resample = fit.treebag$resample %>%
       mutate(AUC = auc) %>%
-      select(AUC, everything())
+      dplyr::select(AUC, everything())
 
     ## Integrate average CV AUCs into results
     fit.treebag$results = fit.treebag$results %>%
@@ -986,7 +986,7 @@ compute.k_fold_CV = function(model, k_folds, n_rep, stacking = F, metric = "Accu
   #Remove models with same predictions across samples (not able to make distinction)
   model_predictions <- lapply(model_predictions, function(df) {
     df = df %>%
-      select(where(~ n_distinct(.) > 1))
+      dplyr::select(where(~ n_distinct(.) > 1))
 
     if(ncol(df) == 0){
       df = NULL
@@ -2064,7 +2064,7 @@ get_sensitivity_specificity = function(predictions, observed, ml.model){
            sensitivity = tp/sum(observed == 'yes'),
            fpr = fp/sum(observed == 'no'),
            specificity = 1 - fpr) %>%
-    select(sensitivity, specificity, fpr) %>%
+    dplyr::select(sensitivity, specificity, fpr) %>%
     mutate(model = ml.model)
 
   # starts_at_zero <- any(prob_obs$sensitivity == 0 & prob_obs$fpr == 0)

@@ -4,7 +4,7 @@
 \alias{compute.prediction}
 \title{Compute prediction}
 \usage{
-compute.prediction(model, test_data, target)
+\method{compute}{prediction}(model, test_data, target)
 }
 \arguments{
 \item{model}{Trained machine learning model}

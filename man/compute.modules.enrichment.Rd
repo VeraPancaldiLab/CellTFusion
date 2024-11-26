@@ -4,7 +4,7 @@
 \alias{compute.modules.enrichment}
 \title{Computes TFs enrichment using directed targets for each TFs module.}
 \usage{
-compute.modules.enrichment(RNA.tpm, hub_tfs)
+\method{compute}{modules.enrichment}(RNA.tpm, hub_tfs)
 }
 \arguments{
 \item{RNA.tpm}{A matrix with the normalized counts (samples as columns and genes symbols as rows)}

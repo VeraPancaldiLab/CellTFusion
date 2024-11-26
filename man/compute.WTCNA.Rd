@@ -4,7 +4,7 @@
 \alias{compute.WTCNA}
 \title{Compute Weighted TF-coactivity network analysis (WTCNA)}
 \usage{
-compute.WTCNA(
+\method{compute}{WTCNA}(
   TFs.matrix,
   network.type = "unsigned",
   clustering.method = "ward.D2",

@@ -4,7 +4,7 @@
 \alias{compute.survival.analysis}
 \title{Compute survival analysis}
 \usage{
-compute.survival.analysis(
+\method{compute}{survival.analysis}(
   features,
   survival.data,
   time_unit,

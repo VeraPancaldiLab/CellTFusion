@@ -4,7 +4,7 @@
 \alias{compute.LODO.ML}
 \title{Compute Leaving-one-dataset-out approach}
 \usage{
-compute.LODO.ML(
+\method{compute}{LODO.ML}(
   raw.counts,
   normalized = F,
   clinical,

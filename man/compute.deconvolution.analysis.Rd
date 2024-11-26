@@ -4,7 +4,7 @@
 \alias{compute.deconvolution.analysis}
 \title{Compute deconvolution processing}
 \usage{
-compute.deconvolution.analysis(
+\method{compute}{deconvolution.analysis}(
   deconvolution,
   corr,
   zero = 0.9,

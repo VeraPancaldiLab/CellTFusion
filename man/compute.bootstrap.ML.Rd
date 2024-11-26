@@ -4,7 +4,7 @@
 \alias{compute.bootstrap.ML}
 \title{Compute machine learning models across different splits of train and test}
 \usage{
-compute.bootstrap.ML(
+\method{compute}{bootstrap.ML}(
   raw.counts,
   normalized = F,
   clinical,

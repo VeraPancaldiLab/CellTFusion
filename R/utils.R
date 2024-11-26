@@ -264,7 +264,7 @@ mergeModules = function(data, colors, corr){
       if((module1 %in% colnames(data)) && (module2 %in% colnames(data))){
         colors[which(colors%in%c(substring(module1, 3), substring(module2, 3)))] = substring(module1, 3)
         data <- data %>%
-          dplyr::mutate(new_column = rowMeans(dplyr::select(., module1, module2))) %>%
+          dplyr::mutate(new_column = rowMeans(cbind(module1, module2))) %>%
           dplyr::rename(module1 = new_column) %>%
           dplyr::select(., -module1, -module2)
       }

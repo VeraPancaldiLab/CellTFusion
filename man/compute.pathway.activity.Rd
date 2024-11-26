@@ -4,7 +4,7 @@
 \alias{compute.pathway.activity}
 \title{Computes TF-modules pathway activities}
 \usage{
-compute.pathway.activity(RNA.tpm, gene_sets = NULL, paths = NULL)
+\method{compute}{pathway.activity}(RNA.tpm, gene_sets = NULL, paths = NULL)
 }
 \arguments{
 \item{RNA.tpm}{gene expression matrix normalized with genes as rows and samples as columns.}

@@ -4,7 +4,7 @@
 \alias{compute.ML}
 \title{Compute CellTFusion machine learning pipeline}
 \usage{
-compute.ML(
+\method{compute}{ML}(
   raw.counts,
   normalized = F,
   clinical,

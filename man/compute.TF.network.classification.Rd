@@ -4,7 +4,7 @@
 \alias{compute.TF.network.classification}
 \title{Compute TF network classification}
 \usage{
-compute.TF.network.classification(tf.network, pathways.features, return = T)
+\method{compute}{TF.network.classification}(tf.network, pathways.features, return = T)
 }
 \arguments{
 \item{tf.network}{List with the TF network information obtained from compute.WTCNA()}

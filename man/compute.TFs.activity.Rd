@@ -4,7 +4,7 @@
 \alias{compute.TFs.activity}
 \title{Compute TF activity}
 \usage{
-compute.TFs.activity(
+\method{compute}{TFs.activity}(
   RNA.counts,
   TF.collection = "CollecTRI",
   min_targets_size = 5,

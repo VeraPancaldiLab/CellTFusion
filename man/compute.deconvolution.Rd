@@ -4,7 +4,7 @@
 \alias{compute.deconvolution}
 \title{Compute deconvolution}
 \usage{
-compute.deconvolution(
+\method{compute}{deconvolution}(
   raw.counts,
   methods = c("Quantiseq", "MCP", "xCell", "CBSX", "Epidish", "DeconRNASeq", "DWLS"),
   signatures_exclude = NULL,
