@@ -6,7 +6,7 @@
 \usage{
 \method{compute}{deconvolution}(
   raw.counts,
-  methods = c("Quantiseq", "MCP", "xCell", "CBSX", "Epidish", "DeconRNASeq", "DWLS"),
+  methods = c("Quantiseq", "CBSX", "Epidish", "DeconRNASeq", "DWLS"),
   signatures_exclude = NULL,
   normalized = T,
   doParallel = F,

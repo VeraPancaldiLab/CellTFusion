@@ -6,7 +6,7 @@
 \usage{
 \method{compute}{WTCNA}(
   TFs.matrix,
-  network.type = "unsigned",
+  network.type = "signed",
   clustering.method = "ward.D2",
   minMod = 15,
   corr_mod = 0.9,

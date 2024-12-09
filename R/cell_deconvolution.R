@@ -33,10 +33,10 @@
 #' deconv = compute.deconvolution(raw.counts, normalized = T, credentials.mail = "xxxx", credentials.token = "xxxxxx", sc_deconv = T, sc_matrix = sc.object, cell_annotations = cell_labels, cell_samples = bath_ids, name_sc_signature = "Signature_test", file_name = "Test")
 #'
 #'
-compute.deconvolution <- function(raw.counts, methods = c("Quantiseq", "MCP", "xCell", "CBSX", "Epidish", "DeconRNASeq", "DWLS"), signatures_exclude = NULL, normalized = T, doParallel = F, workers = NULL, return = T,
+compute.deconvolution <- function(raw.counts, methods = c("Quantiseq", "CBSX", "Epidish", "DeconRNASeq", "DWLS"), signatures_exclude = NULL, normalized = T, doParallel = F, workers = NULL, return = T,
                                   credentials.mail = NULL, credentials.token = NULL, sc_deconv = F, ncores = NULL, sc_matrix = NULL, cell_annotations = NULL, cell_samples = NULL, name_sc_signature = NULL, file_name = NULL){
 
-  path_signatures = 'src/signatures'
+  path_signatures = '../data/signatures'
 
   if(normalized == T){
     cat("Performing TPM normalization log transformed...............................................................\n\n")
@@ -53,14 +53,14 @@ compute.deconvolution <- function(raw.counts, methods = c("Quantiseq", "MCP", "x
   if("Quantiseq" %in% methods){
     cat("\nRunning Quantiseq...............................................................\n")
     quantiseq = computeQuantiseq(TPM_matrix)}
-  if("MCP" %in% methods){
-    cat("\nRunning MCPCounter...............................................................\n")
-    mcp = computeMCP(TPM_matrix, path_signatures)}
-  if("xCell" %in% methods){
-    xcell = computeXCell(TPM_matrix)
-    cat("\nRunning XCell...............................................................\n")}
+  # if("MCP" %in% methods){
+  #   cat("\nRunning MCPCounter...............................................................\n")
+  #   mcp = computeMCP(TPM_matrix, path_signatures)}
+  # if("xCell" %in% methods){
+  #   xcell = computeXCell(TPM_matrix)
+  #   cat("\nRunning XCell...............................................................\n")}
 
-  default_sig = c("Quantiseq", "MCP", "xCell")
+  default_sig = "Quantiseq" #Add more methods with default signatures
   methods = methods[!(methods %in% default_sig)]
   if(length(methods) == 0){
     methods = NULL
@@ -71,20 +71,20 @@ compute.deconvolution <- function(raw.counts, methods = c("Quantiseq", "MCP", "x
   if (exists("quantiseq")) {
     deconv_default <- quantiseq
   }
-  if (exists("mcp")) {
-    if (is.null(deconv_default)) {
-      deconv_default <- mcp
-    } else {
-      deconv_default <- cbind(deconv_default, mcp)
-    }
-  }
-  if (exists("xcell")) {
-    if (is.null(deconv_default)) {
-      deconv_default <- xcell
-    } else {
-      deconv_default <- cbind(deconv_default, xcell)
-    }
-  }
+  # if (exists("mcp")) {
+  #   if (is.null(deconv_default)) {
+  #     deconv_default <- mcp
+  #   } else {
+  #     deconv_default <- cbind(deconv_default, mcp)
+  #   }
+  # }
+  # if (exists("xcell")) {
+  #   if (is.null(deconv_default)) {
+  #     deconv_default <- xcell
+  #   } else {
+  #     deconv_default <- cbind(deconv_default, xcell)
+  #   }
+  # }
 
   if(is.null(deconv_sig)){
     all_deconvolution_table = deconv_default
@@ -911,10 +911,10 @@ compute.deconvolution.preprocessing = function(deconv){
   cat("Preprocessing deconvolution features...............................................................\n\n")
 
   #Convert mcp and xcell features to proportions by row-scaling
-  for (i in 1:nrow(deconv)) {
-    deconv[,grep("MCP", colnames(deconv))][i,] = deconv[,grep("MCP", colnames(deconv))][i,]/sum(deconv[,grep("MCP", colnames(deconv))][i,])
-    deconv[,grep("XCell", colnames(deconv))][i,] = deconv[,grep("XCell", colnames(deconv))][i,]/sum(deconv[,grep("XCell", colnames(deconv))][i,])
-  }
+  # for (i in 1:nrow(deconv)) {
+  #   deconv[,grep("MCP", colnames(deconv))][i,] = deconv[,grep("MCP", colnames(deconv))][i,]/sum(deconv[,grep("MCP", colnames(deconv))][i,])
+  #   deconv[,grep("XCell", colnames(deconv))][i,] = deconv[,grep("XCell", colnames(deconv))][i,]/sum(deconv[,grep("XCell", colnames(deconv))][i,])
+  # }
 
   ##### Edit cell names for consistency across features
   ##### Macrophages (M0, M1, M2)
@@ -1132,7 +1132,7 @@ compute.deconvolution.preprocessing = function(deconv){
 
   cat("Checking consistency in deconvolution cell fractions across patients...............................................................\n\n")
 
-  combinations = c("Quantiseq", "MCP", "XCell", "Epidish_BPRNACan_",  "Epidish_BPRNACanProMet", "Epidish_BPRNACan3DProMet", "Epidish_CBSX.HNSCC.scRNAseq", "Epidish_CBSX.Melanoma.scRNAseq",
+  combinations = c("Quantiseq", "Epidish_BPRNACan_",  "Epidish_BPRNACanProMet", "Epidish_BPRNACan3DProMet", "Epidish_CBSX.HNSCC.scRNAseq", "Epidish_CBSX.Melanoma.scRNAseq",
                    "Epidish_CBSX.NSCLC.PBMCs.scRNAseq", "Epidish_CCLE.TIL10", "Epidish_TIL10", "Epidish_LM22", "DeconRNASeq_BPRNACan_", "DeconRNASeq_BPRNACanProMet",
                    "DeconRNASeq_BPRNACan3DProMet", "DeconRNASeq_CBSX.HNSCC.scRNAseq", "DeconRNASeq_CBSX.Melanoma.scRNAseq", "DeconRNASeq_CBSX.NSCLC.PBMCs.scRNAseq", "DeconRNASeq_CCLE.TIL10",
                    "DeconRNASeq_TIL10", "DeconRNASeq_LM22", "CBSX_BPRNACan_", "CBSX_BPRNACanProMet", "CBSX_BPRNACan3DProMet", "CBSX_CBSX.HNSCC.scRNAseq",
@@ -1216,7 +1216,7 @@ computeCBSX = function(TPM_matrix, signature_file, name, password, name_signatur
 #' deconrnaseq <- computeDeconRNASeq(TPM_matrix, signature, signature_name)
 #'
 computeDeconRNASeq = function(TPM_matrix, signature_file, name_signature){
-  decon <- DeconRNASeq::DeconRNASeq(TPM_matrix, data.frame(signature_file))
+  decon <- DeconRNASeq::DeconRNASeq(as.matrix(TPM_matrix), data.frame(signature_file))
   deconRNAseq = decon$out.all
   rownames(deconRNAseq) = colnames(TPM_matrix)
 
@@ -1562,3 +1562,12 @@ removeCorrelatedFeatures <- function(data, threshold, name, n_seed) {
 
   return(list(new_data, features_high_corr, cell_name))
 }
+
+
+#' Data object from xCell.
+#'
+#' For some reason, this object is not properly exported from the xCell namespace.
+#' This is a workaround, that `xCellAnalysis` can be properly called from this package.
+#'
+#' @export
+xCell.data <- xCell::xCell.data

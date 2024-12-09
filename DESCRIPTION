@@ -46,6 +46,7 @@ Imports:
     purrr,
     randomForest,
     ReactomePA,
+    recipes,
     rlang,
     rstatix,
     stats,
@@ -57,7 +58,7 @@ Imports:
     utils,
     viper,
     WGCNA
-Remotes:  
+Remotes: 
     omnideconv/immunedeconv,
     omnideconv/DWLS,
     grst/MCPcounter,

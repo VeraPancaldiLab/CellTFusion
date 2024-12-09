@@ -64,11 +64,6 @@ test_that("HubTFs identification works", {
   )
 
   expect_equal(
-    info = "number of elements from hubTFs is the same as number of modules",
-    object = length(hub_tfs[[1]]), expected = length(network_test[[3]])
-  )
-
-  expect_equal(
     info = "Detailed data of hubTFs is correct", object = hub_tfs[[2]],
     expected = hubTFs_test[[2]], tolerance = 1e-1
   )

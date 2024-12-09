@@ -24,7 +24,7 @@
 CellTFusion = function(raw.counts, coldata = NULL, cbsx.mail = NULL, cbsx.token = NULL, file_name = NULL){
 
   #Normalize counts
-  counts.norm = data.frame(NormalizeTPM(raw.counts, log = T))
+  counts.norm = data.frame(ADImpute::NormalizeTPM(raw.counts, log = T))
   #Deconvolution
   cat("Calculating cell type deconvolution............................................................\n")
   if(is.null(cbsx.mail)==T || is.null(cbsx.token)==T){
@@ -805,7 +805,7 @@ compute.TF.network.classification = function(tf.network, pathways.features, retu
   # moduleTraitCor <- moduleTraitCor[, non_constant_columns] # Filter out the columns that are constant or all zeros
 
   ### Find clusters
-  silhouette = factoextra::fviz_nbclust(moduleTraitCor, hcut, method = "silhouette", k.max = nrow(moduleTraitCor)-1)
+  silhouette = factoextra::fviz_nbclust(moduleTraitCor, factoextra::hcut, method = "silhouette", k.max = nrow(moduleTraitCor)-1)
   k_cluster = as.numeric(silhouette$data$clusters[which.max(silhouette$data$y)])
 
   if(return){
@@ -980,7 +980,7 @@ compute.TFs.activity <- function(RNA.counts, TF.collection = "CollecTRI", min_ta
 #'
 #' network = compute.WTCNA(tfs, corr_mod = 0.9, clustering.method = "ward.D2", return = T)
 #'
-compute.WTCNA <- function(TFs.matrix, network.type = "unsigned", clustering.method = "ward.D2", minMod = 15, corr_mod = 0.9, cor_type = "p", return = T){
+compute.WTCNA <- function(TFs.matrix, network.type = "signed", clustering.method = "ward.D2", minMod = 15, corr_mod = 0.9, cor_type = "p", return = T){
 
   cat("Creating weighted TF-coactivity network......................................................................\n\n")
   #####Choose parameter for scale-free network topology
