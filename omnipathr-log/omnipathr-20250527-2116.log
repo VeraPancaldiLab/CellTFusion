@@ -1,0 +1,578 @@
+[2025-05-27 21:16:07] [INFO]    [OmnipathR] Welcome to OmnipathR!
+[2025-05-27 21:16:07] [TRACE]   [OmnipathR] Reading JSON from `/home/marcelo.hurtado/.cache/OmnipathR/cache.json` (encoding: UTF-8).
+[2025-05-27 21:16:07] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2025-05-27 21:16:07] [INFO]    [OmnipathR] Initialized cache: `/home/marcelo.hurtado/.cache/OmnipathR`.
+[2025-05-27 21:16:07] [TRACE]   [OmnipathR] Reading JSON from `/home/marcelo.hurtado/R/x86_64-pc-linux-gnu-library/4.3/OmnipathR/db/db_def.json` (encoding: UTF-8).
+[2025-05-27 21:16:07] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2025-05-27 21:16:07] [TRACE]   [OmnipathR] Reading JSON from `/home/marcelo.hurtado/R/x86_64-pc-linux-gnu-library/4.3/OmnipathR/internal/magic_bytes.json` (encoding: UTF-8).
+[2025-05-27 21:16:07] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2025-05-27 21:16:07] [TRACE]   [OmnipathR] Reading JSON from `/home/marcelo.hurtado/R/x86_64-pc-linux-gnu-library/4.3/OmnipathR/internal/urls.json` (encoding: UTF-8).
+[2025-05-27 21:16:07] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2025-05-27 21:16:07] [TRACE]   [OmnipathR] Reading JSON from `/home/marcelo.hurtado/R/x86_64-pc-linux-gnu-library/4.3/OmnipathR/internal/id_types.json` (encoding: UTF-8).
+[2025-05-27 21:16:07] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2025-05-27 21:17:05] [INFO]    [OmnipathR] Loading database `Ensembl and OMA organism names`.
+[2025-05-27 21:17:05] [INFO]    [OmnipathR] Looking up in cache `https://www.ensembl.org/info/about/species.html`: key=7332486db7400730697234bad76ca0c8e4d00799, latest version=1.
+[2025-05-27 21:17:05] [TRACE]   [OmnipathR] Cache file path: /home/marcelo.hurtado/.cache/OmnipathR/7332486db7400730697234bad76ca0c8e4d00799-1.html
+[2025-05-27 21:17:05] [TRACE]   [OmnipathR] Looking up in cache: `https://omabrowser.org/All/oma-species.txt`.
+[2025-05-27 21:17:05] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/30e690cbb55dfc63b5903ab337f34ffc2f4be397-1.rds`.
+[2025-05-27 21:17:05] [INFO]    [OmnipathR] Loaded database `Ensembl and OMA organism names`.
+[2025-05-27 21:17:05] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=extra_attrs,evidences,sources,references,curation_effort&loops=yes&license=academic`
+[2025-05-27 21:17:05] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/5e82de18cbd9b5d9237867d70ab653aa2a24da2e-1.rds`.
+[2025-05-27 21:17:05] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=extra_attrs,evidences,sources,references,curation_effort&loops=yes&license=academic`
+[2025-05-27 21:17:05] [TRACE]   [OmnipathR] Converting JSON column `extra_attrs` to list.
+[2025-05-27 21:17:07] [TRACE]   [OmnipathR] Converting JSON column `evidences` to list.
+[2025-05-27 21:17:10] [TRACE]   [OmnipathR] Restricting interaction records to datasets: collectri; and resources: any
+[2025-05-27 21:17:15] [TRACE]   [OmnipathR] Filtering evidence columns: positive, negative, directed, undirected; to datasets: collectri; and resources: any
+[2025-05-27 21:18:02] [SUCCESS] [OmnipathR] Downloaded 64958 interactions.
+[2025-05-27 21:18:02] [TRACE]   [OmnipathR] Reading JSON from `https://omnipathdb.org/resources` (encoding: UTF-8).
+[2025-05-27 21:18:02] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2025-05-27 21:18:02] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/interactions?genesymbols=yes&resources=CollecTRI&datasets=tf_mirna&organisms=9606&fields=extra_attrs,evidences,sources,references,curation_effort&license=academic`
+[2025-05-27 21:18:02] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/911416570c2aaa914be32ebf7b85e1eb3d1ff162-1.rds`.
+[2025-05-27 21:18:02] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&resources=CollecTRI&datasets=tf_mirna&organisms=9606&fields=extra_attrs,evidences,sources,references,curation_effort&license=academic`
+[2025-05-27 21:18:02] [TRACE]   [OmnipathR] Converting JSON column `extra_attrs` to list.
+[2025-05-27 21:18:02] [TRACE]   [OmnipathR] Converting JSON column `evidences` to list.
+[2025-05-27 21:18:02] [TRACE]   [OmnipathR] Restricting interaction records to datasets: tf_mirna; and resources: CollecTRI
+[2025-05-27 21:18:02] [TRACE]   [OmnipathR] Filtering evidence columns: positive, negative, directed, undirected; to datasets: tf_mirna; and resources: CollecTRI
+[2025-05-27 21:18:03] [SUCCESS] [OmnipathR] Downloaded 232 interactions.
+[2025-05-27 21:20:06] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=extra_attrs,evidences,sources,references,curation_effort&loops=yes&license=academic`
+[2025-05-27 21:20:06] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/5e82de18cbd9b5d9237867d70ab653aa2a24da2e-1.rds`.
+[2025-05-27 21:20:06] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=extra_attrs,evidences,sources,references,curation_effort&loops=yes&license=academic`
+[2025-05-27 21:20:06] [TRACE]   [OmnipathR] Converting JSON column `extra_attrs` to list.
+[2025-05-27 21:20:08] [TRACE]   [OmnipathR] Converting JSON column `evidences` to list.
+[2025-05-27 21:20:11] [TRACE]   [OmnipathR] Restricting interaction records to datasets: collectri; and resources: any
+[2025-05-27 21:20:14] [TRACE]   [OmnipathR] Filtering evidence columns: positive, negative, directed, undirected; to datasets: collectri; and resources: any
+[2025-05-27 21:21:02] [SUCCESS] [OmnipathR] Downloaded 64958 interactions.
+[2025-05-27 21:21:02] [TRACE]   [OmnipathR] Reading JSON from `https://omnipathdb.org/resources` (encoding: UTF-8).
+[2025-05-27 21:21:02] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2025-05-27 21:21:02] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/interactions?genesymbols=yes&resources=CollecTRI&datasets=tf_mirna&organisms=9606&fields=extra_attrs,evidences,sources,references,curation_effort&license=academic`
+[2025-05-27 21:21:02] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/911416570c2aaa914be32ebf7b85e1eb3d1ff162-1.rds`.
+[2025-05-27 21:21:02] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&resources=CollecTRI&datasets=tf_mirna&organisms=9606&fields=extra_attrs,evidences,sources,references,curation_effort&license=academic`
+[2025-05-27 21:21:02] [TRACE]   [OmnipathR] Converting JSON column `extra_attrs` to list.
+[2025-05-27 21:21:02] [TRACE]   [OmnipathR] Converting JSON column `evidences` to list.
+[2025-05-27 21:21:02] [TRACE]   [OmnipathR] Restricting interaction records to datasets: tf_mirna; and resources: CollecTRI
+[2025-05-27 21:21:02] [TRACE]   [OmnipathR] Filtering evidence columns: positive, negative, directed, undirected; to datasets: tf_mirna; and resources: CollecTRI
+[2025-05-27 21:21:03] [SUCCESS] [OmnipathR] Downloaded 232 interactions.
+[2025-05-27 21:21:19] [TRACE]   [OmnipathR] Reading JSON from `https://omnipathdb.org/resources` (encoding: UTF-8).
+[2025-05-27 21:21:19] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2025-05-27 21:21:20] [TRACE]   [OmnipathR] Reading JSON from `https://omnipathdb.org/resources` (encoding: UTF-8).
+[2025-05-27 21:21:20] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2025-05-27 21:21:20] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/annotations?resources=PROGENy&license=academic`
+[2025-05-27 21:21:22] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/3492392585ba05414edfae46801492076437d7e7-1.rds`.
+[2025-05-27 21:21:22] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/annotations?resources=PROGENy&license=academic`
+[2025-05-27 21:21:22] [SUCCESS] [OmnipathR] Loaded 700239 annotation records from cache.
+[2025-05-27 21:21:30] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=extra_attrs,evidences,sources,references,curation_effort&loops=yes&license=academic`
+[2025-05-27 21:21:32] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/5e82de18cbd9b5d9237867d70ab653aa2a24da2e-1.rds`.
+[2025-05-27 21:21:32] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=extra_attrs,evidences,sources,references,curation_effort&loops=yes&license=academic`
+[2025-05-27 21:21:32] [TRACE]   [OmnipathR] Converting JSON column `extra_attrs` to list.
+[2025-05-27 21:21:33] [TRACE]   [OmnipathR] Converting JSON column `evidences` to list.
+[2025-05-27 21:21:37] [TRACE]   [OmnipathR] Restricting interaction records to datasets: collectri; and resources: any
+[2025-05-27 21:21:40] [TRACE]   [OmnipathR] Filtering evidence columns: positive, negative, directed, undirected; to datasets: collectri; and resources: any
+[2025-05-27 21:22:29] [SUCCESS] [OmnipathR] Downloaded 64958 interactions.
+[2025-05-27 21:22:30] [TRACE]   [OmnipathR] Reading JSON from `https://omnipathdb.org/resources` (encoding: UTF-8).
+[2025-05-27 21:22:30] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2025-05-27 21:22:30] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/interactions?genesymbols=yes&resources=CollecTRI&datasets=tf_mirna&organisms=9606&fields=extra_attrs,evidences,sources,references,curation_effort&license=academic`
+[2025-05-27 21:22:30] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/911416570c2aaa914be32ebf7b85e1eb3d1ff162-1.rds`.
+[2025-05-27 21:22:30] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&resources=CollecTRI&datasets=tf_mirna&organisms=9606&fields=extra_attrs,evidences,sources,references,curation_effort&license=academic`
+[2025-05-27 21:22:30] [TRACE]   [OmnipathR] Converting JSON column `extra_attrs` to list.
+[2025-05-27 21:22:30] [TRACE]   [OmnipathR] Converting JSON column `evidences` to list.
+[2025-05-27 21:22:30] [TRACE]   [OmnipathR] Restricting interaction records to datasets: tf_mirna; and resources: CollecTRI
+[2025-05-27 21:22:30] [TRACE]   [OmnipathR] Filtering evidence columns: positive, negative, directed, undirected; to datasets: tf_mirna; and resources: CollecTRI
+[2025-05-27 21:22:30] [SUCCESS] [OmnipathR] Downloaded 232 interactions.
+[2025-05-27 21:26:20] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=extra_attrs,evidences,sources,references,curation_effort&loops=yes&license=academic`
+[2025-05-27 21:26:21] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/5e82de18cbd9b5d9237867d70ab653aa2a24da2e-1.rds`.
+[2025-05-27 21:26:21] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=extra_attrs,evidences,sources,references,curation_effort&loops=yes&license=academic`
+[2025-05-27 21:26:21] [TRACE]   [OmnipathR] Converting JSON column `extra_attrs` to list.
+[2025-05-27 21:26:22] [TRACE]   [OmnipathR] Converting JSON column `evidences` to list.
+[2025-05-27 21:26:26] [TRACE]   [OmnipathR] Restricting interaction records to datasets: collectri; and resources: any
+[2025-05-27 21:26:29] [TRACE]   [OmnipathR] Filtering evidence columns: positive, negative, directed, undirected; to datasets: collectri; and resources: any
+[2025-05-27 21:27:15] [SUCCESS] [OmnipathR] Downloaded 64958 interactions.
+[2025-05-27 21:27:16] [TRACE]   [OmnipathR] Reading JSON from `https://omnipathdb.org/resources` (encoding: UTF-8).
+[2025-05-27 21:27:16] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2025-05-27 21:27:16] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/interactions?genesymbols=yes&resources=CollecTRI&datasets=tf_mirna&organisms=9606&fields=extra_attrs,evidences,sources,references,curation_effort&license=academic`
+[2025-05-27 21:27:16] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/911416570c2aaa914be32ebf7b85e1eb3d1ff162-1.rds`.
+[2025-05-27 21:27:16] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&resources=CollecTRI&datasets=tf_mirna&organisms=9606&fields=extra_attrs,evidences,sources,references,curation_effort&license=academic`
+[2025-05-27 21:27:16] [TRACE]   [OmnipathR] Converting JSON column `extra_attrs` to list.
+[2025-05-27 21:27:16] [TRACE]   [OmnipathR] Converting JSON column `evidences` to list.
+[2025-05-27 21:27:16] [TRACE]   [OmnipathR] Restricting interaction records to datasets: tf_mirna; and resources: CollecTRI
+[2025-05-27 21:27:16] [TRACE]   [OmnipathR] Filtering evidence columns: positive, negative, directed, undirected; to datasets: tf_mirna; and resources: CollecTRI
+[2025-05-27 21:27:17] [SUCCESS] [OmnipathR] Downloaded 232 interactions.
+[2025-05-27 21:27:34] [TRACE]   [OmnipathR] Reading JSON from `https://omnipathdb.org/resources` (encoding: UTF-8).
+[2025-05-27 21:27:34] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2025-05-27 21:27:34] [TRACE]   [OmnipathR] Reading JSON from `https://omnipathdb.org/resources` (encoding: UTF-8).
+[2025-05-27 21:27:34] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2025-05-27 21:27:34] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/annotations?resources=PROGENy&license=academic`
+[2025-05-27 21:27:36] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/3492392585ba05414edfae46801492076437d7e7-1.rds`.
+[2025-05-27 21:27:36] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/annotations?resources=PROGENy&license=academic`
+[2025-05-27 21:27:36] [SUCCESS] [OmnipathR] Loaded 700239 annotation records from cache.
+[2025-05-27 21:29:04] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=extra_attrs,evidences,sources,references,curation_effort&loops=yes&license=academic`
+[2025-05-27 21:29:04] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/5e82de18cbd9b5d9237867d70ab653aa2a24da2e-1.rds`.
+[2025-05-27 21:29:04] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=extra_attrs,evidences,sources,references,curation_effort&loops=yes&license=academic`
+[2025-05-27 21:29:04] [TRACE]   [OmnipathR] Converting JSON column `extra_attrs` to list.
+[2025-05-27 21:29:07] [TRACE]   [OmnipathR] Converting JSON column `evidences` to list.
+[2025-05-27 21:29:10] [TRACE]   [OmnipathR] Restricting interaction records to datasets: collectri; and resources: any
+[2025-05-27 21:29:13] [TRACE]   [OmnipathR] Filtering evidence columns: positive, negative, directed, undirected; to datasets: collectri; and resources: any
+[2025-05-27 21:30:00] [SUCCESS] [OmnipathR] Downloaded 64958 interactions.
+[2025-05-27 21:30:01] [TRACE]   [OmnipathR] Reading JSON from `https://omnipathdb.org/resources` (encoding: UTF-8).
+[2025-05-27 21:30:01] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2025-05-27 21:30:01] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/interactions?genesymbols=yes&resources=CollecTRI&datasets=tf_mirna&organisms=9606&fields=extra_attrs,evidences,sources,references,curation_effort&license=academic`
+[2025-05-27 21:30:01] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/911416570c2aaa914be32ebf7b85e1eb3d1ff162-1.rds`.
+[2025-05-27 21:30:01] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&resources=CollecTRI&datasets=tf_mirna&organisms=9606&fields=extra_attrs,evidences,sources,references,curation_effort&license=academic`
+[2025-05-27 21:30:01] [TRACE]   [OmnipathR] Converting JSON column `extra_attrs` to list.
+[2025-05-27 21:30:01] [TRACE]   [OmnipathR] Converting JSON column `evidences` to list.
+[2025-05-27 21:30:01] [TRACE]   [OmnipathR] Restricting interaction records to datasets: tf_mirna; and resources: CollecTRI
+[2025-05-27 21:30:01] [TRACE]   [OmnipathR] Filtering evidence columns: positive, negative, directed, undirected; to datasets: tf_mirna; and resources: CollecTRI
+[2025-05-27 21:30:01] [SUCCESS] [OmnipathR] Downloaded 232 interactions.
+[2025-05-27 21:31:25] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=extra_attrs,evidences,sources,references,curation_effort&loops=yes&license=academic`
+[2025-05-27 21:31:25] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/5e82de18cbd9b5d9237867d70ab653aa2a24da2e-1.rds`.
+[2025-05-27 21:31:25] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=extra_attrs,evidences,sources,references,curation_effort&loops=yes&license=academic`
+[2025-05-27 21:31:25] [TRACE]   [OmnipathR] Converting JSON column `extra_attrs` to list.
+[2025-05-27 21:31:27] [TRACE]   [OmnipathR] Converting JSON column `evidences` to list.
+[2025-05-27 21:31:31] [TRACE]   [OmnipathR] Restricting interaction records to datasets: collectri; and resources: any
+[2025-05-27 21:31:34] [TRACE]   [OmnipathR] Filtering evidence columns: positive, negative, directed, undirected; to datasets: collectri; and resources: any
+[2025-05-27 21:32:25] [SUCCESS] [OmnipathR] Downloaded 64958 interactions.
+[2025-05-27 21:32:26] [TRACE]   [OmnipathR] Reading JSON from `https://omnipathdb.org/resources` (encoding: UTF-8).
+[2025-05-27 21:32:26] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2025-05-27 21:32:26] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/interactions?genesymbols=yes&resources=CollecTRI&datasets=tf_mirna&organisms=9606&fields=extra_attrs,evidences,sources,references,curation_effort&license=academic`
+[2025-05-27 21:32:26] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/911416570c2aaa914be32ebf7b85e1eb3d1ff162-1.rds`.
+[2025-05-27 21:32:26] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&resources=CollecTRI&datasets=tf_mirna&organisms=9606&fields=extra_attrs,evidences,sources,references,curation_effort&license=academic`
+[2025-05-27 21:32:26] [TRACE]   [OmnipathR] Converting JSON column `extra_attrs` to list.
+[2025-05-27 21:32:26] [TRACE]   [OmnipathR] Converting JSON column `evidences` to list.
+[2025-05-27 21:32:26] [TRACE]   [OmnipathR] Restricting interaction records to datasets: tf_mirna; and resources: CollecTRI
+[2025-05-27 21:32:26] [TRACE]   [OmnipathR] Filtering evidence columns: positive, negative, directed, undirected; to datasets: tf_mirna; and resources: CollecTRI
+[2025-05-27 21:32:26] [SUCCESS] [OmnipathR] Downloaded 232 interactions.
+[2025-05-27 21:32:39] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=extra_attrs,evidences,sources,references,curation_effort&loops=yes&license=academic`
+[2025-05-27 21:32:39] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/5e82de18cbd9b5d9237867d70ab653aa2a24da2e-1.rds`.
+[2025-05-27 21:32:39] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=extra_attrs,evidences,sources,references,curation_effort&loops=yes&license=academic`
+[2025-05-27 21:32:39] [TRACE]   [OmnipathR] Converting JSON column `extra_attrs` to list.
+[2025-05-27 21:32:41] [TRACE]   [OmnipathR] Converting JSON column `evidences` to list.
+[2025-05-27 21:32:45] [TRACE]   [OmnipathR] Restricting interaction records to datasets: collectri; and resources: any
+[2025-05-27 21:32:48] [TRACE]   [OmnipathR] Filtering evidence columns: positive, negative, directed, undirected; to datasets: collectri; and resources: any
+[2025-05-27 21:33:36] [SUCCESS] [OmnipathR] Downloaded 64958 interactions.
+[2025-05-27 21:33:37] [TRACE]   [OmnipathR] Reading JSON from `https://omnipathdb.org/resources` (encoding: UTF-8).
+[2025-05-27 21:33:37] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2025-05-27 21:33:37] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/interactions?genesymbols=yes&resources=CollecTRI&datasets=tf_mirna&organisms=9606&fields=extra_attrs,evidences,sources,references,curation_effort&license=academic`
+[2025-05-27 21:33:37] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/911416570c2aaa914be32ebf7b85e1eb3d1ff162-1.rds`.
+[2025-05-27 21:33:37] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&resources=CollecTRI&datasets=tf_mirna&organisms=9606&fields=extra_attrs,evidences,sources,references,curation_effort&license=academic`
+[2025-05-27 21:33:37] [TRACE]   [OmnipathR] Converting JSON column `extra_attrs` to list.
+[2025-05-27 21:33:37] [TRACE]   [OmnipathR] Converting JSON column `evidences` to list.
+[2025-05-27 21:33:37] [TRACE]   [OmnipathR] Restricting interaction records to datasets: tf_mirna; and resources: CollecTRI
+[2025-05-27 21:33:37] [TRACE]   [OmnipathR] Filtering evidence columns: positive, negative, directed, undirected; to datasets: tf_mirna; and resources: CollecTRI
+[2025-05-27 21:33:38] [SUCCESS] [OmnipathR] Downloaded 232 interactions.
+[2025-05-27 21:36:04] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=extra_attrs,evidences,sources,references,curation_effort&loops=yes&license=academic`
+[2025-05-27 21:36:05] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/5e82de18cbd9b5d9237867d70ab653aa2a24da2e-1.rds`.
+[2025-05-27 21:36:05] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=extra_attrs,evidences,sources,references,curation_effort&loops=yes&license=academic`
+[2025-05-27 21:36:05] [TRACE]   [OmnipathR] Converting JSON column `extra_attrs` to list.
+[2025-05-27 21:36:07] [TRACE]   [OmnipathR] Converting JSON column `evidences` to list.
+[2025-05-27 21:36:10] [TRACE]   [OmnipathR] Restricting interaction records to datasets: collectri; and resources: any
+[2025-05-27 21:36:13] [TRACE]   [OmnipathR] Filtering evidence columns: positive, negative, directed, undirected; to datasets: collectri; and resources: any
+[2025-05-27 21:37:00] [SUCCESS] [OmnipathR] Downloaded 64958 interactions.
+[2025-05-27 21:37:00] [TRACE]   [OmnipathR] Reading JSON from `https://omnipathdb.org/resources` (encoding: UTF-8).
+[2025-05-27 21:37:00] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2025-05-27 21:37:00] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/interactions?genesymbols=yes&resources=CollecTRI&datasets=tf_mirna&organisms=9606&fields=extra_attrs,evidences,sources,references,curation_effort&license=academic`
+[2025-05-27 21:37:00] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/911416570c2aaa914be32ebf7b85e1eb3d1ff162-1.rds`.
+[2025-05-27 21:37:00] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&resources=CollecTRI&datasets=tf_mirna&organisms=9606&fields=extra_attrs,evidences,sources,references,curation_effort&license=academic`
+[2025-05-27 21:37:00] [TRACE]   [OmnipathR] Converting JSON column `extra_attrs` to list.
+[2025-05-27 21:37:00] [TRACE]   [OmnipathR] Converting JSON column `evidences` to list.
+[2025-05-27 21:37:00] [TRACE]   [OmnipathR] Restricting interaction records to datasets: tf_mirna; and resources: CollecTRI
+[2025-05-27 21:37:00] [TRACE]   [OmnipathR] Filtering evidence columns: positive, negative, directed, undirected; to datasets: tf_mirna; and resources: CollecTRI
+[2025-05-27 21:37:01] [SUCCESS] [OmnipathR] Downloaded 232 interactions.
+[2025-05-27 21:37:18] [TRACE]   [OmnipathR] Reading JSON from `https://omnipathdb.org/resources` (encoding: UTF-8).
+[2025-05-27 21:37:18] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2025-05-27 21:37:18] [TRACE]   [OmnipathR] Reading JSON from `https://omnipathdb.org/resources` (encoding: UTF-8).
+[2025-05-27 21:37:18] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2025-05-27 21:37:18] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/annotations?resources=PROGENy&license=academic`
+[2025-05-27 21:37:20] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/3492392585ba05414edfae46801492076437d7e7-1.rds`.
+[2025-05-27 21:37:20] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/annotations?resources=PROGENy&license=academic`
+[2025-05-27 21:37:20] [SUCCESS] [OmnipathR] Loaded 700239 annotation records from cache.
+[2025-05-27 21:37:27] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=extra_attrs,evidences,sources,references,curation_effort&loops=yes&license=academic`
+[2025-05-27 21:37:28] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/5e82de18cbd9b5d9237867d70ab653aa2a24da2e-1.rds`.
+[2025-05-27 21:37:28] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=extra_attrs,evidences,sources,references,curation_effort&loops=yes&license=academic`
+[2025-05-27 21:37:28] [TRACE]   [OmnipathR] Converting JSON column `extra_attrs` to list.
+[2025-05-27 21:37:30] [TRACE]   [OmnipathR] Converting JSON column `evidences` to list.
+[2025-05-27 21:37:33] [TRACE]   [OmnipathR] Restricting interaction records to datasets: collectri; and resources: any
+[2025-05-27 21:37:36] [TRACE]   [OmnipathR] Filtering evidence columns: positive, negative, directed, undirected; to datasets: collectri; and resources: any
+[2025-05-27 21:38:23] [SUCCESS] [OmnipathR] Downloaded 64958 interactions.
+[2025-05-27 21:38:23] [TRACE]   [OmnipathR] Reading JSON from `https://omnipathdb.org/resources` (encoding: UTF-8).
+[2025-05-27 21:38:23] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2025-05-27 21:38:23] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/interactions?genesymbols=yes&resources=CollecTRI&datasets=tf_mirna&organisms=9606&fields=extra_attrs,evidences,sources,references,curation_effort&license=academic`
+[2025-05-27 21:38:23] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/911416570c2aaa914be32ebf7b85e1eb3d1ff162-1.rds`.
+[2025-05-27 21:38:23] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&resources=CollecTRI&datasets=tf_mirna&organisms=9606&fields=extra_attrs,evidences,sources,references,curation_effort&license=academic`
+[2025-05-27 21:38:23] [TRACE]   [OmnipathR] Converting JSON column `extra_attrs` to list.
+[2025-05-27 21:38:23] [TRACE]   [OmnipathR] Converting JSON column `evidences` to list.
+[2025-05-27 21:38:23] [TRACE]   [OmnipathR] Restricting interaction records to datasets: tf_mirna; and resources: CollecTRI
+[2025-05-27 21:38:23] [TRACE]   [OmnipathR] Filtering evidence columns: positive, negative, directed, undirected; to datasets: tf_mirna; and resources: CollecTRI
+[2025-05-27 21:38:24] [SUCCESS] [OmnipathR] Downloaded 232 interactions.
+[2025-05-27 21:38:26] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=extra_attrs,evidences,sources,references,curation_effort&loops=yes&license=academic`
+[2025-05-27 21:38:27] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/5e82de18cbd9b5d9237867d70ab653aa2a24da2e-1.rds`.
+[2025-05-27 21:38:27] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=extra_attrs,evidences,sources,references,curation_effort&loops=yes&license=academic`
+[2025-05-27 21:38:27] [TRACE]   [OmnipathR] Converting JSON column `extra_attrs` to list.
+[2025-05-27 21:38:29] [TRACE]   [OmnipathR] Converting JSON column `evidences` to list.
+[2025-05-27 21:38:32] [TRACE]   [OmnipathR] Restricting interaction records to datasets: collectri; and resources: any
+[2025-05-27 21:38:36] [TRACE]   [OmnipathR] Filtering evidence columns: positive, negative, directed, undirected; to datasets: collectri; and resources: any
+[2025-05-27 21:39:25] [SUCCESS] [OmnipathR] Downloaded 64958 interactions.
+[2025-05-27 21:39:26] [TRACE]   [OmnipathR] Reading JSON from `https://omnipathdb.org/resources` (encoding: UTF-8).
+[2025-05-27 21:39:26] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2025-05-27 21:39:26] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/interactions?genesymbols=yes&resources=CollecTRI&datasets=tf_mirna&organisms=9606&fields=extra_attrs,evidences,sources,references,curation_effort&license=academic`
+[2025-05-27 21:39:26] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/911416570c2aaa914be32ebf7b85e1eb3d1ff162-1.rds`.
+[2025-05-27 21:39:26] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&resources=CollecTRI&datasets=tf_mirna&organisms=9606&fields=extra_attrs,evidences,sources,references,curation_effort&license=academic`
+[2025-05-27 21:39:26] [TRACE]   [OmnipathR] Converting JSON column `extra_attrs` to list.
+[2025-05-27 21:39:26] [TRACE]   [OmnipathR] Converting JSON column `evidences` to list.
+[2025-05-27 21:39:26] [TRACE]   [OmnipathR] Restricting interaction records to datasets: tf_mirna; and resources: CollecTRI
+[2025-05-27 21:39:26] [TRACE]   [OmnipathR] Filtering evidence columns: positive, negative, directed, undirected; to datasets: tf_mirna; and resources: CollecTRI
+[2025-05-27 21:39:27] [SUCCESS] [OmnipathR] Downloaded 232 interactions.
+[2025-05-27 21:46:04] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=extra_attrs,evidences,sources,references,curation_effort&loops=yes&license=academic`
+[2025-05-27 21:46:04] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/5e82de18cbd9b5d9237867d70ab653aa2a24da2e-1.rds`.
+[2025-05-27 21:46:04] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=extra_attrs,evidences,sources,references,curation_effort&loops=yes&license=academic`
+[2025-05-27 21:46:04] [TRACE]   [OmnipathR] Converting JSON column `extra_attrs` to list.
+[2025-05-27 21:46:06] [TRACE]   [OmnipathR] Converting JSON column `evidences` to list.
+[2025-05-27 21:46:10] [TRACE]   [OmnipathR] Restricting interaction records to datasets: collectri; and resources: any
+[2025-05-27 21:46:13] [TRACE]   [OmnipathR] Filtering evidence columns: positive, negative, directed, undirected; to datasets: collectri; and resources: any
+[2025-05-27 21:47:01] [SUCCESS] [OmnipathR] Downloaded 64958 interactions.
+[2025-05-27 21:47:02] [TRACE]   [OmnipathR] Reading JSON from `https://omnipathdb.org/resources` (encoding: UTF-8).
+[2025-05-27 21:47:02] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2025-05-27 21:47:02] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/interactions?genesymbols=yes&resources=CollecTRI&datasets=tf_mirna&organisms=9606&fields=extra_attrs,evidences,sources,references,curation_effort&license=academic`
+[2025-05-27 21:47:02] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/911416570c2aaa914be32ebf7b85e1eb3d1ff162-1.rds`.
+[2025-05-27 21:47:02] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&resources=CollecTRI&datasets=tf_mirna&organisms=9606&fields=extra_attrs,evidences,sources,references,curation_effort&license=academic`
+[2025-05-27 21:47:02] [TRACE]   [OmnipathR] Converting JSON column `extra_attrs` to list.
+[2025-05-27 21:47:02] [TRACE]   [OmnipathR] Converting JSON column `evidences` to list.
+[2025-05-27 21:47:02] [TRACE]   [OmnipathR] Restricting interaction records to datasets: tf_mirna; and resources: CollecTRI
+[2025-05-27 21:47:02] [TRACE]   [OmnipathR] Filtering evidence columns: positive, negative, directed, undirected; to datasets: tf_mirna; and resources: CollecTRI
+[2025-05-27 21:47:02] [SUCCESS] [OmnipathR] Downloaded 232 interactions.
+[2025-05-27 21:47:05] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=extra_attrs,evidences,sources,references,curation_effort&loops=yes&license=academic`
+[2025-05-27 21:47:05] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/5e82de18cbd9b5d9237867d70ab653aa2a24da2e-1.rds`.
+[2025-05-27 21:47:05] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=extra_attrs,evidences,sources,references,curation_effort&loops=yes&license=academic`
+[2025-05-27 21:47:05] [TRACE]   [OmnipathR] Converting JSON column `extra_attrs` to list.
+[2025-05-27 21:47:07] [TRACE]   [OmnipathR] Converting JSON column `evidences` to list.
+[2025-05-27 21:47:11] [TRACE]   [OmnipathR] Restricting interaction records to datasets: collectri; and resources: any
+[2025-05-27 21:47:14] [TRACE]   [OmnipathR] Filtering evidence columns: positive, negative, directed, undirected; to datasets: collectri; and resources: any
+[2025-05-27 21:48:02] [SUCCESS] [OmnipathR] Downloaded 64958 interactions.
+[2025-05-27 21:48:02] [TRACE]   [OmnipathR] Reading JSON from `https://omnipathdb.org/resources` (encoding: UTF-8).
+[2025-05-27 21:48:02] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2025-05-27 21:48:03] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/interactions?genesymbols=yes&resources=CollecTRI&datasets=tf_mirna&organisms=9606&fields=extra_attrs,evidences,sources,references,curation_effort&license=academic`
+[2025-05-27 21:48:03] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/911416570c2aaa914be32ebf7b85e1eb3d1ff162-1.rds`.
+[2025-05-27 21:48:03] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&resources=CollecTRI&datasets=tf_mirna&organisms=9606&fields=extra_attrs,evidences,sources,references,curation_effort&license=academic`
+[2025-05-27 21:48:03] [TRACE]   [OmnipathR] Converting JSON column `extra_attrs` to list.
+[2025-05-27 21:48:03] [TRACE]   [OmnipathR] Converting JSON column `evidences` to list.
+[2025-05-27 21:48:03] [TRACE]   [OmnipathR] Restricting interaction records to datasets: tf_mirna; and resources: CollecTRI
+[2025-05-27 21:48:03] [TRACE]   [OmnipathR] Filtering evidence columns: positive, negative, directed, undirected; to datasets: tf_mirna; and resources: CollecTRI
+[2025-05-27 21:48:03] [SUCCESS] [OmnipathR] Downloaded 232 interactions.
+[2025-05-27 21:52:38] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=extra_attrs,evidences,sources,references,curation_effort&loops=yes&license=academic`
+[2025-05-27 21:52:39] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/5e82de18cbd9b5d9237867d70ab653aa2a24da2e-1.rds`.
+[2025-05-27 21:52:39] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=extra_attrs,evidences,sources,references,curation_effort&loops=yes&license=academic`
+[2025-05-27 21:52:39] [TRACE]   [OmnipathR] Converting JSON column `extra_attrs` to list.
+[2025-05-27 21:52:41] [TRACE]   [OmnipathR] Converting JSON column `evidences` to list.
+[2025-05-27 21:52:44] [TRACE]   [OmnipathR] Restricting interaction records to datasets: collectri; and resources: any
+[2025-05-27 21:52:48] [TRACE]   [OmnipathR] Filtering evidence columns: positive, negative, directed, undirected; to datasets: collectri; and resources: any
+[2025-05-27 21:53:38] [SUCCESS] [OmnipathR] Downloaded 64958 interactions.
+[2025-05-27 21:53:39] [TRACE]   [OmnipathR] Reading JSON from `https://omnipathdb.org/resources` (encoding: UTF-8).
+[2025-05-27 21:53:39] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2025-05-27 21:53:39] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/interactions?genesymbols=yes&resources=CollecTRI&datasets=tf_mirna&organisms=9606&fields=extra_attrs,evidences,sources,references,curation_effort&license=academic`
+[2025-05-27 21:53:39] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/911416570c2aaa914be32ebf7b85e1eb3d1ff162-1.rds`.
+[2025-05-27 21:53:39] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&resources=CollecTRI&datasets=tf_mirna&organisms=9606&fields=extra_attrs,evidences,sources,references,curation_effort&license=academic`
+[2025-05-27 21:53:39] [TRACE]   [OmnipathR] Converting JSON column `extra_attrs` to list.
+[2025-05-27 21:53:39] [TRACE]   [OmnipathR] Converting JSON column `evidences` to list.
+[2025-05-27 21:53:39] [TRACE]   [OmnipathR] Restricting interaction records to datasets: tf_mirna; and resources: CollecTRI
+[2025-05-27 21:53:39] [TRACE]   [OmnipathR] Filtering evidence columns: positive, negative, directed, undirected; to datasets: tf_mirna; and resources: CollecTRI
+[2025-05-27 21:53:39] [SUCCESS] [OmnipathR] Downloaded 232 interactions.
+[2025-05-27 21:54:00] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=extra_attrs,evidences,sources,references,curation_effort&loops=yes&license=academic`
+[2025-05-27 21:54:01] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/5e82de18cbd9b5d9237867d70ab653aa2a24da2e-1.rds`.
+[2025-05-27 21:54:01] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=extra_attrs,evidences,sources,references,curation_effort&loops=yes&license=academic`
+[2025-05-27 21:54:01] [TRACE]   [OmnipathR] Converting JSON column `extra_attrs` to list.
+[2025-05-27 21:54:03] [TRACE]   [OmnipathR] Converting JSON column `evidences` to list.
+[2025-05-27 21:54:06] [TRACE]   [OmnipathR] Restricting interaction records to datasets: collectri; and resources: any
+[2025-05-27 21:54:09] [TRACE]   [OmnipathR] Filtering evidence columns: positive, negative, directed, undirected; to datasets: collectri; and resources: any
+[2025-05-27 21:54:57] [SUCCESS] [OmnipathR] Downloaded 64958 interactions.
+[2025-05-27 21:54:57] [TRACE]   [OmnipathR] Reading JSON from `https://omnipathdb.org/resources` (encoding: UTF-8).
+[2025-05-27 21:54:57] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2025-05-27 21:54:57] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/interactions?genesymbols=yes&resources=CollecTRI&datasets=tf_mirna&organisms=9606&fields=extra_attrs,evidences,sources,references,curation_effort&license=academic`
+[2025-05-27 21:54:57] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/911416570c2aaa914be32ebf7b85e1eb3d1ff162-1.rds`.
+[2025-05-27 21:54:57] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&resources=CollecTRI&datasets=tf_mirna&organisms=9606&fields=extra_attrs,evidences,sources,references,curation_effort&license=academic`
+[2025-05-27 21:54:57] [TRACE]   [OmnipathR] Converting JSON column `extra_attrs` to list.
+[2025-05-27 21:54:58] [TRACE]   [OmnipathR] Converting JSON column `evidences` to list.
+[2025-05-27 21:54:58] [TRACE]   [OmnipathR] Restricting interaction records to datasets: tf_mirna; and resources: CollecTRI
+[2025-05-27 21:54:58] [TRACE]   [OmnipathR] Filtering evidence columns: positive, negative, directed, undirected; to datasets: tf_mirna; and resources: CollecTRI
+[2025-05-27 21:54:59] [SUCCESS] [OmnipathR] Downloaded 232 interactions.
+[2025-05-27 22:34:19] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=extra_attrs,evidences,sources,references,curation_effort&loops=yes&license=academic`
+[2025-05-27 22:34:20] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/5e82de18cbd9b5d9237867d70ab653aa2a24da2e-1.rds`.
+[2025-05-27 22:34:20] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=extra_attrs,evidences,sources,references,curation_effort&loops=yes&license=academic`
+[2025-05-27 22:34:20] [TRACE]   [OmnipathR] Converting JSON column `extra_attrs` to list.
+[2025-05-27 22:34:22] [TRACE]   [OmnipathR] Converting JSON column `evidences` to list.
+[2025-05-27 22:34:25] [TRACE]   [OmnipathR] Restricting interaction records to datasets: collectri; and resources: any
+[2025-05-27 22:34:29] [TRACE]   [OmnipathR] Filtering evidence columns: positive, negative, directed, undirected; to datasets: collectri; and resources: any
+[2025-05-27 22:35:17] [SUCCESS] [OmnipathR] Downloaded 64958 interactions.
+[2025-05-27 22:35:17] [TRACE]   [OmnipathR] Reading JSON from `https://omnipathdb.org/resources` (encoding: UTF-8).
+[2025-05-27 22:35:17] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2025-05-27 22:35:18] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/interactions?genesymbols=yes&resources=CollecTRI&datasets=tf_mirna&organisms=9606&fields=extra_attrs,evidences,sources,references,curation_effort&license=academic`
+[2025-05-27 22:35:18] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/911416570c2aaa914be32ebf7b85e1eb3d1ff162-1.rds`.
+[2025-05-27 22:35:18] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&resources=CollecTRI&datasets=tf_mirna&organisms=9606&fields=extra_attrs,evidences,sources,references,curation_effort&license=academic`
+[2025-05-27 22:35:18] [TRACE]   [OmnipathR] Converting JSON column `extra_attrs` to list.
+[2025-05-27 22:35:18] [TRACE]   [OmnipathR] Converting JSON column `evidences` to list.
+[2025-05-27 22:35:18] [TRACE]   [OmnipathR] Restricting interaction records to datasets: tf_mirna; and resources: CollecTRI
+[2025-05-27 22:35:18] [TRACE]   [OmnipathR] Filtering evidence columns: positive, negative, directed, undirected; to datasets: tf_mirna; and resources: CollecTRI
+[2025-05-27 22:35:18] [SUCCESS] [OmnipathR] Downloaded 232 interactions.
+[2025-05-27 22:36:33] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=extra_attrs,evidences,sources,references,curation_effort&loops=yes&license=academic`
+[2025-05-27 22:36:34] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/5e82de18cbd9b5d9237867d70ab653aa2a24da2e-1.rds`.
+[2025-05-27 22:36:34] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=extra_attrs,evidences,sources,references,curation_effort&loops=yes&license=academic`
+[2025-05-27 22:36:34] [TRACE]   [OmnipathR] Converting JSON column `extra_attrs` to list.
+[2025-05-27 22:36:35] [TRACE]   [OmnipathR] Converting JSON column `evidences` to list.
+[2025-05-27 22:36:39] [TRACE]   [OmnipathR] Restricting interaction records to datasets: collectri; and resources: any
+[2025-05-27 22:36:42] [TRACE]   [OmnipathR] Filtering evidence columns: positive, negative, directed, undirected; to datasets: collectri; and resources: any
+[2025-05-27 22:37:26] [SUCCESS] [OmnipathR] Downloaded 64958 interactions.
+[2025-05-27 22:37:27] [TRACE]   [OmnipathR] Reading JSON from `https://omnipathdb.org/resources` (encoding: UTF-8).
+[2025-05-27 22:37:27] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2025-05-27 22:37:27] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/interactions?genesymbols=yes&resources=CollecTRI&datasets=tf_mirna&organisms=9606&fields=extra_attrs,evidences,sources,references,curation_effort&license=academic`
+[2025-05-27 22:37:27] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/911416570c2aaa914be32ebf7b85e1eb3d1ff162-1.rds`.
+[2025-05-27 22:37:27] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&resources=CollecTRI&datasets=tf_mirna&organisms=9606&fields=extra_attrs,evidences,sources,references,curation_effort&license=academic`
+[2025-05-27 22:37:27] [TRACE]   [OmnipathR] Converting JSON column `extra_attrs` to list.
+[2025-05-27 22:37:27] [TRACE]   [OmnipathR] Converting JSON column `evidences` to list.
+[2025-05-27 22:37:27] [TRACE]   [OmnipathR] Restricting interaction records to datasets: tf_mirna; and resources: CollecTRI
+[2025-05-27 22:37:27] [TRACE]   [OmnipathR] Filtering evidence columns: positive, negative, directed, undirected; to datasets: tf_mirna; and resources: CollecTRI
+[2025-05-27 22:37:27] [SUCCESS] [OmnipathR] Downloaded 232 interactions.
+[2025-05-27 22:39:43] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=extra_attrs,evidences,sources,references,curation_effort&loops=yes&license=academic`
+[2025-05-27 22:39:43] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/5e82de18cbd9b5d9237867d70ab653aa2a24da2e-1.rds`.
+[2025-05-27 22:39:43] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=extra_attrs,evidences,sources,references,curation_effort&loops=yes&license=academic`
+[2025-05-27 22:39:43] [TRACE]   [OmnipathR] Converting JSON column `extra_attrs` to list.
+[2025-05-27 22:39:45] [TRACE]   [OmnipathR] Converting JSON column `evidences` to list.
+[2025-05-27 22:39:48] [TRACE]   [OmnipathR] Restricting interaction records to datasets: collectri; and resources: any
+[2025-05-27 22:39:52] [TRACE]   [OmnipathR] Filtering evidence columns: positive, negative, directed, undirected; to datasets: collectri; and resources: any
+[2025-05-27 22:40:39] [SUCCESS] [OmnipathR] Downloaded 64958 interactions.
+[2025-05-27 22:40:39] [TRACE]   [OmnipathR] Reading JSON from `https://omnipathdb.org/resources` (encoding: UTF-8).
+[2025-05-27 22:40:39] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2025-05-27 22:40:39] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/interactions?genesymbols=yes&resources=CollecTRI&datasets=tf_mirna&organisms=9606&fields=extra_attrs,evidences,sources,references,curation_effort&license=academic`
+[2025-05-27 22:40:39] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/911416570c2aaa914be32ebf7b85e1eb3d1ff162-1.rds`.
+[2025-05-27 22:40:39] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&resources=CollecTRI&datasets=tf_mirna&organisms=9606&fields=extra_attrs,evidences,sources,references,curation_effort&license=academic`
+[2025-05-27 22:40:39] [TRACE]   [OmnipathR] Converting JSON column `extra_attrs` to list.
+[2025-05-27 22:40:39] [TRACE]   [OmnipathR] Converting JSON column `evidences` to list.
+[2025-05-27 22:40:39] [TRACE]   [OmnipathR] Restricting interaction records to datasets: tf_mirna; and resources: CollecTRI
+[2025-05-27 22:40:39] [TRACE]   [OmnipathR] Filtering evidence columns: positive, negative, directed, undirected; to datasets: tf_mirna; and resources: CollecTRI
+[2025-05-27 22:40:40] [SUCCESS] [OmnipathR] Downloaded 232 interactions.
+[2025-05-27 22:40:42] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=extra_attrs,evidences,sources,references,curation_effort&loops=yes&license=academic`
+[2025-05-27 22:40:43] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/5e82de18cbd9b5d9237867d70ab653aa2a24da2e-1.rds`.
+[2025-05-27 22:40:43] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=extra_attrs,evidences,sources,references,curation_effort&loops=yes&license=academic`
+[2025-05-27 22:40:43] [TRACE]   [OmnipathR] Converting JSON column `extra_attrs` to list.
+[2025-05-27 22:40:45] [TRACE]   [OmnipathR] Converting JSON column `evidences` to list.
+[2025-05-27 22:40:48] [TRACE]   [OmnipathR] Restricting interaction records to datasets: collectri; and resources: any
+[2025-05-27 22:40:51] [TRACE]   [OmnipathR] Filtering evidence columns: positive, negative, directed, undirected; to datasets: collectri; and resources: any
+[2025-05-27 22:41:38] [SUCCESS] [OmnipathR] Downloaded 64958 interactions.
+[2025-05-27 22:41:39] [TRACE]   [OmnipathR] Reading JSON from `https://omnipathdb.org/resources` (encoding: UTF-8).
+[2025-05-27 22:41:39] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2025-05-27 22:41:39] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/interactions?genesymbols=yes&resources=CollecTRI&datasets=tf_mirna&organisms=9606&fields=extra_attrs,evidences,sources,references,curation_effort&license=academic`
+[2025-05-27 22:41:39] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/911416570c2aaa914be32ebf7b85e1eb3d1ff162-1.rds`.
+[2025-05-27 22:41:39] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&resources=CollecTRI&datasets=tf_mirna&organisms=9606&fields=extra_attrs,evidences,sources,references,curation_effort&license=academic`
+[2025-05-27 22:41:39] [TRACE]   [OmnipathR] Converting JSON column `extra_attrs` to list.
+[2025-05-27 22:41:39] [TRACE]   [OmnipathR] Converting JSON column `evidences` to list.
+[2025-05-27 22:41:39] [TRACE]   [OmnipathR] Restricting interaction records to datasets: tf_mirna; and resources: CollecTRI
+[2025-05-27 22:41:39] [TRACE]   [OmnipathR] Filtering evidence columns: positive, negative, directed, undirected; to datasets: tf_mirna; and resources: CollecTRI
+[2025-05-27 22:41:39] [SUCCESS] [OmnipathR] Downloaded 232 interactions.
+[2025-05-27 22:42:17] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=extra_attrs,evidences,sources,references,curation_effort&loops=yes&license=academic`
+[2025-05-27 22:42:18] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/5e82de18cbd9b5d9237867d70ab653aa2a24da2e-1.rds`.
+[2025-05-27 22:42:18] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=extra_attrs,evidences,sources,references,curation_effort&loops=yes&license=academic`
+[2025-05-27 22:42:18] [TRACE]   [OmnipathR] Converting JSON column `extra_attrs` to list.
+[2025-05-27 22:42:20] [TRACE]   [OmnipathR] Converting JSON column `evidences` to list.
+[2025-05-27 22:42:23] [TRACE]   [OmnipathR] Restricting interaction records to datasets: collectri; and resources: any
+[2025-05-27 22:42:26] [TRACE]   [OmnipathR] Filtering evidence columns: positive, negative, directed, undirected; to datasets: collectri; and resources: any
+[2025-05-27 22:43:15] [SUCCESS] [OmnipathR] Downloaded 64958 interactions.
+[2025-05-27 22:43:16] [TRACE]   [OmnipathR] Reading JSON from `https://omnipathdb.org/resources` (encoding: UTF-8).
+[2025-05-27 22:43:16] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2025-05-27 22:43:16] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/interactions?genesymbols=yes&resources=CollecTRI&datasets=tf_mirna&organisms=9606&fields=extra_attrs,evidences,sources,references,curation_effort&license=academic`
+[2025-05-27 22:43:16] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/911416570c2aaa914be32ebf7b85e1eb3d1ff162-1.rds`.
+[2025-05-27 22:43:16] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&resources=CollecTRI&datasets=tf_mirna&organisms=9606&fields=extra_attrs,evidences,sources,references,curation_effort&license=academic`
+[2025-05-27 22:43:16] [TRACE]   [OmnipathR] Converting JSON column `extra_attrs` to list.
+[2025-05-27 22:43:16] [TRACE]   [OmnipathR] Converting JSON column `evidences` to list.
+[2025-05-27 22:43:16] [TRACE]   [OmnipathR] Restricting interaction records to datasets: tf_mirna; and resources: CollecTRI
+[2025-05-27 22:43:16] [TRACE]   [OmnipathR] Filtering evidence columns: positive, negative, directed, undirected; to datasets: tf_mirna; and resources: CollecTRI
+[2025-05-27 22:43:16] [SUCCESS] [OmnipathR] Downloaded 232 interactions.
+[2025-05-27 22:56:31] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=extra_attrs,evidences,sources,references,curation_effort&loops=yes&license=academic`
+[2025-05-27 22:56:31] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/5e82de18cbd9b5d9237867d70ab653aa2a24da2e-1.rds`.
+[2025-05-27 22:56:31] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=extra_attrs,evidences,sources,references,curation_effort&loops=yes&license=academic`
+[2025-05-27 22:56:31] [TRACE]   [OmnipathR] Converting JSON column `extra_attrs` to list.
+[2025-05-27 22:56:33] [TRACE]   [OmnipathR] Converting JSON column `evidences` to list.
+[2025-05-27 22:56:36] [TRACE]   [OmnipathR] Restricting interaction records to datasets: collectri; and resources: any
+[2025-05-27 22:56:40] [TRACE]   [OmnipathR] Filtering evidence columns: positive, negative, directed, undirected; to datasets: collectri; and resources: any
+[2025-05-27 22:57:27] [SUCCESS] [OmnipathR] Downloaded 64958 interactions.
+[2025-05-27 22:57:28] [TRACE]   [OmnipathR] Reading JSON from `https://omnipathdb.org/resources` (encoding: UTF-8).
+[2025-05-27 22:57:28] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2025-05-27 22:57:28] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/interactions?genesymbols=yes&resources=CollecTRI&datasets=tf_mirna&organisms=9606&fields=extra_attrs,evidences,sources,references,curation_effort&license=academic`
+[2025-05-27 22:57:28] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/911416570c2aaa914be32ebf7b85e1eb3d1ff162-1.rds`.
+[2025-05-27 22:57:28] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&resources=CollecTRI&datasets=tf_mirna&organisms=9606&fields=extra_attrs,evidences,sources,references,curation_effort&license=academic`
+[2025-05-27 22:57:28] [TRACE]   [OmnipathR] Converting JSON column `extra_attrs` to list.
+[2025-05-27 22:57:28] [TRACE]   [OmnipathR] Converting JSON column `evidences` to list.
+[2025-05-27 22:57:28] [TRACE]   [OmnipathR] Restricting interaction records to datasets: tf_mirna; and resources: CollecTRI
+[2025-05-27 22:57:29] [TRACE]   [OmnipathR] Filtering evidence columns: positive, negative, directed, undirected; to datasets: tf_mirna; and resources: CollecTRI
+[2025-05-27 22:57:30] [SUCCESS] [OmnipathR] Downloaded 232 interactions.
+[2025-05-27 22:57:53] [TRACE]   [OmnipathR] Reading JSON from `https://omnipathdb.org/resources` (encoding: UTF-8).
+[2025-05-27 22:57:53] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2025-05-27 22:57:54] [TRACE]   [OmnipathR] Reading JSON from `https://omnipathdb.org/resources` (encoding: UTF-8).
+[2025-05-27 22:57:54] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2025-05-27 22:57:54] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/annotations?resources=PROGENy&license=academic`
+[2025-05-27 22:57:55] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/3492392585ba05414edfae46801492076437d7e7-1.rds`.
+[2025-05-27 22:57:55] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/annotations?resources=PROGENy&license=academic`
+[2025-05-27 22:57:56] [SUCCESS] [OmnipathR] Loaded 700239 annotation records from cache.
+[2025-05-27 22:58:06] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=extra_attrs,evidences,sources,references,curation_effort&loops=yes&license=academic`
+[2025-05-27 22:58:06] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/5e82de18cbd9b5d9237867d70ab653aa2a24da2e-1.rds`.
+[2025-05-27 22:58:06] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=extra_attrs,evidences,sources,references,curation_effort&loops=yes&license=academic`
+[2025-05-27 22:58:06] [TRACE]   [OmnipathR] Converting JSON column `extra_attrs` to list.
+[2025-05-27 22:58:08] [TRACE]   [OmnipathR] Converting JSON column `evidences` to list.
+[2025-05-27 22:58:11] [TRACE]   [OmnipathR] Restricting interaction records to datasets: collectri; and resources: any
+[2025-05-27 22:58:15] [TRACE]   [OmnipathR] Filtering evidence columns: positive, negative, directed, undirected; to datasets: collectri; and resources: any
+[2025-05-27 22:59:03] [SUCCESS] [OmnipathR] Downloaded 64958 interactions.
+[2025-05-27 22:59:03] [TRACE]   [OmnipathR] Reading JSON from `https://omnipathdb.org/resources` (encoding: UTF-8).
+[2025-05-27 22:59:03] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2025-05-27 22:59:03] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/interactions?genesymbols=yes&resources=CollecTRI&datasets=tf_mirna&organisms=9606&fields=extra_attrs,evidences,sources,references,curation_effort&license=academic`
+[2025-05-27 22:59:03] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/911416570c2aaa914be32ebf7b85e1eb3d1ff162-1.rds`.
+[2025-05-27 22:59:03] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&resources=CollecTRI&datasets=tf_mirna&organisms=9606&fields=extra_attrs,evidences,sources,references,curation_effort&license=academic`
+[2025-05-27 22:59:03] [TRACE]   [OmnipathR] Converting JSON column `extra_attrs` to list.
+[2025-05-27 22:59:03] [TRACE]   [OmnipathR] Converting JSON column `evidences` to list.
+[2025-05-27 22:59:04] [TRACE]   [OmnipathR] Restricting interaction records to datasets: tf_mirna; and resources: CollecTRI
+[2025-05-27 22:59:04] [TRACE]   [OmnipathR] Filtering evidence columns: positive, negative, directed, undirected; to datasets: tf_mirna; and resources: CollecTRI
+[2025-05-27 22:59:05] [SUCCESS] [OmnipathR] Downloaded 232 interactions.
+[2025-05-27 22:59:07] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=extra_attrs,evidences,sources,references,curation_effort&loops=yes&license=academic`
+[2025-05-27 22:59:08] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/5e82de18cbd9b5d9237867d70ab653aa2a24da2e-1.rds`.
+[2025-05-27 22:59:08] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=extra_attrs,evidences,sources,references,curation_effort&loops=yes&license=academic`
+[2025-05-27 22:59:08] [TRACE]   [OmnipathR] Converting JSON column `extra_attrs` to list.
+[2025-05-27 22:59:09] [TRACE]   [OmnipathR] Converting JSON column `evidences` to list.
+[2025-05-27 22:59:13] [TRACE]   [OmnipathR] Restricting interaction records to datasets: collectri; and resources: any
+[2025-05-27 22:59:16] [TRACE]   [OmnipathR] Filtering evidence columns: positive, negative, directed, undirected; to datasets: collectri; and resources: any
+[2025-05-27 23:00:07] [SUCCESS] [OmnipathR] Downloaded 64958 interactions.
+[2025-05-27 23:00:08] [TRACE]   [OmnipathR] Reading JSON from `https://omnipathdb.org/resources` (encoding: UTF-8).
+[2025-05-27 23:00:08] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2025-05-27 23:00:08] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/interactions?genesymbols=yes&resources=CollecTRI&datasets=tf_mirna&organisms=9606&fields=extra_attrs,evidences,sources,references,curation_effort&license=academic`
+[2025-05-27 23:00:08] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/911416570c2aaa914be32ebf7b85e1eb3d1ff162-1.rds`.
+[2025-05-27 23:00:08] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&resources=CollecTRI&datasets=tf_mirna&organisms=9606&fields=extra_attrs,evidences,sources,references,curation_effort&license=academic`
+[2025-05-27 23:00:08] [TRACE]   [OmnipathR] Converting JSON column `extra_attrs` to list.
+[2025-05-27 23:00:08] [TRACE]   [OmnipathR] Converting JSON column `evidences` to list.
+[2025-05-27 23:00:08] [TRACE]   [OmnipathR] Restricting interaction records to datasets: tf_mirna; and resources: CollecTRI
+[2025-05-27 23:00:08] [TRACE]   [OmnipathR] Filtering evidence columns: positive, negative, directed, undirected; to datasets: tf_mirna; and resources: CollecTRI
+[2025-05-27 23:00:09] [SUCCESS] [OmnipathR] Downloaded 232 interactions.
+[2025-05-27 23:04:29] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=extra_attrs,evidences,sources,references,curation_effort&loops=yes&license=academic`
+[2025-05-27 23:04:29] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/5e82de18cbd9b5d9237867d70ab653aa2a24da2e-1.rds`.
+[2025-05-27 23:04:29] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=extra_attrs,evidences,sources,references,curation_effort&loops=yes&license=academic`
+[2025-05-27 23:04:29] [TRACE]   [OmnipathR] Converting JSON column `extra_attrs` to list.
+[2025-05-27 23:04:31] [TRACE]   [OmnipathR] Converting JSON column `evidences` to list.
+[2025-05-27 23:04:35] [TRACE]   [OmnipathR] Restricting interaction records to datasets: collectri; and resources: any
+[2025-05-27 23:04:38] [TRACE]   [OmnipathR] Filtering evidence columns: positive, negative, directed, undirected; to datasets: collectri; and resources: any
+[2025-05-27 23:05:25] [SUCCESS] [OmnipathR] Downloaded 64958 interactions.
+[2025-05-27 23:05:26] [TRACE]   [OmnipathR] Reading JSON from `https://omnipathdb.org/resources` (encoding: UTF-8).
+[2025-05-27 23:05:26] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2025-05-27 23:05:26] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/interactions?genesymbols=yes&resources=CollecTRI&datasets=tf_mirna&organisms=9606&fields=extra_attrs,evidences,sources,references,curation_effort&license=academic`
+[2025-05-27 23:05:26] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/911416570c2aaa914be32ebf7b85e1eb3d1ff162-1.rds`.
+[2025-05-27 23:05:26] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&resources=CollecTRI&datasets=tf_mirna&organisms=9606&fields=extra_attrs,evidences,sources,references,curation_effort&license=academic`
+[2025-05-27 23:05:26] [TRACE]   [OmnipathR] Converting JSON column `extra_attrs` to list.
+[2025-05-27 23:05:26] [TRACE]   [OmnipathR] Converting JSON column `evidences` to list.
+[2025-05-27 23:05:26] [TRACE]   [OmnipathR] Restricting interaction records to datasets: tf_mirna; and resources: CollecTRI
+[2025-05-27 23:05:26] [TRACE]   [OmnipathR] Filtering evidence columns: positive, negative, directed, undirected; to datasets: tf_mirna; and resources: CollecTRI
+[2025-05-27 23:05:27] [SUCCESS] [OmnipathR] Downloaded 232 interactions.
+[2025-05-27 23:05:37] [TRACE]   [OmnipathR] Reading JSON from `https://omnipathdb.org/resources` (encoding: UTF-8).
+[2025-05-27 23:05:37] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2025-05-27 23:05:37] [TRACE]   [OmnipathR] Reading JSON from `https://omnipathdb.org/resources` (encoding: UTF-8).
+[2025-05-27 23:05:37] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2025-05-27 23:05:38] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/annotations?resources=PROGENy&license=academic`
+[2025-05-27 23:05:39] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/3492392585ba05414edfae46801492076437d7e7-1.rds`.
+[2025-05-27 23:05:39] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/annotations?resources=PROGENy&license=academic`
+[2025-05-27 23:05:39] [SUCCESS] [OmnipathR] Loaded 700239 annotation records from cache.
+[2025-05-27 23:14:21] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=extra_attrs,evidences,sources,references,curation_effort&loops=yes&license=academic`
+[2025-05-27 23:14:22] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/5e82de18cbd9b5d9237867d70ab653aa2a24da2e-1.rds`.
+[2025-05-27 23:14:22] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=extra_attrs,evidences,sources,references,curation_effort&loops=yes&license=academic`
+[2025-05-27 23:14:22] [TRACE]   [OmnipathR] Converting JSON column `extra_attrs` to list.
+[2025-05-27 23:14:24] [TRACE]   [OmnipathR] Converting JSON column `evidences` to list.
+[2025-05-27 23:14:30] [TRACE]   [OmnipathR] Restricting interaction records to datasets: collectri; and resources: any
+[2025-05-27 23:14:35] [TRACE]   [OmnipathR] Filtering evidence columns: positive, negative, directed, undirected; to datasets: collectri; and resources: any
+[2025-05-27 23:15:55] [SUCCESS] [OmnipathR] Downloaded 64958 interactions.
+[2025-05-27 23:15:55] [TRACE]   [OmnipathR] Reading JSON from `https://omnipathdb.org/resources` (encoding: UTF-8).
+[2025-05-27 23:15:55] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2025-05-27 23:15:55] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/interactions?genesymbols=yes&resources=CollecTRI&datasets=tf_mirna&organisms=9606&fields=extra_attrs,evidences,sources,references,curation_effort&license=academic`
+[2025-05-27 23:15:55] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/911416570c2aaa914be32ebf7b85e1eb3d1ff162-1.rds`.
+[2025-05-27 23:15:55] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&resources=CollecTRI&datasets=tf_mirna&organisms=9606&fields=extra_attrs,evidences,sources,references,curation_effort&license=academic`
+[2025-05-27 23:15:55] [TRACE]   [OmnipathR] Converting JSON column `extra_attrs` to list.
+[2025-05-27 23:15:55] [TRACE]   [OmnipathR] Converting JSON column `evidences` to list.
+[2025-05-27 23:15:56] [TRACE]   [OmnipathR] Restricting interaction records to datasets: tf_mirna; and resources: CollecTRI
+[2025-05-27 23:15:56] [TRACE]   [OmnipathR] Filtering evidence columns: positive, negative, directed, undirected; to datasets: tf_mirna; and resources: CollecTRI
+[2025-05-27 23:15:57] [SUCCESS] [OmnipathR] Downloaded 232 interactions.
+[2025-05-27 23:27:29] [TRACE]   [OmnipathR] Reading JSON from `https://omnipathdb.org/resources` (encoding: UTF-8).
+[2025-05-27 23:27:29] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2025-05-27 23:27:30] [TRACE]   [OmnipathR] Reading JSON from `https://omnipathdb.org/resources` (encoding: UTF-8).
+[2025-05-27 23:27:30] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2025-05-27 23:27:30] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/annotations?resources=PROGENy&license=academic`
+[2025-05-27 23:27:32] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/3492392585ba05414edfae46801492076437d7e7-1.rds`.
+[2025-05-27 23:27:32] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/annotations?resources=PROGENy&license=academic`
+[2025-05-27 23:27:32] [SUCCESS] [OmnipathR] Loaded 700239 annotation records from cache.
+[2025-05-27 23:37:40] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=extra_attrs,evidences,sources,references,curation_effort&loops=yes&license=academic`
+[2025-05-27 23:37:41] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/5e82de18cbd9b5d9237867d70ab653aa2a24da2e-1.rds`.
+[2025-05-27 23:37:41] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=extra_attrs,evidences,sources,references,curation_effort&loops=yes&license=academic`
+[2025-05-27 23:37:41] [TRACE]   [OmnipathR] Converting JSON column `extra_attrs` to list.
+[2025-05-27 23:37:43] [TRACE]   [OmnipathR] Converting JSON column `evidences` to list.
+[2025-05-27 23:37:47] [TRACE]   [OmnipathR] Restricting interaction records to datasets: collectri; and resources: any
+[2025-05-27 23:37:51] [TRACE]   [OmnipathR] Filtering evidence columns: positive, negative, directed, undirected; to datasets: collectri; and resources: any
+[2025-05-27 23:38:52] [SUCCESS] [OmnipathR] Downloaded 64958 interactions.
+[2025-05-27 23:38:53] [TRACE]   [OmnipathR] Reading JSON from `https://omnipathdb.org/resources` (encoding: UTF-8).
+[2025-05-27 23:38:53] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2025-05-27 23:38:53] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/interactions?genesymbols=yes&resources=CollecTRI&datasets=tf_mirna&organisms=9606&fields=extra_attrs,evidences,sources,references,curation_effort&license=academic`
+[2025-05-27 23:38:53] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/911416570c2aaa914be32ebf7b85e1eb3d1ff162-1.rds`.
+[2025-05-27 23:38:53] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&resources=CollecTRI&datasets=tf_mirna&organisms=9606&fields=extra_attrs,evidences,sources,references,curation_effort&license=academic`
+[2025-05-27 23:38:53] [TRACE]   [OmnipathR] Converting JSON column `extra_attrs` to list.
+[2025-05-27 23:38:53] [TRACE]   [OmnipathR] Converting JSON column `evidences` to list.
+[2025-05-27 23:38:53] [TRACE]   [OmnipathR] Restricting interaction records to datasets: tf_mirna; and resources: CollecTRI
+[2025-05-27 23:38:53] [TRACE]   [OmnipathR] Filtering evidence columns: positive, negative, directed, undirected; to datasets: tf_mirna; and resources: CollecTRI
+[2025-05-27 23:38:54] [SUCCESS] [OmnipathR] Downloaded 232 interactions.
+[2025-05-27 23:38:57] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=extra_attrs,evidences,sources,references,curation_effort&loops=yes&license=academic`
+[2025-05-27 23:38:58] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/5e82de18cbd9b5d9237867d70ab653aa2a24da2e-1.rds`.
+[2025-05-27 23:38:58] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=extra_attrs,evidences,sources,references,curation_effort&loops=yes&license=academic`
+[2025-05-27 23:38:58] [TRACE]   [OmnipathR] Converting JSON column `extra_attrs` to list.
+[2025-05-27 23:39:00] [TRACE]   [OmnipathR] Converting JSON column `evidences` to list.
+[2025-05-27 23:39:05] [TRACE]   [OmnipathR] Restricting interaction records to datasets: collectri; and resources: any
+[2025-05-27 23:39:09] [TRACE]   [OmnipathR] Filtering evidence columns: positive, negative, directed, undirected; to datasets: collectri; and resources: any
+[2025-05-27 23:40:13] [SUCCESS] [OmnipathR] Downloaded 64958 interactions.
+[2025-05-27 23:40:13] [TRACE]   [OmnipathR] Reading JSON from `https://omnipathdb.org/resources` (encoding: UTF-8).
+[2025-05-27 23:40:13] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2025-05-27 23:40:13] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/interactions?genesymbols=yes&resources=CollecTRI&datasets=tf_mirna&organisms=9606&fields=extra_attrs,evidences,sources,references,curation_effort&license=academic`
+[2025-05-27 23:40:13] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/911416570c2aaa914be32ebf7b85e1eb3d1ff162-1.rds`.
+[2025-05-27 23:40:13] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&resources=CollecTRI&datasets=tf_mirna&organisms=9606&fields=extra_attrs,evidences,sources,references,curation_effort&license=academic`
+[2025-05-27 23:40:13] [TRACE]   [OmnipathR] Converting JSON column `extra_attrs` to list.
+[2025-05-27 23:40:13] [TRACE]   [OmnipathR] Converting JSON column `evidences` to list.
+[2025-05-27 23:40:13] [TRACE]   [OmnipathR] Restricting interaction records to datasets: tf_mirna; and resources: CollecTRI
+[2025-05-27 23:40:13] [TRACE]   [OmnipathR] Filtering evidence columns: positive, negative, directed, undirected; to datasets: tf_mirna; and resources: CollecTRI
+[2025-05-27 23:40:14] [SUCCESS] [OmnipathR] Downloaded 232 interactions.
+[2025-05-27 23:55:09] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=extra_attrs,evidences,sources,references,curation_effort&loops=yes&license=academic`
+[2025-05-27 23:55:09] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/5e82de18cbd9b5d9237867d70ab653aa2a24da2e-1.rds`.
+[2025-05-27 23:55:09] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=extra_attrs,evidences,sources,references,curation_effort&loops=yes&license=academic`
+[2025-05-27 23:55:09] [TRACE]   [OmnipathR] Converting JSON column `extra_attrs` to list.
+[2025-05-27 23:55:10] [TRACE]   [OmnipathR] Converting JSON column `evidences` to list.
+[2025-05-27 23:55:12] [TRACE]   [OmnipathR] Restricting interaction records to datasets: collectri; and resources: any
+[2025-05-27 23:55:13] [TRACE]   [OmnipathR] Filtering evidence columns: positive, negative, directed, undirected; to datasets: collectri; and resources: any
+[2025-05-27 23:55:39] [SUCCESS] [OmnipathR] Downloaded 64958 interactions.
+[2025-05-27 23:55:41] [TRACE]   [OmnipathR] Reading JSON from `https://omnipathdb.org/resources` (encoding: UTF-8).
+[2025-05-27 23:55:41] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2025-05-27 23:55:41] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/interactions?genesymbols=yes&resources=CollecTRI&datasets=tf_mirna&organisms=9606&fields=extra_attrs,evidences,sources,references,curation_effort&license=academic`
+[2025-05-27 23:55:41] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/911416570c2aaa914be32ebf7b85e1eb3d1ff162-1.rds`.
+[2025-05-27 23:55:41] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&resources=CollecTRI&datasets=tf_mirna&organisms=9606&fields=extra_attrs,evidences,sources,references,curation_effort&license=academic`
+[2025-05-27 23:55:41] [TRACE]   [OmnipathR] Converting JSON column `extra_attrs` to list.
+[2025-05-27 23:55:41] [TRACE]   [OmnipathR] Converting JSON column `evidences` to list.
+[2025-05-27 23:55:41] [TRACE]   [OmnipathR] Restricting interaction records to datasets: tf_mirna; and resources: CollecTRI
+[2025-05-27 23:55:41] [TRACE]   [OmnipathR] Filtering evidence columns: positive, negative, directed, undirected; to datasets: tf_mirna; and resources: CollecTRI
+[2025-05-27 23:55:42] [SUCCESS] [OmnipathR] Downloaded 232 interactions.
+[2025-05-27 23:56:02] [TRACE]   [OmnipathR] Reading JSON from `https://omnipathdb.org/resources` (encoding: UTF-8).
+[2025-05-27 23:56:02] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2025-05-27 23:56:13] [TRACE]   [OmnipathR] Reading JSON from `https://omnipathdb.org/resources` (encoding: UTF-8).
+[2025-05-27 23:56:13] [TRACE]   [OmnipathR] JSON validation successful: TRUE
+[2025-05-27 23:56:13] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/annotations?resources=PROGENy&license=academic`
+[2025-05-27 23:56:13] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/3492392585ba05414edfae46801492076437d7e7-1.rds`.
+[2025-05-27 23:56:13] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/annotations?resources=PROGENy&license=academic`
+[2025-05-27 23:56:13] [SUCCESS] [OmnipathR] Loaded 700239 annotation records from cache.
+[2025-05-27 23:56:18] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=extra_attrs,evidences,sources,references,curation_effort&loops=yes&license=academic`
+[2025-05-27 23:56:18] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/5e82de18cbd9b5d9237867d70ab653aa2a24da2e-1.rds`.
+[2025-05-27 23:56:18] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=extra_attrs,evidences,sources,references,curation_effort&loops=yes&license=academic`
+[2025-05-27 23:56:18] [TRACE]   [OmnipathR] Converting JSON column `extra_attrs` to list.
+[2025-05-27 23:56:19] [TRACE]   [OmnipathR] Converting JSON column `evidences` to list.
+[2025-05-27 23:56:21] [TRACE]   [OmnipathR] Restricting interaction records to datasets: collectri; and resources: any
+[2025-05-27 23:56:23] [TRACE]   [OmnipathR] Filtering evidence columns: positive, negative, directed, undirected; to datasets: collectri; and resources: any
+[2025-05-27 23:56:47] [SUCCESS] [OmnipathR] Downloaded 64958 interactions.
+[2025-05-27 23:57:47] [ERROR]   [OmnipathR] [decoupleR] Failed to download TF-miRNA interactions from OmniPath. For more information, see the OmnipathR log.
+[2025-05-27 23:57:47] [TRACE]   [OmnipathR] Looking up in cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=extra_attrs,evidences,sources,references,curation_effort&loops=yes&license=academic`
+[2025-05-27 23:57:48] [TRACE]   [OmnipathR] Loaded data from RDS `/home/marcelo.hurtado/.cache/OmnipathR/5e82de18cbd9b5d9237867d70ab653aa2a24da2e-1.rds`.
+[2025-05-27 23:57:48] [INFO]    [OmnipathR] Loaded from cache: `https://omnipathdb.org/interactions?genesymbols=yes&datasets=collectri&organisms=9606&dorothea_levels=A,B&fields=extra_attrs,evidences,sources,references,curation_effort&loops=yes&license=academic`
+[2025-05-27 23:57:48] [TRACE]   [OmnipathR] Converting JSON column `extra_attrs` to list.
+[2025-05-27 23:57:49] [TRACE]   [OmnipathR] Converting JSON column `evidences` to list.
+[2025-05-27 23:57:50] [TRACE]   [OmnipathR] Restricting interaction records to datasets: collectri; and resources: any
+[2025-05-27 23:57:52] [TRACE]   [OmnipathR] Filtering evidence columns: positive, negative, directed, undirected; to datasets: collectri; and resources: any
+[2025-05-27 23:58:17] [SUCCESS] [OmnipathR] Downloaded 64958 interactions.
+[2025-05-27 23:58:23] [ERROR]   [OmnipathR] [decoupleR] Failed to download TF-miRNA interactions from OmniPath. For more information, see the OmnipathR log.

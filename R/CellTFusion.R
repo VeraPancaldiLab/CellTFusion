@@ -11,6 +11,12 @@ utils::globalVariables(c("Trait", "Value" ,"level", ".", "Cells_level", "PC1", "
 #' @param cbsx.mail (Optional) Email credential for CIBERSORTx. Required if "CibersortX" is among deconv_methods.
 #' @param cbsx.token (Optional) Token credential for CIBERSORTx. Required if "CibersortX" is among deconv_methods.
 #' @param file_name (Optional) Prefix for output files saved in the "Results/" directory.
+#' @param TF.collection Character. The source of the TF–target network. Options are `"CollecTRI"` (default), `"Dorothea"`, or `"ARACNE"`.
+#' - `"CollecTRI"` and `"Dorothea"` use prebuilt collections from OmnipathR.
+#' - `"ARACNE"` allows user input of a custom network file in a 3-column format: `regulator`, `target`, and `mutual information`.
+#' @param min_targets_size Integer. Minimum number of target genes per regulon required for TF activity inference. Default is 5.
+#' @param tfs.pruned Logical. Whether to prune TF regulons to limit the number of target genes, which helps reduce bias introduced by TFs with large regulons. If `TRUE`, the user will be prompted to input a maximum size for regulons. Default is `FALSE`.
+#' @param universe Optional. A user-specified data frame of TF–target interactions. If not provided, the function will fetch the relevant network based on the `TF.collection` argument.
 #' @param min_targets_size Integer; minimum number of target genes required to compute TF activity.
 #' @param minMod Integer; minimum module size for WGCNA module detection.
 #' @param corr_mod Numeric; correlation threshold for merging TF modules.
@@ -57,8 +63,8 @@ utils::globalVariables(c("Trait", "Value" ,"level", ".", "Cells_level", "PC1", "
 #' )
 #'}
 #'
-CellTFusion = function(raw.counts, normalized = T, coldata = NULL, deconv_methods = c("Quantiseq", "Epidish", "DeconRNASeq", "DWLS", "CibersortX"), cbsx.mail = NULL, cbsx.token = NULL, file_name = NULL,
-                       min_targets_size, minMod, corr_mod, corr, cells_extra = NULL, pval = 0.05, high_corr_groups, trait = NULL, trait.positive = NULL, return = T){
+CellTFusion = function(raw.counts, normalized = T, coldata = NULL, trait = NULL, trait.positive = NULL, deconv_methods = c("Quantiseq", "Epidish", "DeconRNASeq", "DWLS", "CibersortX"), cbsx.mail = NULL, cbsx.token = NULL, file_name = NULL,
+                       TF.collection = "CollecTRI", min_targets_size = 5, tfs.pruned = FALSE, universe = NULL, minMod = 15, corr_mod = 0.9, corr = 0.7, cells_extra = NULL, pval = 0.05, high_corr_groups, return = T){
 
   #Normalize counts
   if(normalized == T){
@@ -80,14 +86,11 @@ CellTFusion = function(raw.counts, normalized = T, coldata = NULL, deconv_method
   }
   #TF activity
   cat("\nCalculating TF activity............................................................\n")
-  tfs = compute.TFs.activity(counts.norm, TF.collection = "CollecTRI", min_targets_size, tfs.pruned = FALSE, universe = NULL)
+  tfs = compute.TFs.activity(counts.norm, TF.collection, min_targets_size, tfs.pruned, universe)
 
   # 1. TFs network construction
   cat("\nConstructing TF network............................................................\n")
   network = compute.WTCNA(tfs, network.type = "signed", clustering.method = "ward.D2", minMod, corr_mod, cor_type = "p", return)
-  if(is.null(coldata) == F){
-    compute.metada.association(network[[1]], coldata, pval = pval, width = 10)
-  }
   # 1.2. Modules characterization
   # cat("\nPerforming TF module characterization............................................................\n")
   # hub_tfs = identify_hub_TFs(t(tfs), network, MM_thresh = 0.8, degree_thresh = 0.9)
@@ -95,15 +98,14 @@ CellTFusion = function(raw.counts, normalized = T, coldata = NULL, deconv_method
   # 2. Pathways activity inference
   cat("\nCalculating pathway activities............................................................\n")
   pathways = compute.pathway.activity(counts.norm, gene_sets = NULL, paths = NULL)
-  compute.modules.relationship(network[[1]], pathways, "Pathways_Progeny-TFs_Modules", width = 15)
   # 3. Deconvolution analysis
   cat("\nPerforming deconvolution analysis............................................................\n")
   dt = multideconv::compute.deconvolution.analysis(deconv, corr = corr, seed = 123, cells_extra = cells_extra, file_name = file_name, return = return)
-  compute.modules.relationship(network[[1]], dt[[1]], "Deconvolution-TFs_Modules", vertical = T, height = 30, width = 10, pval = pval)
   # 4. Cell groups construction and scores
   cat("\nCell groups identification............................................................\n")
   cell.groups = construct_cell_groups(counts.norm, tfs, deconv, network, dt, coldata, pval = pval, high_corr_groups,
-                                      clustering.method = "ward.D2", trait = trait, positive = trait.positive)
+                                      clustering.method = "ward.D2", trait = trait, positive = trait.positive,
+                                      TF.collection, min_targets_size, tfs.pruned, universe)
 
   cat("\nEverything done! Results are saved in Results/ folder............................................................\n")
 
@@ -1653,6 +1655,12 @@ compute.composition.matrix = function(deconvolution, deconvolution.subgroupped, 
 #' @param clustering.method Clustering method for hierarchical clustering. Default: "ward.D2".
 #' @param trait Optional character: column name in `clinical` for trait to split by and do a supervised cell group analysis (see paper for more info). If no provided, analysis will be unsupervised.
 #' @param positive Optional value defining the positive class of the `trait`.
+#' @param TF.collection Character. The source of the TF–target network. Options are `"CollecTRI"` (default), `"Dorothea"`, or `"ARACNE"`. Only needed when supervised analysis will be performed, if not, it will be ignored.
+#' - `"CollecTRI"` and `"Dorothea"` use prebuilt collections from OmnipathR.
+#' - `"ARACNE"` allows user input of a custom network file in a 3-column format: `regulator`, `target`, and `mutual information`.
+#' @param min_targets_size Integer. Minimum number of target genes per regulon required for TF activity inference. Default is 5. Only needed when supervised analysis will be performed, if not, it will be ignored.
+#' @param tfs.pruned Logical. Whether to prune TF regulons to limit the number of target genes, which helps reduce bias introduced by TFs with large regulons. If `TRUE`, the user will be prompted to input a maximum size for regulons. Default is `FALSE`. Only needed when supervised analysis will be performed, if not, it will be ignored.
+#' @param universe Optional. A user-specified data frame of TF–target interactions. If not provided, the function will fetch the relevant network based on the `TF.collection` argument. Only needed when supervised analysis will be performed, if not, it will be ignored.
 #'
 #' @return A list of 3 elements:
 #' \describe{
@@ -1661,7 +1669,7 @@ compute.composition.matrix = function(deconvolution, deconvolution.subgroupped, 
 #'   \item{loadings}{A list of numeric vectors indicating the loadings (feature contributions) for each group.}
 #' }
 #' @export
-construct_cell_groups = function(counts, tfs, deconv, network, dt, clinical, pval = 0.05, high_corr_groups = 0.9, clustering.method = "ward.D2", trait = NULL, positive = NULL){
+construct_cell_groups = function(counts, tfs, deconv, network, dt, clinical, pval = 0.05, high_corr_groups = 0.9, clustering.method = "ward.D2", trait = NULL, positive = NULL, TF.collection = "CollecTRI", min_targets_size = 5, tfs.pruned = FALSE, universe = NULL){
 
   if(is.null(trait) == F){
     ##### Split between positive class and negative class
@@ -1672,7 +1680,7 @@ construct_cell_groups = function(counts, tfs, deconv, network, dt, clinical, pva
       dplyr::filter(trait == positive)
     counts.normalized.positive = counts[,rownames(traitData_positive)]
     deconv.positive = deconv[rownames(traitData_positive),]
-    tfs.positive = compute.TFs.activity(counts.normalized.positive)
+    tfs.positive = compute.TFs.activity(counts.normalized.positive, TF.collection, min_targets_size, tfs.pruned, universe)
     dt.positive = dt
     network.positive = network
     dt.positive[[1]] = replicate_deconvolution_subgroups(dt, deconv.positive)
@@ -1686,7 +1694,7 @@ construct_cell_groups = function(counts, tfs, deconv, network, dt, clinical, pva
       dplyr::filter(trait != positive)
     counts.normalized.negative = counts[,rownames(traitData_negative)]
     deconv.negative = deconv[rownames(traitData_negative),]
-    tfs.negative = compute.TFs.activity(counts.normalized.negative)
+    tfs.negative = compute.TFs.activity(counts.normalized.negative, TF.collection, min_targets_size, tfs.pruned, universe)
     dt.negative = dt
     network.negative = network
     dt.negative[[1]] = replicate_deconvolution_subgroups(dt, deconv.negative)
@@ -1768,7 +1776,7 @@ construct_cell_groups = function(counts, tfs, deconv, network, dt, clinical, pva
 #' Then it extracts the relevant cells for each feature and calculates composite
 #' scores.
 #'
-#'
+#' @export
 compute.test.set = function(deconv_res, cell_groups, features, deconvolution_test){
 
   ################################################################################Simulate cell subgroups
@@ -2128,6 +2136,7 @@ cell.groups.anova.test = function(cell.groups, coldata, trait, pval = 0.05){
   cell.groups.sig = list()
   cell.groups.sig[[1]] = cell.groups[[1]][,sig]
   cell.groups.sig[[2]] = cell.groups[[2]][sig]
+  cell.groups.sig[[3]] = cell.groups[[3]][sig]
 
   if(length(sig)==0){
     message("No significant cell groups (pvalue < ", pval, ") after Anova test")
@@ -2180,6 +2189,7 @@ cell.groups.fisher.test = function(cell.groups, coldata, trait, pval = 0.05){
   cell.groups.sig = list()
   cell.groups.sig[[1]] = cell.groups[[1]][,sig]
   cell.groups.sig[[2]] = cell.groups[[2]][sig]
+  cell.groups.sig[[3]] = cell.groups[[3]][sig]
 
   if(length(sig)==0){
     message("No significant cell groups (pvalue < ", pval, ") after Fisher test")
@@ -2273,7 +2283,7 @@ create_tfs_modules = function(TF.matrix, network_tfs){
   tfs.modules = TF.matrix %>%
     t() %>%
     data.frame() %>%
-    dplyr::mutate(Module = "na")
+    dplyr::mutate(Module = "na") ## Create column to assign the corresponding module to each TF
 
   for (i in 1:length(network_tfs[[3]])) {
     tfs.modules$Module[which(rownames(tfs.modules) %in% network_tfs[[3]][[i]])] = names(network_tfs[[3]])[i]
