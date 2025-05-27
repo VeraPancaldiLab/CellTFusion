@@ -4,65 +4,58 @@ Version: 0.0.0.9000
 Authors@R: 
     person("Marcelo", "Hurtado", , "marcelo.hurt137@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0009-0004-6712-0864"))
-Description: CellTFusion is an approach to characterize immune patient profiles based on coordinated TF activity profiles, estimating the cell states, in complement to the cell types abundance estimated by immune deconvolution
+Description: CellTFusion is an approach to characterize immune patient profiles based on coordinated TF activity profiles, estimating the cell states, in complement to the cell types abundance estimated by immune deconvolution.
 License: GPL (>= 3)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
+Depends:
+    R (>= 4.3)
 Imports: 
     ADImpute,
     AnnotationDbi,
-    Biobase,
-    Boruta,
     broom,
-    C50,
     caret,
-    data.table,
-    DeconRNASeq,
     decoupleR,
     dendextend,
-    doParallel,
     dplyr,
-    DWLS (>= 0.4),
     dynamicTreeCut,
     enrichplot,
-    EpiDISH,
     factoextra,
-    foreach,
     ggplot2,
     gplots,
+    CCA,
     graphics,
     grDevices,
     GSVA,
     Hmisc,
-    immunedeconv (>= 2.1.0),
-    MatrixGenerics,
     matrixStats,
-    MCPcounter (>= 1.2.0),
-    omnideconv (>= 0.1.0),
     OmnipathR (>= 3.10.1),
     org.Hs.eg.db,
-    parallel,
-    purrr,
-    randomForest,
     ReactomePA,
-    recipes,
-    rlang,
+    multideconv,
     rstatix,
     stats,
     stringr,
     survival,
     survminer,
     tibble,
+    ggstatsplot,
+    rms,
+    scales,
+    dorothea,
     tidyr,
     utils,
     viper,
-    WGCNA
+    WGCNA,
+    pheatmap,
+    purrr,
+    cluster
 Remotes: 
-    omnideconv/immunedeconv,
-    omnideconv/DWLS,
-    grst/MCPcounter,
+    VeraPancaldiLab/multideconv,
+    VeraPancaldiLab/pipeML,
     saezlab/OmnipathR
 Suggests: 
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
+LazyData: true
