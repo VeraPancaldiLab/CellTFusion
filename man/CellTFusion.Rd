@@ -8,19 +8,22 @@ CellTFusion(
   raw.counts,
   normalized = T,
   coldata = NULL,
+  trait = NULL,
+  trait.positive = NULL,
   deconv_methods = c("Quantiseq", "Epidish", "DeconRNASeq", "DWLS", "CibersortX"),
   cbsx.mail = NULL,
   cbsx.token = NULL,
   file_name = NULL,
-  min_targets_size,
-  minMod,
-  corr_mod,
-  corr,
+  TF.collection = "CollecTRI",
+  min_targets_size = 5,
+  tfs.pruned = FALSE,
+  universe = NULL,
+  minMod = 15,
+  corr_mod = 0.9,
+  corr = 0.7,
   cells_extra = NULL,
   pval = 0.05,
   high_corr_groups,
-  trait = NULL,
-  trait.positive = NULL,
   return = T
 )
 }
@@ -31,6 +34,10 @@ CellTFusion(
 
 \item{coldata}{(Optional) A data frame containing clinical metadata for association analysis with TF modules.}
 
+\item{trait}{Optional character: column name in \code{clinical} for trait to split by and do a supervised cell group analysis (see paper for more info). If no provided, analysis will be unsupervised.}
+
+\item{trait.positive}{Optional value defining the positive class of the \code{trait}.}
+
 \item{deconv_methods}{A character vector of deconvolution methods to apply. Default includes:
 \code{c("Quantiseq", "Epidish", "DeconRNASeq", "DWLS", "CibersortX")}.}
 
@@ -40,7 +47,17 @@ CellTFusion(
 
 \item{file_name}{(Optional) Prefix for output files saved in the "Results/" directory.}
 
+\item{TF.collection}{Character. The source of the TF–target network. Options are \code{"CollecTRI"} (default), \code{"Dorothea"}, or \code{"ARACNE"}.
+\itemize{
+\item \code{"CollecTRI"} and \code{"Dorothea"} use prebuilt collections from OmnipathR.
+\item \code{"ARACNE"} allows user input of a custom network file in a 3-column format: \code{regulator}, \code{target}, and \verb{mutual information}.
+}}
+
 \item{min_targets_size}{Integer; minimum number of target genes required to compute TF activity.}
+
+\item{tfs.pruned}{Logical. Whether to prune TF regulons to limit the number of target genes, which helps reduce bias introduced by TFs with large regulons. If \code{TRUE}, the user will be prompted to input a maximum size for regulons. Default is \code{FALSE}.}
+
+\item{universe}{Optional. A user-specified data frame of TF–target interactions. If not provided, the function will fetch the relevant network based on the \code{TF.collection} argument.}
 
 \item{minMod}{Integer; minimum module size for WGCNA module detection.}
 
@@ -53,10 +70,6 @@ CellTFusion(
 \item{pval}{Numeric; p-value threshold for statistical tests (e.g., metadata and relationship associations).}
 
 \item{high_corr_groups}{Numeric; correlation threshold to identify highly similar cell groups.}
-
-\item{trait}{Optional character: column name in \code{clinical} for trait to split by and do a supervised cell group analysis (see paper for more info). If no provided, analysis will be unsupervised.}
-
-\item{trait.positive}{Optional value defining the positive class of the \code{trait}.}
 
 \item{return}{Logical; if TRUE, returns intermediate results from internal functions. Default is TRUE.}
 }
