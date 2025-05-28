@@ -28,6 +28,8 @@ reference:
   - cell.groups.fisher.test
   - cell.groups.anova.test
   - compute.survival.analysis
+  - identify.cell.groups
+  - identify.cell.signatures
 - title: Utils
   desc: >
     Internal use (not exported functions)
