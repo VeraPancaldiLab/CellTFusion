@@ -189,6 +189,7 @@ Next, we train the machine learning model using the cell group scores:
 
 ```{r}
 library(caret)
+library(pipeML)
 res = pipeML::compute_features.training.ML(features_train = res_training$Cell_groups[[1]], 
                                            target_var = traitData_train$Best.Confirmed.Overall.Response, 
                                            trait.positive = "PD", 
