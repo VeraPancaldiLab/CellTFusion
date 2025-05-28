@@ -36,6 +36,7 @@ Imports:
     org.Hs.eg.db,
     ReactomePA,
     multideconv,
+    pipeML,
     rstatix,
     stats,
     stringr,
