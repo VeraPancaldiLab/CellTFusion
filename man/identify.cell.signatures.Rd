@@ -2,13 +2,25 @@
 % Please edit documentation in R/CellTFusion.R
 \name{identify.cell.signatures}
 \alias{identify.cell.signatures}
-\title{Identify cell signatures from Machine Learning Models and Deconvolution Data}
+\title{Identify cell presence scores across important features from the trained machine learning models.}
 \usage{
-\method{identify}{cell.signatures}(model, deconvolution, var_importance, n_top = 20, sign, file.name)
+\method{identify}{cell.signatures}(
+  cell_groups,
+  deconvolution_processed,
+  TF_network,
+  deconvolution,
+  var_importance,
+  n_top = 20,
+  sign,
+  file.name
+)
 }
 \arguments{
-\item{model}{A list containing the machine learning model results, including
-subgroup compositions and cell groups.}
+\item{cell_groups}{A list containing the cell groups returned by \code{construct_cell_groups()}.}
+
+\item{deconvolution_processed}{A list containing the subgroupped deconvolution results returned by \code{compute.deconvolution.analysis()} from the multideconv R package.}
+
+\item{TF_network}{A list containing the TF modules network returned by \code{compute.WTCNA()}.}
 
 \item{deconvolution}{A data.frame or matrix of deconvolution features where columns
 represent cell types or subgroups.}
@@ -43,15 +55,5 @@ The function performs the following major steps:
 \item Estimates the optimal number of clusters via silhouette analysis.
 \item Evaluates feature importance based on impact on clustering quality via permutation bootstrapping.
 \item Generates heatmaps and bar plots summarizing cell presence scores and TF module scores.
-}
-}
-\examples{
-\dontrun{
-identify.cell.signatures(model = ml_model,
-                         deconvolution = deconv_data,
-                         var_importance = shap_values,
-                         n_top = 20,
-                         sign = "Increase",
-                         file.name = "example_model")
 }
 }
