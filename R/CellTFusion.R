@@ -1831,15 +1831,16 @@ compute.test.set = function(deconv_res, cell_groups, features, deconvolution_tes
 
 }
 
-#' Identify cell signatures from Machine Learning Models and Deconvolution Data
+#' Identify cell presence scores across important features from the trained machine learning models.
 #'
 #' This function extracts cell subgroup compositions from a machine learning model,
 #' identifies top predictive features based on variable importance, and analyzes
 #' cell-type presence patterns using clustering. It computes feature importance based on
 #' clustering impact and generates visualizations for cell feature presence and TF module scores.
 #'
-#' @param model A list containing the machine learning model results, including
-#'   subgroup compositions and cell groups.
+#' @param cell_groups A list containing the cell groups returned by \code{construct_cell_groups()}.
+#' @param deconvolution_processed A list containing the subgroupped deconvolution results returned by \code{compute.deconvolution.analysis()} from the multideconv R package.
+#' @param TF_network A list containing the TF modules network returned by \code{compute.WTCNA()}.
 #' @param deconvolution A data.frame or matrix of deconvolution features where columns
 #'   represent cell types or subgroups.
 #' @param var_importance A data.frame or tibble containing variable importance scores
@@ -1870,21 +1871,13 @@ compute.test.set = function(deconv_res, cell_groups, features, deconvolution_tes
 #' @importFrom ggplot2 ggplot aes geom_bar theme_minimal labs theme element_text margin scale_y_continuous
 #' @importFrom utils stack
 #'
-#' @examples
-#' \dontrun{
-#' identify.cell.signatures(model = ml_model,
-#'                          deconvolution = deconv_data,
-#'                          var_importance = shap_values,
-#'                          n_top = 20,
-#'                          sign = "Increase",
-#'                          file.name = "example_model")
-#' }
-identify.cell.signatures = function(model, deconvolution, var_importance, n_top = 20, sign, file.name){
+#' @export
+identify.cell.signatures = function(cell_groups, deconvolution_processed, TF_network, deconvolution, var_importance, n_top = 20, sign, file.name){
 
   # Extract deconvolution subgroups composition per ML model
   deconv_subgroups = list()
   contador = 1
-  subgroups = model[["Deconvolution_subgroups"]][["Deconvolution subgroups composition"]]
+  subgroups = deconvolution_processed[["Deconvolution subgroups composition"]]
   for (i in 1:length(subgroups)) {
     if(length(subgroups[[i]])!=0){ #Whether a specific cell type does not contains subgroups
       for (j in 1:length(subgroups[[i]])) {
@@ -1897,7 +1890,7 @@ identify.cell.signatures = function(model, deconvolution, var_importance, n_top 
 
   # Take top features based on variable importance
   top <- var_importance %>%
-    tidyr::pivot_longer(cols = dplyr::everything(), names_to = "feature", values_to = "shap_value") %>%
+    tidyr::pivot_longer(cols = everything(), names_to = "feature", values_to = "shap_value") %>%
     dplyr::group_by(feature) %>%
     dplyr::summarise(mean_shap = mean(shap_value, na.rm = TRUE)) %>% #Average SHAP values across samples
     dplyr::mutate(direction = ifelse(mean_shap > 0, "Increase", "Decrease")) %>% #Give direction
@@ -1907,7 +1900,7 @@ identify.cell.signatures = function(model, deconvolution, var_importance, n_top 
         warning("Not enough features for selecting n_top = ", n_top, " features in model. Selecting all available features.\n")
         .  # Use all available rows
       } else {
-        dplyr::top_n(., n_top, wt = mean_shap)  # Select the top n_top features
+        top_n(., n_top, wt = mean_shap)  # Select the top n_top features
       }
     } %>%
     dplyr::arrange(desc(mean_shap)) %>% #Order in decreasing order
@@ -1925,7 +1918,7 @@ identify.cell.signatures = function(model, deconvolution, var_importance, n_top 
 
   # Extract cell composition from top features
   for (feature in top) {
-    composition = model[["Cell_groups"]][[2]][[feature]]
+    composition = cell_groups[[2]][[feature]]
     cell.groups_top[[contador]] = composition
     contador = contador + 1
   }
@@ -1949,21 +1942,21 @@ identify.cell.signatures = function(model, deconvolution, var_importance, n_top 
   }
 
   # Identify clusters of cell combinations
-  jaccard_dist = stats::dist(presence_matrix, method="binary") #Jaccard distance
-  hc <- stats::hclust(jaccard_dist, method = "ward.D2") #Hierarchical clustering of distance
+  jaccard_dist = dist(presence_matrix, method="binary") #Jaccard distance
+  hc <- hclust(jaccard_dist, method = "ward.D2") #Hierarchical clustering of distance
   matrica <- as.matrix(jaccard_dist) #Convert distance object to matrix
-  silhouette <- factoextra::fviz_nbclust(matrica, FUNcluster = hcut, method = "silhouette", k.max = 6) #Identify k clusters from matrix
+  silhouette <- fviz_nbclust(matrica, FUNcluster = hcut, method = "silhouette", k.max = 6) #Identify k clusters from matrix
   k_cluster = as.numeric(silhouette$data$clusters[which.max(silhouette$data$y)]) #Extract k value
-  sub_grp <- dendextend::cutree(hc, k = k_cluster) #Obtain k cluster composition
+  sub_grp <- cutree(hc, k = k_cluster) #Obtain k cluster composition
 
-  p = pheatmap::pheatmap(matrica,
+  p = pheatmap(matrica,
                cluster_rows = hc,
                cluster_cols = hc,
                show_rownames = TRUE,
                show_colnames = TRUE,
                fontsize = 8,
                border_color = NA,
-               color = grDevices::hcl.colors(20, palette = "PRGn"),
+               color = hcl.colors(20, palette = "PRGn"),
                main = "Jaccard Distance Matrix Heatmap")
 
   pdf(paste0("Results/Cell_combinations_jaccard_", file.name, ".pdf"), width = 8)
@@ -1989,9 +1982,9 @@ identify.cell.signatures = function(model, deconvolution, var_importance, n_top 
       permuted_matrix[, feature_idx] <- sample(permuted_matrix[, feature_idx]) # Permute the feature values (only the current feature is shuffled)
 
       # Recompute Jaccard distance and clustering for the permuted matrix
-      permuted_dist = stats::dist(permuted_matrix, method="binary")
-      permuted_hc <- stats::hclust(permuted_dist, method = "ward.D2")
-      permuted_sub_grp <- dendextend::cutree(permuted_hc, k = k_cluster)
+      permuted_dist = dist(permuted_matrix, method="binary")
+      permuted_hc <- hclust(permuted_dist, method = "ward.D2")
+      permuted_sub_grp <- cutree(permuted_hc, k = k_cluster)
 
       # Recompute clustering quality for the permuted matrix
       permuted_quality <- compute_silhouette(permuted_sub_grp, as.matrix(permuted_dist))
@@ -2015,7 +2008,7 @@ identify.cell.signatures = function(model, deconvolution, var_importance, n_top 
   feature_importance <- feature_importance[order(-feature_importance$Impact), ]
 
   # Plot feature importance
-  p = ggplot(feature_importance, aes(x = stats::reorder(Feature, -Impact), y = Impact)) +
+  p = ggplot(feature_importance, aes(x = reorder(Feature, -Impact), y = Impact)) +
     geom_bar(stat = "identity", fill = "steelblue") +
     theme_minimal() +
     labs(title = "Feature Importance Based on Clustering Impact",
@@ -2029,8 +2022,8 @@ identify.cell.signatures = function(model, deconvolution, var_importance, n_top 
 
   # Keep only features with a positive impact in clustering quality
   features = feature_importance %>%
-    dplyr::filter(Impact > 0) %>%
-    dplyr::pull(Feature)
+    filter(Impact > 0) %>%
+    pull(Feature)
 
   # Keep only features with positive impact in clustering
   presence_matrix_important = presence_matrix[,features]
@@ -2046,7 +2039,7 @@ identify.cell.signatures = function(model, deconvolution, var_importance, n_top 
 
   #Calculate scores of presence for each feature
   scores = colSums(presence_matrix_important)/nrow(presence_matrix_important)
-  top_scores_df <- utils::stack(scores)
+  top_scores_df <- stack(scores)
 
   #Plot scores of the cell features across ML models
   p = ggplot(top_scores_df, aes(y = values, x = reorder(ind, -values, decreasing = F))) +
@@ -2066,7 +2059,7 @@ identify.cell.signatures = function(model, deconvolution, var_importance, n_top 
   #Extract TF modules
   colors_groups = c()
   for(i in top){
-    colors_groups = c(colors_groups, extract_colors(names(model$TF_network$`TFs per module`),i))
+    colors_groups = c(colors_groups, extract_colors(names(TF_network$`TFs per module`),i))
   }
   top_colors_df = data.frame(prop.table(table(colors_groups)))
 
