@@ -4,6 +4,7 @@ utils::globalVariables(c("Trait", "Value" ,"level", ".", "Cells_level", "PC1", "
 #' Compute one-step CellTFusion
 #'
 #' @param raw.counts A matrix of raw gene expression counts (genes as rows, samples as columns).
+#' @param deconv A data frame with deconvolution features (cell-type proportions as columns x samples as rows).
 #' @param normalized Logical; if TRUE, normalize raw counts to log-transformed TPM for TF computation. For deconvolution they are going to be normalize just as TPM. Default is TRUE.
 #' @param coldata (Optional) A data frame containing clinical metadata for association analysis with TF modules.
 #' @param deconv_methods A character vector of deconvolution methods to apply. Default includes:
@@ -63,8 +64,8 @@ utils::globalVariables(c("Trait", "Value" ,"level", ".", "Cells_level", "PC1", "
 #' )
 #'}
 #'
-CellTFusion = function(raw.counts, normalized = T, coldata = NULL, trait = NULL, trait.positive = NULL, deconv_methods = c("Quantiseq", "Epidish", "DeconRNASeq", "DWLS", "CibersortX"), cbsx.mail = NULL, cbsx.token = NULL, file_name = NULL,
-                       TF.collection = "CollecTRI", min_targets_size = 5, tfs.pruned = FALSE, universe = NULL, minMod = 15, corr_mod = 0.9, corr = 0.7, cells_extra = NULL, pval = 0.05, high_corr_groups, return = T){
+CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL, trait = NULL, trait.positive = NULL, deconv_methods = c("Quantiseq", "Epidish", "DeconRNASeq", "DWLS", "CibersortX"), cbsx.mail = NULL, cbsx.token = NULL, file_name = NULL,
+                       TF.collection = "CollecTRI", min_targets_size = 5, tfs.pruned = FALSE, universe = NULL, paths = NULL, minMod = 15, corr_mod = 0.9, corr = 0.7, cells_extra = NULL, pval = 0.05, high_corr_groups, return = T){
 
   #Normalize counts
   if(normalized == T){
@@ -74,16 +75,19 @@ CellTFusion = function(raw.counts, normalized = T, coldata = NULL, trait = NULL,
   }
 
   #Deconvolution
-  cat("Calculating cell type deconvolution............................................................\n")
-  if(("CibersortX" %in% deconv_methods) == T){
-    if(is.null(cbsx.mail)==T || is.null(cbsx.token)==T){
-      stop("No CibersortX credentials given!\n")
+  if(is.null(deconv)){
+    cat("Calculating cell type deconvolution............................................................\n")
+    if(("CibersortX" %in% deconv_methods) == T){
+      if(is.null(cbsx.mail)==T || is.null(cbsx.token)==T){
+        stop("No CibersortX credentials given!\n")
+      }else{
+        deconv = multideconv::compute.deconvolution(raw.counts, normalized = normalized, methods = deconv_methods, credentials.mail = cbsx.mail, credentials.token = cbsx.token, doParallel = T, workers = 3, file_name = file_name, return = return)
+      }
     }else{
-      deconv = multideconv::compute.deconvolution(raw.counts, normalized = normalized, methods = deconv_methods, credentials.mail = cbsx.mail, credentials.token = cbsx.token, doParallel = T, workers = 3, file_name = file_name, return = return)
+      deconv = multideconv::compute.deconvolution(raw.counts, normalized = normalized, methods = deconv_methods, file_name = file_name, return = return)
     }
-  }else{
-    deconv = multideconv::compute.deconvolution(raw.counts, normalized = normalized, methods = deconv_methods, file_name = file_name, return = return)
   }
+
   #TF activity
   cat("\nCalculating TF activity............................................................\n")
   tfs = compute.TFs.activity(counts.norm, TF.collection, min_targets_size, tfs.pruned, universe)
@@ -97,7 +101,7 @@ CellTFusion = function(raw.counts, normalized = T, coldata = NULL, trait = NULL,
   # compute.modules.enrichment(counts.norm, hub_tfs)
   # 2. Pathways activity inference
   cat("\nCalculating pathway activities............................................................\n")
-  pathways = compute.pathway.activity(counts.norm, gene_sets = NULL, paths = NULL)
+  pathways = compute.pathway.activity(counts.norm, gene_sets = NULL, paths = paths)
   # 3. Deconvolution analysis
   cat("\nPerforming deconvolution analysis............................................................\n")
   dt = multideconv::compute.deconvolution.analysis(deconv, corr = corr, seed = 123, cells_extra = cells_extra, file_name = file_name, return = return)
@@ -2823,4 +2827,255 @@ compute.test.score = function(cell_group, loadings){
 
   return(selected_components)
 
+}
+
+#' Prepare folds for CellTFusion cross-validation with processed training and test data
+#'
+#' This function processes a dataset for k-fold cross-validation using the CellTFusion framework.
+#' For each fold, it generates training and test datasets by computing cell group features from the deconvolution matrix
+#' and gene expression data. It also processes the entire dataset once to provide a final processed training set.
+#'
+#' @param data A data frame containing gene expression data (samples x genes) and a column named `target` indicating class labels.
+#' @param folds A list of integer vectors indicating row indices for the training set in each fold. The test set is implicitly defined as the complement.
+#' @param deconv A matrix or data frame of deconvolution features (samples x features). If NULL, CellTFusion will proceed without it.
+#' @param normalized Logical indicating whether the gene expression data is already normalized. Defaults to FALSE.
+#' @param coldata A data frame with metadata (e.g., sample annotations), must match the number and order of samples in `data`.
+#' @param trait A character string specifying the name of the column in `coldata` containing the trait of interest (e.g., response).
+#' @param trait.positive A character string indicating the positive class label for the trait.
+#'
+#' @return A list of two elements:
+#' \itemize{
+#'   \item \code{processed_folds}: A list of folds, where each fold contains:
+#'     \itemize{
+#'       \item \code{train_data}: Processed training data with cell group features and `target` column.
+#'       \item \code{test_data}: Test data projected into the learned cell group feature space.
+#'       \item \code{obs_test}: True class labels for the test set.
+#'       \item \code{rowIndex}: Row indices corresponding to the test set.
+#'       \item \code{fold_name}: Optional fold name if provided in the `folds` list.
+#'     }
+#'   \item \code{train_cell_data_final}: Final cell group feature matrix for the full dataset, including the `target` column.
+#' }
+#'
+#' @details The function runs the `CellTFusion()` pipeline on each fold's training set and uses the trained projection
+#' to compute the test set representation. It also runs CellTFusion on the full dataset to return the complete processed training set.
+#'
+#' @importFrom dplyr mutate
+#' @importFrom decoupleR get_collectri
+#' @importFrom stats setNames
+#' @export
+#'
+prepare_CellTFusion_folds <- function(data, folds, deconv = NULL,
+                                      normalized = FALSE, coldata, trait, trait.positive) {
+
+  universe <- decoupleR::get_collectri(organism = 'human', split_complexes = FALSE)
+  paths <- get_progeny(organism = 'human', top = 500)
+
+  processed_folds <- list()
+
+  for (i in seq_along(folds)) {
+    cat("Preprocessing fold", i, "\n")
+
+    train_idx <- folds[[i]]
+    test_idx <- setdiff(seq_len(nrow(data)), train_idx)
+
+    ## Subset data
+    train_data <- data[train_idx, , drop = FALSE]
+    train_deconv <- deconv[train_idx, , drop = FALSE]
+    train_coldata <- coldata[train_idx, , drop = FALSE]
+    obs_train <- train_data$target
+    train_data$target <- NULL
+
+    ## Run CellTFusion once
+    train_processed <- CellTFusion(
+      t(train_data),
+      deconv = train_deconv,
+      normalized = normalized,
+      coldata = train_coldata,
+      trait = trait,
+      trait.positive = trait.positive,
+      universe = universe,
+      paths = paths,
+      return = FALSE
+    )
+
+    train_cell_data <- train_processed$Cell_groups[[1]] %>%
+      dplyr::mutate(target = obs_train)
+
+    ## Prepare test data using trained info
+    test_deconv <- deconv[test_idx, , drop = FALSE]
+    obs_test <- data$target[test_idx]
+
+    test_data <- compute.test.set(
+      train_processed$Processed_deconvolution,
+      train_processed$Cell_groups,
+      colnames(train_cell_data)[colnames(train_cell_data) != "target"],
+      test_deconv
+    )
+
+    processed_folds[[i]] <- list(
+      train_data = train_cell_data,
+      test_data = test_data,
+      obs_test = obs_test,
+      rowIndex = test_idx,
+      fold_name = names(folds)[i]
+    )
+  }
+
+  # Run CellTFusion on the full training set
+  obs_train = data$target
+  data$target = NULL
+
+  train_processed_final <- CellTFusion(
+    t(data),
+    deconv,
+    normalized,
+    coldata,
+    trait,
+    trait.positive,
+    return = FALSE
+  )
+
+  # Get cell group features
+  train_cell_data_final <- train_processed_final$Cell_groups[[1]] %>%
+    dplyr::mutate(target = obs_train)
+
+
+  return(list(processed_folds, train_cell_data_final))
+}
+
+#' Train and evaluate machine learning models on CellTFusion-processed folds
+#'
+#' This function performs k-fold cross-validation using cell group features generated by the `prepare_CellTFusion_folds()` function.
+#' It supports hyperparameter tuning over a grid and returns a model object that mimicks the caret's training output, including performance metrics and predictions.
+#'
+#' @param processed_folds A list of folds as returned by `prepare_CellTFusion_folds()`. Each fold contains processed training and test data with cell group features.
+#' @param ml_method A character string indicating the machine learning model to use, as supported by the `caret` package (e.g., `"rf"`, `"svmRadial"`, `"glmnet"`).
+#' @param tuneGrid Optional. A data frame specifying the grid of hyperparameters to evaluate. If `NULL`, a default grid of length 3 is generated using caret's `getModelInfo()`.
+#' @param training_set_all A data frame containing the full training set (i.e., all folds combined) with cell group features and a `target` column, as returned in `train_cell_data_final` from `prepare_CellTFusion_folds()`.
+#'
+#' @return A list (caret-style object) with the following components:
+#' \itemize{
+#'   \item \code{fit.train}: The final model trained on the full training set using the best hyperparameters.
+#'   \item \code{results}: A data frame summarizing average cross-validated Accuracy, Kappa, and their standard deviations for each hyperparameter combination.
+#'   \item \code{pred}: A data frame of predictions from each fold, including class probabilities, observed and predicted labels, and hyperparameter values.
+#'   \item \code{resample}: A data frame summarizing Accuracy and Kappa per fold for the best-tuned model.
+#' }
+#'
+#' @details
+#' This function performs the following:
+#' \enumerate{
+#'   \item Trains models for each fold and hyperparameter combination.
+#'   \item Predicts on the held-out test data of each fold.
+#'   \item Aggregates prediction results and evaluates Accuracy and Kappa for each fold and hyperparameter set.
+#'   \item Selects the best-performing hyperparameter set based on mean Accuracy across folds.
+#'   \item Trains the final model on the full dataset using the selected hyperparameters.
+#' }
+#'
+#' @importFrom dplyr tibble bind_cols group_by summarise rename ungroup select desc slice_max arrange all_of across
+#' @importFrom tidyr unnest_wider
+#' @importFrom caret train trainControl getModelInfo
+#' @importFrom stats predict
+#' @export
+#'
+compute_CellTFusion_k_fold_CV <- function(processed_folds, ml_method, tuneGrid = NULL, training_set_all) {
+
+  all_preds <- list()
+
+  ## Train once to get grid
+  if (!is.null(tuneGrid)) {
+    grid <- tuneGrid
+  } else {
+    grid_func <- caret::getModelInfo(ml_method)[[ml_method]]$grid
+    grid <- grid_func(
+      x = processed_folds[[1]]$train_data[, -which(names(processed_folds[[1]]$train_data) == "target")],
+      y = processed_folds[[1]]$train_data$target,
+      len = 3
+    )
+  }
+
+  for (grid_row in seq_len(nrow(grid))) {
+    hp <- grid[grid_row, , drop = FALSE]
+    hp_string <- paste(names(hp), hp, sep = "=", collapse = "; ")
+
+    for (i in seq_along(processed_folds)) {
+      fold <- processed_folds[[i]]
+      cat("Running fold", i, "with", hp_string, "\n")
+
+      ## Train model
+      model <- caret::train(
+        target ~ .,
+        data = fold$train_data,
+        method = ml_method,
+        trControl = caret::trainControl(method = "none", classProbs = TRUE),
+        tuneGrid = hp,
+        metric = "Accuracy"
+      )
+
+      ## Predict
+      fold$test_data = fold$test_data[,colnames(fold$test_data)%in%model$coefnames] #Use only those features selected by model
+      probs <- stats::predict(model, newdata = fold$test_data, type = "prob")
+      preds <- stats::predict(model, newdata = fold$test_data)
+
+      pred_df <- dplyr::tibble(
+        rowIndex = fold$rowIndex,
+        Resample = fold$fold_name,
+        obs = fold$obs_test,
+        pred = preds
+      ) %>%
+        dplyr::bind_cols(hp) %>%
+        dplyr::bind_cols(probs)
+
+      all_preds[[length(all_preds) + 1]] <- pred_df
+    }
+  }
+
+  ## Combine predictions
+  pred_df_all <- dplyr::bind_rows(all_preds)
+  rownames(pred_df_all) <- NULL
+  hp_cols <- names(grid)
+
+  ## Evaluate metrics
+  results_matrix <- pred_df_all %>%
+    dplyr::group_by(dplyr::across(dplyr::all_of(hp_cols)), Resample) %>%
+    dplyr::summarise(metrics = list(calculate_accuracy_kappa_resample(obs, pred)), .groups = "drop") %>%
+    tidyr::unnest_wider(metrics) %>%
+    dplyr::group_by(dplyr::across(dplyr::all_of(hp_cols))) %>%
+    dplyr::summarise(
+      Accuracy = mean(Accuracy_resample),
+      Kappa = mean(Kappa_resample),
+      AccuracySD = sd(Accuracy_resample),
+      KappaSD = sd(Kappa_resample)
+    )
+
+  ## Choose best
+  best_row <- results_matrix %>% dplyr::ungroup() %>% dplyr::arrange(dplyr::desc(Accuracy)) %>% dplyr::slice_max(Accuracy, n = 1, with_ties = FALSE) #Take the top one, if there are ties pick the first one
+  besttune <- best_row %>% dplyr::select(dplyr::all_of(hp_cols))
+
+  ## Resample summary
+  resample_df <- pred_df_all %>%
+    dplyr::inner_join(besttune, by = hp_cols) %>%
+    dplyr::group_by(Resample) %>%
+    dplyr::summarise(metrics = list(calculate_accuracy_kappa_resample(obs, pred)), .groups = "drop") %>%
+    tidyr::unnest_wider(metrics) %>%
+    dplyr::rename(Accuracy = Accuracy_resample, Kappa = Kappa_resample) %>%
+    dplyr::select(Accuracy, Kappa, Resample) %>%
+    dplyr::arrange(Resample)
+
+
+  # Train model with bestTune from CV
+  final_model <- caret::train(
+    target ~ .,
+    data = training_set_all,
+    method = ml_method,
+    trControl = caret::trainControl(method = "none", classProbs = TRUE),
+    tuneGrid = besttune
+  )
+
+  ## Return caret-like object
+  fit.train <- final_model
+  fit.train$results <- results_matrix
+  fit.train$pred <- pred_df_all
+  fit.train$resample <- resample_df
+
+  return(fit.train)
 }

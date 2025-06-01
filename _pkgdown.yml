@@ -30,6 +30,10 @@ reference:
   - compute.survival.analysis
   - identify.cell.groups
   - identify.cell.signatures
+- title: Machine learning
+  contents:
+  - prepare_CellTFusion_folds
+  - compute_CellTFusion_k_fold_CV
 - title: Utils
   desc: >
     Internal use (not exported functions)

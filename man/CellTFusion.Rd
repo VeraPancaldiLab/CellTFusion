@@ -6,6 +6,7 @@
 \usage{
 CellTFusion(
   raw.counts,
+  deconv = NULL,
   normalized = T,
   coldata = NULL,
   trait = NULL,
@@ -18,6 +19,7 @@ CellTFusion(
   min_targets_size = 5,
   tfs.pruned = FALSE,
   universe = NULL,
+  paths = NULL,
   minMod = 15,
   corr_mod = 0.9,
   corr = 0.7,
@@ -29,6 +31,8 @@ CellTFusion(
 }
 \arguments{
 \item{raw.counts}{A matrix of raw gene expression counts (genes as rows, samples as columns).}
+
+\item{deconv}{A data frame with deconvolution features (cell-type proportions as columns x samples as rows).}
 
 \item{normalized}{Logical; if TRUE, normalize raw counts to log-transformed TPM for TF computation. For deconvolution they are going to be normalize just as TPM. Default is TRUE.}
 
