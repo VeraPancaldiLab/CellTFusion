@@ -22,6 +22,7 @@
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/compute.pathway.activity.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/compute.survival.analysis.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/compute.test.set.html</loc></url>
+<url><loc>https://verapancaldilab.github.io/CellTFusion/reference/compute_CellTFusion_k_fold_CV.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/compute_cell_groups_signatures.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/compute_composite_score.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/construct_cell_groups.html</loc></url>
@@ -40,6 +41,7 @@
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/mergeModules.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/module_enrich.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/network.html</loc></url>
+<url><loc>https://verapancaldilab.github.io/CellTFusion/reference/prepare_CellTFusion_folds.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/raw.counts.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/remove.cell.groups.corr.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/remove_equal.html</loc></url>
