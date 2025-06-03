@@ -51,6 +51,7 @@ Imports:
     utils,
     viper,
     WGCNA,
+    fastcluster,
     pheatmap,
     purrr,
     cluster
