@@ -65,7 +65,7 @@ utils::globalVariables(c("Trait", "Value" ,"level", ".", "Cells_level", "PC1", "
 #'}
 #'
 CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL, trait = NULL, trait.positive = NULL, deconv_methods = c("Quantiseq", "Epidish", "DeconRNASeq", "DWLS", "CibersortX"), cbsx.mail = NULL, cbsx.token = NULL, file_name = NULL,
-                       TF.collection = "CollecTRI", min_targets_size = 5, tfs.pruned = FALSE, universe = NULL, paths = NULL, minMod = 15, corr_mod = 0.9, corr = 0.7, cells_extra = NULL, pval = 0.05, high_corr_groups, return = T){
+                       TF.collection = "CollecTRI", min_targets_size = 5, tfs.pruned = FALSE, universe = NULL, paths = NULL, minMod = 15, corr_mod = 0.9, corr = 0.7, cells_extra = NULL, pval = 0.05, high_corr_groups = 0.9, return = T){
 
   #Normalize counts
   if(normalized == T){
@@ -107,7 +107,7 @@ CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL
   dt = multideconv::compute.deconvolution.analysis(deconv, corr = corr, seed = 123, cells_extra = cells_extra, file_name = file_name, return = return)
   # 4. Cell groups construction and scores
   cat("\nCell groups identification............................................................\n")
-  cell.groups = construct_cell_groups(counts.norm, tfs, deconv, network, dt, coldata, pval = pval, high_corr_groups,
+  cell.groups = construct_cell_groups(counts.norm, tfs, deconv, network, dt, coldata, pval = pval, high_corr_groups = high_corr_groups,
                                       clustering.method = "ward.D2", trait = trait, positive = trait.positive,
                                       TF.collection, min_targets_size, tfs.pruned, universe)
 
@@ -1946,21 +1946,21 @@ identify.cell.signatures = function(cell_groups, deconvolution_processed, TF_net
   }
 
   # Identify clusters of cell combinations
-  jaccard_dist = dist(presence_matrix, method="binary") #Jaccard distance
-  hc <- hclust(jaccard_dist, method = "ward.D2") #Hierarchical clustering of distance
+  jaccard_dist = stats::dist(presence_matrix, method="binary") #Jaccard distance
+  hc <- fastcluster::hclust(jaccard_dist, method = "ward.D2") #Hierarchical clustering of distance
   matrica <- as.matrix(jaccard_dist) #Convert distance object to matrix
-  silhouette <- fviz_nbclust(matrica, FUNcluster = hcut, method = "silhouette", k.max = 6) #Identify k clusters from matrix
+  silhouette <- factoextra::fviz_nbclust(matrica, FUNcluster = factoextra::hcut, method = "silhouette", k.max = ncol(matrica)-1) #Identify k clusters from matrix
   k_cluster = as.numeric(silhouette$data$clusters[which.max(silhouette$data$y)]) #Extract k value
-  sub_grp <- cutree(hc, k = k_cluster) #Obtain k cluster composition
+  sub_grp <- stats::cutree(hc, k = k_cluster) #Obtain k cluster composition
 
-  p = pheatmap(matrica,
+  p = pheatmap::pheatmap(matrica,
                cluster_rows = hc,
                cluster_cols = hc,
                show_rownames = TRUE,
                show_colnames = TRUE,
                fontsize = 8,
                border_color = NA,
-               color = hcl.colors(20, palette = "PRGn"),
+               color = grDevices::hcl.colors(20, palette = "PRGn"),
                main = "Jaccard Distance Matrix Heatmap")
 
   pdf(paste0("Results/Cell_combinations_jaccard_", file.name, ".pdf"), width = 8)
@@ -1986,9 +1986,9 @@ identify.cell.signatures = function(cell_groups, deconvolution_processed, TF_net
       permuted_matrix[, feature_idx] <- sample(permuted_matrix[, feature_idx]) # Permute the feature values (only the current feature is shuffled)
 
       # Recompute Jaccard distance and clustering for the permuted matrix
-      permuted_dist = dist(permuted_matrix, method="binary")
-      permuted_hc <- hclust(permuted_dist, method = "ward.D2")
-      permuted_sub_grp <- cutree(permuted_hc, k = k_cluster)
+      permuted_dist = stats::dist(permuted_matrix, method="binary")
+      permuted_hc <- stats::hclust(permuted_dist, method = "ward.D2")
+      permuted_sub_grp <- stats::cutree(permuted_hc, k = k_cluster)
 
       # Recompute clustering quality for the permuted matrix
       permuted_quality <- compute_silhouette(permuted_sub_grp, as.matrix(permuted_dist))
@@ -2012,7 +2012,7 @@ identify.cell.signatures = function(cell_groups, deconvolution_processed, TF_net
   feature_importance <- feature_importance[order(-feature_importance$Impact), ]
 
   # Plot feature importance
-  p = ggplot(feature_importance, aes(x = reorder(Feature, -Impact), y = Impact)) +
+  p = ggplot2::ggplot(feature_importance, aes(x = reorder(Feature, -Impact), y = Impact)) +
     geom_bar(stat = "identity", fill = "steelblue") +
     theme_minimal() +
     labs(title = "Feature Importance Based on Clustering Impact",
@@ -2026,8 +2026,8 @@ identify.cell.signatures = function(cell_groups, deconvolution_processed, TF_net
 
   # Keep only features with a positive impact in clustering quality
   features = feature_importance %>%
-    filter(Impact > 0) %>%
-    pull(Feature)
+    dplyr::filter(Impact > 0) %>%
+    dplyr::pull(Feature)
 
   # Keep only features with positive impact in clustering
   presence_matrix_important = presence_matrix[,features]
@@ -2046,7 +2046,7 @@ identify.cell.signatures = function(cell_groups, deconvolution_processed, TF_net
   top_scores_df <- stack(scores)
 
   #Plot scores of the cell features across ML models
-  p = ggplot(top_scores_df, aes(y = values, x = reorder(ind, -values, decreasing = F))) +
+  p = ggplot2::ggplot(top_scores_df, aes(y = values, x = reorder(ind, -values, decreasing = F))) +
     geom_bar(stat = "identity", fill = "skyblue", width = 0.6) +
     theme_minimal() +
     labs(title = paste0("Cell features presence scores across ", nrow(presence_matrix_important), " predictive cell groups"),
@@ -2868,7 +2868,7 @@ prepare_CellTFusion_folds <- function(data, folds, deconv = NULL,
                                       normalized = FALSE, coldata, trait, trait.positive) {
 
   universe <- decoupleR::get_collectri(organism = 'human', split_complexes = FALSE)
-  paths <- get_progeny(organism = 'human', top = 500)
+  paths <- decoupleR::get_progeny(organism = 'human', top = 500)
 
   processed_folds <- list()
 
@@ -2939,8 +2939,9 @@ prepare_CellTFusion_folds <- function(data, folds, deconv = NULL,
   train_cell_data_final <- train_processed_final$Cell_groups[[1]] %>%
     dplyr::mutate(target = obs_train)
 
+  custom_output = train_processed_final
 
-  return(list(processed_folds, train_cell_data_final))
+  return(list(processed_folds, train_cell_data_final, custom_output))
 }
 
 #' Train and evaluate machine learning models on CellTFusion-processed folds
@@ -3037,7 +3038,7 @@ compute_CellTFusion_k_fold_CV <- function(processed_folds, ml_method, tuneGrid =
   ## Evaluate metrics
   results_matrix <- pred_df_all %>%
     dplyr::group_by(dplyr::across(dplyr::all_of(hp_cols)), Resample) %>%
-    dplyr::summarise(metrics = list(calculate_accuracy_kappa_resample(obs, pred)), .groups = "drop") %>%
+    dplyr::summarise(metrics = list(pipeML::calculate_accuracy_kappa_resample(obs, pred)), .groups = "drop") %>%
     tidyr::unnest_wider(metrics) %>%
     dplyr::group_by(dplyr::across(dplyr::all_of(hp_cols))) %>%
     dplyr::summarise(
@@ -3055,7 +3056,7 @@ compute_CellTFusion_k_fold_CV <- function(processed_folds, ml_method, tuneGrid =
   resample_df <- pred_df_all %>%
     dplyr::inner_join(besttune, by = hp_cols) %>%
     dplyr::group_by(Resample) %>%
-    dplyr::summarise(metrics = list(calculate_accuracy_kappa_resample(obs, pred)), .groups = "drop") %>%
+    dplyr::summarise(metrics = list(pipeML::calculate_accuracy_kappa_resample(obs, pred)), .groups = "drop") %>%
     tidyr::unnest_wider(metrics) %>%
     dplyr::rename(Accuracy = Accuracy_resample, Kappa = Kappa_resample) %>%
     dplyr::select(Accuracy, Kappa, Resample) %>%
