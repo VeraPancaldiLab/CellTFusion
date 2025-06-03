@@ -25,7 +25,7 @@ CellTFusion(
   corr = 0.7,
   cells_extra = NULL,
   pval = 0.05,
-  high_corr_groups,
+  high_corr_groups = 0.9,
   return = T
 )
 }
