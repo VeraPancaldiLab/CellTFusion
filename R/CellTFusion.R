@@ -104,7 +104,7 @@ CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL
   pathways = compute.pathway.activity(counts.norm, gene_sets = NULL, paths = paths)
   # 3. Deconvolution analysis
   cat("\nPerforming deconvolution analysis............................................................\n")
-  dt = multideconv::compute.deconvolution.analysis(deconv, corr = corr, seed = 123, cells_extra = cells_extra, file_name = file_name, return = return)
+  dt = multideconv::compute.deconvolution.analysis(deconv, corr = corr, seed = 123, cells_extra = cells_extra, file_name = file_name, return = return, verbose = FALSE)
   # 4. Cell groups construction and scores
   cat("\nCell groups identification............................................................\n")
   cell.groups = construct_cell_groups(counts.norm, tfs, deconv, network, dt, coldata, pval = pval, high_corr_groups = high_corr_groups,
@@ -1208,6 +1208,7 @@ compute.TFs.activity <- function(RNA.counts, TF.collection = "CollecTRI", min_ta
 #' @param minMod Minimum number of TFs per module. Default is 15.
 #' @param corr_mod Correlation threshold (0–1) for merging similar modules. Default is 0.9.
 #' @param cor_type Correlation type for adjacency calculation: "p" (Pearson), "s" (Spearman). Default is "p".
+#' @param verbose Boolen value to whether print or no the function messages
 #' @param return Logical, whether to save output plots and module list to "Results/". Default is TRUE.
 #'
 #' @return A named list with:
@@ -1228,13 +1229,18 @@ compute.TFs.activity <- function(RNA.counts, TF.collection = "CollecTRI", min_ta
 #'
 #' data("tfs")
 #' network <- compute.WTCNA(tfs, corr_mod = 0.9, clustering.method = "ward.D2", return = FALSE)
-compute.WTCNA <- function(TFs.matrix, network.type = "signed", clustering.method = "ward.D2", minMod = 15, corr_mod = 0.9, cor_type = "p", return = T){
+compute.WTCNA <- function(TFs.matrix, network.type = "signed", clustering.method = "ward.D2", minMod = 15, corr_mod = 0.9, cor_type = "p", verbose = F, return = T){
 
-  cat("Creating weighted TF-coactivity network......................................................................\n\n")
+  if(verbose){
+    cat("Creating weighted TF-coactivity network......................................................................\n\n")
+  }
+  
   #####Choose parameter for scale-free network topology
   powers = c(c(1:10), seq(from = 12, to=20, by=1))
-  sft = WGCNA::pickSoftThreshold(TFs.matrix, powerVector = powers, verbose = 0, networkType = network.type)
-
+  sink(tempfile())
+  invisible(sft <- WGCNA::pickSoftThreshold(TFs.matrix, powerVector = powers, verbose = 0, networkType = network.type))
+  sink()
+  
   if(return){
     pdf("Results/Soft_Threshold")
     plot(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2],
@@ -1250,19 +1256,23 @@ compute.WTCNA <- function(TFs.matrix, network.type = "signed", clustering.method
   diff = abs(-sign(sft$fitIndices[,3])*sft$fitIndices[,2] - target) #Calculate absolute difference
   min_index = which.min(diff) #Identify the index with the minimum difference
   softPower = powers[min_index]
-  cat("Choosing", softPower, "as soft-threshold......................................................................\n\n")
+  
+  if(verbose){
+    cat("Choosing", softPower, "as soft-threshold......................................................................\n\n")
+    
+    #####Co-expression matrix using nodes adjacency and topological overlapping nodes
+    cat("Calculating nodes adjacency and topological overlapping nodes.................................................\n\n")
+  }
 
-  #####Co-expression matrix using nodes adjacency and topological overlapping nodes
-  cat("Calculating nodes adjacency and topological overlapping nodes.................................................\n\n")
   adjacency = WGCNA::adjacency(TFs.matrix, power =softPower, type=network.type, corFnc = "cor", corOptions = list(use = cor_type))
-  TOM = WGCNA::TOMsimilarity(adjacency, TOMType = network.type)
+  TOM = WGCNA::TOMsimilarity(adjacency, TOMType = network.type, verbose = 0)
   dissTOM = 1-TOM
 
   #####Unsupervised hierarchical clustering using dissimilarity matrix
   geneTree = stats::hclust(dist(dissTOM), method = clustering.method)
   dynamicMods = dynamicTreeCut::cutreeDynamic(dendro = geneTree, distM = dissTOM,
                                               deepSplit = 2, pamRespectsDendro = FALSE,
-                                              minClusterSize = minMod);
+                                              minClusterSize = minMod, verbose = 0);
   dynamicColors = WGCNA::labels2colors(dynamicMods)
 
   #####Remove variables and clean garbage
@@ -1279,12 +1289,18 @@ compute.WTCNA <- function(TFs.matrix, network.type = "signed", clustering.method
   }
 
   #####Calculate eigenvectors from modules
-  cat("Calculating eigenvectors from modules.................................................\n\n")
+  if(verbose){
+    cat("Calculating eigenvectors from modules.................................................\n\n")
+  }
+  
   MEList = WGCNA::moduleEigengenes(TFs.matrix, colors = dynamicColors, scale = F) #Data already scale
   MEs = MEList$eigengenes
   MEs = WGCNA::orderMEs(MEs)
 
-  print(paste0("Merging modules significantly correlated with ", corr_mod, "........"))
+  if(verbose){
+    print(paste0("Merging modules significantly correlated with ", corr_mod, "........"))
+  }
+  
   merge = mergeModules(MEs, dynamicColors, corr_mod)
   MEs = merge[[1]]
   dynamicColors = merge[[2]]
@@ -2506,13 +2522,6 @@ remove.cell.groups.corr <- function(data, threshold = 0.95) {
 
       #Add new combined features
       class <- unique(stringr::str_extract(colnames(feature_corr), "positive|negative"))
-      if(length(class)==1){
-        if(is.na(class) == F){
-          message("Highly correlated features (r>", threshold,"): ", paste(colnames(feature_corr), collapse = ', '), ". Combining.")
-        }else if(is.na(class) == T){
-          message("Highly correlated features (r>", threshold,"): ", paste(colnames(feature_corr), collapse = ', '), ". Combining.")
-        }
-      }
 
       if(contador==1){
         #Remove features from original data
@@ -2827,7 +2836,6 @@ prepare_CellTFusion_folds <- function(data, folds, deconv = NULL,
   processed_folds <- list()
 
   for (i in seq_along(folds)) {
-    cat("Preprocessing fold", i, "\n")
 
     train_idx <- folds[[i]]
     test_idx <- setdiff(seq_len(nrow(data)), train_idx)
