@@ -28,7 +28,8 @@ utils::globalVariables(c("Trait", "Value" ,"level", ".", "Cells_level", "PC1", "
 #' @param trait Optional character: column name in `clinical` for trait to split by and do a supervised cell group analysis (see paper for more info). If no provided, analysis will be unsupervised.
 #' @param trait.positive Optional value defining the positive class of the `trait`.
 #' @param return Logical; if TRUE, returns intermediate results from internal functions. Default is TRUE.
-#'
+#' @param verbose Boolen value to whether print or no the function messages
+#' 
 #' @return A list containing:
 #' \describe{
 #'   \item{Deconvolution}{A matrix with cell-type proportions (samples as rows, cell types as columns).}
@@ -65,7 +66,7 @@ utils::globalVariables(c("Trait", "Value" ,"level", ".", "Cells_level", "PC1", "
 #'}
 #'
 CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL, trait = NULL, trait.positive = NULL, deconv_methods = c("Quantiseq", "Epidish", "DeconRNASeq", "DWLS", "CibersortX"), cbsx.mail = NULL, cbsx.token = NULL, file_name = NULL,
-                       TF.collection = "CollecTRI", min_targets_size = 5, tfs.pruned = FALSE, universe = NULL, paths = NULL, minMod = 15, corr_mod = 0.9, corr = 0.7, cells_extra = NULL, pval = 0.05, high_corr_groups = 0.9, return = T){
+                       TF.collection = "CollecTRI", min_targets_size = 5, tfs.pruned = FALSE, universe = NULL, paths = NULL, minMod = 15, corr_mod = 0.9, corr = 0.7, cells_extra = NULL, pval = 0.05, high_corr_groups = 0.9, return = T, verbose = T){
 
   #Normalize counts
   if(normalized == T){
@@ -76,7 +77,9 @@ CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL
 
   #Deconvolution
   if(is.null(deconv)){
-    cat("Calculating cell type deconvolution............................................................\n")
+    if(verbose){
+      cat("Calculating cell type deconvolution............................................................\n")
+    }
     if(("CibersortX" %in% deconv_methods) == T){
       if(is.null(cbsx.mail)==T || is.null(cbsx.token)==T){
         stop("No CibersortX credentials given!\n")
@@ -89,29 +92,41 @@ CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL
   }
 
   #TF activity
-  cat("\nCalculating TF activity............................................................\n")
+  if(verbose){
+    cat("\nCalculating TF activity............................................................\n")
+  }
   tfs = compute.TFs.activity(counts.norm, TF.collection, min_targets_size, tfs.pruned, universe)
 
   # 1. TFs network construction
-  cat("\nConstructing TF network............................................................\n")
+  if(verbose){
+    cat("\nConstructing TF network............................................................\n")
+  }
   network = compute.WTCNA(tfs, network.type = "signed", clustering.method = "ward.D2", minMod, corr_mod, cor_type = "p", return)
   # 1.2. Modules characterization
   # cat("\nPerforming TF module characterization............................................................\n")
   # hub_tfs = identify_hub_TFs(t(tfs), network, MM_thresh = 0.8, degree_thresh = 0.9)
   # compute.modules.enrichment(counts.norm, hub_tfs)
   # 2. Pathways activity inference
-  cat("\nCalculating pathway activities............................................................\n")
+  if(verbose){
+    cat("\nCalculating pathway activities............................................................\n")
+  }
   pathways = compute.pathway.activity(counts.norm, gene_sets = NULL, paths = paths)
   # 3. Deconvolution analysis
-  cat("\nPerforming deconvolution analysis............................................................\n")
+  if(verbose){
+    cat("\nPerforming deconvolution analysis............................................................\n")
+  }
   dt = multideconv::compute.deconvolution.analysis(deconv, corr = corr, seed = 123, cells_extra = cells_extra, file_name = file_name, return = return, verbose = FALSE)
   # 4. Cell groups construction and scores
-  cat("\nCell groups identification............................................................\n")
+  if(verbose){
+    cat("\nCell groups identification............................................................\n")
+  }
   cell.groups = construct_cell_groups(counts.norm, tfs, deconv, network, dt, coldata, pval = pval, high_corr_groups = high_corr_groups,
                                       clustering.method = "ward.D2", trait = trait, positive = trait.positive,
                                       TF.collection, min_targets_size, tfs.pruned, universe)
 
-  cat("\nEverything done! Results are saved in Results/ folder............................................................\n")
+  if(verbose){
+    cat("\nEverything done! Results are saved in Results/ folder............................................................\n")
+  }
 
   res = list("Deconvolution" = deconv, "TFs_matrix" = tfs, "TF_network" = network, "Pathways_scores" = pathways,
              "Processed_deconvolution" = dt, "Cell_groups" = cell.groups)
@@ -1712,7 +1727,6 @@ construct_cell_groups = function(counts, tfs, deconv, network, dt, clinical, pva
 
   cell.groups = remove.cell.groups.corr(cell.groups, threshold = high_corr_groups) #(Not done to avoid really big groups)
 
-  cat("Removing low variance features (if present)........................\n")
   zero = caret::nearZeroVar(cell.groups[[1]], saveMetrics = TRUE)
   cell.groups[[1]] = cell.groups[[1]][, !zero$nzv]
   cell.groups[[2]] = cell.groups[[2]][!zero$nzv]
@@ -2827,11 +2841,8 @@ compute.test.score = function(cell_group, loadings){
 #' @importFrom stats setNames
 #' @export
 #'
-prepare_CellTFusion_folds <- function(data, folds, deconv = NULL,
+prepare_CellTFusion_folds <- function(data, folds, deconv = NULL, universe = NULL, paths = NULL,
                                       normalized = FALSE, coldata, trait, trait.positive) {
-
-  universe <- decoupleR::get_collectri(organism = 'human', split_complexes = FALSE)
-  paths <- decoupleR::get_progeny(organism = 'human', top = 500)
 
   processed_folds <- list()
 
@@ -2857,7 +2868,8 @@ prepare_CellTFusion_folds <- function(data, folds, deconv = NULL,
       trait.positive = trait.positive,
       universe = universe,
       paths = paths,
-      return = FALSE
+      return = FALSE,
+      verbose = FALSE
     )
 
     train_cell_data <- train_processed$Cell_groups[[1]] %>%
@@ -2894,7 +2906,8 @@ prepare_CellTFusion_folds <- function(data, folds, deconv = NULL,
     coldata,
     trait,
     trait.positive,
-    return = FALSE
+    return = FALSE,
+    verbose = FALSE
   )
 
   # Get cell group features
