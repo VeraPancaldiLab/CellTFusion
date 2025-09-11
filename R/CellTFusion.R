@@ -66,7 +66,7 @@ utils::globalVariables(c("Trait", "Value" ,"level", ".", "Cells_level", "PC1", "
 #'}
 #'
 CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL, trait = NULL, trait.positive = NULL, deconv_methods = c("Quantiseq", "Epidish", "DeconRNASeq", "DWLS", "CibersortX"), cbsx.mail = NULL, cbsx.token = NULL, file_name = NULL,
-                       TF.collection = "CollecTRI", min_targets_size = 5, tfs.pruned = FALSE, universe = NULL, paths = NULL, minMod = 15, corr_mod = 0.9, corr = 0.7, cells_extra = NULL, pval = 0.05, high_corr_groups = 0.9, return = T, verbose = T){
+                       TF.collection = "CollecTRI", min_targets_size = 10, tfs.pruned = FALSE, universe = NULL, paths = NULL, minMod = 10, corr_mod = 0.9, corr = 0.7, cells_extra = NULL, pval = 0.05, high_corr_groups = 0.8, return = T, verbose = T){
 
   #Normalize counts
   if(normalized == T){
@@ -101,7 +101,7 @@ CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL
   if(verbose){
     cat("\nConstructing TF network............................................................\n")
   }
-  network = compute.WTCNA(tfs, network.type = "signed", clustering.method = "ward.D2", minMod, corr_mod, cor_type = "p", return)
+  network = compute.WTCNA(tfs, network.type = "signed", clustering.method = "ward.D2", minMod, corr_mod, cor_type = "p", return = return)
   # 1.2. Modules characterization
   # cat("\nPerforming TF module characterization............................................................\n")
   # hub_tfs = identify_hub_TFs(t(tfs), network, MM_thresh = 0.8, degree_thresh = 0.9)
@@ -181,7 +181,8 @@ CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL
 #' }
 cell.groups.computation = function(deconvolution, cell.dendrograms, tfs.module.network, return = T){
 
-  cuts = c(0.01, 0.02, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4) #Hard coded - Because heights are based on distance we keep feature close together meaning (distance from 0.05 to max 0.3)
+  #cuts = c(-Inf, 0.01, 0.02, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4) #Hard coded - Because heights are based on distance we keep feature close together meaning (distance from 0.05 to max 0.3)
+  cuts = c(0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4) #Hard coded - Because heights are based on distance we keep feature close together meaning (distance from 0.05 to max 0.3)
   #cuts = calculate_dendrogram_cuts(cell.dendrograms)
 
   cell.groups = list()
@@ -212,7 +213,7 @@ cell.groups.computation = function(deconvolution, cell.dendrograms, tfs.module.n
         z = z[-idy]
       }
 
-      ###################################################Remove groups with one single feature
+      ###################################################Remove groups with one single feature (deprecated)
       if(length(x) != 0){
         #groups_cut[[contador]] = remove_single_groups(x, y, z)
         groups_cut[[contador]] = list(x, y, z)
@@ -358,7 +359,7 @@ compute_cell_groups_signatures = function(deconv_res, cell_groups, features, dec
     color = stringr::str_split(name_cell_group, "_")[[1]][2]
     loadings_cells = cell_groups[[2]][[idx[i]]]
 
-    score = compute_composite_score(pca_cells, color, tfs.module.network[[1]])
+    score = compute_composite_score(pca_cells, color, tfs.module.network[[1]], discard = T) ###Loadings are not been used from positive/negative analysis, only the cell groups. Loadings are re-calculated
     x = score[[1]]
 
     if(nrow(data.frame(x)) > 1){ # nrow(x) > 1 means this is a vector and no NA
@@ -422,67 +423,72 @@ compute.metada.association = function(tfs.modules, coldata, pval = 0.05, width =
   coldata_categorical = coldata %>%
     dplyr::select(dplyr::where(is.character)|dplyr::where(is.factor))
 
-  if(ncol(coldata_categorical)!=0){
+  if(ncol(coldata_categorical) != 0){
     data = cbind(tfs.modules, coldata_categorical)
     pvals = data.frame()
     fvals = data.frame()
+    
     for(i in 1:ncol(tfs.modules)){
       contador = 1
       for (j in (ncol(tfs.modules)+1):ncol(data)) {
         module <- names(data)[i]
         trait <- names(data)[j]
-
-        aov_model <- stats::aov(data[,i] ~ data[,j], data = data)
-        avz <- broom::tidy(aov_model)
-
-        # Calculate eta squared manually
-        ss_between <- avz$sumsq[1]
-        ss_residual <- avz$sumsq[2]
-        eta2 <- ss_between / (ss_between + ss_residual)
-
-        pvals[i,contador] = avz$p.value[1]
-        fvals[i,contador] = avz$statistic[1]
+        
+        df <- data.frame(
+          value = data[, i],
+          trait = as.factor(data[, j])
+        )
+        
+        # Global ANOVA (rstatix, so it's compatible downstream)
+        res.aov <- rstatix::anova_test(data = df, dv = value, between = trait)
+        
+        pvals[i, contador] = res.aov$p
+        fvals[i, contador] = res.aov$F
         contador = contador + 1
-
-        if(avz$p.value[1] < pval) {
-          pdf(paste0("Results/ANOVA_", module, "-", trait))
+        
+        # Only continue if ANOVA significant
+        if(res.aov$p < pval) {
+          
+          # Pairwise Tukey
+          pwc <- df %>%
+            rstatix::tukey_hsd(value ~ trait) %>%
+            rstatix::add_xy_position(x = "trait")
+          
+          pdf(paste0("Results/ANOVA_", module, "-", trait, ".pdf"))
           print(
-            ggplot(data, aes(x = data[,j], y = data[,i], fill = data[,j])) +
-              geom_boxplot() +
-              scale_fill_brewer() +
-              geom_smooth(aes(x = data[,j], y = data[,i]), method = "loess") +
-              ylab(paste0("Values for ", module)) +
-              xlab(paste0("Clinical trait: ", trait)) +
-              labs(title = "One way ANOVA test",
-                   subtitle = paste0(
-                     "F statistic: ", round(avz$statistic[1], 3),
-                     " | p-value: ", round(avz$p.value[1], 3),
-                     " | effect size: ", round(eta2, 3))
+            ggpubr::ggboxplot(df, x = "trait", y = "value", fill = "trait", add = "jitter") +
+              ggpubr::stat_pvalue_manual(pwc, hide.ns = TRUE) +
+              labs(
+                title = "One-way ANOVA with Tukey HSD",
+                subtitle = rstatix::get_test_label(res.aov, detailed = TRUE),
+                caption  = rstatix::get_pwc_label(pwc),
+                x = paste0("Clinical trait: ", trait),
+                y = paste0("Values for ", module)
               ) +
-              theme(axis.text.x = element_text(size = 20, angle = 0),
-                    axis.title.x = element_text(size = 20),
-                    legend.title = element_text(size = 15),
-                    legend.text = element_text(size = 12),
-                    axis.title.y = element_text(size = 20, angle = 90),
-                    plot.title = element_text(size = 20),
-                    plot.subtitle = element_text(size = 15, face = "bold")) +
-              scale_fill_discrete(name = trait)
+              theme(
+                axis.text.x = element_text(size = 20, angle = 0),
+                axis.title.x = element_text(size = 20),
+                legend.position = "none",
+                axis.title.y = element_text(size = 20, angle = 90),
+                plot.title = element_text(size = 20),
+                plot.subtitle = element_text(size = 15, face = "bold")
+              )
           )
           dev.off()
         }
       }
     }
+    
     rownames(pvals) = colnames(tfs.modules)
     colnames(pvals) = colnames(coldata_categorical)
-
     rownames(fvals) = colnames(tfs.modules)
     colnames(fvals) = colnames(coldata_categorical)
-
+    
     pvals = as.matrix(pvals)
     textMatrix2 = paste("ANOVA\n(", signif(pvals, 2), ")", sep = "")
     dim(textMatrix2) = dim(pvals)
   }
-
+  
   ###Association with quantitative variables
   coldata_quantitative = coldata %>%
     dplyr::select(dplyr::where(is.numeric))
@@ -1658,7 +1664,7 @@ compute.composition.matrix = function(deconvolution, deconvolution.subgroupped, 
 #'   \item{loadings}{A list of numeric vectors indicating the loadings (feature contributions) for each group.}
 #' }
 #' @export
-construct_cell_groups = function(counts, tfs, deconv, network, dt, clinical, pval = 0.05, high_corr_groups = 0.9, clustering.method = "ward.D2", trait = NULL, positive = NULL, TF.collection = "CollecTRI", min_targets_size = 5, tfs.pruned = FALSE, universe = NULL){
+construct_cell_groups = function(counts, tfs, deconv, network, dt, clinical, pval = 0.05, high_corr_groups = 0.8, clustering.method = "ward.D2", trait = NULL, positive = NULL, TF.collection = "CollecTRI", min_targets_size = 10, tfs.pruned = FALSE, universe = NULL){
 
   if(is.null(trait) == F){
     ##### Split between positive class and negative class
@@ -1725,7 +1731,7 @@ construct_cell_groups = function(counts, tfs, deconv, network, dt, clinical, pva
     cell.groups = cell.groups.computation(dt[[1]], cell_dendrograms, network, return = F)
   }
 
-  cell.groups = remove.cell.groups.corr(cell.groups, threshold = high_corr_groups) #(Not done to avoid really big groups)
+  cell.groups = remove.cell.groups.corr(cell.groups, threshold = high_corr_groups) 
 
   zero = caret::nearZeroVar(cell.groups[[1]], saveMetrics = TRUE)
   cell.groups[[1]] = cell.groups[[1]][, !zero$nzv]
@@ -2841,81 +2847,123 @@ compute.test.score = function(cell_group, loadings){
 #' @importFrom stats setNames
 #' @export
 #'
-prepare_CellTFusion_folds <- function(data, folds, deconv = NULL, universe = NULL, paths = NULL,
-                                      normalized = FALSE, coldata, trait, trait.positive) {
+prepare_CellTFusion_folds <- function(data, folds = NULL, deconv = NULL, universe = NULL, paths = NULL,
+                                      normalized = FALSE, coldata, trait, trait.positive,
+                                      min_targets_size, minMod, corr_mod, corr, high_corr_groups, bestune = NULL){
 
-  processed_folds <- list()
-
-  for (i in seq_along(folds)) {
-
-    train_idx <- folds[[i]]
-    test_idx <- setdiff(seq_len(nrow(data)), train_idx)
-
-    ## Subset data
-    train_data <- data[train_idx, , drop = FALSE]
-    train_deconv <- deconv[train_idx, , drop = FALSE]
-    train_coldata <- coldata[train_idx, , drop = FALSE]
-    obs_train <- train_data$target
-    train_data$target <- NULL
-
-    ## Run CellTFusion once
-    train_processed <- CellTFusion(
-      t(train_data),
-      deconv = train_deconv,
+  if(!is.null(bestune)){
+    # Run CellTFusion on the full training set
+    obs_train = data$target
+    data$target = NULL
+    
+    best_celltfusion_params <- bestune %>%
+      dplyr::select(min_targets_size, minMod, corr_mod, corr, high_corr_groups)
+    
+    train_processed_final <- CellTFusion(
+      t(data),
+      deconv = deconv,
       normalized = normalized,
-      coldata = train_coldata,
+      coldata = coldata,
       trait = trait,
       trait.positive = trait.positive,
       universe = universe,
       paths = paths,
+      min_targets_size   = best_celltfusion_params$min_targets_size,
+      minMod             = best_celltfusion_params$minMod,
+      corr_mod           = best_celltfusion_params$corr_mod,
+      corr               = best_celltfusion_params$corr,
+      high_corr_groups   = best_celltfusion_params$high_corr_groups,
       return = FALSE,
       verbose = FALSE
     )
-
-    train_cell_data <- train_processed$Cell_groups[[1]] %>%
+    
+    # Get cell group features
+    train_cell_data_final <- train_processed_final$Cell_groups[[1]] %>%
+      data.frame() %>%
       dplyr::mutate(target = obs_train)
-
-    ## Prepare test data using trained info
-    test_deconv <- deconv[test_idx, , drop = FALSE]
-    obs_test <- data$target[test_idx]
-
-    test_data <- compute.test.set(
-      train_processed$Processed_deconvolution,
-      train_processed$Cell_groups,
-      colnames(train_cell_data)[colnames(train_cell_data) != "target"],
-      test_deconv
+    
+    custom_output = train_processed_final
+    
+    res = list(train_cell_data_final, custom_output, best_celltfusion_params)
+  }else{ ### Means best tune need to be find
+    
+    custom_grid <- expand.grid(
+      min_targets_size = min_targets_size,
+      minMod  = minMod,
+      corr_mod = corr_mod,
+      corr = corr,
+      high_corr_groups = high_corr_groups
     )
-
-    processed_folds[[i]] <- list(
-      train_data = train_cell_data,
-      test_data = test_data,
-      obs_test = obs_test,
-      rowIndex = test_idx,
-      fold_name = names(folds)[i]
-    )
+    
+    processed_folds <- list()
+    
+    for (i in seq_along(folds)) {
+      
+      train_idx <- folds[[i]]
+      test_idx <- setdiff(seq_len(nrow(data)), train_idx)
+      
+      ## Subset data
+      train_data <- data[train_idx, , drop = FALSE]
+      train_deconv <- deconv[train_idx, , drop = FALSE]
+      train_coldata <- coldata[train_idx, , drop = FALSE]
+      obs_train <- train_data$target
+      train_data$target <- NULL
+      
+      processed_folds[[i]] = list()
+      
+      for(j in seq_len(nrow(custom_grid))){
+        
+        ## Run CellTFusion once
+        train_processed <- CellTFusion(
+          t(train_data),
+          deconv = train_deconv,
+          normalized = normalized,
+          coldata = train_coldata,
+          trait = trait,
+          trait.positive = trait.positive,
+          universe = universe,
+          paths = paths,
+          min_targets_size = custom_grid$min_targets_size[j], 
+          minMod = custom_grid$minMod[j], 
+          corr_mod = custom_grid$corr_mod[j], 
+          corr = custom_grid$corr[j], 
+          high_corr_groups = custom_grid$high_corr_groups[j],
+          return = FALSE,
+          verbose = FALSE
+        )
+        
+        train_cell_data <- train_processed$Cell_groups[[1]] %>%
+          data.frame() %>%
+          dplyr::mutate(target = obs_train)
+        
+        ## Prepare test data using trained info
+        test_deconv <- deconv[test_idx, , drop = FALSE]
+        obs_test <- data$target[test_idx]
+        
+        test_data <- compute.test.set(
+          train_processed$Processed_deconvolution,
+          train_processed$Cell_groups,
+          colnames(train_cell_data)[colnames(train_cell_data) != "target"],
+          test_deconv
+        ) 
+        
+        processed_folds[[i]][[j]] <- list(
+          train_data = train_cell_data,
+          test_data  = test_data,
+          obs_test   = obs_test,
+          rowIndex   = test_idx,
+          fold_name  = names(folds)[i],
+          params     = custom_grid[j, ] 
+        )
+        
+      }
+      
+    }
+    
+    res = processed_folds
   }
+  
 
-  # Run CellTFusion on the full training set
-  obs_train = data$target
-  data$target = NULL
-
-  train_processed_final <- CellTFusion(
-    t(data),
-    deconv,
-    normalized,
-    coldata,
-    trait,
-    trait.positive,
-    return = FALSE,
-    verbose = FALSE
-  )
-
-  # Get cell group features
-  train_cell_data_final <- train_processed_final$Cell_groups[[1]] %>%
-    dplyr::mutate(target = obs_train)
-
-  custom_output = train_processed_final
-
-  return(list(processed_folds, train_cell_data_final, custom_output))
+  return(res)
 }
 
