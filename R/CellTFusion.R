@@ -2538,11 +2538,45 @@ remove.cell.groups.corr <- function(data, threshold = 0.95) {
       }
       new_group_composition = unique(unlist(unname(data[[2]][colnames(feature)])))
       new_group_value = rowMeans(data[[1]][,colnames(data[[1]])%in%colnames(feature),drop=F])
-      new_loadings_value <- Reduce("+", data[[3]][colnames(data[[1]])%in%colnames(feature)]) / length(data[[3]][colnames(data[[1]])%in%colnames(feature)])
 
-      #Add new combined features
-      class <- unique(stringr::str_extract(colnames(feature_corr), "positive|negative"))
-
+      ################ Merging cell loadings 
+      
+      # Select the loadings matrices corresponding to the current set of correlated features
+      mats <- data[[3]][colnames(data[[1]]) %in% colnames(feature)]
+      
+      # Ensure that all matrices have proper column names (set the rownames() as colnames() as they are square)
+      mats_fixed <- lapply(mats, function(x) {
+        if (is.null(colnames(x))) {
+          colnames(x) <- rownames(x)
+        }
+        x
+      })
+      
+      # Compute the union of all features across the selected matrices: full set of features that the merged matrix should contain
+      all_features <- Reduce(union, lapply(mats_fixed, rownames))
+      
+      # Align each matrix to the full set of features
+      # - Add missing rows/columns filled with 0 for features not present in the matrix
+      # - Reorder rows and columns according to 'all_features'
+      mats_aligned <- lapply(mats_fixed, function(x) {
+        missing <- setdiff(all_features, rownames(x))  # Identify features missing in this matrix
+        if(length(missing) > 0){
+          # Add missing rows (initialized to 0)
+          x <- rbind(x, matrix(0, nrow = length(missing), ncol = ncol(x),
+                               dimnames = list(missing, colnames(x))))
+          # Add missing columns (initialized to 0)
+          x <- cbind(x, matrix(0, nrow = nrow(x), ncol = length(missing),
+                               dimnames = list(rownames(x), missing)))
+        }
+        # Reorder rows and columns so all matrices have the same order
+        x[all_features, all_features, drop = FALSE]
+      })
+      
+      # Combine all aligned matrices by computing the element-wise average
+      new_loadings_value <- Reduce("+", mats_aligned) / length(mats_aligned)
+      
+      ################ 
+      
       if(contador==1){
         #Remove features from original data
         new_data <- data[[1]][, -which(colnames(data[[1]])%in%colnames(feature_corr)), drop = F]
@@ -2554,24 +2588,29 @@ remove.cell.groups.corr <- function(data, threshold = 0.95) {
         new_groups = new_groups[-which(names(new_groups) %in% colnames(feature_corr))]
       }
 
-      ## If corr features are from two different classes don't combine, just discard them (as they don't make any distinction between classes for prediction)
-      if(length(class) == 1){
-        if(is.na(class) == F){
-          new_name = paste0("Dendrogram_",  paste0(unique(unlist(color_features)), collapse = "_"), ".group_combined_", contador, "_", class)
-        }else{
-          new_name = paste0("Dendrogram_",  paste0(unique(unlist(color_features)), collapse = "_"), ".group_combined_", contador)
-        }
-        new_data = cbind(new_data, new_group_value)
-        colnames(new_data)[length(new_data)] = new_name
-
-        new_groups[[length(new_groups)+1]] = new_group_composition
-        names(new_groups)[length(new_groups)] = new_name
-
-        new_loadings[[length(new_loadings)+1]] = new_loadings_value
-        names(new_loadings)[length(new_loadings)] = new_name
-
-        contador = contador + 1
+      #Add new combined features
+      class <- unique(stringr::str_extract(colnames(feature_corr), "positive|negative"))
+      if(length(class)>1){
+        class = paste0(class, collapse = ".")
       }
+        
+      ## If corr features are from two different classes don't combine, just discard them (as they don't make any distinction between classes for prediction)
+      if(is.na(class) == F){
+        new_name = paste0("Dendrogram_",  paste0(unique(unlist(color_features)), collapse = "_"), ".group_combined_", contador, "_", class)
+      }else{
+        new_name = paste0("Dendrogram_",  paste0(unique(unlist(color_features)), collapse = "_"), ".group_combined_", contador)
+      }
+      new_data = cbind(new_data, new_group_value)
+      colnames(new_data)[length(new_data)] = new_name
+
+      new_groups[[length(new_groups)+1]] = new_group_composition
+      names(new_groups)[length(new_groups)] = new_name
+
+      new_loadings[[length(new_loadings)+1]] = new_loadings_value
+      names(new_loadings)[length(new_loadings)] = new_name
+
+      contador = contador + 1
+      
     }else{ #Nothing is combined
       if(contador == 1){
         new_data = data[[1]]
@@ -2848,122 +2887,147 @@ compute.test.score = function(cell_group, loadings){
 #' @export
 #'
 prepare_CellTFusion_folds <- function(data, folds = NULL, deconv = NULL, universe = NULL, paths = NULL,
-                                      normalized = FALSE, coldata, trait, trait.positive,
+                                      normalized = FALSE, coldata, trait, trait.positive, ncores = NULL,
                                       min_targets_size, minMod, corr_mod, corr, high_corr_groups, bestune = NULL){
-
-  if(!is.null(bestune)){
-    # Run CellTFusion on the full training set
-    obs_train = data$target
-    data$target = NULL
-    
-    best_celltfusion_params <- bestune %>%
-      dplyr::select(min_targets_size, minMod, corr_mod, corr, high_corr_groups)
-    
-    train_processed_final <- CellTFusion(
-      t(data),
-      deconv = deconv,
-      normalized = normalized,
-      coldata = coldata,
-      trait = trait,
-      trait.positive = trait.positive,
-      universe = universe,
-      paths = paths,
-      min_targets_size   = best_celltfusion_params$min_targets_size,
-      minMod             = best_celltfusion_params$minMod,
-      corr_mod           = best_celltfusion_params$corr_mod,
-      corr               = best_celltfusion_params$corr,
-      high_corr_groups   = best_celltfusion_params$high_corr_groups,
-      return = FALSE,
-      verbose = FALSE
-    )
-    
-    # Get cell group features
-    train_cell_data_final <- train_processed_final$Cell_groups[[1]] %>%
-      data.frame() %>%
-      dplyr::mutate(target = obs_train)
-    
-    custom_output = train_processed_final
-    
-    res = list(train_cell_data_final, custom_output, best_celltfusion_params)
-  }else{ ### Means best tune need to be find
-    
-    custom_grid <- expand.grid(
-      min_targets_size = min_targets_size,
-      minMod  = minMod,
-      corr_mod = corr_mod,
-      corr = corr,
-      high_corr_groups = high_corr_groups
-    )
-    
-    processed_folds <- list()
-    
-    for (i in seq_along(folds)) {
-      
-      train_idx <- folds[[i]]
-      test_idx <- setdiff(seq_len(nrow(data)), train_idx)
-      
-      ## Subset data
-      train_data <- data[train_idx, , drop = FALSE]
-      train_deconv <- deconv[train_idx, , drop = FALSE]
-      train_coldata <- coldata[train_idx, , drop = FALSE]
-      obs_train <- train_data$target
-      train_data$target <- NULL
-      
-      processed_folds[[i]] = list()
-      
-      for(j in seq_len(nrow(custom_grid))){
-        
-        ## Run CellTFusion once
-        train_processed <- CellTFusion(
-          t(train_data),
-          deconv = train_deconv,
-          normalized = normalized,
-          coldata = train_coldata,
-          trait = trait,
-          trait.positive = trait.positive,
-          universe = universe,
-          paths = paths,
-          min_targets_size = custom_grid$min_targets_size[j], 
-          minMod = custom_grid$minMod[j], 
-          corr_mod = custom_grid$corr_mod[j], 
-          corr = custom_grid$corr[j], 
-          high_corr_groups = custom_grid$high_corr_groups[j],
-          return = FALSE,
-          verbose = FALSE
-        )
-        
-        train_cell_data <- train_processed$Cell_groups[[1]] %>%
-          data.frame() %>%
-          dplyr::mutate(target = obs_train)
-        
-        ## Prepare test data using trained info
-        test_deconv <- deconv[test_idx, , drop = FALSE]
-        obs_test <- data$target[test_idx]
-        
-        test_data <- compute.test.set(
-          train_processed$Processed_deconvolution,
-          train_processed$Cell_groups,
-          colnames(train_cell_data)[colnames(train_cell_data) != "target"],
-          test_deconv
-        ) 
-        
-        processed_folds[[i]][[j]] <- list(
-          train_data = train_cell_data,
-          test_data  = test_data,
-          obs_test   = obs_test,
-          rowIndex   = test_idx,
-          fold_name  = names(folds)[i],
-          params     = custom_grid[j, ] 
-        )
-        
-      }
-      
-    }
-    
-    res = processed_folds
-  }
   
+    if(!is.null(bestune)){
+      # Run CellTFusion on the full training set
+      obs_train = data$target
+      data$target = NULL
+
+      best_celltfusion_params <- bestune %>%
+        dplyr::select(min_targets_size, minMod, corr_mod, corr, high_corr_groups)
+
+      train_processed_final <- CellTFusion(
+        t(data),
+        deconv = deconv,
+        normalized = normalized,
+        coldata = coldata,
+        trait = trait,
+        trait.positive = trait.positive,
+        universe = universe,
+        paths = paths,
+        min_targets_size   = best_celltfusion_params$min_targets_size,
+        minMod             = best_celltfusion_params$minMod,
+        corr_mod           = best_celltfusion_params$corr_mod,
+        corr               = best_celltfusion_params$corr,
+        high_corr_groups   = best_celltfusion_params$high_corr_groups,
+        return = FALSE,
+        verbose = FALSE
+      )
+
+      # Get cell group features
+      train_cell_data_final <- train_processed_final$Cell_groups[[1]] %>%
+        data.frame() %>%
+        dplyr::mutate(target = obs_train)
+
+      custom_output = train_processed_final
+
+      res = list(train_cell_data_final, custom_output, best_celltfusion_params)
+    }else{ ### Means best tune need to be find
+
+      custom_grid <- expand.grid(
+        min_targets_size = min_targets_size,
+        minMod  = minMod,
+        corr_mod = corr_mod,
+        corr = corr,
+        high_corr_groups = high_corr_groups
+      )
+
+
+      ### Implement parallelization
+      if(is.null(ncores) == TRUE){
+        ncores = parallel::detectCores() - 2
+      }
+
+      cl <- parallel::makeCluster(ncores)
+      doParallel::registerDoParallel(cl)
+
+      # Parallelize over folds
+      processed_folds <- foreach::foreach(i = seq_along(folds), .packages = c("dplyr")) %dopar% {
+        source("src/CellTFusion.R")
+
+        cat("Starting fold", names(folds)[i], "\n")
+
+        train_idx <- folds[[i]]
+        test_idx <- setdiff(seq_len(nrow(data)), train_idx)
+
+        ## Subset data
+        train_data <- data[train_idx, , drop = FALSE]
+        train_deconv <- deconv[train_idx, , drop = FALSE]
+        train_coldata <- coldata[train_idx, , drop = FALSE]
+        obs_train <- train_data$target
+        train_data$target <- NULL
+
+        fold_results <- vector("list", nrow(custom_grid))
+
+        for (j in seq_len(nrow(custom_grid))) {
+
+          cat(sprintf(
+            "Running fold %s | combination %d/%d: min_targets_size=%s, minMod=%s, corr_mod=%s, corr=%s, high_corr_groups=%s",
+            names(folds)[i], j, nrow(custom_grid),
+            custom_grid$min_targets_size[j],
+            custom_grid$minMod[j],
+            custom_grid$corr_mod[j],
+            custom_grid$corr[j],
+            custom_grid$high_corr_groups[j]
+          ))
+
+          ## Run CellTFusion once
+          train_processed <- CellTFusion(
+            t(train_data),
+            deconv          = train_deconv,
+            normalized      = normalized,
+            coldata         = train_coldata,
+            trait           = trait,
+            trait.positive  = trait.positive,
+            universe        = universe,
+            paths           = paths,
+            min_targets_size = custom_grid$min_targets_size[j],
+            minMod           = custom_grid$minMod[j],
+            corr_mod         = custom_grid$corr_mod[j],
+            corr             = custom_grid$corr[j],
+            high_corr_groups = custom_grid$high_corr_groups[j],
+            return          = FALSE,
+            verbose         = FALSE
+          )
+
+          train_cell_data <- train_processed$Cell_groups[[1]] %>%
+            data.frame() %>%
+            dplyr::mutate(target = obs_train)
+
+          ## Prepare test data using trained info
+          test_deconv <- deconv[test_idx, , drop = FALSE]
+          obs_test <- data$target[test_idx]
+
+          test_data <- compute.test.set(
+            train_processed$Processed_deconvolution,
+            train_processed$Cell_groups,
+            colnames(train_cell_data)[colnames(train_cell_data) != "target"],
+            test_deconv
+          )
+
+          fold_results[[j]] <- list(
+            train_data = train_cell_data,
+            test_data  = test_data,
+            obs_test   = obs_test,
+            rowIndex   = test_idx,
+            fold_name  = names(folds)[i],
+            params     = custom_grid[j, ]
+          )
+        }
+
+        fold_results
+      }
+
+      parallel::stopCluster(cl)  # stop the cluster after parallel execution
+      unregister_dopar() #Stop Dopar from running in the background
+
+      res <- processed_folds
+    }
 
   return(res)
+  
 }
+
 
