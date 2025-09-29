@@ -16,17 +16,18 @@ CellTFusion(
   cbsx.token = NULL,
   file_name = NULL,
   TF.collection = "CollecTRI",
-  min_targets_size = 5,
+  min_targets_size = 10,
   tfs.pruned = FALSE,
   universe = NULL,
   paths = NULL,
-  minMod = 15,
+  minMod = 10,
   corr_mod = 0.9,
   corr = 0.7,
   cells_extra = NULL,
   pval = 0.05,
-  high_corr_groups = 0.9,
-  return = T
+  high_corr_groups = 0.8,
+  return = T,
+  verbose = T
 )
 }
 \arguments{
@@ -63,6 +64,8 @@ CellTFusion(
 
 \item{universe}{Optional. A user-specified data frame of TF–target interactions. If not provided, the function will fetch the relevant network based on the \code{TF.collection} argument.}
 
+\item{paths}{Optional. A user-specified data frame of pathways gene sets. If not provided, the function will fetch the relevant pathways based on \code{PROGENy}.}
+
 \item{minMod}{Integer; minimum module size for WGCNA module detection.}
 
 \item{corr_mod}{Numeric; correlation threshold for merging TF modules.}
@@ -76,6 +79,8 @@ CellTFusion(
 \item{high_corr_groups}{Numeric; correlation threshold to identify highly similar cell groups.}
 
 \item{return}{Logical; if TRUE, returns intermediate results from internal functions. Default is TRUE.}
+
+\item{verbose}{Boolen value to whether print or no the function messages}
 }
 \value{
 A list containing:

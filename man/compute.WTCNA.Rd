@@ -11,6 +11,7 @@ compute.WTCNA(
   minMod = 15,
   corr_mod = 0.9,
   cor_type = "p",
+  verbose = F,
   return = T
 )
 }
@@ -26,6 +27,8 @@ compute.WTCNA(
 \item{corr_mod}{Correlation threshold (0–1) for merging similar modules. Default is 0.9.}
 
 \item{cor_type}{Correlation type for adjacency calculation: "p" (Pearson), "s" (Spearman). Default is "p".}
+
+\item{verbose}{Boolen value to whether print or no the function messages}
 
 \item{return}{Logical, whether to save output plots and module list to "Results/". Default is TRUE.}
 }

@@ -12,12 +12,12 @@ construct_cell_groups(
   dt,
   clinical,
   pval = 0.05,
-  high_corr_groups = 0.9,
+  high_corr_groups = 0.8,
   clustering.method = "ward.D2",
   trait = NULL,
   positive = NULL,
   TF.collection = "CollecTRI",
-  min_targets_size = 5,
+  min_targets_size = 10,
   tfs.pruned = FALSE,
   universe = NULL
 )

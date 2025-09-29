@@ -2,53 +2,109 @@
 % Please edit documentation in R/CellTFusion.R
 \name{prepare_CellTFusion_folds}
 \alias{prepare_CellTFusion_folds}
-\title{Prepare folds for CellTFusion cross-validation with processed training and test data}
+\title{Prepare CellTFusion folds for cross-validation with training and test data}
 \usage{
 prepare_CellTFusion_folds(
   data,
-  folds,
+  folds = NULL,
   deconv = NULL,
+  universe = NULL,
+  paths = NULL,
   normalized = FALSE,
   coldata,
   trait,
-  trait.positive
+  trait.positive,
+  ncores = NULL,
+  min_targets_size,
+  minMod,
+  corr_mod,
+  corr,
+  high_corr_groups,
+  bestune = NULL
 )
 }
 \arguments{
-\item{data}{A data frame containing gene expression data (samples x genes) and a column named \code{target} indicating class labels.}
+\item{data}{A data frame containing gene expression data (samples x genes) and a column named \code{target}
+indicating class labels.}
 
-\item{folds}{A list of integer vectors indicating row indices for the training set in each fold. The test set is implicitly defined as the complement.}
+\item{folds}{A list of integer vectors indicating row indices for the training set in each fold.
+The test set is implicitly defined as the complement.}
 
-\item{deconv}{A matrix or data frame of deconvolution features (samples x features). If NULL, CellTFusion will proceed without it.}
+\item{deconv}{A matrix or data frame of deconvolution features (samples x features). If \code{NULL},
+CellTFusion will run without these features.}
 
-\item{normalized}{Logical indicating whether the gene expression data is already normalized. Defaults to FALSE.}
+\item{universe}{Optional universe of features for CellTFusion.}
+
+\item{paths}{Optional list of prior knowledge resources for CellTFusion.}
+
+\item{normalized}{Logical. Whether the gene expression data is already normalized. Defaults to \code{FALSE}.}
 
 \item{coldata}{A data frame with metadata (e.g., sample annotations), must match the number and order of samples in \code{data}.}
 
 \item{trait}{A character string specifying the name of the column in \code{coldata} containing the trait of interest (e.g., response).}
 
 \item{trait.positive}{A character string indicating the positive class label for the trait.}
+
+\item{ncores}{Integer. Number of CPU cores to use for parallelization. If \code{NULL}, \code{parallel::detectCores() - 2} is used.}
+
+\item{min_targets_size}{Hyperparameters for CellTFusion}
+
+\item{minMod}{Hyperparameters for CellTFusion}
+
+\item{corr_mod}{Hyperparameters for CellTFusion}
+
+\item{corr}{Hyperparameters for CellTFusion}
+
+\item{high_corr_groups}{Hyperparameters for CellTFusion.
+These can be provided as vectors to define a tuning grid when \code{bestune = NULL}.}
+
+\item{bestune}{Optional. A data frame of tuned hyperparameters. If provided, the function skips fold construction
+and directly processes the full dataset using these values.}
 }
 \value{
-A list of two elements:
+A list with two possible structures depending on \code{bestune}:
 \itemize{
-\item \code{processed_folds}: A list of folds, where each fold contains:
+\item If \code{bestune} is provided:
 \itemize{
-\item \code{train_data}: Processed training data with cell group features and \code{target} column.
-\item \code{test_data}: Test data projected into the learned cell group feature space.
-\item \code{obs_test}: True class labels for the test set.
-\item \code{rowIndex}: Row indices corresponding to the test set.
-\item \code{fold_name}: Optional fold name if provided in the \code{folds} list.
+\item \code{train_cell_data_final}: Final processed cell group feature matrix for the full dataset, including the \code{target} column.
+\item \code{custom_output}: The full CellTFusion object from training.
+\item \code{best_celltfusion_params}: The tuned hyperparameters used.
 }
-\item \code{train_cell_data_final}: Final cell group feature matrix for the full dataset, including the \code{target} column.
+\item If \code{bestune} is \code{NULL}:
+\itemize{
+\item \code{processed_folds}: A list of folds. Each fold contains:
+\itemize{
+\item \code{train_data}: Processed training data with cell group features and \code{target}.
+\item \code{test_data}: Projected test data in the learned feature space.
+\item \code{obs_test}: True class labels for the test set.
+\item \code{rowIndex}: Row indices corresponding to the test samples.
+\item \code{fold_name}: Fold identifier (if provided).
+\item \code{params}: Hyperparameter values used for this fold.
+}
+}
 }
 }
 \description{
-This function processes a dataset for k-fold cross-validation using the CellTFusion framework.
-For each fold, it generates training and test datasets by computing cell group features from the deconvolution matrix
-and gene expression data. It also processes the entire dataset once to provide a final processed training set.
+This function prepares data for k-fold cross-validation using the CellTFusion framework.
+It supports two modes of operation:
+\enumerate{
+\item If a set of tuned hyperparameters is provided via \code{bestune}, the function will
+process the full dataset once with those parameters and return a single processed training set.
+\item If no tuned parameters are provided, the function will construct fold-specific training
+and test datasets, expanding over a grid of CellTFusion hyperparameters and returning them
+for subsequent model training and hyperparameter selection.
+}
 }
 \details{
-The function runs the \code{CellTFusion()} pipeline on each fold's training set and uses the trained projection
-to compute the test set representation. It also runs CellTFusion on the full dataset to return the complete processed training set.
+For each fold, training and test sets are generated by running the \code{CellTFusion()} pipeline
+on the training data (gene expression and optional deconvolution features). The trained
+projection is then applied to the test data to ensure comparability between folds.
+
+When \code{bestune = NULL}, the function expands all possible hyperparameter combinations
+via \code{expand.grid()} and runs CellTFusion separately for each fold and parameter set.
+This can be computationally expensive, so the function supports parallelization via
+\pkg{foreach}, \pkg{doParallel}, and \pkg{parallel}.
+
+The results of this function are designed to be passed directly to \code{compute_custom_k_fold_CV()}
+for hyperparameter selection and model evaluation.
 }

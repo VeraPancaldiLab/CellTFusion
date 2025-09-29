@@ -1,5 +1,5 @@
 
-utils::globalVariables(c("Trait", "Value" ,"level", ".", "Cells_level", "PC1", "Features", "tf", "Module", "shap_value", "mean_shap", "direction", "Feature", "Impact", "values", "ind", "Freq", "new_column", ".data", "id", "value", "P", "p", "sig_p", "r"))
+utils::globalVariables(c("Trait", "Value" ,"level", ".", "Cells_level", "PC1", "Features", "tf", "Module", "shap_value", "mean_shap", "direction", "Feature", "Impact", "values", "ind", "Freq", "new_column", ".data", "id", "value", "P", "p", "sig_p", "r", "i"))
 
 #' Compute one-step CellTFusion
 #'
@@ -18,6 +18,7 @@ utils::globalVariables(c("Trait", "Value" ,"level", ".", "Cells_level", "PC1", "
 #' @param min_targets_size Integer. Minimum number of target genes per regulon required for TF activity inference. Default is 5.
 #' @param tfs.pruned Logical. Whether to prune TF regulons to limit the number of target genes, which helps reduce bias introduced by TFs with large regulons. If `TRUE`, the user will be prompted to input a maximum size for regulons. Default is `FALSE`.
 #' @param universe Optional. A user-specified data frame of TF–target interactions. If not provided, the function will fetch the relevant network based on the `TF.collection` argument.
+#' @param paths Optional. A user-specified data frame of pathways gene sets. If not provided, the function will fetch the relevant pathways based on `PROGENy`.
 #' @param min_targets_size Integer; minimum number of target genes required to compute TF activity.
 #' @param minMod Integer; minimum module size for WGCNA module detection.
 #' @param corr_mod Numeric; correlation threshold for merging TF modules.
@@ -29,7 +30,7 @@ utils::globalVariables(c("Trait", "Value" ,"level", ".", "Cells_level", "PC1", "
 #' @param trait.positive Optional value defining the positive class of the `trait`.
 #' @param return Logical; if TRUE, returns intermediate results from internal functions. Default is TRUE.
 #' @param verbose Boolen value to whether print or no the function messages
-#' 
+#'
 #' @return A list containing:
 #' \describe{
 #'   \item{Deconvolution}{A matrix with cell-type proportions (samples as rows, cell types as columns).}
@@ -427,33 +428,33 @@ compute.metada.association = function(tfs.modules, coldata, pval = 0.05, width =
     data = cbind(tfs.modules, coldata_categorical)
     pvals = data.frame()
     fvals = data.frame()
-    
+
     for(i in 1:ncol(tfs.modules)){
       contador = 1
       for (j in (ncol(tfs.modules)+1):ncol(data)) {
         module <- names(data)[i]
         trait <- names(data)[j]
-        
+
         df <- data.frame(
           value = data[, i],
           trait = as.factor(data[, j])
         )
-        
+
         # Global ANOVA (rstatix, so it's compatible downstream)
         res.aov <- rstatix::anova_test(data = df, dv = value, between = trait)
-        
+
         pvals[i, contador] = res.aov$p
         fvals[i, contador] = res.aov$F
         contador = contador + 1
-        
+
         # Only continue if ANOVA significant
         if(res.aov$p < pval) {
-          
+
           # Pairwise Tukey
           pwc <- df %>%
             rstatix::tukey_hsd(value ~ trait) %>%
             rstatix::add_xy_position(x = "trait")
-          
+
           pdf(paste0("Results/ANOVA_", module, "-", trait, ".pdf"))
           print(
             ggpubr::ggboxplot(df, x = "trait", y = "value", fill = "trait", add = "jitter") +
@@ -478,17 +479,17 @@ compute.metada.association = function(tfs.modules, coldata, pval = 0.05, width =
         }
       }
     }
-    
+
     rownames(pvals) = colnames(tfs.modules)
     colnames(pvals) = colnames(coldata_categorical)
     rownames(fvals) = colnames(tfs.modules)
     colnames(fvals) = colnames(coldata_categorical)
-    
+
     pvals = as.matrix(pvals)
     textMatrix2 = paste("ANOVA\n(", signif(pvals, 2), ")", sep = "")
     dim(textMatrix2) = dim(pvals)
   }
-  
+
   ###Association with quantitative variables
   coldata_quantitative = coldata %>%
     dplyr::select(dplyr::where(is.numeric))
@@ -1255,13 +1256,13 @@ compute.WTCNA <- function(TFs.matrix, network.type = "signed", clustering.method
   if(verbose){
     cat("Creating weighted TF-coactivity network......................................................................\n\n")
   }
-  
+
   #####Choose parameter for scale-free network topology
   powers = c(c(1:10), seq(from = 12, to=20, by=1))
   sink(tempfile())
   invisible(sft <- WGCNA::pickSoftThreshold(TFs.matrix, powerVector = powers, verbose = 0, networkType = network.type))
   sink()
-  
+
   if(return){
     pdf("Results/Soft_Threshold")
     plot(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2],
@@ -1277,10 +1278,10 @@ compute.WTCNA <- function(TFs.matrix, network.type = "signed", clustering.method
   diff = abs(-sign(sft$fitIndices[,3])*sft$fitIndices[,2] - target) #Calculate absolute difference
   min_index = which.min(diff) #Identify the index with the minimum difference
   softPower = powers[min_index]
-  
+
   if(verbose){
     cat("Choosing", softPower, "as soft-threshold......................................................................\n\n")
-    
+
     #####Co-expression matrix using nodes adjacency and topological overlapping nodes
     cat("Calculating nodes adjacency and topological overlapping nodes.................................................\n\n")
   }
@@ -1313,7 +1314,7 @@ compute.WTCNA <- function(TFs.matrix, network.type = "signed", clustering.method
   if(verbose){
     cat("Calculating eigenvectors from modules.................................................\n\n")
   }
-  
+
   MEList = WGCNA::moduleEigengenes(TFs.matrix, colors = dynamicColors, scale = F) #Data already scale
   MEs = MEList$eigengenes
   MEs = WGCNA::orderMEs(MEs)
@@ -1321,7 +1322,7 @@ compute.WTCNA <- function(TFs.matrix, network.type = "signed", clustering.method
   if(verbose){
     print(paste0("Merging modules significantly correlated with ", corr_mod, "........"))
   }
-  
+
   merge = mergeModules(MEs, dynamicColors, corr_mod)
   MEs = merge[[1]]
   dynamicColors = merge[[2]]
@@ -1731,7 +1732,7 @@ construct_cell_groups = function(counts, tfs, deconv, network, dt, clinical, pva
     cell.groups = cell.groups.computation(dt[[1]], cell_dendrograms, network, return = F)
   }
 
-  cell.groups = remove.cell.groups.corr(cell.groups, threshold = high_corr_groups) 
+  cell.groups = remove.cell.groups.corr(cell.groups, threshold = high_corr_groups)
 
   zero = caret::nearZeroVar(cell.groups[[1]], saveMetrics = TRUE)
   cell.groups[[1]] = cell.groups[[1]][, !zero$nzv]
@@ -1884,7 +1885,7 @@ identify.cell.signatures = function(cell_groups, deconvolution_processed, TF_net
 
   # Take top features based on variable importance
   top <- var_importance %>%
-    tidyr::pivot_longer(cols = everything(), names_to = "feature", values_to = "shap_value") %>%
+    tidyr::pivot_longer(cols = dplyr::everything(), names_to = "feature", values_to = "shap_value") %>%
     dplyr::group_by(feature) %>%
     dplyr::summarise(mean_shap = mean(shap_value, na.rm = TRUE)) %>% #Average SHAP values across samples
     dplyr::mutate(direction = ifelse(mean_shap > 0, "Increase", "Decrease")) %>% #Give direction
@@ -2539,11 +2540,11 @@ remove.cell.groups.corr <- function(data, threshold = 0.95) {
       new_group_composition = unique(unlist(unname(data[[2]][colnames(feature)])))
       new_group_value = rowMeans(data[[1]][,colnames(data[[1]])%in%colnames(feature),drop=F])
 
-      ################ Merging cell loadings 
-      
+      ################ Merging cell loadings
+
       # Select the loadings matrices corresponding to the current set of correlated features
       mats <- data[[3]][colnames(data[[1]]) %in% colnames(feature)]
-      
+
       # Ensure that all matrices have proper column names (set the rownames() as colnames() as they are square)
       mats_fixed <- lapply(mats, function(x) {
         if (is.null(colnames(x))) {
@@ -2551,10 +2552,10 @@ remove.cell.groups.corr <- function(data, threshold = 0.95) {
         }
         x
       })
-      
+
       # Compute the union of all features across the selected matrices: full set of features that the merged matrix should contain
       all_features <- Reduce(union, lapply(mats_fixed, rownames))
-      
+
       # Align each matrix to the full set of features
       # - Add missing rows/columns filled with 0 for features not present in the matrix
       # - Reorder rows and columns according to 'all_features'
@@ -2571,12 +2572,12 @@ remove.cell.groups.corr <- function(data, threshold = 0.95) {
         # Reorder rows and columns so all matrices have the same order
         x[all_features, all_features, drop = FALSE]
       })
-      
+
       # Combine all aligned matrices by computing the element-wise average
       new_loadings_value <- Reduce("+", mats_aligned) / length(mats_aligned)
-      
-      ################ 
-      
+
+      ################
+
       if(contador==1){
         #Remove features from original data
         new_data <- data[[1]][, -which(colnames(data[[1]])%in%colnames(feature_corr)), drop = F]
@@ -2593,7 +2594,7 @@ remove.cell.groups.corr <- function(data, threshold = 0.95) {
       if(length(class)>1){
         class = paste0(class, collapse = ".")
       }
-        
+
       ## If corr features are from two different classes don't combine, just discard them (as they don't make any distinction between classes for prediction)
       if(is.na(class) == F){
         new_name = paste0("Dendrogram_",  paste0(unique(unlist(color_features)), collapse = "_"), ".group_combined_", contador, "_", class)
@@ -2610,7 +2611,7 @@ remove.cell.groups.corr <- function(data, threshold = 0.95) {
       names(new_loadings)[length(new_loadings)] = new_name
 
       contador = contador + 1
-      
+
     }else{ #Nothing is combined
       if(contador == 1){
         new_data = data[[1]]
@@ -2851,45 +2852,86 @@ compute.test.score = function(cell_group, loadings){
 
 }
 
-#' Prepare folds for CellTFusion cross-validation with processed training and test data
+#' Prepare CellTFusion folds for cross-validation with training and test data
 #'
-#' This function processes a dataset for k-fold cross-validation using the CellTFusion framework.
-#' For each fold, it generates training and test datasets by computing cell group features from the deconvolution matrix
-#' and gene expression data. It also processes the entire dataset once to provide a final processed training set.
-#'
-#' @param data A data frame containing gene expression data (samples x genes) and a column named `target` indicating class labels.
-#' @param folds A list of integer vectors indicating row indices for the training set in each fold. The test set is implicitly defined as the complement.
-#' @param deconv A matrix or data frame of deconvolution features (samples x features). If NULL, CellTFusion will proceed without it.
-#' @param normalized Logical indicating whether the gene expression data is already normalized. Defaults to FALSE.
-#' @param coldata A data frame with metadata (e.g., sample annotations), must match the number and order of samples in `data`.
-#' @param trait A character string specifying the name of the column in `coldata` containing the trait of interest (e.g., response).
-#' @param trait.positive A character string indicating the positive class label for the trait.
-#'
-#' @return A list of two elements:
-#' \itemize{
-#'   \item \code{processed_folds}: A list of folds, where each fold contains:
-#'     \itemize{
-#'       \item \code{train_data}: Processed training data with cell group features and `target` column.
-#'       \item \code{test_data}: Test data projected into the learned cell group feature space.
-#'       \item \code{obs_test}: True class labels for the test set.
-#'       \item \code{rowIndex}: Row indices corresponding to the test set.
-#'       \item \code{fold_name}: Optional fold name if provided in the `folds` list.
-#'     }
-#'   \item \code{train_cell_data_final}: Final cell group feature matrix for the full dataset, including the `target` column.
+#' This function prepares data for k-fold cross-validation using the CellTFusion framework.
+#' It supports two modes of operation:
+#' \enumerate{
+#'   \item If a set of tuned hyperparameters is provided via \code{bestune}, the function will
+#'   process the full dataset once with those parameters and return a single processed training set.
+#'   \item If no tuned parameters are provided, the function will construct fold-specific training
+#'   and test datasets, expanding over a grid of CellTFusion hyperparameters and returning them
+#'   for subsequent model training and hyperparameter selection.
 #' }
 #'
-#' @details The function runs the `CellTFusion()` pipeline on each fold's training set and uses the trained projection
-#' to compute the test set representation. It also runs CellTFusion on the full dataset to return the complete processed training set.
+#' For each fold, training and test sets are generated by running the \code{CellTFusion()} pipeline
+#' on the training data (gene expression and optional deconvolution features). The trained
+#' projection is then applied to the test data to ensure comparability between folds.
 #'
-#' @importFrom dplyr mutate
-#' @importFrom decoupleR get_collectri
+#' @param data A data frame containing gene expression data (samples x genes) and a column named \code{target}
+#'   indicating class labels.
+#' @param folds A list of integer vectors indicating row indices for the training set in each fold.
+#'   The test set is implicitly defined as the complement.
+#' @param deconv A matrix or data frame of deconvolution features (samples x features). If \code{NULL},
+#'   CellTFusion will run without these features.
+#' @param universe Optional universe of features for CellTFusion.
+#' @param paths Optional list of prior knowledge resources for CellTFusion.
+#' @param normalized Logical. Whether the gene expression data is already normalized. Defaults to \code{FALSE}.
+#' @param coldata A data frame with metadata (e.g., sample annotations), must match the number and order of samples in \code{data}.
+#' @param trait A character string specifying the name of the column in \code{coldata} containing the trait of interest (e.g., response).
+#' @param trait.positive A character string indicating the positive class label for the trait.
+#' @param ncores Integer. Number of CPU cores to use for parallelization. If \code{NULL}, \code{parallel::detectCores() - 2} is used.
+#' @param min_targets_size Hyperparameters for CellTFusion
+#' @param minMod Hyperparameters for CellTFusion
+#' @param corr_mod Hyperparameters for CellTFusion
+#' @param corr Hyperparameters for CellTFusion
+#' @param high_corr_groups Hyperparameters for CellTFusion.
+#'   These can be provided as vectors to define a tuning grid when \code{bestune = NULL}.
+#' @param bestune Optional. A data frame of tuned hyperparameters. If provided, the function skips fold construction
+#'   and directly processes the full dataset using these values.
+#'
+#' @return A list with two possible structures depending on \code{bestune}:
+#' \itemize{
+#'   \item If \code{bestune} is provided:
+#'     \itemize{
+#'       \item \code{train_cell_data_final}: Final processed cell group feature matrix for the full dataset, including the \code{target} column.
+#'       \item \code{custom_output}: The full CellTFusion object from training.
+#'       \item \code{best_celltfusion_params}: The tuned hyperparameters used.
+#'     }
+#'   \item If \code{bestune} is \code{NULL}:
+#'     \itemize{
+#'       \item \code{processed_folds}: A list of folds. Each fold contains:
+#'         \itemize{
+#'           \item \code{train_data}: Processed training data with cell group features and \code{target}.
+#'           \item \code{test_data}: Projected test data in the learned feature space.
+#'           \item \code{obs_test}: True class labels for the test set.
+#'           \item \code{rowIndex}: Row indices corresponding to the test samples.
+#'           \item \code{fold_name}: Fold identifier (if provided).
+#'           \item \code{params}: Hyperparameter values used for this fold.
+#'         }
+#'     }
+#' }
+#'
+#' @details
+#' When \code{bestune = NULL}, the function expands all possible hyperparameter combinations
+#' via \code{expand.grid()} and runs CellTFusion separately for each fold and parameter set.
+#' This can be computationally expensive, so the function supports parallelization via
+#' \pkg{foreach}, \pkg{doParallel}, and \pkg{parallel}.
+#'
+#' The results of this function are designed to be passed directly to \code{compute_custom_k_fold_CV()}
+#' for hyperparameter selection and model evaluation.
+#'
+#' @importFrom dplyr mutate select
 #' @importFrom stats setNames
+#' @importFrom parallel makeCluster stopCluster detectCores
+#' @importFrom doParallel registerDoParallel
+#' @importFrom foreach foreach %dopar%
 #' @export
 #'
 prepare_CellTFusion_folds <- function(data, folds = NULL, deconv = NULL, universe = NULL, paths = NULL,
                                       normalized = FALSE, coldata, trait, trait.positive, ncores = NULL,
                                       min_targets_size, minMod, corr_mod, corr, high_corr_groups, bestune = NULL){
-  
+
     if(!is.null(bestune)){
       # Run CellTFusion on the full training set
       obs_train = data$target
@@ -2945,7 +2987,7 @@ prepare_CellTFusion_folds <- function(data, folds = NULL, deconv = NULL, univers
 
       # Parallelize over folds
       processed_folds <- foreach::foreach(i = seq_along(folds), .packages = c("dplyr")) %dopar% {
-        source("src/CellTFusion.R")
+        require("CellTFusion.R")
 
         cat("Starting fold", names(folds)[i], "\n")
 
@@ -3027,7 +3069,15 @@ prepare_CellTFusion_folds <- function(data, folds = NULL, deconv = NULL, univers
     }
 
   return(res)
-  
+
+}
+
+unregister_dopar <- function() {
+  if (!is.null(foreach::getDoParRegistered())) {
+    # switch back to sequential backend
+    foreach::registerDoSEQ()
+    gc()
+  }
 }
 
 
