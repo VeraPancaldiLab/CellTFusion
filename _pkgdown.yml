@@ -55,7 +55,6 @@ reference:
   - remove.cell.groups.corr
   - remove_equal
   - remove_single_groups
-  - replicate_deconvolution_subgroups
 - title: Package Data
   desc: >
     Example data
