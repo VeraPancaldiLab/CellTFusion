@@ -85,7 +85,7 @@ compute.modules.relationship(network[[1]], pathways, "Pathways_Progeny-TFs_Modul
 
 If pathway analysis alone does not provide sufficient insight into the biological relevance of each module, users can perform Over-Representation Analysis (ORA) using the Reactome database. The function below first identifies hub transcription factors (TFs) for each module based on module membership (MM) and node degree thresholds. It then performs enrichment analysis using the target genes of these hub TFs. Resulting dot plots are automatically saved in the `Results/` directory.
 
-```{r}
+```{r, eval = FALSE}
 hub_tfs = identify_hub_TFs(t(tfs), network, MM_thresh = 0.8, degree_thresh = 0.9)
 compute.modules.enrichment(counts.norm, hub_tfs)
 ```
