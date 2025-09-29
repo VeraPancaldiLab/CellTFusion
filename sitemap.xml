@@ -22,13 +22,13 @@
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/compute.pathway.activity.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/compute.survival.analysis.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/compute.test.set.html</loc></url>
-<url><loc>https://verapancaldilab.github.io/CellTFusion/reference/compute_CellTFusion_k_fold_CV.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/compute_cell_groups_signatures.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/compute_composite_score.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/construct_cell_groups.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/correlation.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/counts.norm.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/create_tfs_modules.html</loc></url>
+<url><loc>https://verapancaldilab.github.io/CellTFusion/reference/deconv.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/deconv_subgroups.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/extract_cells.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/extract_colors.html</loc></url>
@@ -46,7 +46,6 @@
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/remove.cell.groups.corr.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/remove_equal.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/remove_single_groups.html</loc></url>
-<url><loc>https://verapancaldilab.github.io/CellTFusion/reference/replicate_deconvolution_subgroups.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/tfs.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/traitdata.html</loc></url>
 </urlset>

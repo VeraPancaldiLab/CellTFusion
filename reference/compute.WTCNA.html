@@ -50,6 +50,7 @@ represented by the eigenvalue of the module.</p>
 <span>  minMod <span class="op">=</span> <span class="fl">15</span>,</span>
 <span>  corr_mod <span class="op">=</span> <span class="fl">0.9</span>,</span>
 <span>  cor_type <span class="op">=</span> <span class="st">"p"</span>,</span>
+<span>  verbose <span class="op">=</span> <span class="cn">F</span>,</span>
 <span>  return <span class="op">=</span> <span class="cn">T</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -82,6 +83,10 @@ represented by the eigenvalue of the module.</p>
 <dd><p>Correlation type for adjacency calculation: "p" (Pearson), "s" (Spearman). Default is "p".</p></dd>
 
 
+<dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>
+<dd><p>Boolen value to whether print or no the function messages</p></dd>
+
+
 <dt id="arg-return">return<a class="anchor" aria-label="anchor" href="#arg-return"></a></dt>
 <dd><p>Logical, whether to save output plots and module list to "Results/". Default is TRUE.</p></dd>
 
@@ -104,42 +109,7 @@ BMC Bioinformatics, 9, 559. https://doi.org/10.1186/1471-2105-9-559</p>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"tfs"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">network</span> <span class="op">&lt;-</span> <span class="fu">compute.WTCNA</span><span class="op">(</span><span class="va">tfs</span>, corr_mod <span class="op">=</span> <span class="fl">0.9</span>, clustering.method <span class="op">=</span> <span class="st">"ward.D2"</span>, return <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Creating weighted TF-coactivity network......................................................................</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>executing %dopar% sequentially: no parallel backend registered</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    Power SFT.R.sq slope truncated.R.sq mean.k. median.k. max.k.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1      1    0.351  5.37          0.948 398.000  401.0000 448.00</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2      2    0.325 -1.98          0.891 216.000  214.0000 286.00</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3      3    0.741 -2.74          0.936 123.000  117.0000 195.00</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4      4    0.866 -2.55          0.964  72.500   66.3000 140.00</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5      5    0.918 -2.36          0.972  44.500   38.6000 104.00</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6      6    0.940 -2.13          0.977  28.300   22.8000  79.90</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7      7    0.948 -1.97          0.979  18.600   14.1000  62.60</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8      8    0.958 -1.81          0.982  12.600    8.8900  49.90</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9      9    0.971 -1.70          0.993   8.770    5.6700  40.40</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10    10    0.973 -1.62          0.987   6.280    3.6700  33.20</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11    12    0.967 -1.55          0.979   3.450    1.6100  24.00</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12    13    0.969 -1.51          0.982   2.640    1.0800  20.70</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13    14    0.975 -1.48          0.988   2.050    0.7310  18.00</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 14    15    0.944 -1.48          0.957   1.620    0.5080  15.70</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 15    16    0.953 -1.45          0.971   1.300    0.3540  13.90</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 16    17    0.958 -1.42          0.977   1.060    0.2520  12.30</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 17    18    0.954 -1.40          0.970   0.869    0.1770  10.90</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 18    19    0.966 -1.37          0.981   0.722    0.1260   9.78</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 19    20    0.964 -1.36          0.974   0.606    0.0925   8.78</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Choosing 5 as soft-threshold......................................................................</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Calculating nodes adjacency and topological overlapping nodes.................................................</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ..connectivity..</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ..matrix multiplication (system BLAS)..</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ..normalization..</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ..done.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  ..cutHeight not given, setting it to 28.3  ===&gt;  99% of the (truncated) height range in dendro.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  ..done.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Calculating eigenvectors from modules.................................................</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "Merging modules significantly correlated with 0.9........"</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

@@ -77,8 +77,8 @@ invite to read the main paper of the tool.</p>
 <span><span class="co">#&gt; loading 'CellTFusion'</span></span></code></pre></div>
 <p>Load the pre-packaged example data included in CellTFusion:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">raw.counts</span> <span class="op">=</span> <span class="fu">CellTFusion</span><span class="fu">::</span><span class="va"><a href="../reference/raw.counts.html">raw.counts</a></span></span>
-<span><span class="va">traitdata</span> <span class="op">=</span> <span class="fu">CellTFusion</span><span class="fu">::</span><span class="va"><a href="../reference/traitdata.html">traitdata</a></span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">raw.counts</span> <span class="op">=</span> <span class="fu">CellTFusion</span><span class="fu">::</span><span class="va"><a href="../reference/raw.counts.html">raw.counts</a></span> <span class="co">## Corresponds to bulk RNAseq counts</span></span>
+<span><span class="va">traitdata</span> <span class="op">=</span> <span class="fu">CellTFusion</span><span class="fu">::</span><span class="va"><a href="../reference/traitdata.html">traitdata</a></span> <span class="co">## Corresponds to the clinical data per sample</span></span></code></pre></div>
 <p>CellTFusion requires two primary inputs: cell-type deconvolution
 proportions and transcription factor (TF) activity scores. To obtain
 these features, we will leverage publicly available tools designed for
@@ -391,13 +391,13 @@ target genes.</p>
 <span><span class="co">#&gt; TFs scores computed</span></span></code></pre></div>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">tfs</span><span class="op">[</span>,<span class="fl">1</span><span class="op">:</span><span class="fl">5</span><span class="op">]</span><span class="op">)</span></span>
-<span><span class="co">#&gt;                       ABL1       AEBP1          AHR      AHRR       AIP</span></span>
-<span><span class="co">#&gt; SAM7f0d9cc7f001 0.44045397  0.24348391  0.093126238 -2.493479 0.7188767</span></span>
-<span><span class="co">#&gt; SAM4305ab968b90 0.17664797 -0.27915544  0.379454861 -1.410350 0.3249628</span></span>
-<span><span class="co">#&gt; SAMcf018fee2acd 0.49582603  0.07747384 -0.155846689 -2.922200 1.0263483</span></span>
-<span><span class="co">#&gt; SAMcc4675f394a1 0.01389884  0.82804476  0.764277963 -1.574752 1.0817918</span></span>
-<span><span class="co">#&gt; SAM49f9b2e57aa5 0.54970704  0.20790602  0.005645296 -2.801177 0.7727100</span></span>
-<span><span class="co">#&gt; SAM2e7aa8fa0ab3 0.65705334  0.90025447 -0.146135090 -2.486875 1.2479375</span></span></code></pre></div>
+<span><span class="co">#&gt;                       ABL1       AEBP1         AHR      AHRR       AIP</span></span>
+<span><span class="co">#&gt; SAM7f0d9cc7f001 0.44133617  0.24423916  0.10089256 -2.491850 0.7172756</span></span>
+<span><span class="co">#&gt; SAM4305ab968b90 0.17796653 -0.27814654  0.38564347 -1.409414 0.3237798</span></span>
+<span><span class="co">#&gt; SAMcf018fee2acd 0.49684957  0.07861677 -0.15318192 -2.922621 1.0245627</span></span>
+<span><span class="co">#&gt; SAMcc4675f394a1 0.01569867  0.82879897  0.77065571 -1.573287 1.0804686</span></span>
+<span><span class="co">#&gt; SAM49f9b2e57aa5 0.55063295  0.20878115  0.01259975 -2.799676 0.7715777</span></span>
+<span><span class="co">#&gt; SAM2e7aa8fa0ab3 0.65809848  0.90006143 -0.13849651 -2.485155 1.2459907</span></span></code></pre></div>
 <p>Once features have been calculated we can start analyzing our data
 using CellTFusion</p>
 <p>Before constructing the cell groups, we first reduce the TF activity
@@ -408,73 +408,12 @@ activity, which we refer to as Weighted TF Correlation Network Analysis
 (WTCNA).</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">network</span> <span class="op">=</span> <span class="fu"><a href="../reference/compute.WTCNA.html">compute.WTCNA</a></span><span class="op">(</span><span class="va">tfs</span>, corr_mod <span class="op">=</span> <span class="fl">0.8</span>, clustering.method <span class="op">=</span> <span class="st">"ward.D2"</span>, return <span class="op">=</span> <span class="cn">T</span><span class="op">)</span> </span>
-<span><span class="co">#&gt; Creating weighted TF-coactivity network......................................................................</span></span>
-<span><span class="co">#&gt; Warning: executing %dopar% sequentially: no parallel backend registered</span></span>
-<span><span class="co">#&gt;    Power SFT.R.sq slope truncated.R.sq mean.k. median.k. max.k.</span></span>
-<span><span class="co">#&gt; 1      1    0.349  5.34          0.948 398.000  401.0000 448.00</span></span>
-<span><span class="co">#&gt; 2      2    0.327 -1.99          0.889 216.000  214.0000 286.00</span></span>
-<span><span class="co">#&gt; 3      3    0.744 -2.74          0.936 123.000  117.0000 195.00</span></span>
-<span><span class="co">#&gt; 4      4    0.875 -2.54          0.970  72.500   66.4000 140.00</span></span>
-<span><span class="co">#&gt; 5      5    0.918 -2.36          0.973  44.500   38.6000 104.00</span></span>
-<span><span class="co">#&gt; 6      6    0.939 -2.13          0.976  28.300   22.8000  80.00</span></span>
-<span><span class="co">#&gt; 7      7    0.948 -1.97          0.979  18.600   14.1000  62.70</span></span>
-<span><span class="co">#&gt; 8      8    0.959 -1.81          0.983  12.600    8.9100  50.00</span></span>
-<span><span class="co">#&gt; 9      9    0.972 -1.70          0.994   8.790    5.6900  40.50</span></span>
-<span><span class="co">#&gt; 10    10    0.975 -1.62          0.990   6.290    3.6800  33.30</span></span>
-<span><span class="co">#&gt; 11    12    0.968 -1.55          0.980   3.460    1.6200  24.00</span></span>
-<span><span class="co">#&gt; 12    13    0.961 -1.52          0.969   2.640    1.0900  20.70</span></span>
-<span><span class="co">#&gt; 13    14    0.977 -1.48          0.990   2.060    0.7380  18.00</span></span>
-<span><span class="co">#&gt; 14    15    0.947 -1.47          0.960   1.630    0.5100  15.80</span></span>
-<span><span class="co">#&gt; 15    16    0.953 -1.44          0.971   1.300    0.3570  13.90</span></span>
-<span><span class="co">#&gt; 16    17    0.957 -1.42          0.975   1.060    0.2570  12.30</span></span>
-<span><span class="co">#&gt; 17    18    0.955 -1.40          0.969   0.871    0.1790  11.00</span></span>
-<span><span class="co">#&gt; 18    19    0.961 -1.37          0.971   0.724    0.1270   9.81</span></span>
-<span><span class="co">#&gt; 19    20    0.960 -1.36          0.967   0.608    0.0928   8.81</span></span>
-<span><span class="co">#&gt; Choosing 5 as soft-threshold......................................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Calculating nodes adjacency and topological overlapping nodes.................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ..connectivity..</span></span>
-<span><span class="co">#&gt; ..matrix multiplication (system BLAS)..</span></span>
-<span><span class="co">#&gt; ..normalization..</span></span>
-<span><span class="co">#&gt; ..done.</span></span>
-<span><span class="co">#&gt;  ..cutHeight not given, setting it to 30.3  ===&gt;  99% of the (truncated) height range in dendro.</span></span>
-<span><span class="co">#&gt;  ..done.</span></span>
-<span><span class="co">#&gt; Calculating eigenvectors from modules.................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [1] "Merging modules significantly correlated with 0.8........"</span></span></code></pre></div>
+<span><span class="co">#&gt; Warning: executing %dopar% sequentially: no parallel backend registered</span></span></code></pre></div>
 <p>To explore how clinical variables are associated with the TF modules,
 we can run the following analysis. This function will generate and save
 the corresponding plots in the <code>Results/</code> directory:</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/compute.metada.association.html">compute.metada.association</a></span><span class="op">(</span><span class="va">network</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>, <span class="va">traitdata</span>, pval <span class="op">=</span> <span class="fl">0.05</span>, width <span class="op">=</span> <span class="fl">10</span><span class="op">)</span> </span>
-<span><span class="co">#&gt; Scale for <span style="color: #00BB00;">fill</span> is already present.</span></span>
-<span><span class="co">#&gt; Adding another scale for <span style="color: #00BB00;">fill</span>, which will replace the existing scale.</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using formula = 'y ~ x'</span></span>
-<span><span class="co">#&gt; Scale for <span style="color: #00BB00;">fill</span> is already present.</span></span>
-<span><span class="co">#&gt; Adding another scale for <span style="color: #00BB00;">fill</span>, which will replace the existing scale.</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using formula = 'y ~ x'</span></span>
-<span><span class="co">#&gt; Scale for <span style="color: #00BB00;">fill</span> is already present.</span></span>
-<span><span class="co">#&gt; Adding another scale for <span style="color: #00BB00;">fill</span>, which will replace the existing scale.</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using formula = 'y ~ x'</span></span>
-<span><span class="co">#&gt; Scale for <span style="color: #00BB00;">fill</span> is already present.</span></span>
-<span><span class="co">#&gt; Adding another scale for <span style="color: #00BB00;">fill</span>, which will replace the existing scale.</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using formula = 'y ~ x'</span></span>
-<span><span class="co">#&gt; Scale for <span style="color: #00BB00;">fill</span> is already present.</span></span>
-<span><span class="co">#&gt; Adding another scale for <span style="color: #00BB00;">fill</span>, which will replace the existing scale.</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using formula = 'y ~ x'</span></span>
-<span><span class="co">#&gt; Scale for <span style="color: #00BB00;">fill</span> is already present.</span></span>
-<span><span class="co">#&gt; Adding another scale for <span style="color: #00BB00;">fill</span>, which will replace the existing scale.</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using formula = 'y ~ x'</span></span>
-<span><span class="co">#&gt; Scale for <span style="color: #00BB00;">fill</span> is already present.</span></span>
-<span><span class="co">#&gt; Adding another scale for <span style="color: #00BB00;">fill</span>, which will replace the existing scale.</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using formula = 'y ~ x'</span></span>
-<span><span class="co">#&gt; Scale for <span style="color: #00BB00;">fill</span> is already present.</span></span>
-<span><span class="co">#&gt; Adding another scale for <span style="color: #00BB00;">fill</span>, which will replace the existing scale.</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using formula = 'y ~ x'</span></span>
-<span><span class="co">#&gt; Scale for <span style="color: #00BB00;">fill</span> is already present.</span></span>
-<span><span class="co">#&gt; Adding another scale for <span style="color: #00BB00;">fill</span>, which will replace the existing scale.</span></span>
-<span><span class="co">#&gt; `geom_smooth()` using formula = 'y ~ x'</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/compute.metada.association.html">compute.metada.association</a></span><span class="op">(</span><span class="va">network</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>, <span class="va">traitdata</span>, pval <span class="op">=</span> <span class="fl">0.05</span>, width <span class="op">=</span> <span class="fl">10</span><span class="op">)</span> </span></code></pre></div>
 <p>To functionally characterize the TF modules, we provide a utility to
 estimate pathway activities using a multivariate linear model (MLM)
 implemented via the <code>decoupleR</code> package (<span class="citation">Badia-i-Mompel et al. (<a href="#ref-10.1093/bioadv/vbac016">2022</a>)</span>). By default, the
@@ -513,29 +452,7 @@ TFs. Resulting dot plots are automatically saved in the
 <code>Results/</code> directory.</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">hub_tfs</span> <span class="op">=</span> <span class="fu"><a href="../reference/identify_hub_TFs.html">identify_hub_TFs</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">tfs</span><span class="op">)</span>, <span class="va">network</span>, MM_thresh <span class="op">=</span> <span class="fl">0.8</span>, degree_thresh <span class="op">=</span> <span class="fl">0.9</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/compute.modules.enrichment.html">compute.modules.enrichment</a></span><span class="op">(</span><span class="va">counts.norm</span>, <span class="va">hub_tfs</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Warning in OmnipathR::import_tf_mirna_interactions(genesymbols = TRUE, resources = "CollecTRI", : 'OmnipathR::import_tf_mirna_interactions' is deprecated.</span></span>
-<span><span class="co">#&gt; Use 'tf_mirna' instead.</span></span>
-<span><span class="co">#&gt; See help("Deprecated")</span></span>
-<span><span class="co">#&gt; Warning in readLines(con = path, encoding = encoding): incomplete final line</span></span>
-<span><span class="co">#&gt; found on 'https://omnipathdb.org/resources'</span></span>
-<span><span class="co">#&gt; 'select()' returned 1:1 mapping between keys and columns</span></span>
-<span><span class="co">#&gt; 'select()' returned 1:many mapping between keys and columns</span></span>
-<span><span class="co">#&gt; Loading required package: org.Hs.eg.db</span></span>
-<span><span class="co">#&gt; Loading required package: AnnotationDbi</span></span>
-<span><span class="co">#&gt; Loading required package: stats4</span></span>
-<span><span class="co">#&gt; Loading required package: IRanges</span></span>
-<span><span class="co">#&gt; Loading required package: S4Vectors</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Attaching package: 'S4Vectors'</span></span>
-<span><span class="co">#&gt; The following object is masked from 'package:utils':</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;     findMatches</span></span>
-<span><span class="co">#&gt; The following objects are masked from 'package:base':</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;     expand.grid, I, unname</span></span>
-<span><span class="co">#&gt; 'select()' returned 1:1 mapping between keys and columns</span></span>
-<span><span class="co">#&gt; 'select()' returned 1:many mapping between keys and columns</span></span></code></pre></div>
+<span><span class="fu"><a href="../reference/compute.modules.enrichment.html">compute.modules.enrichment</a></span><span class="op">(</span><span class="va">counts.norm</span>, <span class="va">hub_tfs</span><span class="op">)</span></span></code></pre></div>
 <p>Once the TF modules are defined and functionally characterized, we
 further refine the cell-type deconvolution results to reduce
 dimensionality and enhance statistical power in downstream association
@@ -546,61 +463,6 @@ cell types with similar abundance patterns across samples and returns a
 reduced feature matrix.</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">dt</span> <span class="op">=</span> <span class="fu">multideconv</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/multideconv/man/compute.deconvolution.analysis.html" class="external-link">compute.deconvolution.analysis</a></span><span class="op">(</span><span class="va">deconv</span>, corr <span class="op">=</span> <span class="fl">0.7</span>, seed <span class="op">=</span> <span class="fl">123</span><span class="op">)</span> </span>
-<span><span class="co">#&gt; Removing features with high zero number 90%...............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Checking distribution of variances...............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Chosen threshold is: 0.0002068133 </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Saving variance distribution plot in Results/ folder</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Removing 44 features with variance across samples below this threshold...............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Splitting deconvolution features per cell type...............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Finding group of features with high correlation between each other...............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [1] "Highly correlated features (r&gt;0.9): DeconRNASeq_BPRNACan_B.cells, DeconRNASeq_BPRNACan3DProMet_B.cells"</span></span>
-<span><span class="co">#&gt; Keeping only feature: DeconRNASeq_BPRNACan_B.cells</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [1] "Highly correlated features (r&gt;0.9): Epidish_BPRNACan_B.cells, Epidish_BPRNACan3DProMet_B.cells, Epidish_BPRNACanProMet_B.cells"</span></span>
-<span><span class="co">#&gt; Keeping only feature: Epidish_BPRNACanProMet_B.cells</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [1] "Highly correlated features (r&gt;0.9): DeconRNASeq_BPRNACan_Macrophages.M1, DeconRNASeq_BPRNACanProMet_Macrophages.M1"</span></span>
-<span><span class="co">#&gt; Keeping only feature: DeconRNASeq_BPRNACan_Macrophages.M1</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [1] "Highly correlated features (r&gt;0.9): DeconRNASeq_CCLE.TIL10_Macrophages.M1, DeconRNASeq_TIL10_Macrophages.M1"</span></span>
-<span><span class="co">#&gt; Keeping only feature: DeconRNASeq_CCLE.TIL10_Macrophages.M1</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [1] "Highly correlated features (r&gt;0.9): DeconRNASeq_BPRNACan_Macrophages.M2, DeconRNASeq_BPRNACan3DProMet_Macrophages.M2, DeconRNASeq_BPRNACanProMet_Macrophages.M2"</span></span>
-<span><span class="co">#&gt; Keeping only feature: DeconRNASeq_BPRNACanProMet_Macrophages.M2</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [1] "Highly correlated features (r&gt;0.9): DeconRNASeq_CCLE.TIL10_Macrophages.M2, DeconRNASeq_TIL10_Macrophages.M2"</span></span>
-<span><span class="co">#&gt; Keeping only feature: DeconRNASeq_CCLE.TIL10_Macrophages.M2</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [1] "Highly correlated features (r&gt;0.9): DeconRNASeq_CCLE.TIL10_Monocytes, DeconRNASeq_TIL10_Monocytes"</span></span>
-<span><span class="co">#&gt; Keeping only feature: DeconRNASeq_CCLE.TIL10_Monocytes</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [1] "Highly correlated features (r&gt;0.9): DeconRNASeq_BPRNACan_Neutrophils, DeconRNASeq_BPRNACan3DProMet_Neutrophils, DeconRNASeq_BPRNACanProMet_Neutrophils"</span></span>
-<span><span class="co">#&gt; Keeping only feature: DeconRNASeq_BPRNACanProMet_Neutrophils</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [1] "Highly correlated features (r&gt;0.9): DeconRNASeq_BPRNACan3DProMet_NK.cells, DeconRNASeq_BPRNACanProMet_NK.cells"</span></span>
-<span><span class="co">#&gt; Keeping only feature: DeconRNASeq_BPRNACan3DProMet_NK.cells</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [1] "Highly correlated features (r&gt;0.9): DeconRNASeq_BPRNACan_Cancer, DeconRNASeq_BPRNACan3DProMet_Cancer, DeconRNASeq_BPRNACanProMet_Cancer"</span></span>
-<span><span class="co">#&gt; Keeping only feature: DeconRNASeq_BPRNACanProMet_Cancer</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [1] "Highly correlated features (r&gt;0.9): Epidish_BPRNACan_Cancer, Epidish_BPRNACan3DProMet_Cancer"</span></span>
-<span><span class="co">#&gt; Keeping only feature: Epidish_BPRNACan_Cancer</span></span>
-<span><span class="co">#&gt; Warning in compute_subgroups(cells[[i]], file_name = names(cells)[i], thres_corr = corr): Deconvolution features with less than two columns for subgrouping (skipping)</span></span>
-<span><span class="co">#&gt; Warning in compute_subgroups(cells[[i]], file_name = names(cells)[i], thres_corr = corr): Deconvolution features with less than two columns for subgrouping (skipping)</span></span>
-<span><span class="co">#&gt; Warning in compute_subgroups(cells[[i]], file_name = names(cells)[i], thres_corr = corr): Deconvolution features with less than two columns for subgrouping (skipping)</span></span>
-<span><span class="co">#&gt; Warning in compute_subgroups(cells[[i]], file_name = names(cells)[i], thres_corr = corr): Deconvolution features with less than two columns for subgrouping (skipping)</span></span>
-<span><span class="co">#&gt; Warning in compute_subgroups(cells[[i]], file_name = names(cells)[i], thres_corr = corr): Deconvolution features with less than two columns for subgrouping (skipping)</span></span>
-<span><span class="co">#&gt; Warning in compute_subgroups(cells[[i]], file_name = names(cells)[i], thres_corr = corr): Deconvolution features with less than two columns for subgrouping (skipping)</span></span>
-<span><span class="co">#&gt; Warning in compute_subgroups(cells[[i]], file_name = names(cells)[i], thres_corr = corr): Deconvolution features with less than two columns for subgrouping (skipping)</span></span>
-<span><span class="co">#&gt; Warning in compute_subgroups(cells[[i]], file_name = names(cells)[i], thres_corr = corr): Deconvolution features with less than two columns for subgrouping (skipping)</span></span>
-<span><span class="co">#&gt; Warning in compute_subgroups(cells[[i]], file_name = names(cells)[i], thres_corr = corr): Deconvolution features with less than two columns for subgrouping (skipping)</span></span>
 <span><span class="co">#&gt; Deconvolution features subgroupped</span></span>
 <span><span class="co">#Association of TFs modules with deconvolution </span></span>
 <span><span class="fu"><a href="../reference/compute.modules.relationship.html">compute.modules.relationship</a></span><span class="op">(</span><span class="va">network</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>, <span class="va">dt</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>, <span class="st">"Deconvolution-TFs_Modules"</span>, vertical <span class="op">=</span> <span class="cn">T</span>, height <span class="op">=</span> <span class="fl">30</span>, width <span class="op">=</span> <span class="fl">10</span>, pval <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span></span></code></pre></div>
@@ -630,46 +492,12 @@ treatment response).</p>
 <span><span class="co">#&gt; Use 'tf_mirna' instead.</span></span>
 <span><span class="co">#&gt; See help("Deprecated")</span></span>
 <span><span class="co">#&gt; Warning in OmnipathR::import_tf_mirna_interactions(genesymbols = TRUE, resources = "CollecTRI", : incomplete final line found on 'https://omnipathdb.org/resources'</span></span>
-<span><span class="co">#&gt; TFs scores computed</span></span>
-<span><span class="co">#&gt; Highly correlated features (r&gt;0.9): Dendrogram_brown_group_7_positive.class, Dendrogram_brown_group_10_positive.class. Combining.</span></span>
-<span><span class="co">#&gt; Highly correlated features (r&gt;0.9): Dendrogram_brown_group_9_positive.class, Dendrogram_brown_group_12_positive.class. Combining.</span></span>
-<span><span class="co">#&gt; Highly correlated features (r&gt;0.9): Dendrogram_black_group_10_positive.class, Dendrogram_black_group_15_positive.class. Combining.</span></span>
-<span><span class="co">#&gt; Highly correlated features (r&gt;0.9): Dendrogram_yellow_group_3_negative.class, Dendrogram_yellow_group_8_negative.class, Dendrogram_yellow_group_10_negative.class. Combining.</span></span>
-<span><span class="co">#&gt; Highly correlated features (r&gt;0.9): Dendrogram_yellow_group_4_negative.class, Dendrogram_black_group_11_negative.class. Combining.</span></span>
-<span><span class="co">#&gt; Highly correlated features (r&gt;0.9): Dendrogram_yellow_group_5_negative.class, Dendrogram_yellow_group_11_negative.class, Dendrogram_yellow_group_15_negative.class. Combining.</span></span>
-<span><span class="co">#&gt; Highly correlated features (r&gt;0.9): Dendrogram_yellow_group_7_negative.class, Dendrogram_yellow_group_13_negative.class. Combining.</span></span>
-<span><span class="co">#&gt; Highly correlated features (r&gt;0.9): Dendrogram_black_group_2_negative.class, Dendrogram_black_group_9_negative.class. Combining.</span></span>
-<span><span class="co">#&gt; Highly correlated features (r&gt;0.9): Dendrogram_black_group_7_negative.class, Dendrogram_black_group_18_negative.class. Combining.</span></span>
-<span><span class="co">#&gt; Highly correlated features (r&gt;0.9): Dendrogram_black_group_12_negative.class, Dendrogram_black_group_21_negative.class. Combining.</span></span>
-<span><span class="co">#&gt; Highly correlated features (r&gt;0.9): Dendrogram_black_group_14_negative.class, Dendrogram_black_group_24_negative.class. Combining.</span></span>
-<span><span class="co">#&gt; Highly correlated features (r&gt;0.9): Dendrogram_red_group_2_negative.class, Dendrogram_red_group_5_negative.class. Combining.</span></span>
-<span><span class="co">#&gt; Highly correlated features (r&gt;0.9): Dendrogram_pink_group_1_negative.class, Dendrogram_pink_group_2_negative.class, Dendrogram_pink_group_4_negative.class. Combining.</span></span>
-<span><span class="co">#&gt; Highly correlated features (r&gt;0.9): Dendrogram_brown_group_2_negative.class, Dendrogram_brown_group_5_negative.class. Combining.</span></span>
-<span><span class="co">#&gt; Removing low variance features (if present)........................</span></span></code></pre></div>
+<span><span class="co">#&gt; TFs scores computed</span></span></code></pre></div>
 <p>Unsupervised analysis</p>
 <p>Alternatively, we can identify cell groups solely based on molecular
 features without using clinical annotations.</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">cell_groups</span> <span class="op">=</span> <span class="fu"><a href="../reference/construct_cell_groups.html">construct_cell_groups</a></span><span class="op">(</span><span class="va">counts.norm</span>, <span class="va">tfs</span>, <span class="va">deconv</span>, <span class="va">network</span>, <span class="va">dt</span>, pval <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Highly correlated features (r&gt;0.9): Dendrogram_yellow_group_1, Dendrogram_yellow_group_2, Dendrogram_black_group_14. Combining.</span></span>
-<span><span class="co">#&gt; Highly correlated features (r&gt;0.9): Dendrogram_yellow_group_4, Dendrogram_yellow_group_11. Combining.</span></span>
-<span><span class="co">#&gt; Highly correlated features (r&gt;0.9): Dendrogram_yellow_group_6, Dendrogram_yellow_group_8. Combining.</span></span>
-<span><span class="co">#&gt; Highly correlated features (r&gt;0.9): Dendrogram_yellow_group_7, Dendrogram_yellow_group_12. Combining.</span></span>
-<span><span class="co">#&gt; Highly correlated features (r&gt;0.9): Dendrogram_yellow_group_9, Dendrogram_yellow_group_14. Combining.</span></span>
-<span><span class="co">#&gt; Highly correlated features (r&gt;0.9): Dendrogram_black_group_6, Dendrogram_black_group_11. Combining.</span></span>
-<span><span class="co">#&gt; Highly correlated features (r&gt;0.9): Dendrogram_black_group_7, Dendrogram_black_group_13. Combining.</span></span>
-<span><span class="co">#&gt; Highly correlated features (r&gt;0.9): Dendrogram_black_group_8, Dendrogram_black_group_9, Dendrogram_black_group_26. Combining.</span></span>
-<span><span class="co">#&gt; Highly correlated features (r&gt;0.9): Dendrogram_black_group_12, Dendrogram_black_group_17, Dendrogram_black_group_24. Combining.</span></span>
-<span><span class="co">#&gt; Highly correlated features (r&gt;0.9): Dendrogram_black_group_15, Dendrogram_black_group_18. Combining.</span></span>
-<span><span class="co">#&gt; Highly correlated features (r&gt;0.9): Dendrogram_black_group_16, Dendrogram_black_group_22. Combining.</span></span>
-<span><span class="co">#&gt; Highly correlated features (r&gt;0.9): Dendrogram_black_group_19, Dendrogram_black_group_30. Combining.</span></span>
-<span><span class="co">#&gt; Highly correlated features (r&gt;0.9): Dendrogram_black_group_21, Dendrogram_black_group_25. Combining.</span></span>
-<span><span class="co">#&gt; Highly correlated features (r&gt;0.9): Dendrogram_red_group_1, Dendrogram_red_group_2, Dendrogram_red_group_4, Dendrogram_red_group_8. Combining.</span></span>
-<span><span class="co">#&gt; Highly correlated features (r&gt;0.9): Dendrogram_red_group_3, Dendrogram_red_group_5. Combining.</span></span>
-<span><span class="co">#&gt; Highly correlated features (r&gt;0.9): Dendrogram_pink_group_1, Dendrogram_pink_group_2, Dendrogram_pink_group_3. Combining.</span></span>
-<span><span class="co">#&gt; Highly correlated features (r&gt;0.9): Dendrogram_brown_group_1, Dendrogram_brown_group_4. Combining.</span></span>
-<span><span class="co">#&gt; Highly correlated features (r&gt;0.9): Dendrogram_brown_group_2, Dendrogram_brown_group_5. Combining.</span></span>
-<span><span class="co">#&gt; Removing low variance features (if present)........................</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">cell_groups</span> <span class="op">=</span> <span class="fu"><a href="../reference/construct_cell_groups.html">construct_cell_groups</a></span><span class="op">(</span><span class="va">counts.norm</span>, <span class="va">tfs</span>, <span class="va">deconv</span>, <span class="va">network</span>, <span class="va">dt</span>, pval <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="analize-results">
@@ -935,41 +763,6 @@ To run this streamlined pipeline, simply execute:</p>
 <span><span class="co">#&gt; TFs scores computed</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Constructing TF network............................................................</span></span>
-<span><span class="co">#&gt; Creating weighted TF-coactivity network......................................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;    Power SFT.R.sq slope truncated.R.sq mean.k. median.k. max.k.</span></span>
-<span><span class="co">#&gt; 1      1    0.349  5.34          0.948 398.000  401.0000 448.00</span></span>
-<span><span class="co">#&gt; 2      2    0.327 -1.99          0.889 216.000  214.0000 286.00</span></span>
-<span><span class="co">#&gt; 3      3    0.744 -2.74          0.936 123.000  117.0000 195.00</span></span>
-<span><span class="co">#&gt; 4      4    0.875 -2.54          0.970  72.500   66.4000 140.00</span></span>
-<span><span class="co">#&gt; 5      5    0.918 -2.36          0.973  44.500   38.6000 104.00</span></span>
-<span><span class="co">#&gt; 6      6    0.939 -2.13          0.976  28.300   22.8000  80.00</span></span>
-<span><span class="co">#&gt; 7      7    0.948 -1.97          0.979  18.600   14.1000  62.70</span></span>
-<span><span class="co">#&gt; 8      8    0.959 -1.81          0.983  12.600    8.9100  50.00</span></span>
-<span><span class="co">#&gt; 9      9    0.972 -1.70          0.994   8.790    5.6900  40.50</span></span>
-<span><span class="co">#&gt; 10    10    0.975 -1.62          0.990   6.290    3.6800  33.30</span></span>
-<span><span class="co">#&gt; 11    12    0.968 -1.55          0.980   3.460    1.6200  24.00</span></span>
-<span><span class="co">#&gt; 12    13    0.961 -1.52          0.969   2.640    1.0900  20.70</span></span>
-<span><span class="co">#&gt; 13    14    0.977 -1.48          0.990   2.060    0.7380  18.00</span></span>
-<span><span class="co">#&gt; 14    15    0.947 -1.47          0.960   1.630    0.5100  15.80</span></span>
-<span><span class="co">#&gt; 15    16    0.953 -1.44          0.971   1.300    0.3570  13.90</span></span>
-<span><span class="co">#&gt; 16    17    0.957 -1.42          0.975   1.060    0.2570  12.30</span></span>
-<span><span class="co">#&gt; 17    18    0.955 -1.40          0.969   0.871    0.1790  11.00</span></span>
-<span><span class="co">#&gt; 18    19    0.961 -1.37          0.971   0.724    0.1270   9.81</span></span>
-<span><span class="co">#&gt; 19    20    0.960 -1.36          0.967   0.608    0.0928   8.81</span></span>
-<span><span class="co">#&gt; Choosing 5 as soft-threshold......................................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Calculating nodes adjacency and topological overlapping nodes.................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ..connectivity..</span></span>
-<span><span class="co">#&gt; ..matrix multiplication (system BLAS)..</span></span>
-<span><span class="co">#&gt; ..normalization..</span></span>
-<span><span class="co">#&gt; ..done.</span></span>
-<span><span class="co">#&gt;  ..cutHeight not given, setting it to 30.3  ===&gt;  99% of the (truncated) height range in dendro.</span></span>
-<span><span class="co">#&gt;  ..done.</span></span>
-<span><span class="co">#&gt; Calculating eigenvectors from modules.................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [1] "Merging modules significantly correlated with 0.9........"</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Calculating pathway activities............................................................</span></span>
 <span><span class="co">#&gt; Warning in OmnipathR::get_annotation_resources(): 'OmnipathR::get_annotation_resources' is deprecated.</span></span>
@@ -984,87 +777,19 @@ To run this streamlined pipeline, simply execute:</p>
 <span><span class="co">#&gt; Pathways scores computed</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Performing deconvolution analysis............................................................</span></span>
-<span><span class="co">#&gt; Removing features with high zero number 90%...............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Checking distribution of variances...............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Chosen threshold is: 0.0002068133 </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Saving variance distribution plot in Results/ folder</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Removing 44 features with variance across samples below this threshold...............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Splitting deconvolution features per cell type...............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Finding group of features with high correlation between each other...............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [1] "Highly correlated features (r&gt;0.9): DeconRNASeq_BPRNACan_B.cells, DeconRNASeq_BPRNACan3DProMet_B.cells"</span></span>
-<span><span class="co">#&gt; Keeping only feature: DeconRNASeq_BPRNACan_B.cells</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [1] "Highly correlated features (r&gt;0.9): Epidish_BPRNACan_B.cells, Epidish_BPRNACan3DProMet_B.cells, Epidish_BPRNACanProMet_B.cells"</span></span>
-<span><span class="co">#&gt; Keeping only feature: Epidish_BPRNACanProMet_B.cells</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [1] "Highly correlated features (r&gt;0.9): DeconRNASeq_BPRNACan_Macrophages.M1, DeconRNASeq_BPRNACanProMet_Macrophages.M1"</span></span>
-<span><span class="co">#&gt; Keeping only feature: DeconRNASeq_BPRNACan_Macrophages.M1</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [1] "Highly correlated features (r&gt;0.9): DeconRNASeq_CCLE.TIL10_Macrophages.M1, DeconRNASeq_TIL10_Macrophages.M1"</span></span>
-<span><span class="co">#&gt; Keeping only feature: DeconRNASeq_CCLE.TIL10_Macrophages.M1</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [1] "Highly correlated features (r&gt;0.9): DeconRNASeq_BPRNACan_Macrophages.M2, DeconRNASeq_BPRNACan3DProMet_Macrophages.M2, DeconRNASeq_BPRNACanProMet_Macrophages.M2"</span></span>
-<span><span class="co">#&gt; Keeping only feature: DeconRNASeq_BPRNACanProMet_Macrophages.M2</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [1] "Highly correlated features (r&gt;0.9): DeconRNASeq_CCLE.TIL10_Macrophages.M2, DeconRNASeq_TIL10_Macrophages.M2"</span></span>
-<span><span class="co">#&gt; Keeping only feature: DeconRNASeq_CCLE.TIL10_Macrophages.M2</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [1] "Highly correlated features (r&gt;0.9): DeconRNASeq_CCLE.TIL10_Monocytes, DeconRNASeq_TIL10_Monocytes"</span></span>
-<span><span class="co">#&gt; Keeping only feature: DeconRNASeq_CCLE.TIL10_Monocytes</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [1] "Highly correlated features (r&gt;0.9): DeconRNASeq_BPRNACan_Neutrophils, DeconRNASeq_BPRNACan3DProMet_Neutrophils, DeconRNASeq_BPRNACanProMet_Neutrophils"</span></span>
-<span><span class="co">#&gt; Keeping only feature: DeconRNASeq_BPRNACanProMet_Neutrophils</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [1] "Highly correlated features (r&gt;0.9): DeconRNASeq_BPRNACan3DProMet_NK.cells, DeconRNASeq_BPRNACanProMet_NK.cells"</span></span>
-<span><span class="co">#&gt; Keeping only feature: DeconRNASeq_BPRNACan3DProMet_NK.cells</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [1] "Highly correlated features (r&gt;0.9): DeconRNASeq_BPRNACan_Cancer, DeconRNASeq_BPRNACan3DProMet_Cancer, DeconRNASeq_BPRNACanProMet_Cancer"</span></span>
-<span><span class="co">#&gt; Keeping only feature: DeconRNASeq_BPRNACanProMet_Cancer</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [1] "Highly correlated features (r&gt;0.9): Epidish_BPRNACan_Cancer, Epidish_BPRNACan3DProMet_Cancer"</span></span>
-<span><span class="co">#&gt; Keeping only feature: Epidish_BPRNACan_Cancer</span></span>
-<span><span class="co">#&gt; Warning in compute_subgroups(cells[[i]], file_name = names(cells)[i], thres_corr = corr): Deconvolution features with less than two columns for subgrouping (skipping)</span></span>
-<span><span class="co">#&gt; Warning in compute_subgroups(cells[[i]], file_name = names(cells)[i], thres_corr = corr): Deconvolution features with less than two columns for subgrouping (skipping)</span></span>
-<span><span class="co">#&gt; Warning in compute_subgroups(cells[[i]], file_name = names(cells)[i], thres_corr = corr): Deconvolution features with less than two columns for subgrouping (skipping)</span></span>
-<span><span class="co">#&gt; Warning in compute_subgroups(cells[[i]], file_name = names(cells)[i], thres_corr = corr): Deconvolution features with less than two columns for subgrouping (skipping)</span></span>
-<span><span class="co">#&gt; Warning in compute_subgroups(cells[[i]], file_name = names(cells)[i], thres_corr = corr): Deconvolution features with less than two columns for subgrouping (skipping)</span></span>
-<span><span class="co">#&gt; Warning in compute_subgroups(cells[[i]], file_name = names(cells)[i], thres_corr = corr): Deconvolution features with less than two columns for subgrouping (skipping)</span></span>
-<span><span class="co">#&gt; Warning in compute_subgroups(cells[[i]], file_name = names(cells)[i], thres_corr = corr): Deconvolution features with less than two columns for subgrouping (skipping)</span></span>
-<span><span class="co">#&gt; Warning in compute_subgroups(cells[[i]], file_name = names(cells)[i], thres_corr = corr): Deconvolution features with less than two columns for subgrouping (skipping)</span></span>
-<span><span class="co">#&gt; Warning in compute_subgroups(cells[[i]], file_name = names(cells)[i], thres_corr = corr): Deconvolution features with less than two columns for subgrouping (skipping)</span></span>
 <span><span class="co">#&gt; Deconvolution features subgroupped</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Cell groups identification............................................................</span></span>
 <span><span class="co">#&gt; Warning in OmnipathR::import_tf_mirna_interactions(genesymbols = TRUE, resources = "CollecTRI", : 'OmnipathR::import_tf_mirna_interactions' is deprecated.</span></span>
 <span><span class="co">#&gt; Use 'tf_mirna' instead.</span></span>
 <span><span class="co">#&gt; See help("Deprecated")</span></span>
-<span><span class="co">#&gt; Warning in readLines(con = path, encoding = encoding): incomplete final line</span></span>
-<span><span class="co">#&gt; found on 'https://omnipathdb.org/resources'</span></span>
+<span><span class="co">#&gt; Warning in OmnipathR::import_tf_mirna_interactions(genesymbols = TRUE, resources = "CollecTRI", : incomplete final line found on 'https://omnipathdb.org/resources'</span></span>
 <span><span class="co">#&gt; TFs scores computed</span></span>
 <span><span class="co">#&gt; Warning in OmnipathR::import_tf_mirna_interactions(genesymbols = TRUE, resources = "CollecTRI", : 'OmnipathR::import_tf_mirna_interactions' is deprecated.</span></span>
 <span><span class="co">#&gt; Use 'tf_mirna' instead.</span></span>
 <span><span class="co">#&gt; See help("Deprecated")</span></span>
 <span><span class="co">#&gt; Warning in OmnipathR::import_tf_mirna_interactions(genesymbols = TRUE, resources = "CollecTRI", : incomplete final line found on 'https://omnipathdb.org/resources'</span></span>
 <span><span class="co">#&gt; TFs scores computed</span></span>
-<span><span class="co">#&gt; Highly correlated features (r&gt;0.85): Dendrogram_black_group_4_positive.class, Dendrogram_black_group_10_positive.class, Dendrogram_black_group_15_positive.class. Combining.</span></span>
-<span><span class="co">#&gt; Highly correlated features (r&gt;0.85): Dendrogram_yellow_group_3_negative.class, Dendrogram_yellow_group_8_negative.class, Dendrogram_yellow_group_10_negative.class, Dendrogram_yellow_group_14_negative.class. Combining.</span></span>
-<span><span class="co">#&gt; Highly correlated features (r&gt;0.85): Dendrogram_yellow_group_4_negative.class, Dendrogram_yellow_group_11_negative.class, Dendrogram_yellow_group_15_negative.class, Dendrogram_black_group_11_negative.class. Combining.</span></span>
-<span><span class="co">#&gt; Highly correlated features (r&gt;0.85): Dendrogram_yellow_group_7_negative.class, Dendrogram_yellow_group_13_negative.class. Combining.</span></span>
-<span><span class="co">#&gt; Highly correlated features (r&gt;0.85): Dendrogram_black_group_1_negative.class, Dendrogram_black_group_8_negative.class. Combining.</span></span>
-<span><span class="co">#&gt; Highly correlated features (r&gt;0.85): Dendrogram_black_group_2_negative.class, Dendrogram_black_group_9_negative.class, Dendrogram_black_group_14_negative.class, Dendrogram_black_group_24_negative.class. Combining.</span></span>
-<span><span class="co">#&gt; Highly correlated features (r&gt;0.85): Dendrogram_black_group_12_negative.class, Dendrogram_black_group_21_negative.class, Dendrogram_black_group_27_negative.class. Combining.</span></span>
-<span><span class="co">#&gt; Highly correlated features (r&gt;0.85): Dendrogram_red_group_2_negative.class, Dendrogram_red_group_5_negative.class. Combining.</span></span>
-<span><span class="co">#&gt; Highly correlated features (r&gt;0.85): Dendrogram_red_group_3_negative.class, Dendrogram_red_group_4_negative.class. Combining.</span></span>
-<span><span class="co">#&gt; Highly correlated features (r&gt;0.85): Dendrogram_pink_group_1_negative.class, Dendrogram_pink_group_2_negative.class, Dendrogram_pink_group_4_negative.class. Combining.</span></span>
-<span><span class="co">#&gt; Highly correlated features (r&gt;0.85): Dendrogram_brown_group_2_negative.class, Dendrogram_brown_group_5_negative.class. Combining.</span></span>
-<span><span class="co">#&gt; Removing low variance features (if present)........................</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Everything done! Results are saved in Results/ folder............................................................</span></span></code></pre></div>
 </div>
@@ -1336,41 +1061,6 @@ follows:</p>
 <span><span class="co">#&gt; TFs scores computed</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Constructing TF network............................................................</span></span>
-<span><span class="co">#&gt; Creating weighted TF-coactivity network......................................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;    Power SFT.R.sq slope truncated.R.sq mean.k. median.k. max.k.</span></span>
-<span><span class="co">#&gt; 1      1    0.288  4.87          0.946 398.000   400.000 446.00</span></span>
-<span><span class="co">#&gt; 2      2    0.249 -1.85          0.889 216.000   214.000 284.00</span></span>
-<span><span class="co">#&gt; 3      3    0.682 -2.64          0.944 123.000   118.000 193.00</span></span>
-<span><span class="co">#&gt; 4      4    0.818 -2.48          0.943  72.600    67.000 138.00</span></span>
-<span><span class="co">#&gt; 5      5    0.912 -2.35          0.980  44.600    38.900 102.00</span></span>
-<span><span class="co">#&gt; 6      6    0.939 -2.11          0.986  28.500    23.400  77.80</span></span>
-<span><span class="co">#&gt; 7      7    0.937 -1.97          0.981  18.700    14.700  60.70</span></span>
-<span><span class="co">#&gt; 8      8    0.959 -1.80          0.992  12.700     9.340  48.10</span></span>
-<span><span class="co">#&gt; 9      9    0.954 -1.72          0.975   8.910     6.030  38.90</span></span>
-<span><span class="co">#&gt; 10    10    0.966 -1.64          0.988   6.390     3.910  32.50</span></span>
-<span><span class="co">#&gt; 11    12    0.957 -1.58          0.974   3.530     1.730  23.40</span></span>
-<span><span class="co">#&gt; 12    13    0.964 -1.54          0.982   2.700     1.170  20.20</span></span>
-<span><span class="co">#&gt; 13    14    0.945 -1.55          0.976   2.110     0.808  17.60</span></span>
-<span><span class="co">#&gt; 14    15    0.948 -1.51          0.977   1.670     0.559  15.40</span></span>
-<span><span class="co">#&gt; 15    16    0.947 -1.48          0.973   1.340     0.392  13.60</span></span>
-<span><span class="co">#&gt; 16    17    0.954 -1.44          0.985   1.090     0.279  12.00</span></span>
-<span><span class="co">#&gt; 17    18    0.925 -1.45          0.954   0.899     0.200  10.70</span></span>
-<span><span class="co">#&gt; 18    19    0.898 -1.45          0.932   0.748     0.143   9.57</span></span>
-<span><span class="co">#&gt; 19    20    0.906 -1.44          0.932   0.629     0.102   8.59</span></span>
-<span><span class="co">#&gt; Choosing 19 as soft-threshold......................................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Calculating nodes adjacency and topological overlapping nodes.................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ..connectivity..</span></span>
-<span><span class="co">#&gt; ..matrix multiplication (system BLAS)..</span></span>
-<span><span class="co">#&gt; ..normalization..</span></span>
-<span><span class="co">#&gt; ..done.</span></span>
-<span><span class="co">#&gt;  ..cutHeight not given, setting it to 7.13  ===&gt;  99% of the (truncated) height range in dendro.</span></span>
-<span><span class="co">#&gt;  ..done.</span></span>
-<span><span class="co">#&gt; Calculating eigenvectors from modules.................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [1] "Merging modules significantly correlated with 0.9........"</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Calculating pathway activities............................................................</span></span>
 <span><span class="co">#&gt; Warning in OmnipathR::get_annotation_resources(): 'OmnipathR::get_annotation_resources' is deprecated.</span></span>
@@ -1385,96 +1075,19 @@ follows:</p>
 <span><span class="co">#&gt; Pathways scores computed</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Performing deconvolution analysis............................................................</span></span>
-<span><span class="co">#&gt; Removing features with high zero number 90%...............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Checking distribution of variances...............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Chosen threshold is: 0.0002246903 </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Saving variance distribution plot in Results/ folder</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Removing 44 features with variance across samples below this threshold...............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Splitting deconvolution features per cell type...............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Finding group of features with high correlation between each other...............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [1] "Highly correlated features (r&gt;0.9): DeconRNASeq_BPRNACan_B.cells, DeconRNASeq_BPRNACan3DProMet_B.cells"</span></span>
-<span><span class="co">#&gt; Keeping only feature: DeconRNASeq_BPRNACan_B.cells</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [1] "Highly correlated features (r&gt;0.9): Epidish_BPRNACan_B.cells, Epidish_BPRNACan3DProMet_B.cells, Epidish_BPRNACanProMet_B.cells"</span></span>
-<span><span class="co">#&gt; Keeping only feature: Epidish_BPRNACanProMet_B.cells</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [1] "Highly correlated features (r&gt;0.9): DeconRNASeq_BPRNACan_Macrophages.M1, DeconRNASeq_BPRNACanProMet_Macrophages.M1"</span></span>
-<span><span class="co">#&gt; Keeping only feature: DeconRNASeq_BPRNACan_Macrophages.M1</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [1] "Highly correlated features (r&gt;0.9): DeconRNASeq_CCLE.TIL10_Macrophages.M1, DeconRNASeq_TIL10_Macrophages.M1"</span></span>
-<span><span class="co">#&gt; Keeping only feature: DeconRNASeq_CCLE.TIL10_Macrophages.M1</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [1] "Highly correlated features (r&gt;0.9): DeconRNASeq_BPRNACan_Macrophages.M2, DeconRNASeq_BPRNACan3DProMet_Macrophages.M2, DeconRNASeq_BPRNACanProMet_Macrophages.M2"</span></span>
-<span><span class="co">#&gt; Keeping only feature: DeconRNASeq_BPRNACanProMet_Macrophages.M2</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [1] "Highly correlated features (r&gt;0.9): DeconRNASeq_CCLE.TIL10_Macrophages.M2, DeconRNASeq_TIL10_Macrophages.M2"</span></span>
-<span><span class="co">#&gt; Keeping only feature: DeconRNASeq_CCLE.TIL10_Macrophages.M2</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [1] "Highly correlated features (r&gt;0.9): DeconRNASeq_CCLE.TIL10_Monocytes, DeconRNASeq_TIL10_Monocytes"</span></span>
-<span><span class="co">#&gt; Keeping only feature: DeconRNASeq_CCLE.TIL10_Monocytes</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [1] "Highly correlated features (r&gt;0.9): DeconRNASeq_BPRNACan_Neutrophils, DeconRNASeq_BPRNACan3DProMet_Neutrophils, DeconRNASeq_BPRNACanProMet_Neutrophils"</span></span>
-<span><span class="co">#&gt; Keeping only feature: DeconRNASeq_BPRNACanProMet_Neutrophils</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [1] "Highly correlated features (r&gt;0.9): DeconRNASeq_BPRNACan_Cancer, DeconRNASeq_BPRNACan3DProMet_Cancer, DeconRNASeq_BPRNACanProMet_Cancer"</span></span>
-<span><span class="co">#&gt; Keeping only feature: DeconRNASeq_BPRNACanProMet_Cancer</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [1] "Highly correlated features (r&gt;0.9): Epidish_BPRNACan_Cancer, Epidish_BPRNACan3DProMet_Cancer"</span></span>
-<span><span class="co">#&gt; Keeping only feature: Epidish_BPRNACan_Cancer</span></span>
-<span><span class="co">#&gt; Warning in compute_subgroups(cells[[i]], file_name = names(cells)[i], thres_corr = corr): Deconvolution features with less than two columns for subgrouping (skipping)</span></span>
-<span><span class="co">#&gt; Warning in compute_subgroups(cells[[i]], file_name = names(cells)[i], thres_corr = corr): Deconvolution features with less than two columns for subgrouping (skipping)</span></span>
-<span><span class="co">#&gt; Warning in compute_subgroups(cells[[i]], file_name = names(cells)[i], thres_corr = corr): Deconvolution features with less than two columns for subgrouping (skipping)</span></span>
-<span><span class="co">#&gt; Warning in compute_subgroups(cells[[i]], file_name = names(cells)[i], thres_corr = corr): Deconvolution features with less than two columns for subgrouping (skipping)</span></span>
-<span><span class="co">#&gt; Warning in compute_subgroups(cells[[i]], file_name = names(cells)[i], thres_corr = corr): Deconvolution features with less than two columns for subgrouping (skipping)</span></span>
-<span><span class="co">#&gt; Warning in compute_subgroups(cells[[i]], file_name = names(cells)[i], thres_corr = corr): Deconvolution features with less than two columns for subgrouping (skipping)</span></span>
-<span><span class="co">#&gt; Warning in compute_subgroups(cells[[i]], file_name = names(cells)[i], thres_corr = corr): Deconvolution features with less than two columns for subgrouping (skipping)</span></span>
-<span><span class="co">#&gt; Warning in compute_subgroups(cells[[i]], file_name = names(cells)[i], thres_corr = corr): Deconvolution features with less than two columns for subgrouping (skipping)</span></span>
-<span><span class="co">#&gt; Warning in compute_subgroups(cells[[i]], file_name = names(cells)[i], thres_corr = corr): Deconvolution features with less than two columns for subgrouping (skipping)</span></span>
 <span><span class="co">#&gt; Deconvolution features subgroupped</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Cell groups identification............................................................</span></span>
 <span><span class="co">#&gt; Warning in OmnipathR::import_tf_mirna_interactions(genesymbols = TRUE, resources = "CollecTRI", : 'OmnipathR::import_tf_mirna_interactions' is deprecated.</span></span>
 <span><span class="co">#&gt; Use 'tf_mirna' instead.</span></span>
 <span><span class="co">#&gt; See help("Deprecated")</span></span>
-<span><span class="co">#&gt; Warning in readLines(con = path, encoding = encoding): incomplete final line</span></span>
-<span><span class="co">#&gt; found on 'https://omnipathdb.org/resources'</span></span>
+<span><span class="co">#&gt; Warning in OmnipathR::import_tf_mirna_interactions(genesymbols = TRUE, resources = "CollecTRI", : incomplete final line found on 'https://omnipathdb.org/resources'</span></span>
 <span><span class="co">#&gt; TFs scores computed</span></span>
 <span><span class="co">#&gt; Warning in OmnipathR::import_tf_mirna_interactions(genesymbols = TRUE, resources = "CollecTRI", : 'OmnipathR::import_tf_mirna_interactions' is deprecated.</span></span>
 <span><span class="co">#&gt; Use 'tf_mirna' instead.</span></span>
 <span><span class="co">#&gt; See help("Deprecated")</span></span>
 <span><span class="co">#&gt; Warning in OmnipathR::import_tf_mirna_interactions(genesymbols = TRUE, resources = "CollecTRI", : incomplete final line found on 'https://omnipathdb.org/resources'</span></span>
 <span><span class="co">#&gt; TFs scores computed</span></span>
-<span><span class="co">#&gt; Highly correlated features (r&gt;0.85): Dendrogram_green_group_1_positive.class, Dendrogram_green_group_2_positive.class, Dendrogram_green_group_4_positive.class. Combining.</span></span>
-<span><span class="co">#&gt; Highly correlated features (r&gt;0.85): Dendrogram_green_group_3_positive.class, Dendrogram_pink_group_2_positive.class. Combining.</span></span>
-<span><span class="co">#&gt; Highly correlated features (r&gt;0.85): Dendrogram_magenta_group_1_positive.class, Dendrogram_magenta_group_4_positive.class, Dendrogram_magenta_group_13_positive.class. Combining.</span></span>
-<span><span class="co">#&gt; Highly correlated features (r&gt;0.85): Dendrogram_magenta_group_3_positive.class, Dendrogram_magenta_group_5_positive.class, Dendrogram_magenta_group_8_positive.class, Dendrogram_magenta_group_14_positive.class. Combining.</span></span>
-<span><span class="co">#&gt; Highly correlated features (r&gt;0.85): Dendrogram_magenta_group_10_positive.class, Dendrogram_magenta_group_12_positive.class. Combining.</span></span>
-<span><span class="co">#&gt; Highly correlated features (r&gt;0.85): Dendrogram_red_group_8_positive.class, Dendrogram_red_group_23_positive.class. Combining.</span></span>
-<span><span class="co">#&gt; Highly correlated features (r&gt;0.85): Dendrogram_red_group_11_positive.class, Dendrogram_red_group_15_positive.class, Dendrogram_red_group_31_positive.class, Dendrogram_red_group_35_positive.class. Combining.</span></span>
-<span><span class="co">#&gt; Highly correlated features (r&gt;0.85): Dendrogram_red_group_14_positive.class, Dendrogram_red_group_20_positive.class, Dendrogram_red_group_30_positive.class. Combining.</span></span>
-<span><span class="co">#&gt; Highly correlated features (r&gt;0.85): Dendrogram_red_group_18_positive.class, Dendrogram_red_group_28_positive.class. Combining.</span></span>
-<span><span class="co">#&gt; Highly correlated features (r&gt;0.85): Dendrogram_red_group_19_positive.class, Dendrogram_red_group_29_positive.class. Combining.</span></span>
-<span><span class="co">#&gt; Highly correlated features (r&gt;0.85): Dendrogram_red_group_27_positive.class, Dendrogram_red_group_37_positive.class. Combining.</span></span>
-<span><span class="co">#&gt; Highly correlated features (r&gt;0.85): Dendrogram_blue_group_2_positive.class, Dendrogram_blue_group_10_positive.class, Dendrogram_blue_group_18_positive.class. Combining.</span></span>
-<span><span class="co">#&gt; Highly correlated features (r&gt;0.85): Dendrogram_blue_group_7_positive.class, Dendrogram_blue_group_22_positive.class. Combining.</span></span>
-<span><span class="co">#&gt; Highly correlated features (r&gt;0.85): Dendrogram_blue_group_8_positive.class, Dendrogram_blue_group_17_positive.class, Dendrogram_blue_group_25_positive.class. Combining.</span></span>
-<span><span class="co">#&gt; Highly correlated features (r&gt;0.85): Dendrogram_blue_group_24_positive.class, Dendrogram_blue_group_29_positive.class, Dendrogram_blue_group_33_positive.class. Combining.</span></span>
-<span><span class="co">#&gt; Highly correlated features (r&gt;0.85): Dendrogram_blue_group_27_positive.class, Dendrogram_blue_group_32_positive.class. Combining.</span></span>
-<span><span class="co">#&gt; Highly correlated features (r&gt;0.85): Dendrogram_black_group_3_positive.class, Dendrogram_black_group_4_positive.class, Dendrogram_black_group_10_positive.class. Combining.</span></span>
-<span><span class="co">#&gt; Highly correlated features (r&gt;0.85): Dendrogram_black_group_5_positive.class, Dendrogram_black_group_14_positive.class, Dendrogram_yellow_group_18_positive.class. Combining.</span></span>
-<span><span class="co">#&gt; Highly correlated features (r&gt;0.85): Dendrogram_black_group_17_positive.class, Dendrogram_yellow_group_11_positive.class, Dendrogram_yellow_group_19_positive.class, Dendrogram_yellow_group_24_positive.class. Combining.</span></span>
-<span><span class="co">#&gt; Highly correlated features (r&gt;0.85): Dendrogram_yellow_group_3_positive.class, Dendrogram_yellow_group_17_positive.class. Combining.</span></span>
-<span><span class="co">#&gt; Highly correlated features (r&gt;0.85): Dendrogram_yellow_group_6_positive.class, Dendrogram_yellow_group_10_positive.class. Combining.</span></span>
-<span><span class="co">#&gt; Highly correlated features (r&gt;0.85): Dendrogram_black_group_9_negative.class, Dendrogram_black_group_12_negative.class, Dendrogram_yellow_group_9_negative.class. Combining.</span></span>
-<span><span class="co">#&gt; Highly correlated features (r&gt;0.85): Dendrogram_red_group_3_negative.class, Dendrogram_red_group_8_negative.class, Dendrogram_red_group_19_negative.class. Combining.</span></span>
-<span><span class="co">#&gt; Removing low variance features (if present)........................</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Everything done! Results are saved in Results/ folder............................................................</span></span></code></pre></div>
 <p>Next, we train the machine learning model using the cell group
@@ -1493,13 +1106,13 @@ scores:</p>
 <span>                                           target_var <span class="op">=</span> <span class="va">traitData_train</span><span class="op">$</span><span class="va">Best.Confirmed.Overall.Response</span>, </span>
 <span>                                           trait.positive <span class="op">=</span> <span class="st">"PD"</span>, </span>
 <span>                                           metric <span class="op">=</span> <span class="st">"AUROC"</span>, </span>
-<span>                                           stack <span class="op">=</span> <span class="cn">F</span>, k_folds <span class="op">=</span> <span class="fl">2</span>, n_rep <span class="op">=</span> <span class="fl">2</span>,  </span>
-<span>                                           seed <span class="op">=</span> <span class="fl">123</span>, </span>
+<span>                                           stack <span class="op">=</span> <span class="cn">F</span>, k_folds <span class="op">=</span> <span class="fl">2</span>, </span>
+<span>                                           n_rep <span class="op">=</span> <span class="fl">2</span>,  </span>
+<span>                                           ncores <span class="op">=</span> <span class="fl">2</span>,</span>
 <span>                                           return <span class="op">=</span> <span class="cn">F</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Training machine learning model...............................................................</span></span>
 <span><span class="co">#&gt; Warning: glm.fit: algorithm did not converge</span></span>
 <span><span class="co">#&gt; Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred</span></span>
-<span><span class="co">#&gt; Best ML model found:  XGboost </span></span>
+<span><span class="co">#&gt; Best ML model found:  RIDGE </span></span>
 <span><span class="co">#&gt; Returning model trained</span></span></code></pre></div>
 <p>We replicate the trained cell groups into an independent dataset</p>
 <div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
@@ -1733,24 +1346,102 @@ scores:</p>
 <code class="sourceCode R"><span><span class="va">pred</span> <span class="op">=</span> <span class="fu">pipeML</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/pipeML/man/compute_prediction.html" class="external-link">compute_prediction</a></span><span class="op">(</span><span class="va">res</span>, <span class="va">testing_set</span>, <span class="va">traitData_test</span><span class="op">$</span><span class="va">Best.Confirmed.Overall.Response</span>, <span class="st">"PD"</span>, stack <span class="op">=</span> <span class="cn">F</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Predicting target variable using provided ML model.................................................</span></span>
 <span><span class="co">#&gt; Choosing the threshold that maximizes Accuracy for calculating the confusion matrix...................................................</span></span>
-<span><span class="co">#&gt; Best threshold:  0.3390949 </span></span>
-<span><span class="co">#&gt; Accuracy:  86.842 </span></span>
+<span><span class="co">#&gt; Best threshold:  0.6229638 </span></span>
+<span><span class="co">#&gt; Accuracy:  89.474 </span></span>
 <span><span class="co">#&gt; Sensitivity:  100 </span></span>
-<span><span class="co">#&gt; Specificity:  0 </span></span>
-<span><span class="co">#&gt; F1 score:  92.958 </span></span>
-<span><span class="co">#&gt; MCC score:  0 </span></span>
+<span><span class="co">#&gt; Specificity:  20 </span></span>
+<span><span class="co">#&gt; F1 score:  94.286 </span></span>
+<span><span class="co">#&gt; MCC score:  42.235 </span></span>
 <span><span class="co">#&gt; Recall:  100 </span></span>
-<span><span class="co">#&gt; Precision:  86.842</span></span>
+<span><span class="co">#&gt; Precision:  89.189</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">pred</span><span class="op">$</span><span class="va">Metrics</span><span class="op">[</span>,<span class="fl">1</span><span class="op">:</span><span class="fl">5</span><span class="op">]</span><span class="op">)</span></span>
-<span><span class="co">#&gt;         yes   model Sensitivity Specificity fpr</span></span>
-<span><span class="co">#&gt; 1 0.9980846 xgbTree  0.03030303         1.0 0.0</span></span>
-<span><span class="co">#&gt; 2 0.9947400 xgbTree  0.06060606         1.0 0.0</span></span>
-<span><span class="co">#&gt; 3 0.9934875 xgbTree  0.06060606         0.8 0.2</span></span>
-<span><span class="co">#&gt; 4 0.9928812 xgbTree  0.09090909         0.8 0.2</span></span>
-<span><span class="co">#&gt; 5 0.9890772 xgbTree  0.12121212         0.8 0.2</span></span>
-<span><span class="co">#&gt; 6 0.9876173 xgbTree  0.15151515         0.8 0.2</span></span>
+<span><span class="co">#&gt;         yes  model Sensitivity Specificity fpr</span></span>
+<span><span class="co">#&gt; 1 0.9986607 glmnet  0.03030303         1.0 0.0</span></span>
+<span><span class="co">#&gt; 2 0.9916574 glmnet  0.03030303         0.8 0.2</span></span>
+<span><span class="co">#&gt; 3 0.9911454 glmnet  0.06060606         0.8 0.2</span></span>
+<span><span class="co">#&gt; 4 0.9848660 glmnet  0.06060606         0.6 0.4</span></span>
+<span><span class="co">#&gt; 5 0.9634456 glmnet  0.09090909         0.6 0.4</span></span>
+<span><span class="co">#&gt; 6 0.9515404 glmnet  0.12121212         0.6 0.4</span></span>
 <span><span class="va">pred</span><span class="op">$</span><span class="va">AUC</span><span class="op">$</span><span class="va">AUROC</span></span>
-<span><span class="co">#&gt; [1] 0.2787879</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] 0.369697</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="custom-k-fold-cross-validation-with-celltfusion">
+<strong>Custom k-fold cross validation with
+CellTFusion</strong><a class="anchor" aria-label="anchor" href="#custom-k-fold-cross-validation-with-celltfusion"></a>
+</h3>
+<p>In certain use cases it is essential to carefully design how the
+training and test splits are created to prevent data leakage. This is
+especially important for feature construction methods that depend on
+sample-level correlations or deconvolution results. If such features are
+computed on the full dataset before splitting, information from the test
+set can inadvertently influence the training set, leading to inflated
+performance estimates.</p>
+<p>For this purpose, <code>pipeML</code> allows the user to define a
+custom fold construction function. This makes it possible to recompute
+features at every fold while ensuring that test samples are never
+included in the feature learning process.</p>
+<p>For this purpose, <code>CellTFusion</code> provides the function
+<code><a href="../reference/prepare_CellTFusion_folds.html">prepare_CellTFusion_folds()</a></code>, which is fully compatible with
+the <code>pipeML</code> package for machine learning model training and
+evaluation.</p>
+<p>The <code><a href="../reference/prepare_CellTFusion_folds.html">prepare_CellTFusion_folds()</a></code> function handles
+cross-validation by recomputing <code>CellTFusion</code> features inside
+each fold. This ensures that:</p>
+<ul>
+<li><p>Test samples are never included in the feature learning
+process.</p></li>
+<li><p>Hyperparameter tuning can be performed safely without introducing
+bias.</p></li>
+<li><p>Parallelization (via foreach and doParallel) allows multiple
+folds to be processed simultaneously, reducing runtime.</p></li>
+</ul>
+<p>When integrated with <code>pipeML</code>, the function can be passed
+as a custom fold construction function (e.g.,
+<code>fold_construction_fun</code> =
+<code>prepare_CellTFusion_folds</code>), ensuring that the
+cross-validation setup mimics real-world application to unseen data.</p>
+<p>Here is an example of how to integrate it into the machine learning
+workflow:</p>
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">universe</span> <span class="op">&lt;-</span> <span class="fu">decoupleR</span><span class="fu">::</span><span class="fu"><a href="https://saezlab.github.io/decoupleR/reference/get_collectri.html" class="external-link">get_collectri</a></span><span class="op">(</span>organism <span class="op">=</span> <span class="st">'human'</span>, split_complexes <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="va">paths</span> <span class="op">&lt;-</span> <span class="fu">decoupleR</span><span class="fu">::</span><span class="fu"><a href="https://saezlab.github.io/decoupleR/reference/get_progeny.html" class="external-link">get_progeny</a></span><span class="op">(</span>organism <span class="op">=</span> <span class="st">'human'</span>, top <span class="op">=</span> <span class="fl">500</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">res_groups</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/pipeML/man/compute_features.training.ML.html" class="external-link">compute_features.training.ML</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">raw.counts_train</span><span class="op">)</span>, </span>
+<span>                                          <span class="va">traitData_train</span><span class="op">$</span><span class="va">Best.Confirmed.Overall.Response</span>, </span>
+<span>                                          trait.positive <span class="op">=</span> <span class="st">"PD"</span>,</span>
+<span>                                          metric <span class="op">=</span> <span class="st">"AUROC"</span>, </span>
+<span>                                          stack <span class="op">=</span> <span class="cn">F</span>, </span>
+<span>                                          k_folds <span class="op">=</span> <span class="fl">3</span>, </span>
+<span>                                          n_rep <span class="op">=</span> <span class="fl">5</span>, </span>
+<span>                                          LODO <span class="op">=</span> <span class="cn">F</span>, </span>
+<span>                                          file_name <span class="op">=</span> <span class="st">"Test"</span>, </span>
+<span>                                          ncores <span class="op">=</span>  <span class="fl">2</span>,                                                                                        </span>
+<span>                                          return <span class="op">=</span> <span class="cn">T</span>,</span>
+<span>                                          fold_construction_fun <span class="op">=</span> <span class="va">prepare_CellTFusion_folds</span>, </span>
+<span>                                          fold_construction_args_fixed <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>deconv <span class="op">=</span> <span class="va">deconv</span>, </span>
+<span>                                                                              universe <span class="op">=</span> <span class="va">universe</span>, </span>
+<span>                                                                              paths <span class="op">=</span> <span class="va">paths</span>, </span>
+<span>                                                                              ncores <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>                                                                              normalized <span class="op">=</span> <span class="cn">TRUE</span>, </span>
+<span>                                                                              coldata <span class="op">=</span> <span class="va">traitData_train</span>, </span>
+<span>                                                                              trait <span class="op">=</span> <span class="st">"Best.Confirmed.Overall.Response"</span>, </span>
+<span>                                                                              trait.positive <span class="op">=</span> <span class="st">"PD"</span><span class="op">)</span>,</span>
+<span>                                          fold_construction_args_tunable <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>min_targets_size <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">5</span>, <span class="fl">10</span>, <span class="fl">15</span>, <span class="fl">20</span><span class="op">)</span>, </span>
+<span>                                                                                minMod <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">5</span>, <span class="fl">10</span>, <span class="fl">15</span>, <span class="fl">20</span><span class="op">)</span>, </span>
+<span>                                                                                corr_mod <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.7</span>, <span class="fl">0.8</span>, <span class="fl">0.9</span><span class="op">)</span>, </span>
+<span>                                                                                corr <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.7</span>, <span class="fl">0.8</span>, <span class="fl">0.9</span><span class="op">)</span>, </span>
+<span>                                                                                high_corr_groups <span class="op">=</span> <span class="fl">0.9</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p>In this setup:</p>
+<ul>
+<li><p>fold_construction_args_fixed defines parameters that are kept
+constant during the fold construction.</p></li>
+<li><p>fold_construction_args_tunable defines the hyperparameters that
+will be tuned within the cross-validation process.</p></li>
+</ul>
+<p>👉 For more details on what these arguments mean and how to set them
+up, please refer to the <a href="https://verapancaldilab.github.io/pipeML/articles/pipeML.html" class="external-link">pipeML</a>
+tutorial.</p>
 </div>
 <div class="section level2">
 <h2 class="unnumbered" id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
