@@ -64,4 +64,5 @@ reference:
   - tfs
   - counts.norm
   - network
+  - deconv
   - deconv_subgroups

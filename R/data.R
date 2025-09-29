@@ -79,5 +79,6 @@
 #'
 #' @format A data frame with X rows and Y variables:
 #'
-#' @usage data(deconv)
+#' @examples
+#' data(deconv)
 "deconv"
