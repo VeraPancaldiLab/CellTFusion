@@ -8,11 +8,14 @@
 A data frame with X rows and Y variables:
 }
 \usage{
-data(deconv)
+deconv
 }
 \description{
 A toy dataset included with the package to illustrate usage of
 functions in \strong{CellTFusion}. This dataset contains the output
 of a deconvolution run for a small subset of genes.
+}
+\examples{
+data(deconv)
 }
 \keyword{datasets}
