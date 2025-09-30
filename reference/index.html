@@ -30,9 +30,9 @@
     </div>
 
     <div class="section level2">
-      <h2 id="all-functions">All functions<a class="anchor" aria-label="anchor" href="#all-functions"></a></h2>
+      <h2 id="main">Main<a class="anchor" aria-label="anchor" href="#main"></a></h2>
 
-
+      <div class="section-desc"><p>Compute cell type deconvolution</p></div>
 
 
     </div><div class="section level2">
@@ -48,10 +48,86 @@
         <dd>Compute one-step CellTFusion</dd>
       </dl><dl><dt>
 
-          <code><a href="calculate_dendrogram_cuts.html">calculate_dendrogram_cuts()</a></code>
+          <code><a href="compute.TFs.activity.html">compute.TFs.activity()</a></code>
 
         </dt>
-        <dd>Calculate dendrogram cuts</dd>
+        <dd>Compute Transcription Factor (TF) activity</dd>
+      </dl><dl><dt>
+
+          <code><a href="compute.WTCNA.html">compute.WTCNA()</a></code>
+
+        </dt>
+        <dd>Compute Weighted TF-coactivity Network Analysis (WTCNA)</dd>
+      </dl><dl><dt>
+
+          <code><a href="compute.pathway.activity.html">compute.pathway.activity()</a></code>
+
+        </dt>
+        <dd>Computes TF-modules pathway activities scores</dd>
+      </dl><dl><dt>
+
+          <code><a href="identify_hub_TFs.html">identify_hub_TFs()</a></code>
+
+        </dt>
+        <dd>Identify hub TFs</dd>
+      </dl><dl><dt>
+
+          <code><a href="construct_cell_groups.html">construct_cell_groups()</a></code>
+
+        </dt>
+        <dd>Construct cell groups based on TF networks and deconvolution</dd>
+      </dl><dl><dt>
+
+          <code><a href="compute.test.set.html">compute.test.set()</a></code>
+
+        </dt>
+        <dd>Compute composite scores on test set based on previous cell groups</dd>
+      </dl></div><div class="section level2">
+      <h2 id="utils">Utils<a class="anchor" aria-label="anchor" href="#utils"></a></h2>
+
+      <div class="section-desc"><p>Visualization</p></div>
+
+
+    </div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="compute.metada.association.html">compute.metada.association()</a></code>
+
+        </dt>
+        <dd>Compute associations between TF module scores and clinical metadata</dd>
+      </dl><dl><dt>
+
+          <code><a href="compute.modules.relationship.html">compute.modules.relationship()</a></code>
+
+        </dt>
+        <dd>Compute modules relationship</dd>
+      </dl><dl><dt>
+
+          <code><a href="compute.modules.enrichment.html">compute.modules.enrichment()</a></code>
+
+        </dt>
+        <dd>Compute TF module enrichment using directed target genes</dd>
+      </dl></div><div class="section level2">
+      <h2 id="analysis">Analysis<a class="anchor" aria-label="anchor" href="#analysis"></a></h2>
+
+      <div class="section-desc"><p>Cell groups analysis</p></div>
+
+
+    </div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="cell.groups.fisher.test.html">cell.groups.fisher.test()</a></code>
+
+        </dt>
+        <dd>Fisher test using cell groups scores</dd>
       </dl><dl><dt>
 
           <code><a href="cell.groups.anova.test.html">cell.groups.anova.test()</a></code>
@@ -60,16 +136,62 @@
         <dd>Anova test using cell groups scores</dd>
       </dl><dl><dt>
 
+          <code><a href="compute.survival.analysis.html">compute.survival.analysis()</a></code>
+
+        </dt>
+        <dd>Compute survival analysis using CoxPH and Kaplan-Meier Models</dd>
+      </dl><dl><dt>
+
+          <code><a href="identify.cell.groups.html">identify(<i>&lt;cell.groups&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Identify cell groups</dd>
+      </dl><dl><dt>
+
+          <code><a href="identify.cell.signatures.html">identify(<i>&lt;cell.signatures&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Identify cell presence scores across important features from the trained machine learning models.</dd>
+      </dl></div><div class="section level2">
+      <h2 id="machine-learning">Machine learning<a class="anchor" aria-label="anchor" href="#machine-learning"></a></h2>
+
+
+
+
+    </div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="prepare_CellTFusion_folds.html">prepare_CellTFusion_folds()</a></code>
+
+        </dt>
+        <dd>Prepare CellTFusion folds for cross-validation with training and test data</dd>
+      </dl></div><div class="section level2">
+      <h2 id="utils-1">Utils<a class="anchor" aria-label="anchor" href="#utils-1"></a></h2>
+
+      <div class="section-desc"><p>Internal use (not exported functions)</p></div>
+
+
+    </div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="calculate_dendrogram_cuts.html">calculate_dendrogram_cuts()</a></code>
+
+        </dt>
+        <dd>Calculate dendrogram cuts</dd>
+      </dl><dl><dt>
+
           <code><a href="cell.groups.computation.html">cell.groups.computation()</a></code>
 
         </dt>
         <dd>Compute cell group scores from deconvolution and TF module network</dd>
-      </dl><dl><dt>
-
-          <code><a href="cell.groups.fisher.test.html">cell.groups.fisher.test()</a></code>
-
-        </dt>
-        <dd>Fisher test using cell groups scores</dd>
       </dl><dl><dt>
 
           <code><a href="classify.deconvolution.html">classify.deconvolution()</a></code>
@@ -84,58 +206,10 @@
         <dd>Compute TF Network Classification</dd>
       </dl><dl><dt>
 
-          <code><a href="compute.TFs.activity.html">compute.TFs.activity()</a></code>
-
-        </dt>
-        <dd>Compute Transcription Factor (TF) activity</dd>
-      </dl><dl><dt>
-
-          <code><a href="compute.WTCNA.html">compute.WTCNA()</a></code>
-
-        </dt>
-        <dd>Compute Weighted TF-coactivity Network Analysis (WTCNA)</dd>
-      </dl><dl><dt>
-
           <code><a href="compute.composition.matrix.html">compute.composition.matrix()</a></code>
 
         </dt>
         <dd>Compute a cell-type composition matrix from deconvolution subgroups</dd>
-      </dl><dl><dt>
-
-          <code><a href="compute.metada.association.html">compute.metada.association()</a></code>
-
-        </dt>
-        <dd>Compute associations between TF module scores and clinical metadata</dd>
-      </dl><dl><dt>
-
-          <code><a href="compute.modules.enrichment.html">compute.modules.enrichment()</a></code>
-
-        </dt>
-        <dd>Compute TF module enrichment using directed target genes</dd>
-      </dl><dl><dt>
-
-          <code><a href="compute.modules.relationship.html">compute.modules.relationship()</a></code>
-
-        </dt>
-        <dd>Compute modules relationship</dd>
-      </dl><dl><dt>
-
-          <code><a href="compute.pathway.activity.html">compute.pathway.activity()</a></code>
-
-        </dt>
-        <dd>Computes TF-modules pathway activities scores</dd>
-      </dl><dl><dt>
-
-          <code><a href="compute.survival.analysis.html">compute.survival.analysis()</a></code>
-
-        </dt>
-        <dd>Compute survival analysis using CoxPH and Kaplan-Meier Models</dd>
-      </dl><dl><dt>
-
-          <code><a href="compute.test.set.html">compute.test.set()</a></code>
-
-        </dt>
-        <dd>Compute composite scores on test set based on previous cell groups</dd>
       </dl><dl><dt>
 
           <code><a href="compute_cell_groups_signatures.html">compute_cell_groups_signatures()</a></code>
@@ -150,40 +224,16 @@
         <dd>Compute composite score for cell groups</dd>
       </dl><dl><dt>
 
-          <code><a href="construct_cell_groups.html">construct_cell_groups()</a></code>
-
-        </dt>
-        <dd>Construct cell groups based on TF networks and deconvolution</dd>
-      </dl><dl><dt>
-
           <code><a href="correlation.html">correlation()</a></code>
 
         </dt>
         <dd>Perform pairwise correlation across all features</dd>
       </dl><dl><dt>
 
-          <code><a href="counts.norm.html">counts.norm</a></code>
-
-        </dt>
-        <dd>Log(TPM+1) normalized counts</dd>
-      </dl><dl><dt>
-
           <code><a href="create_tfs_modules.html">create_tfs_modules()</a></code>
 
         </dt>
         <dd>Create TFs modules</dd>
-      </dl><dl><dt>
-
-          <code><a href="deconv.html">deconv</a></code>
-
-        </dt>
-        <dd>Example Deconvolution Results</dd>
-      </dl><dl><dt>
-
-          <code><a href="deconv_subgroups.html">deconv_subgroups</a></code>
-
-        </dt>
-        <dd>Cell subgroups</dd>
       </dl><dl><dt>
 
           <code><a href="extract_cells.html">extract_cells()</a></code>
@@ -210,24 +260,6 @@
         <dd>Find maximum iteration from subgroups</dd>
       </dl><dl><dt>
 
-          <code><a href="identify.cell.groups.html">identify(<i>&lt;cell.groups&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Identify cell groups</dd>
-      </dl><dl><dt>
-
-          <code><a href="identify.cell.signatures.html">identify(<i>&lt;cell.signatures&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Identify cell presence scores across important features from the trained machine learning models.</dd>
-      </dl><dl><dt>
-
-          <code><a href="identify_hub_TFs.html">identify_hub_TFs()</a></code>
-
-        </dt>
-        <dd>Identify hub TFs</dd>
-      </dl><dl><dt>
-
           <code><a href="mergeModules.html">mergeModules()</a></code>
 
         </dt>
@@ -238,24 +270,6 @@
 
         </dt>
         <dd>Module enrichment</dd>
-      </dl><dl><dt>
-
-          <code><a href="network.html">network</a></code>
-
-        </dt>
-        <dd>TF Network</dd>
-      </dl><dl><dt>
-
-          <code><a href="prepare_CellTFusion_folds.html">prepare_CellTFusion_folds()</a></code>
-
-        </dt>
-        <dd>Prepare CellTFusion folds for cross-validation with training and test data</dd>
-      </dl><dl><dt>
-
-          <code><a href="raw.counts.html">raw.counts</a></code>
-
-        </dt>
-        <dd>Raw counts</dd>
       </dl><dl><dt>
 
           <code><a href="remove.cell.groups.corr.html">remove.cell.groups.corr()</a></code>
@@ -274,6 +288,29 @@
 
         </dt>
         <dd>Remove cell groups with only one feature</dd>
+      </dl></div><div class="section level2">
+      <h2 id="package-data">Package Data<a class="anchor" aria-label="anchor" href="#package-data"></a></h2>
+
+      <div class="section-desc"><p>Example data</p></div>
+
+
+    </div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="raw.counts.html">raw.counts</a></code>
+
+        </dt>
+        <dd>Raw counts</dd>
+      </dl><dl><dt>
+
+          <code><a href="traitdata.html">traitdata</a></code>
+
+        </dt>
+        <dd>Clinical data</dd>
       </dl><dl><dt>
 
           <code><a href="tfs.html">tfs</a></code>
@@ -282,12 +319,31 @@
         <dd>TFs data</dd>
       </dl><dl><dt>
 
-          <code><a href="traitdata.html">traitdata</a></code>
+          <code><a href="counts.norm.html">counts.norm</a></code>
 
         </dt>
-        <dd>Clinical data</dd>
+        <dd>Log(TPM+1) normalized counts</dd>
+      </dl><dl><dt>
+
+          <code><a href="network.html">network</a></code>
+
+        </dt>
+        <dd>TF Network</dd>
+      </dl><dl><dt>
+
+          <code><a href="deconv.html">deconv</a></code>
+
+        </dt>
+        <dd>Example Deconvolution Results</dd>
+      </dl><dl><dt>
+
+          <code><a href="deconv_subgroups.html">deconv_subgroups</a></code>
+
+        </dt>
+        <dd>Cell subgroups</dd>
       </dl></div>
-  </main></div>
+  </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
+    </nav></aside></div>
 
 
     <footer><div class="pkgdown-footer-left">
