@@ -2,3 +2,67 @@ url: https://verapancaldilab.github.io/CellTFusion/
 template:
   bootstrap: 5
 
+reference:
+- title: Main
+  desc: >
+    Compute cell type deconvolution
+  contents:
+  - CellTFusion
+  - compute.TFs.activity
+  - compute.WTCNA
+  - compute.pathway.activity
+  - identify_hub_TFs
+  - construct_cell_groups
+  - compute.test.set
+- title: Utils
+  desc: >
+    Visualization
+  contents:
+  - compute.metada.association
+  - compute.modules.relationship
+  - compute.modules.enrichment
+- title: Analysis
+  desc: >
+    Cell groups analysis
+  contents:
+  - cell.groups.fisher.test
+  - cell.groups.anova.test
+  - compute.survival.analysis
+  - identify.cell.groups
+  - identify.cell.signatures
+- title: Machine learning
+  contents:
+  - prepare_CellTFusion_folds
+- title: Utils
+  desc: >
+    Internal use (not exported functions)
+  contents:
+  - calculate_dendrogram_cuts
+  - cell.groups.computation
+  - classify.deconvolution
+  - compute.TF.network.classification
+  - compute.composition.matrix
+  - compute_cell_groups_signatures
+  - compute_composite_score
+  - correlation
+  - create_tfs_modules
+  - extract_cells
+  - extract_colors
+  - extract_wilcox_significant
+  - find.maximum.iteration
+  - mergeModules
+  - module_enrich
+  - remove.cell.groups.corr
+  - remove_equal
+  - remove_single_groups
+- title: Package Data
+  desc: >
+    Example data
+  contents:
+  - raw.counts
+  - traitdata
+  - tfs
+  - counts.norm
+  - network
+  - deconv
+  - deconv_subgroups
