@@ -1346,24 +1346,24 @@ scores:</p>
 <code class="sourceCode R"><span><span class="va">pred</span> <span class="op">=</span> <span class="fu">pipeML</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/pipeML/man/compute_prediction.html" class="external-link">compute_prediction</a></span><span class="op">(</span><span class="va">res</span>, <span class="va">testing_set</span>, <span class="va">traitData_test</span><span class="op">$</span><span class="va">Best.Confirmed.Overall.Response</span>, <span class="st">"PD"</span>, stack <span class="op">=</span> <span class="cn">F</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Predicting target variable using provided ML model.................................................</span></span>
 <span><span class="co">#&gt; Choosing the threshold that maximizes Accuracy for calculating the confusion matrix...................................................</span></span>
-<span><span class="co">#&gt; Best threshold:  0.6229638 </span></span>
-<span><span class="co">#&gt; Accuracy:  89.474 </span></span>
+<span><span class="co">#&gt; Best threshold:  0.4588179 </span></span>
+<span><span class="co">#&gt; Accuracy:  86.842 </span></span>
 <span><span class="co">#&gt; Sensitivity:  100 </span></span>
-<span><span class="co">#&gt; Specificity:  20 </span></span>
-<span><span class="co">#&gt; F1 score:  94.286 </span></span>
-<span><span class="co">#&gt; MCC score:  42.235 </span></span>
+<span><span class="co">#&gt; Specificity:  0 </span></span>
+<span><span class="co">#&gt; F1 score:  92.958 </span></span>
+<span><span class="co">#&gt; MCC score:  0 </span></span>
 <span><span class="co">#&gt; Recall:  100 </span></span>
-<span><span class="co">#&gt; Precision:  89.189</span></span>
+<span><span class="co">#&gt; Precision:  86.842</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">pred</span><span class="op">$</span><span class="va">Metrics</span><span class="op">[</span>,<span class="fl">1</span><span class="op">:</span><span class="fl">5</span><span class="op">]</span><span class="op">)</span></span>
 <span><span class="co">#&gt;         yes  model Sensitivity Specificity fpr</span></span>
-<span><span class="co">#&gt; 1 0.9986607 glmnet  0.03030303         1.0 0.0</span></span>
-<span><span class="co">#&gt; 2 0.9916574 glmnet  0.03030303         0.8 0.2</span></span>
-<span><span class="co">#&gt; 3 0.9911454 glmnet  0.06060606         0.8 0.2</span></span>
-<span><span class="co">#&gt; 4 0.9848660 glmnet  0.06060606         0.6 0.4</span></span>
-<span><span class="co">#&gt; 5 0.9634456 glmnet  0.09090909         0.6 0.4</span></span>
-<span><span class="co">#&gt; 6 0.9515404 glmnet  0.12121212         0.6 0.4</span></span>
+<span><span class="co">#&gt; 1 0.9973222 glmnet  0.03030303         1.0 0.0</span></span>
+<span><span class="co">#&gt; 2 0.9946304 glmnet  0.03030303         0.8 0.2</span></span>
+<span><span class="co">#&gt; 3 0.9892390 glmnet  0.06060606         0.8 0.2</span></span>
+<span><span class="co">#&gt; 4 0.9889180 glmnet  0.06060606         0.6 0.4</span></span>
+<span><span class="co">#&gt; 5 0.9829135 glmnet  0.09090909         0.6 0.4</span></span>
+<span><span class="co">#&gt; 6 0.9795687 glmnet  0.12121212         0.6 0.4</span></span>
 <span><span class="va">pred</span><span class="op">$</span><span class="va">AUC</span><span class="op">$</span><span class="va">AUROC</span></span>
-<span><span class="co">#&gt; [1] 0.369697</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] 0.2666667</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="custom-k-fold-cross-validation-with-celltfusion">
