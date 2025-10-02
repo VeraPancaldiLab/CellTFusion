@@ -3005,16 +3005,6 @@ prepare_CellTFusion_folds <- function(data, folds = NULL, deconv = NULL, univers
 
         for (j in seq_len(nrow(custom_grid))) {
 
-          cat(sprintf(
-            "Running fold %s | combination %d/%d: min_targets_size=%s, minMod=%s, corr_mod=%s, corr=%s, high_corr_groups=%s",
-            names(folds)[i], j, nrow(custom_grid),
-            custom_grid$min_targets_size[j],
-            custom_grid$minMod[j],
-            custom_grid$corr_mod[j],
-            custom_grid$corr[j],
-            custom_grid$high_corr_groups[j]
-          ))
-
           ## Run CellTFusion once
           train_processed <- CellTFusion(
             t(train_data),
@@ -3058,8 +3048,9 @@ prepare_CellTFusion_folds <- function(data, folds = NULL, deconv = NULL, univers
             params     = custom_grid[j, ]
           )
         }
-
-        fold_results
+        filename = file.path("Results", paste0("fold_", fold_name, ".rds"))
+        saveRDS(fold_results, file = filename)
+        filename
       }
 
       parallel::stopCluster(cl)  # stop the cluster after parallel execution
