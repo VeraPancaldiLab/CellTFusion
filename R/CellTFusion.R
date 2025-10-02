@@ -2987,7 +2987,7 @@ prepare_CellTFusion_folds <- function(data, folds = NULL, deconv = NULL, univers
 
       # Parallelize over folds
       processed_folds <- foreach::foreach(i = seq_along(folds), .packages = c("dplyr")) %dopar% {
-        require("CellTFusion.R")
+        require(CellTFusion)
 
         cat("Starting fold", names(folds)[i], "\n")
 
@@ -3048,7 +3048,7 @@ prepare_CellTFusion_folds <- function(data, folds = NULL, deconv = NULL, univers
             params     = custom_grid[j, ]
           )
         }
-        filename = file.path("Results", paste0("fold_", fold_name, ".rds"))
+        filename = file.path("Results", paste0("fold_", names(folds)[i], ".rds"))
         saveRDS(fold_results, file = filename)
         filename
       }
