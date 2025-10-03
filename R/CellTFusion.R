@@ -2966,6 +2966,8 @@ prepare_CellTFusion_folds <- function(data, folds = NULL, deconv = NULL, univers
       custom_output = train_processed_final
 
       res = list(train_cell_data_final, custom_output, best_celltfusion_params)
+
+      return(res)
     }else{ ### Means best tune need to be find
 
       custom_grid <- expand.grid(
@@ -3050,16 +3052,12 @@ prepare_CellTFusion_folds <- function(data, folds = NULL, deconv = NULL, univers
         }
         filename = file.path("Results", paste0("fold_", names(folds)[i], ".rds"))
         saveRDS(fold_results, file = filename)
-        filename
       }
 
       parallel::stopCluster(cl)  # stop the cluster after parallel execution
       unregister_dopar() #Stop Dopar from running in the background
 
-      res <- processed_folds
     }
-
-  return(res)
 
 }
 
