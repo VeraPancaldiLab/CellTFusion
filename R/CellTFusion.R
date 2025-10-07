@@ -2988,7 +2988,7 @@ prepare_CellTFusion_folds <- function(data, folds = NULL, deconv = NULL, univers
       doParallel::registerDoParallel(cl)
 
       # Parallelize over folds
-      all_fold_results <- foreach::foreach(i = seq_along(folds), .packages = c("dplyr")) %dopar% {
+      processed_folds <- foreach::foreach(i = seq_along(folds), .packages = c("dplyr")) %dopar% {
         require(CellTFusion)
 
         cat("Starting fold", names(folds)[i], "\n")
@@ -3021,21 +3021,21 @@ prepare_CellTFusion_folds <- function(data, folds = NULL, deconv = NULL, univers
             return = FALSE,
             verbose = FALSE
           )
-          
+
           train_cell_data <- train_processed$Cell_groups[[1]] %>%
             data.frame() %>%
             dplyr::mutate(target = obs_train)
-          
+
           test_deconv <- deconv[test_idx, , drop = FALSE]
           obs_test <- data$target[test_idx]
-          
+
           test_data <- compute.test.set(
             train_processed$Processed_deconvolution,
             train_processed$Cell_groups,
             colnames(train_cell_data)[colnames(train_cell_data) != "target"],
             test_deconv
           )
-          
+
           list(
             train_data = train_cell_data,
             test_data = test_data,
@@ -3045,16 +3045,16 @@ prepare_CellTFusion_folds <- function(data, folds = NULL, deconv = NULL, univers
             params = custom_grid[j, ]
           )
         })
-        
-        return(fold_results)
-        #filename = file.path("Results", paste0("fold_", names(folds)[i], ".rds"))
-        #saveRDS(fold_results, file = filename)
+
+        filename = file.path("Results", paste0("fold_", names(folds)[i], ".rds"))
+        saveRDS(fold_results, file = filename)
+        filename
       }
 
       parallel::stopCluster(cl)  # stop the cluster after parallel execution
       unregister_dopar() #Stop Dopar from running in the background
 
-      return(all_fold_results)
+      return(processed_folds)
     }
 
 }
