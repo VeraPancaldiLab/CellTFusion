@@ -3048,13 +3048,10 @@ prepare_CellTFusion_folds <- function(data, folds = NULL, deconv = NULL, univers
 
         filename = file.path("Results", paste0("fold_", names(folds)[i], ".rds"))
         saveRDS(fold_results, file = filename)
-        filename
       }
 
       parallel::stopCluster(cl)  # stop the cluster after parallel execution
       unregister_dopar() #Stop Dopar from running in the background
-
-      return(processed_folds)
     }
 
 }
