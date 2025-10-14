@@ -61,8 +61,8 @@ The function assumes that \code{tfs_network} and \code{matB} share the same rown
 \code{cor()} and \code{corPvalueStudent()} functions. Insignificant correlations (based on p-value or adjusted p-value) are excluded from the visualization.
 }
 \examples{
-data("counts.norm")
-data("network")
+data("counts.norm.tuto")
+data("network.tuto")
 
 pathways <- compute.pathway.activity(counts.norm)
 compute.modules.relationship(network[[1]],
@@ -70,7 +70,7 @@ compute.modules.relationship(network[[1]],
                              "Pathways_Progeny-TFs_Modules",
                              width = 15)
 
-data("deconv_subgroups")
+data("deconv_subgroups.tuto")
 corr = compute.modules.relationship(network[[1]],
                                     deconv_subgroups[[1]],
                                     "Deconvolution-TFs_Modules",

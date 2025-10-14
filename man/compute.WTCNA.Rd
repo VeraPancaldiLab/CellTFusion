@@ -48,7 +48,7 @@ represented by the eigenvalue of the module.
 }
 \examples{
 
-data("tfs")
+data("tfs.tuto")
 network <- compute.WTCNA(tfs, corr_mod = 0.9, clustering.method = "ward.D2", return = FALSE)
 }
 \references{

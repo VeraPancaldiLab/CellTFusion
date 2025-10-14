@@ -33,9 +33,9 @@
 #' @source Mariathasan et al. (2018), doi: https://doi.org/10.1038/nature25501
 #'
 #' @examples
-#' data(traitdata_tuto)
-#' head(traitdata_tuto)
-"traitdata_tuto"
+#' data(traitdata.tuto)
+#' head(traitdata.tuto)
+"traitdata.tuto"
 
 #' TFs data
 #'

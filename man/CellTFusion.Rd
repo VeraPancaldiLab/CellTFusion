@@ -99,8 +99,8 @@ Compute one-step CellTFusion
 \examples{
 
 \dontrun{
-data("raw.counts")
-data("traitdata")
+data("raw.counts.tuto")
+data("traitdata.tuto")
 
 res <- CellTFusion(
   raw.counts = raw.counts,

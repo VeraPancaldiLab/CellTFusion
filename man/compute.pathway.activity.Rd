@@ -27,7 +27,7 @@ Optionally, it also performs Gene Set Variation Analysis (GSVA) using hallmark s
 }
 \examples{
 # Compute only PROGENy activities
-data("counts.norm")
+data("counts.norm.tuto")
 pathways <- compute.pathway.activity(counts.norm)
 
 }

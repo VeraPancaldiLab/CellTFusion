@@ -42,8 +42,8 @@ All plots are saved in the \verb{Results/} directory.
 }
 \examples{
 
-data("network")
-data("traitdata")
+data("network.tuto")
+data("traitdata.tuto")
 
 compute.metada.association(
   tfs.modules = network[[1]],

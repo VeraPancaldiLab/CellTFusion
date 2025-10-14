@@ -34,7 +34,7 @@ A data frame of inferred and scaled TF activity scores, with samples as rows and
 Infers transcription factor (TF) activity from a gene expression matrix using the VIPER algorithm (Alvarez et al., 2016). The function requires a TF–target gene regulatory network, which can be provided by the user or obtained from OmnipathR resources such as CollecTRI or Dorothea. ARACNE-inferred networks are also supported.
 }
 \examples{
-data("counts.norm")
+data("counts.norm.tuto")
 tfs_activity <- compute.TFs.activity(counts.norm)
 
 }

@@ -22,8 +22,8 @@ Uses hierarchical clustering and silhouette width to determine the optimal numbe
 }
 \examples{
 
-data("network")
-data("counts.norm")
+data("network.tuto")
+data("counts.norm.tuto")
 pathways <- compute.pathway.activity(counts.norm)
 tfs.modules.clusters <- compute.TF.network.classification(tf.network = network,
                                                           pathways.features = pathways,
