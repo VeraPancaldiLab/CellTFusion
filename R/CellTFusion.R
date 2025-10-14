@@ -325,25 +325,27 @@ compute_cell_groups_signatures = function(deconv_res, cell_groups, features, dec
   deconv_subgroups = deconv_res[["Deconvolution subgroups composition"]]
   iterations = find.maximum.iteration(deconv_subgroups)
 
-  # Create same groups composition
-  for (m in 1:iterations) {
-    base_groups = list()
-    for (i in 1:length(deconv_subgroups)){
-      if(length(deconv_subgroups[[i]])!=0){
-        idy = grep(paste0("Iteration.",m), names(deconv_subgroups[[i]]))
-        if(length(idy)!=0){
-          base_groups = append(base_groups, deconv_subgroups[[i]][idy])
+  if(!is.infinite(iterations)){
+    # Create same groups composition
+    for (m in 1:iterations) {
+      base_groups = list()
+      for (i in 1:length(deconv_subgroups)){
+        if(length(deconv_subgroups[[i]])!=0){
+          idy = grep(paste0("Iteration.",m), names(deconv_subgroups[[i]]))
+          if(length(idy)!=0){
+            base_groups = append(base_groups, deconv_subgroups[[i]][idy])
+          }
         }
       }
-    }
 
-    deconv_subgroups_values = c()
-    for (i in 1:length(base_groups)) {
-      deconv_subgroups_values = cbind(deconv_subgroups_values, matrixStats::rowMedians(as.matrix(deconvolution_test[,base_groups[[i]]]))) #Compute median using base groups
-    }
-    colnames(deconv_subgroups_values) = names(base_groups)
-    deconvolution_test = cbind(deconv_subgroups_values, deconvolution_test) # Join cell subgroups and deconv features
+      deconv_subgroups_values = c()
+      for (i in 1:length(base_groups)) {
+        deconv_subgroups_values = cbind(deconv_subgroups_values, matrixStats::rowMedians(as.matrix(deconvolution_test[,base_groups[[i]]]))) #Compute median using base groups
+      }
+      colnames(deconv_subgroups_values) = names(base_groups)
+      deconvolution_test = cbind(deconv_subgroups_values, deconvolution_test) # Join cell subgroups and deconv features
 
+    }
   }
 
   deconvolution_test = deconvolution_test[,colnames(deconvolution_test)%in%colnames(deconv_res[[1]])]

@@ -26,8 +26,8 @@ library(CellTFusion)
 
 Load the pre-packaged example data included in CellTFusion:
 ```{r}
-raw.counts = CellTFusion::raw.counts ## Corresponds to bulk RNAseq counts
-traitdata = CellTFusion::traitdata ## Corresponds to the clinical data per sample
+raw.counts = CellTFusion::raw.counts.tuto ## Corresponds to bulk RNAseq counts
+traitdata = CellTFusion::traitdata.tuto ## Corresponds to the clinical data per sample
 ```
 
 CellTFusion requires two primary inputs: cell-type deconvolution proportions and transcription factor (TF) activity scores. To obtain these features, we will leverage publicly available tools designed for this purpose.
