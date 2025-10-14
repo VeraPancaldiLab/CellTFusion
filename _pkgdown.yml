@@ -59,10 +59,10 @@ reference:
   desc: >
     Example data
   contents:
-  - raw.counts
-  - traitdata
-  - tfs
-  - counts.norm
-  - network
-  - deconv
-  - deconv_subgroups
+  - raw.counts.tuto
+  - traitdata.tuto
+  - tfs.tuto
+  - counts.norm.tuto
+  - network.tuto
+  - deconv.tuto
+  - deconv_subgroups.tuto

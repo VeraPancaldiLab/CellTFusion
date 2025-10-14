@@ -46,8 +46,8 @@ utils::globalVariables(c("Trait", "Value" ,"level", ".", "Cells_level", "PC1", "
 #' @examples
 #'
 #' \dontrun{
-#' data("raw.counts")
-#' data("traitdata")
+#' data("raw.counts.tuto")
+#' data("traitdata.tuto")
 #'
 #' res <- CellTFusion(
 #'   raw.counts = raw.counts,
@@ -408,8 +408,8 @@ compute_cell_groups_signatures = function(deconv_res, cell_groups, features, dec
 #'
 #' @examples
 #'
-#' data("network")
-#' data("traitdata")
+#' data("network.tuto")
+#' data("traitdata.tuto")
 #'
 #' compute.metada.association(
 #'   tfs.modules = network[[1]],
@@ -647,8 +647,8 @@ compute.modules.enrichment <- function(RNA.tpm, hub_tfs){
 #' `cor()` and `corPvalueStudent()` functions. Insignificant correlations (based on p-value or adjusted p-value) are excluded from the visualization.
 #'
 #' @examples
-#' data("counts.norm")
-#' data("network")
+#' data("counts.norm.tuto")
+#' data("network.tuto")
 #'
 #' pathways <- compute.pathway.activity(counts.norm)
 #' compute.modules.relationship(network[[1]],
@@ -656,7 +656,7 @@ compute.modules.enrichment <- function(RNA.tpm, hub_tfs){
 #'                              "Pathways_Progeny-TFs_Modules",
 #'                              width = 15)
 #'
-#' data("deconv_subgroups")
+#' data("deconv_subgroups.tuto")
 #' corr = compute.modules.relationship(network[[1]],
 #'                                     deconv_subgroups[[1]],
 #'                                     "Deconvolution-TFs_Modules",
@@ -887,7 +887,7 @@ compute.modules.relationship <- function(tfs_network, matB, file_name, width = 8
 #'
 #' @examples
 #' # Compute only PROGENy activities
-#' data("counts.norm")
+#' data("counts.norm.tuto")
 #' pathways <- compute.pathway.activity(counts.norm)
 #'
 compute.pathway.activity <- function(RNA.tpm, gene_sets = NULL, paths = NULL){
@@ -1040,8 +1040,8 @@ compute.survival.analysis = function(features, survival.data, time_unit, p.value
 #'
 #' @examples
 #'
-#' data("network")
-#' data("counts.norm")
+#' data("network.tuto")
+#' data("counts.norm.tuto")
 #' pathways <- compute.pathway.activity(counts.norm)
 #' tfs.modules.clusters <- compute.TF.network.classification(tf.network = network,
 #'                                                           pathways.features = pathways,
@@ -1161,7 +1161,7 @@ compute.TF.network.classification = function(tf.network, pathways.features, retu
 #' Margolin, A.A. et al. (2006). ARACNE: an algorithm for the reconstruction of gene regulatory networks in a mammalian cellular context. *BMC Bioinformatics*, 7(Suppl 1), S7. https://doi.org/10.1186/1471-2105-7-S1-S7
 #'
 #' @examples
-#' data("counts.norm")
+#' data("counts.norm.tuto")
 #' tfs_activity <- compute.TFs.activity(counts.norm)
 #'
 compute.TFs.activity <- function(RNA.counts, TF.collection = "CollecTRI", min_targets_size = 5, tfs.pruned = FALSE, universe = NULL){
@@ -1249,7 +1249,7 @@ compute.TFs.activity <- function(RNA.counts, TF.collection = "CollecTRI", min_ta
 #'
 #' @examples
 #'
-#' data("tfs")
+#' data("tfs.tuto")
 #' network <- compute.WTCNA(tfs, corr_mod = 0.9, clustering.method = "ward.D2", return = FALSE)
 compute.WTCNA <- function(TFs.matrix, network.type = "signed", clustering.method = "ward.D2", minMod = 15, corr_mod = 0.9, cor_type = "p", verbose = F, return = T){
 
@@ -1390,8 +1390,8 @@ compute.WTCNA <- function(TFs.matrix, network.type = "signed", clustering.method
 #'
 #' @examples
 #'
-#' data("tfs")
-#' data("network")
+#' data("tfs.tuto")
+#' data("network.tuto")
 #'
 #' hub_tfs <- identify_hub_TFs(t(tfs), network, MM_thresh = 0.8, degree_thresh = 0.9)
 #'
