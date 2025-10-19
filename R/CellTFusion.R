@@ -1676,7 +1676,7 @@ construct_cell_groups = function(counts, tfs, deconv, network, dt, clinical, pva
     traitData_positive = clinical %>%
       dplyr::mutate(trait = clinical[,trait]) %>%
       dplyr::filter(trait == positive)
-    counts.normalized.positive = counts[,rownames(traitData_positive)]
+    counts.normalized.positive = counts[,colnames(counts)%in%rownames(traitData_positive)]
     deconv.positive = deconv[rownames(traitData_positive),]
     tfs.positive = compute.TFs.activity(counts.normalized.positive, TF.collection, min_targets_size, tfs.pruned, universe)
     dt.positive = dt
@@ -1780,29 +1780,34 @@ compute.test.set = function(deconv_res, cell_groups, features, deconvolution_tes
   deconv_subgroups = deconv_res[["Deconvolution subgroups composition"]]
   iterations = find.maximum.iteration(deconv_subgroups)
 
-  # Create same groups composition
-  for (m in 1:iterations) {
-    base_groups = list()
-    for (i in 1:length(deconv_subgroups)){
-      if(length(deconv_subgroups[[i]])!=0){
-        idy = grep(paste0("Iteration.",m), names(deconv_subgroups[[i]]))
-        if(length(idy)!=0){
-          base_groups = append(base_groups, deconv_subgroups[[i]][idy])
+  if(is.infinite(iterations) && iterations < 0){
+    warning("No subgroups to replicate")
+    deconvolution_test = deconvolution_test[,colnames(deconvolution_test) %in% colnames(deconv_res[["Deconvolution matrix"]])]
+  }else{
+    # Create same groups composition
+    for (m in 1:iterations) {
+      base_groups = list()
+      for (i in 1:length(deconv_subgroups)){
+        if(length(deconv_subgroups[[i]])!=0){
+          idy = grep(paste0("Iteration.",m), names(deconv_subgroups[[i]]))
+          if(length(idy)!=0){
+            base_groups = append(base_groups, deconv_subgroups[[i]][idy])
+          }
         }
       }
+      
+      deconv_subgroups_values = c()
+      for (i in 1:length(base_groups)) {
+        deconv_subgroups_values = cbind(deconv_subgroups_values, matrixStats::rowMedians(as.matrix(deconvolution_test[,base_groups[[i]]]))) #Compute median using base groups
+      }
+      colnames(deconv_subgroups_values) = names(base_groups)
+      deconvolution_test = cbind(deconv_subgroups_values, deconvolution_test) # Join cell subgroups and deconv features
+      
     }
-
-    deconv_subgroups_values = c()
-    for (i in 1:length(base_groups)) {
-      deconv_subgroups_values = cbind(deconv_subgroups_values, matrixStats::rowMedians(as.matrix(deconvolution_test[,base_groups[[i]]]))) #Compute median using base groups
-    }
-    colnames(deconv_subgroups_values) = names(base_groups)
-    deconvolution_test = cbind(deconv_subgroups_values, deconvolution_test) # Join cell subgroups and deconv features
-
+    
+    deconvolution_test = deconvolution_test[,colnames(deconvolution_test)%in%colnames(deconv_res[[1]])]
   }
-
-  deconvolution_test = deconvolution_test[,colnames(deconvolution_test)%in%colnames(deconv_res[[1]])]
-
+  
   # Compute composite scores
   idx = which(names(cell_groups[[2]]) %in% features)
   cell_dendrogram = c()
@@ -2980,7 +2985,6 @@ prepare_CellTFusion_folds <- function(data, folds = NULL, deconv = NULL, univers
         high_corr_groups = high_corr_groups
       )
 
-
       ### Implement parallelization
       if(is.null(ncores) == TRUE){
         ncores = parallel::detectCores() - 2
@@ -3006,58 +3010,48 @@ prepare_CellTFusion_folds <- function(data, folds = NULL, deconv = NULL, univers
         train_data$target <- NULL
 
         fold_results <- lapply(seq_len(nrow(custom_grid)), function(j) {
-          tryCatch({
-            message("Running fold ", names(folds)[i], ", grid ", j, " / ", nrow(custom_grid))
-            train_processed <- CellTFusion(
-              t(train_data),
-              deconv = train_deconv,
-              normalized = normalized,
-              coldata = train_coldata,
-              trait = trait,
-              trait.positive = trait.positive,
-              universe = universe,
-              paths = paths,
-              min_targets_size = custom_grid$min_targets_size[j],
-              minMod = custom_grid$minMod[j],
-              corr_mod = custom_grid$corr_mod[j],
-              corr = custom_grid$corr[j],
-              high_corr_groups = custom_grid$high_corr_groups[j],
-              return = FALSE,
-              verbose = FALSE
-            )
-
-            train_cell_data <- train_processed$Cell_groups[[1]] %>%
-              data.frame() %>%
-              dplyr::mutate(target = obs_train)
-
-            test_deconv <- deconv[test_idx, , drop = FALSE]
-            obs_test <- data$target[test_idx]
-
-            test_data <- compute.test.set(
-              train_processed$Processed_deconvolution,
-              train_processed$Cell_groups,
-              colnames(train_cell_data)[colnames(train_cell_data) != "target"],
-              test_deconv
-            )
-
-            list(
-              train_data = train_cell_data,
-              test_data = test_data,
-              obs_test = obs_test,
-              rowIndex = test_idx,
-              fold_name = names(folds)[i],
-              params = custom_grid[j, ]
-            )
-          }, error = function(e) {
-            message("❌ Error in fold ", names(folds)[i],
-                    ", grid ", j, ": ", e$message)
-            return(list(
-              fold_name = names(folds)[i],
-              grid_index = j,
-              error_message = e$message,
-              params = custom_grid[j, ]
-            ))
-          })
+          message("Running fold ", names(folds)[i], ", grid ", j, " / ", nrow(custom_grid))
+          
+          train_processed <- CellTFusion(
+            t(train_data),
+            deconv = train_deconv,
+            normalized = normalized,
+            coldata = train_coldata,
+            trait = trait,
+            trait.positive = trait.positive,
+            universe = universe,
+            paths = paths,
+            min_targets_size = custom_grid$min_targets_size[j],
+            minMod = custom_grid$minMod[j],
+            corr_mod = custom_grid$corr_mod[j],
+            corr = custom_grid$corr[j],
+            high_corr_groups = custom_grid$high_corr_groups[j],
+            return = FALSE,
+            verbose = FALSE
+          )
+          
+          train_cell_data <- train_processed$Cell_groups[[1]] %>%
+            data.frame() %>%
+            dplyr::mutate(target = obs_train)
+          
+          test_deconv <- deconv[test_idx, , drop = FALSE]
+          obs_test <- data$target[test_idx]
+          
+          test_data <- compute.test.set(
+            train_processed$Processed_deconvolution,
+            train_processed$Cell_groups,
+            colnames(train_cell_data)[colnames(train_cell_data) != "target"],
+            test_deconv
+          )
+          
+          list(
+            train_data = train_cell_data,
+            test_data = test_data,
+            obs_test = obs_test,
+            rowIndex = test_idx,
+            fold_name = names(folds)[i],
+            params = custom_grid[j, ]
+          )
         })
 
         filename = file.path("Results", paste0("fold_", names(folds)[i], ".rds"))
