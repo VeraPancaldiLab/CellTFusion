@@ -1795,19 +1795,19 @@ compute.test.set = function(deconv_res, cell_groups, features, deconvolution_tes
           }
         }
       }
-      
+
       deconv_subgroups_values = c()
       for (i in 1:length(base_groups)) {
         deconv_subgroups_values = cbind(deconv_subgroups_values, matrixStats::rowMedians(as.matrix(deconvolution_test[,base_groups[[i]]]))) #Compute median using base groups
       }
       colnames(deconv_subgroups_values) = names(base_groups)
       deconvolution_test = cbind(deconv_subgroups_values, deconvolution_test) # Join cell subgroups and deconv features
-      
+
     }
-    
+
     deconvolution_test = deconvolution_test[,colnames(deconvolution_test)%in%colnames(deconv_res[[1]])]
   }
-  
+
   # Compute composite scores
   idx = which(names(cell_groups[[2]]) %in% features)
   cell_dendrogram = c()
@@ -2106,7 +2106,7 @@ cell.groups.anova.test = function(cell.groups, coldata, trait, pval = 0.05){
     ##Extract only significant features
     if(round(res.aov$p, 5) <= pval){
       cat("Significant pval after doing Anova test for", colnames(cell.groups[[1]])[j], "\n")
-      pdf(paste0("Results/Anova_", trait, "_", colnames(cell.groups[[1]])[j]), width = 12, height = 9)
+      pdf(paste0("Results/Anova_", trait, "_", colnames(cell.groups[[1]])[j], ".pdf"), width = 12, height = 9)
       print(ggplot(data, aes(x=Trait, y=Value, fill=Trait)) +
               geom_boxplot() +
               scale_fill_brewer() +
@@ -2170,7 +2170,7 @@ cell.groups.fisher.test = function(cell.groups, coldata, trait, pval = 0.05){
     if(round(test$p.value, 5) <= pval){
       cat("Significant pval after doing Fisher test for", colnames(cell.groups[[1]])[j], "\n")
       df = data.frame("Cells_level" = coldata[,"Cells_level"], "Trait" = coldata[,trait])
-      pdf(paste0("Results/Fisher_", trait, "_", colnames(cell.groups[[1]])[j]), width = 12, height = 9)
+      pdf(paste0("Results/Fisher_", trait, "_", colnames(cell.groups[[1]])[j], ".pdf"), width = 12, height = 9)
       print(ggstatsplot::ggbarstats(df, Cells_level, Trait, results.subtitle = F,
                                     title= paste0("Dendrogram_", colnames(cell.groups[[1]])[j]),
                                     subtitle = paste0("Fisher's exact test, p-value = ", ifelse(test$p.value < 0.001, "< 0.001", round(test$p.value, 5))))+
@@ -3011,7 +3011,7 @@ prepare_CellTFusion_folds <- function(data, folds = NULL, deconv = NULL, univers
 
         fold_results <- lapply(seq_len(nrow(custom_grid)), function(j) {
           message("Running fold ", names(folds)[i], ", grid ", j, " / ", nrow(custom_grid))
-          
+
           train_processed <- CellTFusion(
             t(train_data),
             deconv = train_deconv,
@@ -3029,21 +3029,21 @@ prepare_CellTFusion_folds <- function(data, folds = NULL, deconv = NULL, univers
             return = FALSE,
             verbose = FALSE
           )
-          
+
           train_cell_data <- train_processed$Cell_groups[[1]] %>%
             data.frame() %>%
             dplyr::mutate(target = obs_train)
-          
+
           test_deconv <- deconv[test_idx, , drop = FALSE]
           obs_test <- data$target[test_idx]
-          
+
           test_data <- compute.test.set(
             train_processed$Processed_deconvolution,
             train_processed$Cell_groups,
             colnames(train_cell_data)[colnames(train_cell_data) != "target"],
             test_deconv
           )
-          
+
           list(
             train_data = train_cell_data,
             test_data = test_data,
