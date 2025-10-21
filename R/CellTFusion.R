@@ -1780,8 +1780,21 @@ compute.test.set = function(deconv_res, cell_groups, features, deconvolution_tes
   deconv_subgroups = deconv_res[["Deconvolution subgroups composition"]]
   iterations = find.maximum.iteration(deconv_subgroups)
 
+  ## Extract the deconv feature without the cluster type
+  features_with_clusters <- colnames(deconv_res[["Deconvolution matrix"]])
+
+  # Extract the base name and cluster suffix from the original names
+  base_names <- gsub("_Cluster_\\d+$", "", features_with_clusters)
+  cluster_suffixes <- sub(".*(_Cluster_\\d+$)", "\\1", features_with_clusters)
+
+  # Create df to map the features with their corresponding clusters
+  map <- data.frame(base = base_names, suffix = cluster_suffixes, stringsAsFactors = FALSE)
+
   if(is.infinite(iterations) && iterations < 0){
     warning("No subgroups to replicate")
+    ## Paste the corresponding clusters to the deconvolution features
+    colnames(deconvolution_test) <- paste0(colnames(deconvolution_test), map$suffix[match(colnames(deconvolution_test), map$base)])
+
     deconvolution_test = deconvolution_test[,colnames(deconvolution_test) %in% colnames(deconv_res[["Deconvolution matrix"]])]
   }else{
     # Create same groups composition
@@ -1804,6 +1817,9 @@ compute.test.set = function(deconv_res, cell_groups, features, deconvolution_tes
       deconvolution_test = cbind(deconv_subgroups_values, deconvolution_test) # Join cell subgroups and deconv features
 
     }
+
+    ## Paste the corresponding clusters to the deconvolution features
+    colnames(deconvolution_test) <- paste0(colnames(deconvolution_test), map$suffix[match(colnames(deconvolution_test), map$base)])
 
     deconvolution_test = deconvolution_test[,colnames(deconvolution_test)%in%colnames(deconv_res[[1]])]
   }
