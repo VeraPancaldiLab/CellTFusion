@@ -117,6 +117,8 @@ CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL
     cat("\nPerforming deconvolution analysis............................................................\n")
   }
   dt = multideconv::compute.deconvolution.analysis(deconv, corr = corr, seed = 123, cells_extra = cells_extra, file_name = file_name, return = return, verbose = FALSE)
+  dt = multideconv::deconvolution_dictionary(dt, pathways) ## Apply dictionary of deconvolution (To be added in compute.deconvolution.analysis() soon)
+
   # 4. Cell groups construction and scores
   if(verbose){
     cat("\nCell groups identification............................................................\n")
