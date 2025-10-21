@@ -396,6 +396,7 @@ compute_cell_groups_signatures = function(deconv_res, cell_groups, features, dec
 #'        Row names should match those of `tfs.modules`.
 #' @param pval A numeric threshold (default = 0.05) to determine statistical significance.
 #'        Only associations with p-values below this threshold are considered significant in the heatmap.
+#' @param file.name Character. Base file name for saving PDF plots of results.
 #' @param width A numeric value indicating the width (in inches) of the output heatmap plot (default = 20).
 #' @param height A numeric value indicating the height (in inches) of the output heatmap plot (default = 8).
 #'
@@ -417,11 +418,12 @@ compute_cell_groups_signatures = function(deconv_res, cell_groups, features, dec
 #'   tfs.modules = network[[1]],
 #'   coldata = traitdata,
 #'   pval = 0.05,
+#'   file.name = 'Tutorial',
 #'   width = 15,
 #'   height = 10
 #' )
 #'
-compute.metada.association = function(tfs.modules, coldata, pval = 0.05, width = 20, height = 8){
+compute.metada.association = function(tfs.modules, coldata, pval = 0.05, file.name, width = 20, height = 8){
   ###Association with categorical variables
   coldata_categorical = coldata %>%
     dplyr::select(dplyr::where(is.character)|dplyr::where(is.factor))
@@ -529,7 +531,7 @@ compute.metada.association = function(tfs.modules, coldata, pval = 0.05, width =
       textMatrix[i] = NA
     }
 
-    pdf("Results/TF.modules_metadata", width = width, height = height)
+    pdf(paste0("Results/TF.modules_metadata_", file.name), width = width, height = height)
     par(mar = c(25, 15, 3, 3))
     WGCNA::labeledHeatmap(Matrix = moduleTraitCor,
                           xLabels = colnames(moduleTraitCor),

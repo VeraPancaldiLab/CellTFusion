@@ -68,7 +68,7 @@ network = compute.WTCNA(tfs, corr_mod = 0.8, clustering.method = "ward.D2", retu
 To explore how clinical variables are associated with the TF modules, we can run the following analysis. This function will generate and save the corresponding plots in the `Results/` directory:
 
 ```{r}
-compute.metada.association(network[[1]], traitdata, pval = 0.05, width = 10) 
+compute.metada.association(network[[1]], traitdata, pval = 0.05, file.name = "Tutorial", width = 10) 
 ```
 
 To functionally characterize the TF modules, we provide a utility to estimate pathway activities using a multivariate linear model (MLM) implemented via the `decoupleR` package (@10.1093/bioadv/vbac016). By default, the `PROGENy` pathway database (@Schubert2018) is used; however, users can supply a custom gene set, in which case Gene Set Variation Analysis (GSVA) will be applied instead.
@@ -94,6 +94,7 @@ Once the TF modules are defined and functionally characterized, we further refin
 
 ```{r}
 dt = multideconv::compute.deconvolution.analysis(deconv, corr = 0.7, seed = 123) 
+dt = multideconv::deconvolution_dictionary(dt, pathways) ## Apply dictionary of deconvolution (To be added in compute.deconvolution.analysis() soon)
 #Association of TFs modules with deconvolution 
 compute.modules.relationship(network[[1]], dt[[1]], "Deconvolution-TFs_Modules", vertical = T, height = 30, width = 10, pval = 0.05)
 ```
