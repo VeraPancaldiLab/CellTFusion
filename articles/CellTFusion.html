@@ -505,11 +505,21 @@ features without using clinical annotations.</p>
 <strong>Analize results</strong><a class="anchor" aria-label="anchor" href="#analize-results"></a>
 </h3>
 <p>To evaluate the association between cell group scores and a clinical
-trait, you can perform statistical tests such as Fisher’s exact test or
-ANOVA.</p>
+trait, you can perform statistical tests such as Fisher’s exact test,
+ANOVA, or any other supported method (Wilcoxon, Kruskal–Wallis, t-test)
+using the unified function <code><a href="../reference/cell.groups.stat.analysis.html">cell.groups.stat.analysis()</a></code>.</p>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">res_fisher</span> <span class="op">=</span> <span class="fu"><a href="../reference/cell.groups.fisher.test.html">cell.groups.fisher.test</a></span><span class="op">(</span><span class="va">cell_groups</span>, <span class="va">traitdata</span>, <span class="st">"Best.Confirmed.Overall.Response"</span>, pval <span class="op">=</span> <span class="fl">0.01</span><span class="op">)</span></span>
-<span><span class="va">res_anova</span> <span class="op">=</span> <span class="fu"><a href="../reference/cell.groups.anova.test.html">cell.groups.anova.test</a></span><span class="op">(</span><span class="va">cell_groups</span>, <span class="va">traitdata</span>, <span class="st">"Best.Confirmed.Overall.Response"</span>, pval <span class="op">=</span> <span class="fl">0.01</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">res_fisher</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cell.groups.stat.analysis.html">cell.groups.stat.analysis</a></span><span class="op">(</span>cell.groups <span class="op">=</span> <span class="va">cell_groups</span>, coldata <span class="op">=</span> <span class="va">traitdata</span>, </span>
+<span>                                        trait <span class="op">=</span> <span class="st">"Best.Confirmed.Overall.Response"</span>, method <span class="op">=</span> <span class="st">"fisher"</span>, pval <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">res_anova</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cell.groups.stat.analysis.html">cell.groups.stat.analysis</a></span><span class="op">(</span>cell.groups <span class="op">=</span> <span class="va">cell_groups</span>, coldata <span class="op">=</span> <span class="va">traitdata</span>,</span>
+<span>                                       trait <span class="op">=</span> <span class="st">"Best.Confirmed.Overall.Response"</span>, method <span class="op">=</span> <span class="st">"anova"</span>, pval <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">res_wilcox</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cell.groups.stat.analysis.html">cell.groups.stat.analysis</a></span><span class="op">(</span>cell.groups <span class="op">=</span> <span class="va">cell_groups</span>, coldata <span class="op">=</span> <span class="va">traitdata</span>, </span>
+<span>                                        trait <span class="op">=</span> <span class="st">"Best.Confirmed.Overall.Response"</span>, method <span class="op">=</span> <span class="st">"wilcox"</span>, pval <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">res_krustal</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cell.groups.stat.analysis.html">cell.groups.stat.analysis</a></span><span class="op">(</span>cell.groups <span class="op">=</span> <span class="va">cell_groups</span>, coldata <span class="op">=</span> <span class="va">traitdata</span>,</span>
+<span>                                         trait <span class="op">=</span> <span class="st">"Best.Confirmed.Overall.Response"</span>, method <span class="op">=</span> <span class="st">"krustal"</span>, pval <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="one-step-celltfusion">

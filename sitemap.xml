@@ -11,6 +11,10 @@
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/cell.groups.anova.test.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/cell.groups.computation.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/cell.groups.fisher.test.html</loc></url>
+<url><loc>https://verapancaldilab.github.io/CellTFusion/reference/cell.groups.kruskal.test.html</loc></url>
+<url><loc>https://verapancaldilab.github.io/CellTFusion/reference/cell.groups.stat.analysis.html</loc></url>
+<url><loc>https://verapancaldilab.github.io/CellTFusion/reference/cell.groups.ttest.html</loc></url>
+<url><loc>https://verapancaldilab.github.io/CellTFusion/reference/cell.groups.wilcox.test.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/classify.deconvolution.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/compute.TF.network.classification.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/compute.TFs.activity.html</loc></url>
