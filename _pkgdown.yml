@@ -27,6 +27,9 @@ reference:
   contents:
   - cell.groups.fisher.test
   - cell.groups.anova.test
+  - cell.groups.wilcox.test
+  - cell.groups.kruskal.test
+  - cell.groups.ttest
   - compute.survival.analysis
   - identify.cell.groups
   - identify.cell.signatures
