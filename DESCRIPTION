@@ -36,10 +36,11 @@ Imports:
     multideconv,
     rstatix,
     stats,
+    ggtree,
     stringr,
     tibble,
     ggstatsplot,
-    rms,
+    rms (>= 6.4-1),
     scales,
     tidyr,
     utils,
@@ -50,11 +51,13 @@ Imports:
     purrr,
     cluster,
     foreach,
+    OmnipathR (>= 3.10.1),
     doParallel
 Remotes: 
     VeraPancaldiLab/multideconv,
     VeraPancaldiLab/pipeML,
-    saezlab/OmnipathR
+    saezlab/OmnipathR,
+    YuLab-SMU/ggtree
 Suggests: 
     knitr,
     rmarkdown,
@@ -64,7 +67,6 @@ Suggests:
     glmnet,
     randomForest,
     xgboost,
-    OmnipathR (>= 3.10.1),
     CCA,
     dorothea,
     survival,
