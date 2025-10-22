@@ -122,11 +122,20 @@ cell_groups = construct_cell_groups(counts.norm, tfs, deconv, network, dt, pval 
 
 ## **Analize results**
 
-To evaluate the association between cell group scores and a clinical trait, you can perform statistical tests such as Fisher’s exact test or ANOVA.
+To evaluate the association between cell group scores and a clinical trait, you can perform statistical tests such as Fisher’s exact test, ANOVA, or any other supported method (Wilcoxon, Kruskal–Wallis, t-test) using the unified function `cell.groups.stat.analysis()`.
 
 ```{r, eval = FALSE}
-res_fisher = cell.groups.fisher.test(cell_groups, traitdata, "Best.Confirmed.Overall.Response", pval = 0.01)
-res_anova = cell.groups.anova.test(cell_groups, traitdata, "Best.Confirmed.Overall.Response", pval = 0.01)
+res_fisher <- cell.groups.stat.analysis(cell.groups = cell_groups, coldata = traitdata, 
+                                        trait = "Best.Confirmed.Overall.Response", method = "fisher", pval = 0.05)
+
+res_anova <- cell.groups.stat.analysis(cell.groups = cell_groups, coldata = traitdata,
+                                       trait = "Best.Confirmed.Overall.Response", method = "anova", pval = 0.05)
+
+res_wilcox <- cell.groups.stat.analysis(cell.groups = cell_groups, coldata = traitdata, 
+                                        trait = "Best.Confirmed.Overall.Response", method = "wilcox", pval = 0.05)
+
+res_krustal <- cell.groups.stat.analysis(cell.groups = cell_groups, coldata = traitdata,
+                                         trait = "Best.Confirmed.Overall.Response", method = "krustal", pval = 0.05)
 ```
 
 ## **One-step CellTFusion**

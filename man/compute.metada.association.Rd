@@ -8,6 +8,7 @@ compute.metada.association(
   tfs.modules,
   coldata,
   pval = 0.05,
+  file.name,
   width = 20,
   height = 8
 )
@@ -21,6 +22,8 @@ Row names should match those of \code{tfs.modules}.}
 
 \item{pval}{A numeric threshold (default = 0.05) to determine statistical significance.
 Only associations with p-values below this threshold are considered significant in the heatmap.}
+
+\item{file.name}{Character. Base file name for saving PDF plots of results.}
 
 \item{width}{A numeric value indicating the width (in inches) of the output heatmap plot (default = 20).}
 
@@ -49,6 +52,7 @@ compute.metada.association(
   tfs.modules = network[[1]],
   coldata = traitdata,
   pval = 0.05,
+  file.name = 'Tutorial',
   width = 15,
   height = 10
 )

@@ -2115,118 +2115,6 @@ identify.cell.signatures = function(cell_groups, deconvolution_processed, TF_net
 
 }
 
-#' Anova test using cell groups scores
-#'
-#' @param cell.groups A list where the first element is a data frame of cell group scores,
-#'        and the second element contains metadata or labels for these groups.
-#' @param coldata A data frame containing the clinical or experimental traits.
-#' @param trait Character. Name of the column in `coldata` to test with ANOVA.
-#' @param pval Numeric. P-value threshold for significance (default 0.05).
-#'
-#' @return A list containing the significant cell groups after ANOVA test. Additionally,
-#'         it saves corresponding boxplot visualizations in the "Results/" folder.
-#' @export
-#'
-cell.groups.anova.test = function(cell.groups, coldata, trait, pval = 0.05){
-
-  sig = c()
-  coldata[,trait] = as.factor(coldata[,trait])
-
-  for (j in 1:ncol(cell.groups[[1]])) {
-    data = data.frame("Value" = cell.groups[[1]][,j], "Trait" = coldata[,trait])
-    model  <- stats::lm(Value ~ Trait, data = data)
-    res.aov <- data %>% rstatix::anova_test(Value ~ Trait)
-    ##Extract only significant features
-    if(round(res.aov$p, 5) <= pval){
-      cat("Significant pval after doing Anova test for", colnames(cell.groups[[1]])[j], "\n")
-      pdf(paste0("Results/Anova_", trait, "_", colnames(cell.groups[[1]])[j], ".pdf"), width = 12, height = 9)
-      print(ggplot(data, aes(x=Trait, y=Value, fill=Trait)) +
-              geom_boxplot() +
-              scale_fill_brewer() +
-              geom_smooth(aes(x=Trait, y=Value), method = "loess") +
-              xlab(paste0("Clinical trait: ", trait)) +
-              labs(title= paste0("Dendrogram_", colnames(cell.groups[[1]])[j]),
-                   subtitle=paste0("Pvalue: ", round(res.aov$p, 5))) +
-              theme(axis.text.x = element_text(size = 20, angle = 0),
-                    axis.title.x = element_text(size = 20),
-                    legend.title = element_text(size = 15),
-                    legend.text = element_text(size = 12),
-                    axis.title.y = element_text(size = 20, angle = 90),
-                    plot.title = element_text(size = 20),
-                    plot.subtitle = element_text(size = 15, face = "bold"))+
-              scale_fill_discrete(name = trait))
-      dev.off()
-
-      sig = c(sig, j)
-    }
-  }
-
-  cell.groups.sig = list()
-  cell.groups.sig[[1]] = cell.groups[[1]][,sig]
-  cell.groups.sig[[2]] = cell.groups[[2]][sig]
-  cell.groups.sig[[3]] = cell.groups[[3]][sig]
-
-  if(length(sig)==0){
-    message("No significant cell groups (pvalue < ", pval, ") after Anova test")
-  }else{
-    return(cell.groups.sig)
-  }
-
-}
-
-#' Fisher test using cell groups scores
-#'
-#' @param cell.groups A list where the first element is a data frame of cell group scores,
-#'        and the second element contains metadata or labels for these groups.
-#' @param coldata A data frame containing the clinical or experimental traits.
-#' @param trait Character. Name of the column in `coldata` to test with Fisher's exact test.
-#' @param pval Numeric. P-value threshold for significance (default 0.05).
-#'
-#' @return A list containing the significant cell groups after Fisher test. Additionally,
-#'         it saves corresponding barplot visualizations in the "Results/" folder.
-#' @export
-#'
-cell.groups.fisher.test = function(cell.groups, coldata, trait, pval = 0.05){
-
-  sig = c()
-  coldata[,trait] = as.factor(coldata[,trait])
-
-  for (j in 1:ncol(cell.groups[[1]])) {
-    coldata = coldata %>%
-      dplyr::mutate(level = cell.groups[[1]][,j],
-                    Cells_level = ifelse(level > summary(level)[3], 'High', 'Low'))
-
-    contingency = table(coldata[,"Cells_level"], coldata[,trait])
-    test = stats::fisher.test(contingency)
-
-    ##Extract only significant features
-    if(round(test$p.value, 5) <= pval){
-      cat("Significant pval after doing Fisher test for", colnames(cell.groups[[1]])[j], "\n")
-      df = data.frame("Cells_level" = coldata[,"Cells_level"], "Trait" = coldata[,trait])
-      pdf(paste0("Results/Fisher_", trait, "_", colnames(cell.groups[[1]])[j], ".pdf"), width = 12, height = 9)
-      print(ggstatsplot::ggbarstats(df, Cells_level, Trait, results.subtitle = F,
-                                    title= paste0("Dendrogram_", colnames(cell.groups[[1]])[j]),
-                                    subtitle = paste0("Fisher's exact test, p-value = ", ifelse(test$p.value < 0.001, "< 0.001", round(test$p.value, 5))))+
-              ggplot2::theme(plot.title = ggplot2::element_text(size=15), axis.text = ggplot2::element_text(size=14), legend.title = ggplot2::element_text(size=14)))
-      dev.off()
-
-      sig = c(j, sig)
-    }
-  }
-
-  cell.groups.sig = list()
-  cell.groups.sig[[1]] = cell.groups[[1]][,sig]
-  cell.groups.sig[[2]] = cell.groups[[2]][sig]
-  cell.groups.sig[[3]] = cell.groups[[3]][sig]
-
-  if(length(sig)==0){
-    message("No significant cell groups (pvalue < ", pval, ") after Fisher test")
-  }else{
-    return(cell.groups.sig)
-  }
-
-}
-
 #' Extract cells from cell type groups
 #'
 #' @param groups A character vector of cell type group names, typically from cell.groups.computation()
@@ -3105,4 +2993,435 @@ unregister_dopar <- function() {
   }
 }
 
+#' Student's t-test for cell group comparisons
+#'
+#' Performs a Student’s t-test comparing cell group scores between two groups of a binary trait.
+#' Significant features are plotted as boxplots and saved as PDF files in the "Results/" directory.
+#'
+#' @param cell.groups A list where the first element is a data frame or matrix of cell group scores,
+#'        and the second and third elements contain metadata or identifiers for the cell groups.
+#' @param coldata A data frame containing sample-level annotations including the trait to test.
+#' @param trait Character. Name of the column in `coldata` used as the grouping variable.
+#' @param pval Numeric. P-value threshold for significance (default = 0.05).
+#'
+#' @return A list containing only significant cell groups after the t-test.
+#'         Returns \code{NULL} if no significant groups are found.
+#' @export
+#'
+cell.groups.ttest <- function(cell.groups, coldata, trait, pval = 0.05) {
+  sig = c()
+  coldata[, trait] = as.factor(coldata[, trait])
 
+  if (length(unique(coldata[, trait])) != 2) {
+    stop("T-test requires a binary trait (exactly two groups).")
+  }
+
+  for (j in 1:ncol(cell.groups[[1]])) {
+    data = data.frame(Value = cell.groups[[1]][, j], Trait = coldata[, trait])
+
+    res.ttest <- stats::t.test(Value ~ Trait, data = data, var.equal = FALSE)
+
+    if (round(res.ttest$p.value, 5) <= pval) {
+      cat("Significant p-value after T-test for", colnames(cell.groups[[1]])[j], "\n")
+
+      pdf(paste0("Results/Ttest_", trait, "_", colnames(cell.groups[[1]])[j], ".pdf"),
+          width = 12, height = 9)
+      print(
+        ggplot(data, aes(x = Trait, y = Value, fill = Trait)) +
+          geom_boxplot(outlier.shape = NA, alpha = 0.7, color = "gray30") +
+          geom_jitter(width = 0.15, size = 2.5, alpha = 0.8, color = "black") +
+          stat_summary(fun = median, geom = "point", shape = 23, size = 3, fill = "white") +
+          scale_fill_brewer(palette = "Set2") +
+          labs(
+            title = paste0("Student's t-test - ", colnames(cell.groups[[1]])[j]),
+            subtitle = paste0("P-value: ", round(res.ttest$p.value, 5)),
+            x = paste0("Clinical trait: ", trait),
+            y = "Cell group score"
+          ) +
+          theme_minimal(base_size = 16) +
+          theme(
+            axis.text.x = element_text(size = 20),
+            axis.title.x = element_text(size = 20),
+            legend.title = element_text(size = 15),
+            legend.text = element_text(size = 12),
+            axis.title.y = element_text(size = 20, angle = 90),
+            plot.title = element_text(size = 20),
+            plot.subtitle = element_text(size = 15, face = "bold")
+          ) +
+          scale_fill_discrete(name = trait)
+      )
+      dev.off()
+
+      sig = c(sig, j)
+    }
+  }
+
+  if (length(sig) == 0) {
+    message("No significant cell groups (p-value < ", pval, ") after t-test.")
+    return(NULL)
+  } else {
+    cell.groups.sig = list()
+    cell.groups.sig[[1]] = cell.groups[[1]][, sig, drop = FALSE]
+    cell.groups.sig[[2]] = cell.groups[[2]][sig]
+    cell.groups.sig[[3]] = cell.groups[[3]][sig]
+    return(cell.groups.sig)
+  }
+}
+
+#' Kruskal–Wallis test for multi-group comparisons
+#'
+#' Performs a Kruskal–Wallis test to compare cell group scores across multiple trait levels.
+#' Significant results are visualized as annotated boxplots with Dunn post-hoc tests.
+#'
+#' @param cell.groups A list containing cell group score data, metadata, and identifiers.
+#' @param coldata A data frame containing sample annotations, including the grouping trait.
+#' @param trait Character. Name of the column in `coldata` used as the grouping variable.
+#' @param pval Numeric. P-value threshold for significance (default = 0.05).
+#'
+#' @return A list containing only significant cell groups after Kruskal–Wallis test.
+#'         Returns \code{NULL} if no significant groups are found.
+#' @export
+#'
+cell.groups.kruskal.test <- function(cell.groups, coldata, trait, pval = 0.05) {
+  sig = c()
+  coldata[, trait] = as.factor(coldata[, trait])
+
+  for (j in 1:ncol(cell.groups[[1]])) {
+    data = data.frame(Value = cell.groups[[1]][, j], Trait = coldata[, trait])
+
+    # Perform Kruskal–Wallis test
+    res.kruskal <- rstatix::kruskal_test(Value ~ Trait, data = data)
+
+    if (res.kruskal$p < pval) {
+      cat("Significant p-value after Kruskal–Wallis test for", colnames(cell.groups[[1]])[j], "\n")
+
+      # Dunn post-hoc test + positions for significance annotation
+      pwc <- data %>%
+        rstatix::dunn_test(Value ~ Trait, p.adjust.method = "BH") %>%
+        rstatix::add_xy_position(x = "Trait")
+
+      pdf(paste0("Results/Kruskal_", trait, "_", colnames(cell.groups[[1]])[j], ".pdf"),
+          width = 12, height = 9)
+      print(
+        ggpubr::ggboxplot(data, x = "Trait", y = "Value", fill = "Trait", add = "jitter") +
+          ggpubr::stat_pvalue_manual(pwc, hide.ns = TRUE) +
+          labs(
+            title = "Kruskal–Wallis Test with Dunn Post-hoc",
+            subtitle = rstatix::get_test_label(res.kruskal, detailed = TRUE),
+            caption = rstatix::get_pwc_label(pwc),
+            x = paste0("Clinical trait: ", trait),
+            y = paste0("Values for ", colnames(cell.groups[[1]])[j])
+          ) +
+          theme(
+            axis.text.x = element_text(size = 20),
+            axis.title.x = element_text(size = 20),
+            axis.title.y = element_text(size = 20, angle = 90),
+            plot.title = element_text(size = 20),
+            plot.subtitle = element_text(size = 15, face = "bold"),
+            legend.position = "none"
+          )
+      )
+      dev.off()
+
+      sig = c(sig, j)
+    }
+  }
+
+  if (length(sig) == 0) {
+    message("No significant cell groups (p-value < ", pval, ") after Kruskal–Wallis test.")
+    return(NULL)
+  } else {
+    cell.groups.sig = list()
+    cell.groups.sig[[1]] = cell.groups[[1]][, sig, drop = FALSE]
+    cell.groups.sig[[2]] = cell.groups[[2]][sig]
+    cell.groups.sig[[3]] = cell.groups[[3]][sig]
+    return(cell.groups.sig)
+  }
+}
+
+#' Wilcoxon rank-sum test for binary traits
+#'
+#' Performs a Wilcoxon rank-sum (Mann–Whitney U) test comparing cell group scores
+#' between two levels of a binary clinical trait.
+#' Significant features are plotted as boxplots and saved to the "Results/" folder.
+#'
+#' @param cell.groups A list containing cell group scores and associated metadata.
+#' @param coldata A data frame containing sample annotations and clinical traits.
+#' @param trait Character. Name of the column in `coldata` used as the binary grouping variable.
+#' @param pval Numeric. P-value threshold for significance (default = 0.05).
+#'
+#' @return A list containing significant cell groups or \code{NULL} if none are found.
+#' @export
+#'
+cell.groups.wilcox.test <- function(cell.groups, coldata, trait, pval = 0.05) {
+  sig = c()
+  coldata[, trait] = as.factor(coldata[, trait])
+
+  if (length(unique(coldata[, trait])) != 2) {
+    stop("Wilcoxon test requires a binary trait (exactly two groups).")
+  }
+
+  for (j in 1:ncol(cell.groups[[1]])) {
+    data = data.frame(Value = cell.groups[[1]][, j], Trait = coldata[, trait])
+
+    # Perform Wilcoxon rank-sum test
+    res.test <- stats::wilcox.test(Value ~ Trait, data = data, exact = FALSE)
+
+    if (round(res.test$p.value, 5) <= pval) {
+      cat("Significant p-value after Wilcoxon test for", colnames(cell.groups[[1]])[j], "\n")
+
+      # Save boxplot
+      pdf(paste0("Results/Wilcoxon_", trait, "_", colnames(cell.groups[[1]])[j], ".pdf"),
+          width = 12, height = 9)
+      print(
+        ggplot(data, aes(x = Trait, y = Value, fill = Trait)) +
+          geom_boxplot(outlier.shape = NA, alpha = 0.7, color = "gray30") +  # hide boxplot outliers
+          geom_jitter(width = 0.15, size = 2.5, alpha = 0.8, color = "black") +  # show all sample points
+          stat_summary(fun = median, geom = "point", shape = 23,
+                       size = 3, fill = "white") +
+          scale_fill_brewer(palette = "Set2") +
+          labs(
+            title = paste0("Wilcoxon Test - ", colnames(cell.groups[[1]])[j]),
+            subtitle = paste0("P-value: ", round(res.test$p.value, 5)),
+            x = paste0("Clinical trait: ", trait),
+            y = "Cell group score"
+          ) +
+          theme_minimal(base_size = 16) +
+          theme(
+            axis.text.x = element_text(size = 20),
+            axis.title.x = element_text(size = 20),
+            legend.title = element_text(size = 15),
+            legend.text = element_text(size = 12),
+            axis.title.y = element_text(size = 20, angle = 90),
+            plot.title = element_text(size = 20),
+            plot.subtitle = element_text(size = 15, face = "bold")
+          ) +
+          scale_fill_discrete(name = trait)
+      )
+      dev.off()
+
+      sig = c(sig, j)
+    }
+  }
+
+  # Collect significant cell groups
+  if (length(sig) == 0) {
+    message("No significant cell groups (p-value < ", pval, ") after Wilcoxon test.")
+    return(invisible(NULL))
+  } else {
+    cell.groups.sig = list()
+    cell.groups.sig[[1]] = cell.groups[[1]][, sig, drop = FALSE]
+    cell.groups.sig[[2]] = cell.groups[[2]][sig]
+    cell.groups.sig[[3]] = cell.groups[[3]][sig]
+    return(cell.groups.sig)
+  }
+}
+
+#' One-way ANOVA test for multi-group comparisons
+#'
+#' Performs one-way ANOVA to test for differences in cell group scores across multiple levels of a trait.
+#' Tukey post-hoc tests are used to identify pairwise differences and significance is visualized as annotated boxplots.
+#'
+#' @param cell.groups A list containing cell group score data, metadata, and identifiers.
+#' @param coldata A data frame containing sample annotations including the grouping variable.
+#' @param trait Character. Name of the column in `coldata` used for the grouping variable.
+#' @param pval Numeric. P-value threshold for significance (default = 0.05).
+#'
+#' @return A list of significant cell groups or \code{NULL} if none are significant.
+#' @export
+#'
+cell.groups.anova.test = function(cell.groups, coldata, trait, pval = 0.05){
+  sig = c()
+  coldata[, trait] = as.factor(coldata[, trait])
+
+  for (j in 1:ncol(cell.groups[[1]])) {
+    data = data.frame(Value = cell.groups[[1]][, j], Trait = coldata[, trait])
+    res.aov <- rstatix::anova_test(data = data, dv = Value, between = Trait)
+
+    if (res.aov$p < pval) {
+      cat("Significant p-value after ANOVA for", colnames(cell.groups[[1]])[j], "\n")
+
+      # Tukey post-hoc test + position for significance annotation
+      pwc <- data %>%
+        rstatix::tukey_hsd(Value ~ Trait) %>%
+        rstatix::add_xy_position(x = "Trait")
+
+      # Generate annotated boxplot (same style as first function)
+      pdf(paste0("Results/ANOVA_", trait, "_", colnames(cell.groups[[1]])[j], ".pdf"),
+          width = 12, height = 9)
+      print(
+        ggpubr::ggboxplot(data, x = "Trait", y = "Value", fill = "Trait", add = "jitter") +
+          ggpubr::stat_pvalue_manual(pwc, hide.ns = TRUE) +
+          labs(
+            title = "One-way ANOVA with Tukey HSD",
+            subtitle = rstatix::get_test_label(res.aov, detailed = TRUE),
+            caption = rstatix::get_pwc_label(pwc),
+            x = paste0("Clinical trait: ", trait),
+            y = paste0("Values for ", colnames(cell.groups[[1]])[j])
+          ) +
+          theme(
+            axis.text.x = element_text(size = 20, angle = 0),
+            axis.title.x = element_text(size = 20),
+            legend.position = "none",
+            axis.title.y = element_text(size = 20, angle = 90),
+            plot.title = element_text(size = 20),
+            plot.subtitle = element_text(size = 15, face = "bold")
+          )
+      )
+      dev.off()
+
+      sig = c(sig, j)
+    }
+  }
+
+  cell.groups.sig = list()
+  if (length(sig) == 0) {
+    message("No significant cell groups (p-value < ", pval, ") after ANOVA test")
+    return(NULL)
+  } else {
+    cell.groups.sig[[1]] = cell.groups[[1]][, sig, drop = FALSE]
+    cell.groups.sig[[2]] = cell.groups[[2]][sig]
+    cell.groups.sig[[3]] = cell.groups[[3]][sig]
+    return(cell.groups.sig)
+  }
+}
+
+#' Fisher test using cell groups scores
+#'
+#' @param cell.groups A list where the first element is a data frame of cell group scores,
+#'        and the second element contains metadata or labels for these groups.
+#' @param coldata A data frame containing the clinical or experimental traits.
+#' @param trait Character. Name of the column in `coldata` to test with Fisher's exact test.
+#' @param pval Numeric. P-value threshold for significance (default 0.05).
+#'
+#' @return A list containing the significant cell groups after Fisher test. Additionally,
+#'         it saves corresponding barplot visualizations in the "Results/" folder.
+#' @export
+#'
+cell.groups.fisher.test = function(cell.groups, coldata, trait, pval = 0.05){
+
+  sig = c()
+  coldata[,trait] = as.factor(coldata[,trait])
+
+  for (j in 1:ncol(cell.groups[[1]])) {
+    coldata = coldata %>%
+      dplyr::mutate(level = cell.groups[[1]][,j],
+                    Cells_level = ifelse(level > summary(level)[3], 'High', 'Low'))
+
+    contingency = table(coldata[,"Cells_level"], coldata[,trait])
+    test = stats::fisher.test(contingency)
+
+    ##Extract only significant features
+    if(round(test$p.value, 5) <= pval){
+      cat("Significant pval after doing Fisher test for", colnames(cell.groups[[1]])[j], "\n")
+      df = data.frame("Cells_level" = coldata[,"Cells_level"], "Trait" = coldata[,trait])
+      pdf(paste0("Results/Fisher_", trait, "_", colnames(cell.groups[[1]])[j], ".pdf"), width = 12, height = 9)
+      print(ggstatsplot::ggbarstats(df, Cells_level, Trait, results.subtitle = F,
+                                    title= paste0("Dendrogram_", colnames(cell.groups[[1]])[j]),
+                                    subtitle = paste0("Fisher's exact test, p-value = ", ifelse(test$p.value < 0.001, "< 0.001", round(test$p.value, 5))))+
+              ggplot2::theme(plot.title = ggplot2::element_text(size=15), axis.text = ggplot2::element_text(size=14), legend.title = ggplot2::element_text(size=14)))
+      dev.off()
+
+      sig = c(j, sig)
+    }
+  }
+
+  cell.groups.sig = list()
+  cell.groups.sig[[1]] = cell.groups[[1]][,sig]
+  cell.groups.sig[[2]] = cell.groups[[2]][sig]
+  cell.groups.sig[[3]] = cell.groups[[3]][sig]
+
+  if(length(sig)==0){
+    message("No significant cell groups (pvalue < ", pval, ") after Fisher test")
+  }else{
+    return(cell.groups.sig)
+  }
+
+}
+
+#' Perform statistical analysis on cell group scores using a specified test
+#'
+#' This function provides a unified interface to perform one of several
+#' statistical tests (Fisher’s exact, Wilcoxon rank-sum, ANOVA, Kruskal–Wallis,
+#' or Student’s t-test) on cell group scores in relation to a given clinical or
+#' experimental trait. The choice of test is specified by the `method` argument.
+#' Each test identifies significant associations and saves a corresponding
+#' visualization for each significant feature in the "Results/" directory.
+#'
+#' @param cell.groups A list where:
+#'   \itemize{
+#'     \item The first element is a data frame or matrix containing cell group scores
+#'           (rows = samples, columns = cell groups).
+#'     \item The second and third elements contain corresponding metadata or annotations
+#'           for these groups (e.g., names, features, etc.).
+#'   }
+#' @param coldata A data frame containing clinical or experimental metadata for samples.
+#'   Must include the column specified in `trait`.
+#' @param trait Character. The name of the column in `coldata` representing the clinical
+#'   or experimental trait to test against (e.g., response, subtype, etc.).
+#' @param method Character. Statistical test to perform. One of:
+#'   \itemize{
+#'     \item `"fisher"` — Fisher’s exact test (for categorical data)
+#'     \item `"wilcox"` — Wilcoxon rank-sum test (non-parametric, binary traits)
+#'     \item `"anova"` — One-way ANOVA (parametric, >2 groups)
+#'     \item `"kruskal"` — Kruskal–Wallis test (non-parametric, >2 groups)
+#'     \item `"ttest"` — Student’s t-test (parametric, binary traits)
+#'   }
+#'   Defaults to all available options, but only one can be used per call.
+#' @param pval Numeric. P-value threshold for significance (default: 0.05).
+#'
+#' @details
+#' The function automatically calls the corresponding statistical test function
+#' based on the `method` argument:
+#' \itemize{
+#'   \item `cell.groups.fisher.test()`
+#'   \item `cell.groups.wilcox.test()`
+#'   \item `cell.groups.anova.test()`
+#'   \item `cell.groups.kruskal.test()`
+#'   \item `cell.groups.ttest()`
+#' }
+#'
+#' Each test produces both a statistical result and visual outputs (PDF plots)
+#' stored in the `"Results/"` folder. These visualizations include the relevant
+#' test results (p-values) annotated on the plots.
+#'
+#' @return A list of significant cell groups, where:
+#'   \itemize{
+#'     \item The first element contains the subset of the original score matrix
+#'           for significant features.
+#'     \item The second and third elements contain associated metadata or feature
+#'           annotations.
+#'   }
+#'   Returns `NULL` if no significant features are found.
+#'
+#' @examples
+#' \dontrun{
+#' # Example usage:
+#' sig.groups <- cell.groups.stat.analysis(cell.groups, coldata, trait = "response",
+#'                                         method = "kruskal", pval = 0.05)
+#' }
+#'
+#' @export
+#'
+cell.groups.stat.analysis <- function(cell.groups, coldata, trait,
+                                      method = c("fisher", "wilcox", "anova", "kruskal", "ttest"),
+                                      pval = 0.05) {
+  method <- match.arg(method)
+
+  message("Running ", toupper(method), " test for cell group comparison...\n")
+
+  result <- switch(method,
+                   fisher   = cell.groups.fisher.test(cell.groups, coldata, trait, pval),
+                   wilcox   = cell.groups.wilcox.test(cell.groups, coldata, trait, pval),
+                   anova    = cell.groups.anova.test(cell.groups, coldata, trait, pval),
+                   kruskal  = cell.groups.kruskal.test(cell.groups, coldata, trait, pval),
+                   ttest    = cell.groups.ttest(cell.groups, coldata, trait, pval))
+
+  if (is.null(result)) {
+    message("No significant features found using ", method, " test (p < ", pval, ").")
+  } else {
+    message("Significant features found: ", ncol(result[[1]]))
+  }
+
+  return(result)
+}

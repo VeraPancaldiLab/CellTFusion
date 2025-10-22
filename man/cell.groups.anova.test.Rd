@@ -2,24 +2,23 @@
 % Please edit documentation in R/CellTFusion.R
 \name{cell.groups.anova.test}
 \alias{cell.groups.anova.test}
-\title{Anova test using cell groups scores}
+\title{One-way ANOVA test for multi-group comparisons}
 \usage{
 cell.groups.anova.test(cell.groups, coldata, trait, pval = 0.05)
 }
 \arguments{
-\item{cell.groups}{A list where the first element is a data frame of cell group scores,
-and the second element contains metadata or labels for these groups.}
+\item{cell.groups}{A list containing cell group score data, metadata, and identifiers.}
 
-\item{coldata}{A data frame containing the clinical or experimental traits.}
+\item{coldata}{A data frame containing sample annotations including the grouping variable.}
 
-\item{trait}{Character. Name of the column in \code{coldata} to test with ANOVA.}
+\item{trait}{Character. Name of the column in \code{coldata} used for the grouping variable.}
 
-\item{pval}{Numeric. P-value threshold for significance (default 0.05).}
+\item{pval}{Numeric. P-value threshold for significance (default = 0.05).}
 }
 \value{
-A list containing the significant cell groups after ANOVA test. Additionally,
-it saves corresponding boxplot visualizations in the "Results/" folder.
+A list of significant cell groups or \code{NULL} if none are significant.
 }
 \description{
-Anova test using cell groups scores
+Performs one-way ANOVA to test for differences in cell group scores across multiple levels of a trait.
+Tukey post-hoc tests are used to identify pairwise differences and significance is visualized as annotated boxplots.
 }
