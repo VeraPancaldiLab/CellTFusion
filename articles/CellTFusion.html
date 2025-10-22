@@ -413,7 +413,7 @@ activity, which we refer to as Weighted TF Correlation Network Analysis
 we can run the following analysis. This function will generate and save
 the corresponding plots in the <code>Results/</code> directory:</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/compute.metada.association.html">compute.metada.association</a></span><span class="op">(</span><span class="va">network</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>, <span class="va">traitdata</span>, pval <span class="op">=</span> <span class="fl">0.05</span>, file.name <span class="op">=</span> <span class="st">"Tutorial"</span>, width <span class="op">=</span> <span class="fl">10</span><span class="op">)</span> </span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/compute.metadata.association.html">compute.metadata.association</a></span><span class="op">(</span><span class="va">network</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>, <span class="va">traitdata</span>, pval <span class="op">=</span> <span class="fl">0.05</span>, file.name <span class="op">=</span> <span class="st">"Tutorial"</span>, width <span class="op">=</span> <span class="fl">10</span><span class="op">)</span> </span></code></pre></div>
 <p>To functionally characterize the TF modules, we provide a utility to
 estimate pathway activities using a multivariate linear model (MLM)
 implemented via the <code>decoupleR</code> package (<span class="citation">Badia-i-Mompel et al. (<a href="#ref-10.1093/bioadv/vbac016">2022</a>)</span>). By default, the
