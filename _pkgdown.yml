@@ -30,6 +30,7 @@ reference:
   - cell.groups.wilcox.test
   - cell.groups.kruskal.test
   - cell.groups.ttest
+  - cell.groups.stat.analysis
   - compute.survival.analysis
   - identify.cell.groups
   - identify.cell.signatures
