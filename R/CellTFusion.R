@@ -411,6 +411,8 @@ compute_cell_groups_signatures = function(deconv_res, cell_groups, features, dec
 #'        Row names should match those of `tfs.modules`.
 #' @param pval A numeric threshold (default = 0.05) to determine statistical significance.
 #'        Only associations with p-values below this threshold are considered significant in the heatmap.
+#' @param corr_method Character string specifying the correlation method to use for continuous variables.
+#'        Options are `"p"` for pearson and `"s"` for spearman. Default is `"p"`.
 #' @param file.name Character. Base file name for saving PDF plots of results.
 #' @param width A numeric value indicating the width (in inches) of the output heatmap plot (default = 20).
 #' @param height A numeric value indicating the height (in inches) of the output heatmap plot (default = 8).
@@ -429,7 +431,7 @@ compute_cell_groups_signatures = function(deconv_res, cell_groups, features, dec
 #' data("network.tuto")
 #' data("traitdata.tuto")
 #'
-#' compute.metada.association(
+#' compute.metadata.association(
 #'   tfs.modules = network[[1]],
 #'   coldata = traitdata,
 #'   pval = 0.05,
@@ -438,7 +440,7 @@ compute_cell_groups_signatures = function(deconv_res, cell_groups, features, dec
 #'   height = 10
 #' )
 #'
-compute.metada.association = function(tfs.modules, coldata, pval = 0.05, file.name, width = 20, height = 8){
+compute.metadata.association = function(tfs.modules, coldata, pval = 0.05, corr_method = "p", file.name, width = 20, height = 8){
   ###Association with categorical variables
   coldata_categorical = coldata %>%
     dplyr::select(dplyr::where(is.character)|dplyr::where(is.factor))
@@ -474,7 +476,7 @@ compute.metada.association = function(tfs.modules, coldata, pval = 0.05, file.na
             rstatix::tukey_hsd(value ~ trait) %>%
             rstatix::add_xy_position(x = "trait")
 
-          pdf(paste0("Results/ANOVA_", module, "-", trait, ".pdf"))
+          pdf(paste0("Results/ANOVA_", module, "-", trait, file.name, ".pdf"))
           print(
             ggpubr::ggboxplot(df, x = "trait", y = "value", fill = "trait", add = "jitter") +
               ggpubr::stat_pvalue_manual(pwc, hide.ns = TRUE) +
@@ -514,7 +516,7 @@ compute.metada.association = function(tfs.modules, coldata, pval = 0.05, file.na
     dplyr::select(dplyr::where(is.numeric))
 
   if(ncol(coldata_quantitative)!=0){
-    moduleTraitCor = WGCNA::cor(tfs.modules, coldata_quantitative, method = "p", use = "pairwise.complete.obs")
+    moduleTraitCor = WGCNA::cor(tfs.modules, coldata_quantitative, method = corr_method, use = "pairwise.complete.obs")
     moduleTraitPvalue = WGCNA::corPvalueStudent(moduleTraitCor, nrow(tfs.modules))
 
     #### Replace pvalues for significance labels
@@ -558,7 +560,7 @@ compute.metada.association = function(tfs.modules, coldata, pval = 0.05, file.na
                           setStdMargins = FALSE,
                           cex.text = 0.7,
                           zlim = c(-1,1),
-                          main = paste0("Clinical associations with TFs modules\nOnly showing significant associations (pvalue < ", pval, ")"))
+                          main = paste0("Clinical associations ", file.name, "\nOnly showing significant associations (pvalue < ", pval, ")"))
     dev.off()
   }
 
@@ -641,8 +643,8 @@ compute.modules.enrichment <- function(RNA.tpm, hub_tfs){
 #' Performs linear correlation between two matrices (e.g., TF modules and external features such as deconvolution estimates or pathway activities)
 #' across the same set of samples, visualizing only significant associations.
 #'
-#' @param tfs_network A numeric matrix or data frame of TF module activity (samples x modules).
-#' @param matB A numeric matrix or data frame of features to correlate with `tfs_network` (samples x features).
+#' @param matA A numeric matrix or data frame of features (samples x features).
+#' @param matB A numeric matrix or data frame of features to correlate with (samples x features).
 #' @param file_name A string indicating the base name (without extension) of the figure to be saved in the "Results/" folder.
 #' @param width An integer indicating the width (in inches) of the output PDF figure. Default is 8.
 #' @param height An integer indicating the height (in inches) of the output PDF figure. Default is 8.
@@ -662,7 +664,7 @@ compute.modules.enrichment <- function(RNA.tpm, hub_tfs){
 #' If `return = FALSE`, the function saves a heatmap of significant correlations to "Results/{file_name}.pdf".
 #'
 #' @details
-#' The function assumes that `tfs_network` and `matB` share the same rownames (i.e., samples in the same order). The correlation is computed using WGCNA's
+#' The function assumes that `matA` and `matB` share the same rownames (i.e., samples in the same order). The correlation is computed using WGCNA's
 #' `cor()` and `corPvalueStudent()` functions. Insignificant correlations (based on p-value or adjusted p-value) are excluded from the visualization.
 #'
 #' @examples
@@ -684,13 +686,13 @@ compute.modules.enrichment <- function(RNA.tpm, hub_tfs){
 #'                                     pval = 0.01)
 #'
 #' @export
-compute.modules.relationship <- function(tfs_network, matB, file_name, width = 8, height = 8, par_mar = NULL, pval=0.05, padj = F, cor_type = "p", return = F, vertical=F, plot = T){
+compute.modules.relationship <- function(matA, matB, file_name, width = 8, height = 8, par_mar = NULL, pval=0.05, padj = F, cor_type = "p", return = F, vertical=F, plot = T){
 
-  tfs_network = data.frame(tfs_network)
+  matA = data.frame(matA)
   matB = data.frame(matB)
 
   ##check if names from both features are the same
-  if(all(rownames(tfs_network)==rownames(matB)) == F){
+  if(all(rownames(matA)==rownames(matB)) == F){
     stop("No equal names, verify the input objects")
   }
 
@@ -698,8 +700,8 @@ compute.modules.relationship <- function(tfs_network, matB, file_name, width = 8
   # moduleTraitCor = t(sig_cor_matrix)
   # moduleTraitPvalue = p_values
 
-  moduleTraitCor = WGCNA::cor(tfs_network, matB, method = cor_type)
-  moduleTraitPvalue = WGCNA::corPvalueStudent(moduleTraitCor, nrow(tfs_network))
+  moduleTraitCor = WGCNA::cor(matA, matB, method = cor_type)
+  moduleTraitPvalue = WGCNA::corPvalueStudent(moduleTraitCor, nrow(matA))
 
   # rev = which(colSums(moduleTraitPvalue > pval)==nrow(moduleTraitPvalue)) #check if there are features no significant with any module
   #
