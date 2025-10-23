@@ -5,7 +5,7 @@
 \title{Compute modules relationship}
 \usage{
 compute.modules.relationship(
-  tfs_network,
+  matA,
   matB,
   file_name,
   width = 8,
@@ -20,9 +20,9 @@ compute.modules.relationship(
 )
 }
 \arguments{
-\item{tfs_network}{A numeric matrix or data frame of TF module activity (samples x modules).}
+\item{matA}{A numeric matrix or data frame of features (samples x features).}
 
-\item{matB}{A numeric matrix or data frame of features to correlate with \code{tfs_network} (samples x features).}
+\item{matB}{A numeric matrix or data frame of features to correlate with (samples x features).}
 
 \item{file_name}{A string indicating the base name (without extension) of the figure to be saved in the "Results/" folder.}
 
@@ -57,7 +57,7 @@ Performs linear correlation between two matrices (e.g., TF modules and external 
 across the same set of samples, visualizing only significant associations.
 }
 \details{
-The function assumes that \code{tfs_network} and \code{matB} share the same rownames (i.e., samples in the same order). The correlation is computed using WGCNA's
+The function assumes that \code{matA} and \code{matB} share the same rownames (i.e., samples in the same order). The correlation is computed using WGCNA's
 \code{cor()} and \code{corPvalueStudent()} functions. Insignificant correlations (based on p-value or adjusted p-value) are excluded from the visualization.
 }
 \examples{

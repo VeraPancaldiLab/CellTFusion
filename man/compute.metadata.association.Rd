@@ -8,6 +8,7 @@ compute.metadata.association(
   tfs.modules,
   coldata,
   pval = 0.05,
+  corr_method = "p",
   file.name,
   width = 20,
   height = 8
@@ -22,6 +23,9 @@ Row names should match those of \code{tfs.modules}.}
 
 \item{pval}{A numeric threshold (default = 0.05) to determine statistical significance.
 Only associations with p-values below this threshold are considered significant in the heatmap.}
+
+\item{corr_method}{Character string specifying the correlation method to use for continuous variables.
+Options are \code{"p"} for pearson and \code{"s"} for spearman. Default is \code{"p"}.}
 
 \item{file.name}{Character. Base file name for saving PDF plots of results.}
 

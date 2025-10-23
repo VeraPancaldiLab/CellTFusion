@@ -1251,6 +1251,7 @@ compute.TFs.activity <- function(RNA.counts, TF.collection = "CollecTRI", min_ta
 #' @param minMod Minimum number of TFs per module. Default is 15.
 #' @param corr_mod Correlation threshold (0–1) for merging similar modules. Default is 0.9.
 #' @param cor_type Correlation type for adjacency calculation: "p" (Pearson), "s" (Spearman). Default is "p".
+#' @param softPower Optional numeric value specifying the soft-thresholding power to be used when constructing
 #' @param verbose Boolen value to whether print or no the function messages
 #' @param return Logical, whether to save output plots and module list to "Results/". Default is TRUE.
 #'
@@ -1272,7 +1273,7 @@ compute.TFs.activity <- function(RNA.counts, TF.collection = "CollecTRI", min_ta
 #'
 #' data("tfs.tuto")
 #' network <- compute.WTCNA(tfs, corr_mod = 0.9, clustering.method = "ward.D2", return = FALSE)
-compute.WTCNA <- function(TFs.matrix, network.type = "signed", clustering.method = "ward.D2", minMod = 15, corr_mod = 0.9, cor_type = "p", verbose = F, return = T){
+compute.WTCNA <- function(TFs.matrix, network.type = "signed", clustering.method = "ward.D2", minMod = 15, corr_mod = 0.9, cor_type = "p", verbose = F, softPower = NULL, return = T){
 
   if(verbose){
     cat("Creating weighted TF-coactivity network......................................................................\n\n")
@@ -1294,15 +1295,23 @@ compute.WTCNA <- function(TFs.matrix, network.type = "signed", clustering.method
     dev.off()
   }
 
-  #Automatic choosing of soft-threshold
-  target = 0.9 #Target SFT.R.sq value
-  diff = abs(-sign(sft$fitIndices[,3])*sft$fitIndices[,2] - target) #Calculate absolute difference
-  min_index = which.min(diff) #Identify the index with the minimum difference
-  softPower = powers[min_index]
+  # Automatic or user-defined soft-threshold selection
+  if (is.null(softPower)) {
+    target = 0.9 # Target SFT.R.sq value
+    diff = abs(-sign(sft$fitIndices[, 3]) * sft$fitIndices[, 2] - target) #Calculate absolute difference
+    min_index = which.min(diff) #Identify the index with the minimum difference
+    softPower = powers[min_index]
+
+    if (verbose) {
+      cat("Automatically choosing", softPower, "as soft-threshold......................................................................\n\n")
+    }
+  } else {
+    if (verbose) {
+      cat("Using user-defined soft-threshold =", softPower, "......................................................................\n\n")
+    }
+  }
 
   if(verbose){
-    cat("Choosing", softPower, "as soft-threshold......................................................................\n\n")
-
     #####Co-expression matrix using nodes adjacency and topological overlapping nodes
     cat("Calculating nodes adjacency and topological overlapping nodes.................................................\n\n")
   }

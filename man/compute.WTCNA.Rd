@@ -12,6 +12,7 @@ compute.WTCNA(
   corr_mod = 0.9,
   cor_type = "p",
   verbose = F,
+  softPower = NULL,
   return = T
 )
 }
@@ -29,6 +30,8 @@ compute.WTCNA(
 \item{cor_type}{Correlation type for adjacency calculation: "p" (Pearson), "s" (Spearman). Default is "p".}
 
 \item{verbose}{Boolen value to whether print or no the function messages}
+
+\item{softPower}{Optional numeric value specifying the soft-thresholding power to be used when constructing}
 
 \item{return}{Logical, whether to save output plots and module list to "Results/". Default is TRUE.}
 }
