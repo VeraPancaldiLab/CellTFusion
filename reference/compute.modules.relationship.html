@@ -41,7 +41,7 @@ across the same set of samples, visualizing only significant associations.</p>
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">compute.modules.relationship</span><span class="op">(</span></span>
-<span>  <span class="va">tfs_network</span>,</span>
+<span>  <span class="va">matA</span>,</span>
 <span>  <span class="va">matB</span>,</span>
 <span>  <span class="va">file_name</span>,</span>
 <span>  width <span class="op">=</span> <span class="fl">8</span>,</span>
@@ -60,12 +60,12 @@ across the same set of samples, visualizing only significant associations.</p>
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
 
 
-<dl><dt id="arg-tfs-network">tfs_network<a class="anchor" aria-label="anchor" href="#arg-tfs-network"></a></dt>
-<dd><p>A numeric matrix or data frame of TF module activity (samples x modules).</p></dd>
+<dl><dt id="arg-mata">matA<a class="anchor" aria-label="anchor" href="#arg-mata"></a></dt>
+<dd><p>A numeric matrix or data frame of features (samples x features).</p></dd>
 
 
 <dt id="arg-matb">matB<a class="anchor" aria-label="anchor" href="#arg-matb"></a></dt>
-<dd><p>A numeric matrix or data frame of features to correlate with <code>tfs_network</code> (samples x features).</p></dd>
+<dd><p>A numeric matrix or data frame of features to correlate with (samples x features).</p></dd>
 
 
 <dt id="arg-file-name">file_name<a class="anchor" aria-label="anchor" href="#arg-file-name"></a></dt>
@@ -116,7 +116,7 @@ across the same set of samples, visualizing only significant associations.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>The function assumes that <code>tfs_network</code> and <code>matB</code> share the same rownames (i.e., samples in the same order). The correlation is computed using WGCNA's
+    <p>The function assumes that <code>matA</code> and <code>matB</code> share the same rownames (i.e., samples in the same order). The correlation is computed using WGCNA's
 <code><a href="https://rdrr.io/r/stats/cor.html" class="external-link">cor()</a></code> and <code>corPvalueStudent()</code> functions. Insignificant correlations (based on p-value or adjusted p-value) are excluded from the visualization.</p>
     </div>
 
