@@ -1,7 +1,7 @@
 Package: CellTFusion
 Title: Integration of immune-cell type deconvolution features and prior-knowledge networks of TFs-gene interactions to characterize potential cell states of the tumor microenvironment using bulk RNAseq data
 Version: 0.0.0.9000
-Authors@R:c( 
+Authors@R: c( 
     person("Marcelo", "Hurtado", , "marcelo.hurtado@inserm.fr", role = c("aut", "cre"),
            comment = c(ORCID = "0009-0004-6712-0864")),
     person("Vera", "Pancaldi", , "vera.pancaldi@inserm.fr", role = "aut",
@@ -10,7 +10,7 @@ Description: CellTFusion is an approach to characterize immune patient profiles 
 License: GPL (>= 3)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3
 Depends:
     R (>= 4.3)
 Imports: 
