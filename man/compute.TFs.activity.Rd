@@ -9,7 +9,8 @@ compute.TFs.activity(
   TF.collection = "CollecTRI",
   min_targets_size = 5,
   tfs.pruned = FALSE,
-  universe = NULL
+  universe = NULL,
+  return = TRUE
 )
 }
 \arguments{
@@ -26,6 +27,8 @@ compute.TFs.activity(
 \item{tfs.pruned}{Logical. Whether to prune TF regulons to limit the number of target genes, which helps reduce bias introduced by TFs with large regulons. If \code{TRUE}, the user will be prompted to input a maximum size for regulons. Default is \code{FALSE}.}
 
 \item{universe}{Optional. A user-specified data frame of TF–target interactions. If not provided, the function will fetch the relevant network based on the \code{TF.collection} argument.}
+
+\item{return}{Logical; if TRUE, saves matrix in Results/ folder. Default is TRUE.}
 }
 \value{
 A data frame of inferred and scaled TF activity scores, with samples as rows and TFs as columns.

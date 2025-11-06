@@ -673,15 +673,15 @@ compute.modules.enrichment <- function(RNA.tpm, hub_tfs){
 #' data("counts.norm.tuto")
 #' data("network.tuto")
 #'
-#' pathways <- compute.pathway.activity(counts.norm)
-#' compute.modules.relationship(network[[1]],
+#' pathways <- compute.pathway.activity(counts.norm.tuto)
+#' compute.modules.relationship(network.tuto[[1]],
 #'                              pathways,
 #'                              "Pathways_Progeny-TFs_Modules",
 #'                              width = 15)
 #'
 #' data("deconv_subgroups.tuto")
-#' corr = compute.modules.relationship(network[[1]],
-#'                                     deconv_subgroups[[1]],
+#' corr = compute.modules.relationship(network.tuto[[1]],
+#'                                     deconv_subgroups.tuto[[1]],
 #'                                     "Deconvolution-TFs_Modules",
 #'                                     plot = FALSE,
 #'                                     return = TRUE,
@@ -912,7 +912,7 @@ compute.modules.relationship <- function(matA, matB, file_name, width = 8, heigh
 #' @examples
 #' # Compute only PROGENy activities
 #' data("counts.norm.tuto")
-#' pathways <- compute.pathway.activity(counts.norm)
+#' pathways <- compute.pathway.activity(counts.norm.tuto)
 #'
 compute.pathway.activity <- function(RNA.tpm, gene_sets = NULL, paths = NULL, return = TRUE) {
 
@@ -998,8 +998,8 @@ compute.pathway.activity <- function(RNA.tpm, gene_sets = NULL, paths = NULL, re
 #'
 #' data("network.tuto")
 #' data("counts.norm.tuto")
-#' pathways <- compute.pathway.activity(counts.norm)
-#' tfs.modules.clusters <- compute.TF.network.classification(tf.network = network,
+#' pathways <- compute.pathway.activity(counts.norm.tuto)
+#' tfs.modules.clusters <- compute.TF.network.classification(tf.network = network.tuto,
 #'                                                           pathways.features = pathways,
 #'                                                           return = FALSE)
 #'
@@ -1171,7 +1171,7 @@ compute.TFs.activity <- function(RNA.counts, TF.collection = "CollecTRI", min_ta
   #
   if(return){
     utils::write.csv(sample_acts, "Results/TF_matrix.csv")
-    utils::write.csv(net_regulons, "Results/TF_target_collection.csv")
+    utils::write.csv(universe, "Results/TF_target_collection.csv")
   }
 
   message("TFs scores computed")

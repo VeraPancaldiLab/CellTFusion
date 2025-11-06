@@ -204,6 +204,7 @@ res = pipeML::compute_features.training.ML(features_train = res_training$Cell_gr
                                            target_var = traitData_train$Best.Confirmed.Overall.Response, 
                                            trait.positive = "PD", 
                                            metric = "AUROC", 
+                                           task_type = "classification",
                                            stack = F, k_folds = 2, 
                                            n_rep = 2,  
                                            ncores = 2,

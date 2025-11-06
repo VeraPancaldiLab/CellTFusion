@@ -4,7 +4,12 @@
 \alias{compute.pathway.activity}
 \title{Computes TF-modules pathway activities scores}
 \usage{
-compute.pathway.activity(RNA.tpm, gene_sets = NULL, paths = NULL)
+compute.pathway.activity(
+  RNA.tpm,
+  gene_sets = NULL,
+  paths = NULL,
+  return = TRUE
+)
 }
 \arguments{
 \item{RNA.tpm}{A numeric matrix of normalized gene expression values with genes as rows and samples as columns.}
@@ -12,6 +17,8 @@ compute.pathway.activity(RNA.tpm, gene_sets = NULL, paths = NULL)
 \item{gene_sets}{A list of gene sets (e.g., hallmark signatures or user-defined sets). If provided, GSVA scores will be computed for these sets. Default is \code{NULL}.}
 
 \item{paths}{A data frame describing the pathway-gene interactions for use with PROGENy. If \code{NULL}, the human PROGENy resource (top 500 genes) will be used by default.}
+
+\item{return}{Logical; if TRUE, saves matrices in Results/ folder. Default is TRUE.}
 }
 \value{
 If \code{gene_sets} is \code{NULL}, a scaled matrix of PROGENy pathway activity scores (samples as rows, pathways as columns).
@@ -28,7 +35,7 @@ Optionally, it also performs Gene Set Variation Analysis (GSVA) using hallmark s
 \examples{
 # Compute only PROGENy activities
 data("counts.norm.tuto")
-pathways <- compute.pathway.activity(counts.norm)
+pathways <- compute.pathway.activity(counts.norm.tuto)
 
 }
 \references{

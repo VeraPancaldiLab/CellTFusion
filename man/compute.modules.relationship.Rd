@@ -64,15 +64,15 @@ The function assumes that \code{matA} and \code{matB} share the same rownames (i
 data("counts.norm.tuto")
 data("network.tuto")
 
-pathways <- compute.pathway.activity(counts.norm)
-compute.modules.relationship(network[[1]],
+pathways <- compute.pathway.activity(counts.norm.tuto)
+compute.modules.relationship(network.tuto[[1]],
                              pathways,
                              "Pathways_Progeny-TFs_Modules",
                              width = 15)
 
 data("deconv_subgroups.tuto")
-corr = compute.modules.relationship(network[[1]],
-                                    deconv_subgroups[[1]],
+corr = compute.modules.relationship(network.tuto[[1]],
+                                    deconv_subgroups.tuto[[1]],
                                     "Deconvolution-TFs_Modules",
                                     plot = FALSE,
                                     return = TRUE,
