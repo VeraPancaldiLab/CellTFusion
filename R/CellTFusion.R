@@ -894,6 +894,7 @@ compute.modules.relationship <- function(matA, matB, file_name, width = 8, heigh
 #' @param RNA.tpm A numeric matrix of normalized gene expression values with genes as rows and samples as columns.
 #' @param gene_sets A list of gene sets (e.g., hallmark signatures or user-defined sets). If provided, GSVA scores will be computed for these sets. Default is \code{NULL}.
 #' @param paths A data frame describing the pathway-gene interactions for use with PROGENy. If \code{NULL}, the human PROGENy resource (top 500 genes) will be used by default.
+#' @param return Logical; if TRUE, saves matrices in Results/ folder. Default is TRUE.
 #'
 #' @return If \code{gene_sets} is \code{NULL}, a scaled matrix of PROGENy pathway activity scores (samples as rows, pathways as columns).
 #' If \code{gene_sets} is provided, a list with two elements:
@@ -913,51 +914,72 @@ compute.modules.relationship <- function(matA, matB, file_name, width = 8, heigh
 #' data("counts.norm.tuto")
 #' pathways <- compute.pathway.activity(counts.norm)
 #'
-compute.pathway.activity <- function(RNA.tpm, gene_sets = NULL, paths = NULL){
+compute.pathway.activity <- function(RNA.tpm, gene_sets = NULL, paths = NULL, return = TRUE) {
 
-  RNA.tpm = as.matrix(RNA.tpm)
-  #Get universe
-  if(is.null(paths)){
+  RNA.tpm <- as.matrix(RNA.tpm)
+  results_list <- list()
+
+  ###### PROGENy
+  if (is.null(paths)) {
     paths <- decoupleR::get_progeny(organism = 'human', top = 500)
   }
 
-  # Run mlm
-  progeny <- decoupleR::run_mlm(mat=RNA.tpm, net=paths, .source='source', .target='target', .mor='weight', minsize = 5)
+  message("Computing PROGENy pathway activity...")
 
-  #Remove variable
-  rm(paths)
-  gc()
+  progeny <- decoupleR::run_mlm(
+    mat      = RNA.tpm,
+    net      = paths,
+    .source  = 'source',
+    .target  = 'target',
+    .mor     = 'weight',
+    minsize  = 5
+  )
 
-  # Transform to wide matrix
   sample_acts_progeny <- progeny %>%
-    tidyr::pivot_wider(id_cols = 'condition', names_from = 'source',
-                       values_from = 'score') %>%
+    tidyr::pivot_wider(id_cols = 'condition', names_from = 'source', values_from = 'score') %>%
     tibble::column_to_rownames('condition') %>%
-    as.matrix()
+    as.matrix() %>%
+    scale() %>%
+    as.data.frame()
 
-  if(is.null(gene_sets)==F){
+  results_list$PROGENy <- sample_acts_progeny
 
-    cat("Computing GSVA analysis using provided gene sets.....................................................\n")
+  ###### GSVA (if gene sets provided)
+
+  if (!is.null(gene_sets)) {
+    message("Computing GSVA activity using provided gene sets...")
 
     gsva_results <- GSVA::gsva(
       RNA.tpm,
       gene_sets,
-      method = "gsva",
-      kcdf = "Gaussian",
-      min.sz = 1,
+      method  = "gsva",
+      kcdf    = "Gaussian",
+      min.sz  = 1,
       mx.diff = TRUE,
       verbose = TRUE
     )
-    sample_acts_hallmarks <- data.frame(scale(t(gsva_results)))
-    return(list(sample_acts_progeny, sample_acts_hallmarks))
+
+    sample_acts_gsva <- t(gsva_results) %>%
+      scale() %>%
+      as.data.frame()
+
+    results_list$GSVA <- sample_acts_gsva
   }
 
-  # Scale per feature
-  sample_acts_progeny <- data.frame(scale(sample_acts_progeny))
+  ###### Save outputs if requested
+  if (return) {
+    if (!is.null(results_list$PROGENy)) {
+      utils::write.csv(results_list$PROGENy, "Results/Pathway_matrix_PROGENy.csv")
+      utils::write.csv(paths, "Results/Pathways_collection_PROGENy.csv")
+    }
+    if (!is.null(results_list$GSVA)) {
+      utils::write.csv(results_list$GSVA, "Results/Pathway_matrix_GSVA.csv")
+      utils::write.csv(gene_sets, "Results/Pathways_collection_GSVA.csv")
+    }
+  }
 
-  message("Pathways scores computed")
-  return(sample_acts_progeny)
-
+  message("Pathway activities computed successfully.")
+  return(results_list)
 }
 
 #' Compute TF Network Classification
@@ -1079,6 +1101,7 @@ compute.TF.network.classification = function(tf.network, pathways.features, retu
 #' @param min_targets_size Integer. Minimum number of target genes per regulon required for TF activity inference. Default is 5.
 #' @param tfs.pruned Logical. Whether to prune TF regulons to limit the number of target genes, which helps reduce bias introduced by TFs with large regulons. If `TRUE`, the user will be prompted to input a maximum size for regulons. Default is `FALSE`.
 #' @param universe Optional. A user-specified data frame of TF–target interactions. If not provided, the function will fetch the relevant network based on the `TF.collection` argument.
+#' @param return Logical; if TRUE, saves matrix in Results/ folder. Default is TRUE.
 #'
 #' @return A data frame of inferred and scaled TF activity scores, with samples as rows and TFs as columns.
 #' @export
@@ -1098,7 +1121,7 @@ compute.TF.network.classification = function(tf.network, pathways.features, retu
 #' data("counts.norm.tuto")
 #' tfs_activity <- compute.TFs.activity(counts.norm)
 #'
-compute.TFs.activity <- function(RNA.counts, TF.collection = "CollecTRI", min_targets_size = 5, tfs.pruned = FALSE, universe = NULL){
+compute.TFs.activity <- function(RNA.counts, TF.collection = "CollecTRI", min_targets_size = 5, tfs.pruned = FALSE, universe = NULL, return = TRUE){
 
   tfs2viper_regulons <- function(df){
     regulon_list <- split(df, df$source)
@@ -1146,6 +1169,11 @@ compute.TFs.activity <- function(RNA.counts, TF.collection = "CollecTRI", min_ta
   # sample_acts <- sample_acts %>% tidyr::pivot_wider(id_cols = condition,
   #                                                      names_from = source, values_from = score) %>% tibble::column_to_rownames("condition")
   #
+  if(return){
+    utils::write.csv(sample_acts, "Results/TF_matrix.csv")
+    utils::write.csv(net_regulons, "Results/TF_target_collection.csv")
+  }
+
   message("TFs scores computed")
 
   return(data.frame(t(sample_acts)))
