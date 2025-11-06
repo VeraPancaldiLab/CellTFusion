@@ -215,7 +215,7 @@ We replicate the trained cell groups into an independent dataset
 
 ```{r}
 ## Compute deconvolution in the independent set
-deconv_test = multideconv::compute.deconvolution(raw.counts_test, methods = c("Quantiseq", "Epidish", "DeconRNASeq"), normalized = T, return = F)
+deconv_test = multideconv::compute.deconvolution(raw.counts_test, methods = c("Quantiseq", "Epidish"), normalized = T, return = F)
 
 ## Replicate cell groups into independent set
 testing_set = compute.test.set(res_training$Processed_deconvolution, res_training$Cell_groups, names(res_training$Cell_groups[[2]]), deconv_test)
