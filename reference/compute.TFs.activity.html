@@ -42,7 +42,8 @@
 <span>  TF.collection <span class="op">=</span> <span class="st">"CollecTRI"</span>,</span>
 <span>  min_targets_size <span class="op">=</span> <span class="fl">5</span>,</span>
 <span>  tfs.pruned <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  universe <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  universe <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  return <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -70,6 +71,10 @@
 
 <dt id="arg-universe">universe<a class="anchor" aria-label="anchor" href="#arg-universe"></a></dt>
 <dd><p>Optional. A user-specified data frame of TF–target interactions. If not provided, the function will fetch the relevant network based on the <code>TF.collection</code> argument.</p></dd>
+
+
+<dt id="arg-return">return<a class="anchor" aria-label="anchor" href="#arg-return"></a></dt>
+<dd><p>Logical; if TRUE, saves matrix in Results/ folder. Default is TRUE.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -106,7 +111,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer></div>
