@@ -37,7 +37,7 @@ CellTFusion requires two primary inputs: cell-type deconvolution proportions and
 To compute cell-type proportions, we will use the `multideconv` R package. This tool integrates multiple deconvolution algorithms and signature matrices to estimate cell-type abundances from bulk RNA-seq data. For more details, visit the [multideconv GitHub repository](https://github.com/VeraPancaldiLab/multideconv).
 
 ```{r}
-deconv = multideconv::compute.deconvolution(raw.counts, methods = c("Quantiseq", "Epidish", "DeconRNASeq"), normalized = T, return = F)
+deconv = multideconv::compute.deconvolution(raw.counts, methods = c("Quantiseq", "Epidish"), normalized = T, return = F)
 ```
 
 ```{r}
@@ -149,7 +149,7 @@ res <- CellTFusion(
   coldata = traitdata, # Optional metadata
   trait = "Best.Confirmed.Overall.Response",  # Optional for supervised analysis
   trait.positive = "CR",                      # Define positive class for trait
-  deconv_methods = c("Quantiseq", "Epidish", "DeconRNASeq"), # Choose from Quantiseq, Epidish, DeconRNASeq, DWLS, CibersortX
+  deconv_methods = c("Quantiseq", "Epidish"), # Choose from Quantiseq, Epidish, DeconRNASeq, DWLS, CibersortX
   file_name = "TestRun",
   corr = 0.7,
   pval = 0.05,
@@ -186,7 +186,7 @@ res_training <- CellTFusion(
   coldata = traitData_train, # Optional metadata
   trait = "Best.Confirmed.Overall.Response",  # Optional supervised analysis
   trait.positive = "PD",                      # Define positive class for trait
-  deconv_methods = c("Quantiseq", "Epidish", "DeconRNASeq"), # Choose from Quantiseq, Epidish, DeconRNASeq, DWLS, CibersortX
+  deconv_methods = c("Quantiseq", "Epidish"), # Choose from Quantiseq, Epidish, DeconRNASeq, DWLS, CibersortX
   file_name = "TestRun",
   corr = 0.7,
   pval = 0.05,
