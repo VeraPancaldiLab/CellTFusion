@@ -2850,10 +2850,10 @@ prepare_CellTFusion_folds <- function(data, folds = NULL, deconv = NULL, univers
       train_cell_data_final <- train_processed_final$Cell_groups[[1]] %>%
         data.frame()
 
-      if (!is.null(obs_train$time) && !is.null(obs_train$event)) {
+      if (is.list(obs_train)) {
         train_cell_data_final <- train_cell_data_final %>%
           dplyr::mutate(
-            time = obs_train$time,
+            time  = obs_train$time,
             event = obs_train$event
           )
       } else {
