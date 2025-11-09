@@ -2808,14 +2808,22 @@ compute.test.score = function(cell_group, loadings){
 #' @importFrom foreach foreach %dopar%
 #' @export
 #'
-prepare_CellTFusion_folds <- function(data, folds = NULL, deconv = NULL, universe = NULL, paths = NULL,
-                                      normalized = FALSE, coldata, trait, trait.positive, ncores = NULL,
-                                      min_targets_size, minMod, corr_mod, corr, high_corr_groups, bestune = NULL){
+prepare_CellTFusion_folds <- function(data, folds = NULL, deconv = NULL, universe = NULL, paths = NULL, normalized = FALSE,
+                                      coldata, trait = NULL, trait.positive = NULL, time_var = NULL, event_var = NULL,
+                                      ncores = NULL, min_targets_size, minMod, corr_mod, corr, high_corr_groups, bestune = NULL){
 
     if(!is.null(bestune)){
       # Run CellTFusion on the full training set
-      obs_train = data$target
-      data$target = NULL
+      obs_train <- NULL
+
+      if ("target" %in% colnames(data)) {
+        obs_train <- data$target
+        data$target <- NULL
+      } else if (!is.null(time_var) && !is.null(event_var)) {
+        obs_train <- list(time = time_var, event = as.numeric(event_var == trait.positive))
+      } else {
+        stop("Either 'target' or both 'time_var' and 'event_var' must be provided.")
+      }
 
       best_celltfusion_params <- bestune %>%
         dplyr::select(min_targets_size, minMod, corr_mod, corr, high_corr_groups)
@@ -2840,8 +2848,18 @@ prepare_CellTFusion_folds <- function(data, folds = NULL, deconv = NULL, univers
 
       # Get cell group features
       train_cell_data_final <- train_processed_final$Cell_groups[[1]] %>%
-        data.frame() %>%
-        dplyr::mutate(target = obs_train)
+        data.frame()
+
+      if (!is.null(obs_train$time) && !is.null(obs_train$event)) {
+        train_cell_data_final <- train_cell_data_final %>%
+          dplyr::mutate(
+            time = obs_train$time,
+            event = obs_train$event
+          )
+      } else {
+        train_cell_data_final <- train_cell_data_final %>%
+          dplyr::mutate(target = obs_train)
+      }
 
       custom_output = train_processed_final
 
@@ -2879,8 +2897,20 @@ prepare_CellTFusion_folds <- function(data, folds = NULL, deconv = NULL, univers
         train_data <- data[train_idx, , drop = FALSE]
         train_deconv <- deconv[train_idx, , drop = FALSE]
         train_coldata <- coldata[train_idx, , drop = FALSE]
-        obs_train <- train_data$target
-        train_data$target <- NULL
+
+        # Determine target or time/event
+        if ("target" %in% colnames(train_data)) {
+          obs_train <- train_data$target
+          train_data$target <- NULL
+
+        } else if (!is.null(time_var) && !is.null(event_var)) {
+          obs_train <- list(
+            time  = time_var[train_idx],
+            event = as.numeric(event_var[train_idx] == trait.positive)
+          )
+        } else {
+          stop("Either 'target' or both 'time_var' and 'event_var' must be provided.")
+        }
 
         fold_results <- lapply(seq_len(nrow(custom_grid)), function(j) {
           message("Running fold ", names(folds)[i], ", grid ", j, " / ", nrow(custom_grid))
@@ -2904,18 +2934,44 @@ prepare_CellTFusion_folds <- function(data, folds = NULL, deconv = NULL, univers
           )
 
           train_cell_data <- train_processed$Cell_groups[[1]] %>%
-            data.frame() %>%
-            dplyr::mutate(target = obs_train)
+            data.frame()
 
+          if (!is.null(obs_train$time) && !is.null(obs_train$event)) {
+            train_cell_data <- train_cell_data %>%
+              dplyr::mutate(
+                time = obs_train$time,
+                event = obs_train$event
+              )
+          } else {
+            train_cell_data <- train_cell_data %>%
+              dplyr::mutate(target = obs_train)
+          }
+
+          # Prepare test data
           test_deconv <- deconv[test_idx, , drop = FALSE]
-          obs_test <- data$target[test_idx]
+          obs_test <- if ("target" %in% colnames(data)) {
+            data$target[test_idx]
+          } else if (!is.null(time_var) && !is.null(event_var)) {
+            list(time = time_var[test_idx], event = as.numeric(event_var[test_idx] == trait.positive))
+          } else {
+            NULL
+          }
 
+          # Prepare test data
           test_data <- compute.test.set(
             train_processed$Processed_deconvolution,
             train_processed$Cell_groups,
-            colnames(train_cell_data)[colnames(train_cell_data) != "target"],
+            colnames(train_cell_data)[!colnames(train_cell_data) %in% c("target", "time", "event")],
             test_deconv
           )
+
+          if (!is.null(obs_test$time) && !is.null(obs_test$event)) {
+            test_data <- test_data %>%
+              dplyr::mutate(
+                time = obs_test$time,
+                event = obs_test$event
+              )
+          }
 
           list(
             train_data = train_cell_data,
@@ -2926,6 +2982,10 @@ prepare_CellTFusion_folds <- function(data, folds = NULL, deconv = NULL, univers
             params = custom_grid[j, ]
           )
         })
+
+        if (nrow(custom_grid) == 1) {
+          fold_results <- fold_results[[1]]
+        }
 
         filename = file.path("Results", paste0("fold_", names(folds)[i], ".rds"))
         saveRDS(fold_results, file = filename)
