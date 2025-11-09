@@ -2936,7 +2936,7 @@ prepare_CellTFusion_folds <- function(data, folds = NULL, deconv = NULL, univers
           train_cell_data <- train_processed$Cell_groups[[1]] %>%
             data.frame()
 
-          if (!is.null(obs_train$time) && !is.null(obs_train$event)) {
+          if (is.list(obs_train)) {
             train_cell_data <- train_cell_data %>%
               dplyr::mutate(
                 time = obs_train$time,
@@ -2965,10 +2965,10 @@ prepare_CellTFusion_folds <- function(data, folds = NULL, deconv = NULL, univers
             test_deconv
           )
 
-          if (!is.null(obs_test$time) && !is.null(obs_test$event)) {
+          if (is.list(obs_test)) {
             test_data <- test_data %>%
               dplyr::mutate(
-                time = obs_test$time,
+                time  = obs_test$time,
                 event = obs_test$event
               )
           }
