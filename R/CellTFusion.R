@@ -924,8 +924,6 @@ compute.pathway.activity <- function(RNA.tpm, gene_sets = NULL, paths = NULL, re
     paths <- decoupleR::get_progeny(organism = 'human', top = 500)
   }
 
-  message("Computing PROGENy pathway activity...")
-
   progeny <- decoupleR::run_mlm(
     mat      = RNA.tpm,
     net      = paths,
@@ -947,8 +945,6 @@ compute.pathway.activity <- function(RNA.tpm, gene_sets = NULL, paths = NULL, re
   ###### GSVA (if gene sets provided)
 
   if (!is.null(gene_sets)) {
-    message("Computing GSVA activity using provided gene sets...")
-
     gsva_results <- GSVA::gsva(
       RNA.tpm,
       gene_sets,
@@ -978,7 +974,6 @@ compute.pathway.activity <- function(RNA.tpm, gene_sets = NULL, paths = NULL, re
     }
   }
 
-  message("Pathway activities computed successfully.")
   return(results_list)
 }
 
@@ -1173,8 +1168,6 @@ compute.TFs.activity <- function(RNA.counts, TF.collection = "CollecTRI", min_ta
     utils::write.csv(sample_acts, "Results/TF_matrix.csv")
     utils::write.csv(universe, "Results/TF_target_collection.csv")
   }
-
-  message("TFs scores computed")
 
   return(data.frame(t(sample_acts)))
 
@@ -2825,8 +2818,16 @@ prepare_CellTFusion_folds <- function(data, folds = NULL, deconv = NULL, univers
         stop("Either 'target' or both 'time_var' and 'event_var' must be provided.")
       }
 
-      best_celltfusion_params <- bestune %>%
-        dplyr::select(min_targets_size, minMod, corr_mod, corr, high_corr_groups)
+      best_celltfusion_params <- if (is.data.frame(bestune)) {
+        bestune %>%
+          dplyr::select(min_targets_size, minMod, corr_mod, corr, high_corr_groups)
+      } else if (is.list(bestune)) {
+        # Extract only numeric parameters, not the large tibbles
+        bestune_subset <- bestune[c("min_targets_size", "minMod", "corr_mod", "corr", "high_corr_groups")]
+        tibble::as_tibble(bestune_subset)
+      } else {
+        stop("`bestune` must be a data.frame or list.")
+      }
 
       train_processed_final <- CellTFusion(
         t(data),
