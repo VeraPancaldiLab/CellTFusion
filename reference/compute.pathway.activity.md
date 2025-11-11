@@ -74,6 +74,4 @@ pathways <- compute.pathway.activity(counts.norm.tuto)
 #> Use 'annotations' instead.
 #> See help("Deprecated")
 #> Warning: incomplete final line found on 'https://omnipathdb.org/resources'
-#> Computing PROGENy pathway activity...
-#> Pathway activities computed successfully.
 ```

@@ -46,8 +46,6 @@ pathways <- compute.pathway.activity(counts.norm.tuto)
 #> Use 'annotations' instead.
 #> See help("Deprecated")
 #> Warning: incomplete final line found on 'https://omnipathdb.org/resources'
-#> Computing PROGENy pathway activity...
-#> Pathway activities computed successfully.
 tfs.modules.clusters <- compute.TF.network.classification(tf.network = network.tuto,
                                                           pathways.features = pathways,
                                                           return = FALSE)

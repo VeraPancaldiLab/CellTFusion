@@ -160,7 +160,6 @@ tfs = compute.TFs.activity(counts.norm, TF.collection = "CollecTRI")
 #> See help("Deprecated")
 #> Warning in readLines(con = path, encoding = encoding): incomplete final line
 #> found on 'https://omnipathdb.org/resources'
-#> TFs scores computed
 ```
 
 ``` r
@@ -217,8 +216,6 @@ pathways = compute.pathway.activity(counts.norm)
 #> See help("Deprecated")
 #> Warning in readLines(con = path, encoding = encoding): incomplete final line
 #> found on 'https://omnipathdb.org/resources'
-#> Computing PROGENy pathway activity...
-#> Pathway activities computed successfully.
 ```
 
 To explore the relationship between features, users can run the
@@ -283,12 +280,11 @@ cell_groups = construct_cell_groups(counts.norm, tfs, deconv, network, dt, trait
 #> See help("Deprecated")
 #> Warning in readLines(con = path, encoding = encoding): incomplete final line
 #> found on 'https://omnipathdb.org/resources'
-#> TFs scores computed
 #> Warning in OmnipathR::import_tf_mirna_interactions(genesymbols = TRUE, resources = "CollecTRI", : 'OmnipathR::import_tf_mirna_interactions' is deprecated.
 #> Use 'tf_mirna' instead.
 #> See help("Deprecated")
-#> Warning in OmnipathR::import_tf_mirna_interactions(genesymbols = TRUE, resources = "CollecTRI", : incomplete final line found on 'https://omnipathdb.org/resources'
-#> TFs scores computed
+#> Warning in readLines(con = path, encoding = encoding): incomplete final line
+#> found on 'https://omnipathdb.org/resources'
 ```
 
 Unsupervised analysis
@@ -428,7 +424,6 @@ res <- CellTFusion(
 #> See help("Deprecated")
 #> Warning in readLines(con = path, encoding = encoding): incomplete final line
 #> found on 'https://omnipathdb.org/resources'
-#> TFs scores computed
 #> 
 #> Constructing TF network............................................................
 #> 
@@ -442,8 +437,6 @@ res <- CellTFusion(
 #> See help("Deprecated")
 #> Warning in readLines(con = path, encoding = encoding): incomplete final line
 #> found on 'https://omnipathdb.org/resources'
-#> Computing PROGENy pathway activity...
-#> Pathway activities computed successfully.
 #> 
 #> Performing deconvolution analysis............................................................
 #> Deconvolution features subgroupped
@@ -453,12 +446,11 @@ res <- CellTFusion(
 #> Use 'tf_mirna' instead.
 #> See help("Deprecated")
 #> Warning in OmnipathR::import_tf_mirna_interactions(genesymbols = TRUE, resources = "CollecTRI", : incomplete final line found on 'https://omnipathdb.org/resources'
-#> TFs scores computed
 #> Warning in OmnipathR::import_tf_mirna_interactions(genesymbols = TRUE, resources = "CollecTRI", : 'OmnipathR::import_tf_mirna_interactions' is deprecated.
 #> Use 'tf_mirna' instead.
 #> See help("Deprecated")
-#> Warning in OmnipathR::import_tf_mirna_interactions(genesymbols = TRUE, resources = "CollecTRI", : incomplete final line found on 'https://omnipathdb.org/resources'
-#> TFs scores computed
+#> Warning in readLines(con = path, encoding = encoding): incomplete final line
+#> found on 'https://omnipathdb.org/resources'
 #> 
 #> Everything done! Results are saved in Results/ folder............................................................
 ```
@@ -589,7 +581,6 @@ res_training <- CellTFusion(
 #> See help("Deprecated")
 #> Warning in readLines(con = path, encoding = encoding): incomplete final line
 #> found on 'https://omnipathdb.org/resources'
-#> TFs scores computed
 #> 
 #> Constructing TF network............................................................
 #> 
@@ -603,8 +594,6 @@ res_training <- CellTFusion(
 #> See help("Deprecated")
 #> Warning in readLines(con = path, encoding = encoding): incomplete final line
 #> found on 'https://omnipathdb.org/resources'
-#> Computing PROGENy pathway activity...
-#> Pathway activities computed successfully.
 #> 
 #> Performing deconvolution analysis............................................................
 #> Deconvolution features subgroupped
@@ -614,12 +603,11 @@ res_training <- CellTFusion(
 #> Use 'tf_mirna' instead.
 #> See help("Deprecated")
 #> Warning in OmnipathR::import_tf_mirna_interactions(genesymbols = TRUE, resources = "CollecTRI", : incomplete final line found on 'https://omnipathdb.org/resources'
-#> TFs scores computed
 #> Warning in OmnipathR::import_tf_mirna_interactions(genesymbols = TRUE, resources = "CollecTRI", : 'OmnipathR::import_tf_mirna_interactions' is deprecated.
 #> Use 'tf_mirna' instead.
 #> See help("Deprecated")
-#> Warning in OmnipathR::import_tf_mirna_interactions(genesymbols = TRUE, resources = "CollecTRI", : incomplete final line found on 'https://omnipathdb.org/resources'
-#> TFs scores computed
+#> Warning in readLines(con = path, encoding = encoding): incomplete final line
+#> found on 'https://omnipathdb.org/resources'
 #> 
 #> Everything done! Results are saved in Results/ folder............................................................
 ```
