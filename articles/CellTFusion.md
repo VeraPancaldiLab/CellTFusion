@@ -253,7 +253,6 @@ returns a reduced feature matrix.
 
 ``` r
 dt = multideconv::compute.deconvolution.analysis(deconv, corr = 0.7, seed = 123) 
-#> Deconvolution features subgroupped
 dt = multideconv::deconvolution_dictionary(dt, pathways) ## Apply dictionary of deconvolution (To be added in compute.deconvolution.analysis() soon)
 #Association of TFs modules with deconvolution 
 compute.modules.relationship(network[[1]], dt[[1]], "Deconvolution-TFs_Modules", vertical = T, height = 30, width = 10, pval = 0.05)
@@ -439,7 +438,6 @@ res <- CellTFusion(
 #> found on 'https://omnipathdb.org/resources'
 #> 
 #> Performing deconvolution analysis............................................................
-#> Deconvolution features subgroupped
 #> 
 #> Cell groups identification............................................................
 #> Warning in OmnipathR::import_tf_mirna_interactions(genesymbols = TRUE, resources = "CollecTRI", : 'OmnipathR::import_tf_mirna_interactions' is deprecated.
@@ -596,7 +594,6 @@ res_training <- CellTFusion(
 #> found on 'https://omnipathdb.org/resources'
 #> 
 #> Performing deconvolution analysis............................................................
-#> Deconvolution features subgroupped
 #> 
 #> Cell groups identification............................................................
 #> Warning in OmnipathR::import_tf_mirna_interactions(genesymbols = TRUE, resources = "CollecTRI", : 'OmnipathR::import_tf_mirna_interactions' is deprecated.

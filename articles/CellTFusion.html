@@ -287,7 +287,6 @@ cell types with similar abundance patterns across samples and returns a
 reduced feature matrix.</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">dt</span> <span class="op">=</span> <span class="fu">multideconv</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/multideconv/man/compute.deconvolution.analysis.html" class="external-link">compute.deconvolution.analysis</a></span><span class="op">(</span><span class="va">deconv</span>, corr <span class="op">=</span> <span class="fl">0.7</span>, seed <span class="op">=</span> <span class="fl">123</span><span class="op">)</span> </span>
-<span><span class="co">#&gt; Deconvolution features subgroupped</span></span>
 <span><span class="va">dt</span> <span class="op">=</span> <span class="fu">multideconv</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/multideconv/man/deconvolution_dictionary.html" class="external-link">deconvolution_dictionary</a></span><span class="op">(</span><span class="va">dt</span>, <span class="va">pathways</span><span class="op">)</span> <span class="co">## Apply dictionary of deconvolution (To be added in compute.deconvolution.analysis() soon)</span></span>
 <span><span class="co">#Association of TFs modules with deconvolution </span></span>
 <span><span class="fu"><a href="../reference/compute.modules.relationship.html">compute.modules.relationship</a></span><span class="op">(</span><span class="va">network</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>, <span class="va">dt</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>, <span class="st">"Deconvolution-TFs_Modules"</span>, vertical <span class="op">=</span> <span class="cn">T</span>, height <span class="op">=</span> <span class="fl">30</span>, width <span class="op">=</span> <span class="fl">10</span>, pval <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span></span></code></pre></div>
@@ -466,7 +465,6 @@ To run this streamlined pipeline, simply execute:</p>
 <span><span class="co">#&gt; found on 'https://omnipathdb.org/resources'</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Performing deconvolution analysis............................................................</span></span>
-<span><span class="co">#&gt; Deconvolution features subgroupped</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Cell groups identification............................................................</span></span>
 <span><span class="co">#&gt; Warning in OmnipathR::import_tf_mirna_interactions(genesymbols = TRUE, resources = "CollecTRI", : 'OmnipathR::import_tf_mirna_interactions' is deprecated.</span></span>
@@ -618,7 +616,6 @@ follows:</p>
 <span><span class="co">#&gt; found on 'https://omnipathdb.org/resources'</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Performing deconvolution analysis............................................................</span></span>
-<span><span class="co">#&gt; Deconvolution features subgroupped</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Cell groups identification............................................................</span></span>
 <span><span class="co">#&gt; Warning in OmnipathR::import_tf_mirna_interactions(genesymbols = TRUE, resources = "CollecTRI", : 'OmnipathR::import_tf_mirna_interactions' is deprecated.</span></span>
