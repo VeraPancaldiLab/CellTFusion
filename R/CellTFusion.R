@@ -98,7 +98,7 @@ CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL
   if(verbose){
     cat("\nCalculating TF activity............................................................\n")
   }
-  tfs = compute.TFs.activity(counts.norm, TF.collection, min_targets_size, tfs.pruned, universe)
+  tfs = compute.TFs.activity(counts.norm, TF.collection, min_targets_size, tfs.pruned, universe, return)
 
   # 1. TFs network construction
   if(verbose){
@@ -113,7 +113,7 @@ CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL
   if(verbose){
     cat("\nCalculating pathway activities............................................................\n")
   }
-  pathways = compute.pathway.activity(counts.norm, gene_sets = NULL, paths = paths)
+  pathways = compute.pathway.activity(counts.norm, gene_sets = NULL, paths = paths, return)
   # 3. Deconvolution analysis
   if(verbose){
     cat("\nPerforming deconvolution analysis............................................................\n")
@@ -2843,7 +2843,7 @@ prepare_CellTFusion_folds <- function(data, folds = NULL, deconv = NULL, univers
         corr_mod           = best_celltfusion_params$corr_mod,
         corr               = best_celltfusion_params$corr,
         high_corr_groups   = best_celltfusion_params$high_corr_groups,
-        return = FALSE,
+        return = TRUE,
         verbose = FALSE
       )
 
