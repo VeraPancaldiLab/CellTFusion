@@ -113,7 +113,7 @@ CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL
   if(verbose){
     cat("\nCalculating pathway activities............................................................\n")
   }
-  pathways = compute.pathway.activity(counts.norm, gene_sets = NULL, paths = paths, return)
+  pathways = compute.pathway.activity(counts.norm, gene_sets = NULL, paths = paths, return = return)
   # 3. Deconvolution analysis
   if(verbose){
     cat("\nPerforming deconvolution analysis............................................................\n")
