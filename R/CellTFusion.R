@@ -205,7 +205,7 @@ cell.groups.computation = function(deconvolution, cell.dendrograms, tfs.module.n
         ###################################################Compute score for each cell group
         pca_group = deconvolution[,colnames(deconvolution) %in% cells, drop = F]
         color = names(cell.dendrograms)[k]
-        score = compute_composite_score(pca_group, color, tfs.module.network[[1]])
+        score = compute_composite_score(pca_group, color, tfs.module.network[[1]], discard = F)
         x[[j]] = score[[1]]
         z[[j]] = score[[2]]
       }
@@ -379,7 +379,7 @@ compute_cell_groups_signatures = function(deconv_res, cell_groups, features, dec
     color = stringr::str_split(name_cell_group, "_")[[1]][2]
     loadings_cells = cell_groups[[2]][[idx[i]]]
 
-    score = compute_composite_score(pca_cells, color, tfs.module.network[[1]], discard = T) ###Loadings are not been used from positive/negative analysis, only the cell groups. Loadings are re-calculated
+    score = compute_composite_score(pca_cells, color, tfs.module.network[[1]], discard = F) ###Loadings are not been used from positive/negative analysis, only the cell groups. Loadings are re-calculated
     x = score[[1]]
 
     if(nrow(data.frame(x)) > 1){ # nrow(x) > 1 means this is a vector and no NA
