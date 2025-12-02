@@ -2824,13 +2824,42 @@ prepare_CellTFusion_folds <- function(data, folds = NULL, deconv = NULL, univers
         stop("Either 'target' or both 'time_var' and 'event_var' must be provided.")
       }
 
+      required_cols <- c("min_targets_size", "minMod", "corr_mod", "corr", "high_corr_groups")
+
       best_celltfusion_params <- if (is.data.frame(bestune)) {
-        bestune %>%
-          dplyr::select(min_targets_size, minMod, corr_mod, corr, high_corr_groups)
+        # check whether all required columns are present
+        if (all(required_cols %in% names(bestune))) {
+          dplyr::select(bestune, dplyr::all_of(required_cols))
+
+        } else {
+          # no tunable parameters → use fixed parameters
+          message("No tunable parameters found in bestune; using fixed parameters.")
+          tibble::tibble(
+            min_targets_size = min_targets_size,
+            minMod = minMod,
+            corr_mod = corr_mod,
+            corr = corr,
+            high_corr_groups = high_corr_groups
+          )
+        }
+
       } else if (is.list(bestune)) {
-        # Extract only numeric parameters, not the large tibbles
-        bestune_subset <- bestune[c("min_targets_size", "minMod", "corr_mod", "corr", "high_corr_groups")]
-        tibble::as_tibble(bestune_subset)
+
+        if (all(required_cols %in% names(bestune))) {
+          tibble::as_tibble(bestune[required_cols])
+
+        } else {
+          message("No tunable parameters found in bestune; using fixed parameters.")
+
+          tibble::tibble(
+            min_targets_size = min_targets_size,
+            minMod = minMod,
+            corr_mod = corr_mod,
+            corr = corr,
+            high_corr_groups = high_corr_groups
+          )
+        }
+
       } else {
         stop("`bestune` must be a data.frame or list.")
       }
