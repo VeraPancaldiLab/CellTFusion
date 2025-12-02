@@ -98,7 +98,7 @@ CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL
   if(verbose){
     cat("\nCalculating TF activity............................................................\n")
   }
-  tfs = compute.TFs.activity(counts.norm, TF.collection, min_targets_size, tfs.pruned, universe, return)
+  tfs = compute.TFs.activity(counts.norm, TF.collection, min_targets_size, tfs.pruned, universe)
 
   # 1. TFs network construction
   if(verbose){
@@ -187,7 +187,7 @@ CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL
 cell.groups.computation = function(deconvolution, cell.dendrograms, tfs.module.network, return = T){
 
   #cuts = c(-Inf, 0.01, 0.02, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4) #Hard coded - Because heights are based on distance we keep feature close together meaning (distance from 0.05 to max 0.3)
-  cuts = c(0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4) #Hard coded - Because heights are based on distance we keep feature close together meaning (distance from 0.05 to max 0.3)
+  cuts = c(-Inf, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.5) #Hard coded - Because heights are based on distance we keep feature close together meaning (distance from 0.05 to max 0.3)
   #cuts = calculate_dendrogram_cuts(cell.dendrograms)
 
   cell.groups = list()
@@ -921,29 +921,28 @@ compute.pathway.activity <- function(RNA.tpm, gene_sets = NULL, paths = NULL, re
 
   ###### PROGENy
   if (is.null(paths)) {
-    paths <- decoupleR::get_progeny(organism = 'human', top = 500)
+    paths <- decoupleR::get_progeny(organism = "human", top = 500)
   }
 
   progeny <- decoupleR::run_mlm(
     mat      = RNA.tpm,
     net      = paths,
-    .source  = 'source',
-    .target  = 'target',
-    .mor     = 'weight',
+    .source  = "source",
+    .target  = "target",
+    .mor     = "weight",
     minsize  = 5
   )
 
   sample_acts_progeny <- progeny %>%
-    tidyr::pivot_wider(id_cols = 'condition', names_from = 'source', values_from = 'score') %>%
-    tibble::column_to_rownames('condition') %>%
+    tidyr::pivot_wider(id_cols = "condition", names_from = "source", values_from = "score") %>%
+    tibble::column_to_rownames("condition") %>%
     as.matrix() %>%
     scale() %>%
     as.data.frame()
 
   results_list$PROGENy <- sample_acts_progeny
 
-  ###### GSVA (if gene sets provided)
-
+  ###### GSVA (optional)
   if (!is.null(gene_sets)) {
     gsva_results <- GSVA::gsva(
       RNA.tpm,
@@ -974,6 +973,13 @@ compute.pathway.activity <- function(RNA.tpm, gene_sets = NULL, paths = NULL, re
     }
   }
 
+  ###### RETURN FORMAT LOGIC
+  # If only one element → return it directly (matrix)
+  if (length(results_list) == 1) {
+    return(results_list[[1]])
+  }
+
+  # If both → return the list
   return(results_list)
 }
 
@@ -2843,7 +2849,7 @@ prepare_CellTFusion_folds <- function(data, folds = NULL, deconv = NULL, univers
         corr_mod           = best_celltfusion_params$corr_mod,
         corr               = best_celltfusion_params$corr,
         high_corr_groups   = best_celltfusion_params$high_corr_groups,
-        return = TRUE,
+        return = FALSE,
         verbose = FALSE
       )
 
