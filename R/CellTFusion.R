@@ -2771,7 +2771,7 @@ compute.test.score = function(cell_group, loadings){
 
   weighted_cell_group_matrix <- as.matrix(cell_group) %*% loadings #Multiply by the original matrix even if the coefx came from the inverse matrix because we need to find the inverse relationship
 
-  return(weighted_cell_group_matrix)
+  return(weighted_cell_group_matrix[,1,drop=F])
 
 }
 
