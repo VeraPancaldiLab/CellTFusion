@@ -2451,7 +2451,6 @@ remove.cell.groups.corr <- function(data, threshold = 0.95) {
         x
       })
 
-
       # Compute the union of all features across the selected matrices: full set of features that the merged matrix should contain
       all_features <- Reduce(union, lapply(mats_fixed, rownames))
 
@@ -2645,7 +2644,7 @@ compute_composite_score = function(cell_group, module_group, tfs.module.network,
   # x_df <- x_df[order(-abs(x_df$loading)), ]   # order by importance
 
 
-  return(list(weighted_cell_group_matrix, cca_result$xcoef[, 1]))
+  return(list(weighted_cell_group_matrix, cca_result$xcoef))
 
 }
 
