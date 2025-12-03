@@ -2440,7 +2440,7 @@ remove.cell.groups.corr <- function(data, threshold = 0.95) {
       mats <- data[[3]][colnames(data[[1]]) %in% colnames(feature)]
 
       # Ensure that all matrices have proper column names (set the rownames() as colnames() as they are square)
-      mats_fixed <- lapply(mats_fixed, function(x) {
+      mats_fixed <- lapply(mats, function(x) {
         if (is.null(dim(x))) {            # if x has no dimensions (i.e., a vector)
           x <- matrix(x, nrow = length(x), ncol = length(x),
                       dimnames = list(names(x), names(x)))
