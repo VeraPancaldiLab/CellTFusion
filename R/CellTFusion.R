@@ -205,7 +205,7 @@ cell.groups.computation = function(deconvolution, cell.dendrograms, tfs.module.n
         ###################################################Compute score for each cell group
         pca_group = deconvolution[,colnames(deconvolution) %in% cells, drop = F]
         color = names(cell.dendrograms)[k]
-        score = compute_composite_score(pca_group, color, tfs.module.network[[1]], discard = F)
+        score = compute_composite_score(pca_group, color, tfs.module.network, discard = F)
         x[[j]] = score[[1]]
         z[[j]] = score[[2]]
       }
@@ -385,7 +385,7 @@ compute_cell_groups_signatures = function(deconv_res, cell_groups, features, dec
     color = stringr::str_split(name_cell_group, "_")[[1]][2]
     loadings_cells = cell_groups[[2]][[idx[i]]]
 
-    score = compute_composite_score(pca_cells, color, tfs.module.network[[1]], discard = F) ###Loadings are not been used from positive/negative analysis, only the cell groups. Loadings are re-calculated
+    score = compute_composite_score(pca_cells, color, tfs.module.network, discard = F) ###Loadings are not been used from positive/negative analysis, only the cell groups. Loadings are re-calculated
     x = score[[1]]
 
     if(nrow(data.frame(x)) > 1){ # nrow(x) > 1 means this is a vector and no NA
@@ -1324,8 +1324,8 @@ compute.WTCNA <- function(TFs.matrix, network.type = "signed", clustering.method
 
   colnames(MEs) <- gsub("ME", "", colnames(MEs))
 
-  output = list(MEs, dynamicColors, modtfs, TFspropVar)
-  names(output) = c("TFs module matrix", "TFs colors", "TFs per module", "Proportion of variance")
+  output = list(MEs, dynamicColors, modtfs, TFspropVar, TFs.matrix)
+  names(output) = c("TFs module matrix", "TFs colors", "TFs per module", "Proportion of variance", "TFs_matrix")
 
   contador = 1
   tfs_modules = data.frame(matrix(nrow = length(modtfs), ncol = 2))
@@ -1657,6 +1657,7 @@ construct_cell_groups = function(counts, tfs, deconv, network, dt, clinical, pva
     network.positive = network
     dt.positive[[1]] = multideconv::replicate_deconvolution_subgroups(dt, deconv.positive)
     network.positive[[1]] = create_tfs_modules(tfs.positive, network)
+    network.positive[[5]] = tfs.positive
 
     corr_modules_positive = compute.modules.relationship(network.positive[[1]], dt.positive[[1]], return = T, plot = F, pval = pval)
 
@@ -1671,6 +1672,7 @@ construct_cell_groups = function(counts, tfs, deconv, network, dt, clinical, pva
     network.negative = network
     dt.negative[[1]] = multideconv::replicate_deconvolution_subgroups(dt, deconv.negative)
     network.negative[[1]] = create_tfs_modules(tfs.negative, network)
+    network.negative[[5]] = tfs.negative
 
     corr_modules_negative = compute.modules.relationship(network.negative[[1]], dt.negative[[1]], return = T, plot = F, pval = pval)
 
@@ -2438,12 +2440,17 @@ remove.cell.groups.corr <- function(data, threshold = 0.95) {
       mats <- data[[3]][colnames(data[[1]]) %in% colnames(feature)]
 
       # Ensure that all matrices have proper column names (set the rownames() as colnames() as they are square)
-      mats_fixed <- lapply(mats, function(x) {
+      mats_fixed <- lapply(mats_fixed, function(x) {
+        if (is.null(dim(x))) {            # if x has no dimensions (i.e., a vector)
+          x <- matrix(x, nrow = length(x), ncol = length(x),
+                      dimnames = list(names(x), names(x)))
+        }
         if (is.null(colnames(x))) {
           colnames(x) <- rownames(x)
         }
         x
       })
+
 
       # Compute the union of all features across the selected matrices: full set of features that the merged matrix should contain
       all_features <- Reduce(union, lapply(mats_fixed, rownames))
@@ -2559,8 +2566,8 @@ module_enrich = function(tpm.counts, module_color, hub_genes, tfs_universe){
 #' between cell group features and corresponding TF module scores.
 #'
 #' @param cell_group A numeric matrix of cell deconvolution features for a cell group (samples x features).
-#' @param color_group A character vector indicating TF module group colors corresponding to the cell group (can be obtained via `extract_colors()`).
-#' @param tfs.module.matrix A numeric matrix representing TF module scores across samples (samples x TF modules).
+#' @param module_group A character vector indicating TF module group colors corresponding to the cell group (can be obtained via `extract_colors()`).
+#' @param tfs.module.network Output of compute.WTCNA().
 #' @param discard Logical; whether to discard cell groups whose canonical correlation is below 0.6 (default TRUE).
 #'
 #' @return A list with:
@@ -2572,27 +2579,30 @@ module_enrich = function(tpm.counts, module_color, hub_genes, tfs_universe){
 #'
 #' @export
 #'
-compute_composite_score = function(cell_group, color_group, tfs.module.matrix, discard = T){
+compute_composite_score = function(cell_group, module_group, tfs.module.network, discard = T){
 
-  module_group = color_group #To match with columns of TFs modules
+  modules = tfs.module.network[["TFs module matrix"]]
+  tfs_all = tfs.module.network[["TFs_matrix"]]
 
   ### Only in case there are groups combined
   if(length(grep(".group", module_group))==1){
     module_group = gsub(".group", "", module_group)
   }
 
-  tf_module_matrix = scale(tfs.module.matrix[,grep(module_group, colnames(tfs.module.matrix))])
+  tf_per_module_matrix = tfs_all[, colnames(tfs_all) %in% tfs.module.network[["TFs per module"]][[module_group]]]
+  tf_module_matrix = modules[,grep(module_group, colnames(modules))]
 
+  ### We take the TF module only to verify the overall sign of association, following analysis is done with full TF matrix per color
   signs = sign(stats::cor(cell_group, tf_module_matrix))
 
-  if(signs[1] < 0){
+  if(signs[1] < 0){ ## Because groups come from hierarchical clustering you expect they will not have multiple signs so you just take the first assuming is the same for the others
     cell_group_matrix = scale(cell_group*-1) #Multiply by -1 because CCA identifies the most positive correlated components so to identify the most negative correlated components we need to invert matrix
   }else{
     cell_group_matrix = scale(cell_group)
   }
 
-  # CCA analysis
-  cca_result <- stats::cancor(cell_group_matrix, tf_module_matrix)
+  # CCA analysis: Note 'cell_group_matrix' is already scale
+  cca_result <- stats::cancor(cell_group_matrix, scale(tf_per_module_matrix))
 
   ###Discard cell group if rcor is not > 0.6 cause it means both linear components are not highly correlated thus they dont represent the association
   if(discard == T){
@@ -2604,14 +2614,38 @@ compute_composite_score = function(cell_group, color_group, tfs.module.matrix, d
   }
 
   # Apply canonical weights to each matrix
-  cell_group <- cell_group[, rownames(cca_result$xcoef)] #Ensure no features have been discard on the way and if yes, subset the matrix (CCA can discard collinear or zero variance features)
+  cell_group <- cell_group[, rownames(cca_result$xcoef), drop = F] #Ensure no features have been discard on the way and if yes, subset the matrix (CCA can discard collinear or zero variance features)
 
-  weighted_cell_group_matrix <- scale(cell_group) %*% cca_result$xcoef #Multiply by the original matrix even if the coefx came from the inverse matrix because we need to find the inverse relationship
-  weighted_tf_module_matrix <- tf_module_matrix %*% cca_result$ycoef
+  ### xcoef[,1] corresponds to the most correlated linear component
+  weighted_cell_group_matrix <- as.matrix(cell_group) %*% cca_result$xcoef[, 1] #Multiply by the original matrix even if the coefx came from the inverse matrix because we need to find the inverse relationship
 
-  selected_components = weighted_cell_group_matrix[,1,drop=F]
+  ### MIGHT BE USEFUL AFTER TO DISCARD VARIABLES THAT DONT HELP TO THE ASSOCIATION AND REDUCE GROUP COMPOSITION
 
-  return(list(selected_components, cca_result$xcoef))
+  # weights
+  # x_weights <- cca_result$xcoef[, 1]
+  #y_weights <- cca_result$ycoef[, 1]
+
+  # # canonical scores (variates)
+  # U1 <- as.vector(scale(cell_group_matrix) %*% x_weights)
+  # V1 <- as.vector(scale(tf_module_matrix) %*% y_weights)
+  #
+  #
+  # # canonical loadings (= correlations of original vars with their own variate)
+  # x_loadings <- as.numeric(cor(as.matrix(cell_group_matrix), U1))   # length = ncol(cell_group_matrix)
+  # y_loadings <- as.numeric(cor(as.matrix(tf_module_matrix), V1))   # length = ncol(tf_module_matrix)
+  #
+  # # cross-loadings (= correlation of X with V1 and Y with U1)
+  # x_cross_loadings <- as.numeric(cor(as.matrix(cell_group_matrix), V1))
+  # y_cross_loadings <- as.numeric(cor(as.matrix(tf_module_matrix), U1))
+  #
+  # x_df <- data.frame(variable = colnames(cell_group_matrix),
+  #                    weight = x_weights,
+  #                    loading = x_loadings,
+  #                    cross_loading = x_cross_loadings)
+  # x_df <- x_df[order(-abs(x_df$loading)), ]   # order by importance
+
+
+  return(list(weighted_cell_group_matrix, cca_result$xcoef[, 1]))
 
 }
 
@@ -2736,11 +2770,9 @@ compute.test.score = function(cell_group, loadings){
   cell_group <- cell_group[, colnames(cell_group) %in% rownames(loadings), drop = F] #Ensure no features have been discard on the way and if yes, subset the matrix (CCA can discard collinear or zero variance features)
   loadings = loadings[rownames(loadings) %in% colnames(cell_group),]
 
-  weighted_cell_group_matrix <- scale(cell_group) %*% loadings #Multiply by the original matrix even if the coefx came from the inverse matrix because we need to find the inverse relationship
+  weighted_cell_group_matrix <- cell_group %*% loadings #Multiply by the original matrix even if the coefx came from the inverse matrix because we need to find the inverse relationship
 
-  selected_components = weighted_cell_group_matrix[,1,drop=F]
-
-  return(selected_components)
+  return(weighted_cell_group_matrix)
 
 }
 
