@@ -2769,7 +2769,7 @@ compute.test.score = function(cell_group, loadings){
   cell_group <- cell_group[, colnames(cell_group) %in% rownames(loadings), drop = F] #Ensure no features have been discard on the way and if yes, subset the matrix (CCA can discard collinear or zero variance features)
   loadings = loadings[rownames(loadings) %in% colnames(cell_group),]
 
-  weighted_cell_group_matrix <- cell_group %*% loadings #Multiply by the original matrix even if the coefx came from the inverse matrix because we need to find the inverse relationship
+  weighted_cell_group_matrix <- as.matrix(cell_group) %*% loadings #Multiply by the original matrix even if the coefx came from the inverse matrix because we need to find the inverse relationship
 
   return(weighted_cell_group_matrix)
 
