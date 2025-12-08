@@ -205,7 +205,7 @@ cell.groups.computation = function(deconvolution, cell.dendrograms, tfs.module.n
         ###################################################Compute score for each cell group
         pca_group = deconvolution[,colnames(deconvolution) %in% cells, drop = F]
         color = names(cell.dendrograms)[k]
-        score = compute_composite_score(pca_group, color, tfs.module.network, discard = F)
+        score = compute_composite_score(pca_group, color, tfs.module.network, discard = T)
         x[[j]] = score[[1]]
         z[[j]] = score[[2]]
       }
@@ -264,16 +264,6 @@ cell.groups.computation = function(deconvolution, cell.dendrograms, tfs.module.n
   cell.groups = list(unlist(unname(cell.groups.values), recursive = F), unlist(unname(cell.groups.names), recursive = F),  unlist(unname(cell.groups.loadings), recursive = F))
   cell.groups[[1]] = cell.groups[[1]] %>%
     data.frame()
-
-  # module_colors = tfs.module.network[["TFs colors"]]
-  # cell.groups = remove.cell.groups.corr(cell.groups, module_colors, threshold = 0.9) #(Not done to avoid really big groups)
-  #
-  # cat("Removing low variance features (if present)........................\n")
-  # zero = nearZeroVar(cell.groups[[1]], saveMetrics = TRUE)
-  # cell.groups[[1]] = cell.groups[[1]][, !zero$nzv]
-  # cell.groups[[2]] = cell.groups[[2]][!zero$nzv]
-  # cell.groups[[3]] = cell.groups[[3]][!zero$nzv]
-  #
 
   ###################################################Export clusters in a table and save
   clusters = data.frame(matrix(nrow = length(cell.groups[[2]]), ncol = 2))
@@ -385,7 +375,7 @@ compute_cell_groups_signatures = function(deconv_res, cell_groups, features, dec
     color = stringr::str_split(name_cell_group, "_")[[1]][2]
     loadings_cells = cell_groups[[2]][[idx[i]]]
 
-    score = compute_composite_score(pca_cells, color, tfs.module.network, discard = F) ###Loadings are not been used from positive/negative analysis, only the cell groups. Loadings are re-calculated
+    score = compute_composite_score(pca_cells, color, tfs.module.network, discard = T) ###Loadings are not been used from positive/negative analysis, only the cell groups. Loadings are re-calculated
     x = score[[1]]
 
     if(nrow(data.frame(x)) > 1){ # nrow(x) > 1 means this is a vector and no NA
@@ -1710,8 +1700,10 @@ construct_cell_groups = function(counts, tfs, deconv, network, dt, clinical, pva
     cell.groups = cell.groups.computation(dt[[1]], cell_dendrograms, network, return = F)
   }
 
+  ### Combined highly corr cell groups
   cell.groups = remove.cell.groups.corr(cell.groups, threshold = high_corr_groups)
 
+  ### Remove low variance cell groups
   zero = caret::nearZeroVar(cell.groups[[1]], saveMetrics = TRUE)
   cell.groups[[1]] = cell.groups[[1]][, !zero$nzv]
   cell.groups[[2]] = cell.groups[[2]][!zero$nzv]
@@ -2162,6 +2154,8 @@ extract_colors <- function(module_colors, cell_group_name) {
 #'
 create_tfs_modules = function(TF.matrix, network_tfs){
 
+  TF.matrix = TF.matrix[, colnames(TF.matrix) %in% colnames(network_tfs$TFs_matrix)]
+
   tfs.modules = TF.matrix %>%
     t() %>%
     data.frame() %>%
@@ -2441,10 +2435,6 @@ remove.cell.groups.corr <- function(data, threshold = 0.95) {
 
       # Ensure that all matrices have proper column names (set the rownames() as colnames() as they are square)
       mats_fixed <- lapply(mats, function(x) {
-        if (is.null(dim(x))) {            # if x has no dimensions (i.e., a vector)
-          x <- matrix(x, nrow = length(x), ncol = length(x),
-                      dimnames = list(names(x), names(x)))
-        }
         if (is.null(colnames(x))) {
           colnames(x) <- rownames(x)
         }
@@ -2470,6 +2460,55 @@ remove.cell.groups.corr <- function(data, threshold = 0.95) {
         # Reorder rows and columns so all matrices have the same order
         x[all_features, all_features, drop = FALSE]
       })
+
+      # # Ensure that all matrices have proper column names (set the rownames() as colnames() as they are square)
+      # mats_fixed <- lapply(mats, function(x) {
+      #
+      #   # Convert vector or scalar -> square matrix
+      #   if (is.null(dim(x))) {
+      #     # Give names if missing
+      #     if (is.null(names(x)) || any(names(x) == "")) {
+      #       names(x) <- paste0("Feature_", seq_along(x))
+      #     }
+      #     x <- matrix(x,
+      #                 nrow = length(x),
+      #                 ncol = length(x),
+      #                 dimnames = list(names(x), names(x)))
+      #   }
+      #
+      #   # Ensure rownames exist
+      #   if (is.null(rownames(x)) || any(rownames(x) == "")) {
+      #     rownames(x) <- paste0("Feature_", seq_len(nrow(x)))
+      #   }
+      #
+      #   # Ensure colnames exist
+      #   if (is.null(colnames(x)) || any(colnames(x) == "")) {
+      #     colnames(x) <- rownames(x)
+      #   }
+      #
+      #   x
+      # })
+      #
+      #
+      # # Compute the union of all features across the selected matrices: full set of features that the merged matrix should contain
+      # all_features <- Reduce(union, lapply(mats_fixed, rownames))
+      #
+      # # Align each matrix to the full set of features
+      # # - Add missing rows/columns filled with 0 for features not present in the matrix
+      # # - Reorder rows and columns according to 'all_features'
+      # mats_aligned <- lapply(mats_fixed, function(x) {
+      #   missing <- setdiff(all_features, rownames(x))  # Identify features missing in this matrix
+      #   if(length(missing) > 0){
+      #     # Add missing rows (initialized to 0)
+      #     x <- rbind(x, matrix(0, nrow = length(missing), ncol = ncol(x),
+      #                          dimnames = list(missing, colnames(x))))
+      #     # Add missing columns (initialized to 0)
+      #     x <- cbind(x, matrix(0, nrow = nrow(x), ncol = length(missing),
+      #                          dimnames = list(rownames(x), missing)))
+      #   }
+      #   # Reorder rows and columns so all matrices have the same order
+      #   x[all_features, all_features, drop = FALSE]
+      # })
 
       # Combine all aligned matrices by computing the element-wise average
       new_loadings_value <- Reduce("+", mats_aligned) / length(mats_aligned)
@@ -2600,8 +2639,8 @@ compute_composite_score = function(cell_group, module_group, tfs.module.network,
     cell_group_matrix = scale(cell_group)
   }
 
-  # CCA analysis: Note 'cell_group_matrix' is already scale
-  cca_result <- stats::cancor(cell_group_matrix, scale(tf_per_module_matrix))
+  # CCA analysis: First CCA is to validate the sign and discard cell types not associated with TFs moduls
+  cca_result <- stats::cancor(cell_group_matrix, scale(tf_module_matrix))
 
   ###Discard cell group if rcor is not > 0.6 cause it means both linear components are not highly correlated thus they dont represent the association
   if(discard == T){
@@ -2611,6 +2650,11 @@ compute_composite_score = function(cell_group, module_group, tfs.module.network,
       return(list("NA", "NA"))
     }
   }
+
+  #Once we confirmed the potential association we can further do a CCA to find a linear component that maximizes the linear relationship. If we dont do this, we will invent linear components that maximizes correlation but that were not existing before
+
+  # CCA analysis: Note 'cell_group_matrix' is already scale
+  cca_result <- stats::cancor(cell_group_matrix, scale(tf_per_module_matrix)) ## Now this is done per tfs_per_module
 
   # Apply canonical weights to each matrix
   cell_group <- cell_group[, rownames(cca_result$xcoef), drop = F] #Ensure no features have been discard on the way and if yes, subset the matrix (CCA can discard collinear or zero variance features)
@@ -2965,8 +3009,7 @@ prepare_CellTFusion_folds <- function(data, folds = NULL, deconv = NULL, univers
       doParallel::registerDoParallel(cl)
 
       # Parallelize over folds
-      processed_folds <- foreach::foreach(i = seq_along(folds), .packages = c("dplyr")) %dopar% {
-        require(CellTFusion)
+      processed_folds <- foreach::foreach(i = seq_along(folds), .packages = c("dplyr", "CellTFusion")) %dopar% {
 
         cat("Starting fold", names(folds)[i], "\n")
 
