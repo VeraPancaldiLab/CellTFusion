@@ -66,8 +66,8 @@ utils::globalVariables(c("Trait", "Value" ,"level", ".", "Cells_level", "PC1", "
 #' )
 #'}
 #'
-CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL, trait = NULL, trait.positive = NULL, deconv_methods = c("Quantiseq", "Epidish", "DeconRNASeq", "DWLS", "CibersortX"), cbsx.mail = NULL, cbsx.token = NULL, file_name = NULL,
-                       TF.collection = "CollecTRI", min_targets_size = 10, tfs.pruned = FALSE, universe = NULL, paths = NULL, minMod = 10, corr_mod = 0.9, corr = 0.7, cells_extra = NULL, pval = 0.05, high_corr_groups = 0.8, return = T, verbose = T){
+CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL, trait = NULL, trait.positive = NULL, batch = F, batch_id = NULL, deconv_methods = c("Quantiseq", "Epidish", "DeconRNASeq", "DWLS", "CibersortX"), cbsx.mail = NULL, cbsx.token = NULL, file_name = NULL,
+                       TF.collection = "CollecTRI", min_targets_size = 10, tfs.pruned = FALSE, universe = NULL, paths = NULL, minMod = 10, corr_mod = 0.9, corr = 0.7, corr_type = "spearman", cells_extra = NULL, pval = 0.05, high_corr_groups = 0.8, return = T, verbose = T){
 
   set.seed(123)
 
@@ -104,12 +104,12 @@ CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL
   if(verbose){
     cat("\nConstructing TF network............................................................\n")
   }
-  network = compute.WTCNA(tfs, network.type = "signed", clustering.method = "ward.D2", minMod, corr_mod, cor_type = "p", return = return)
+  network = compute.WTCNA(TFs.matrix = tfs, batch = batch, network.type = "signed", clustering.method = "ward.D2", minMod, corr_mod, cor_type = "p", return = return)
   # 1.2. Modules characterization
   # cat("\nPerforming TF module characterization............................................................\n")
   # hub_tfs = identify_hub_TFs(t(tfs), network, MM_thresh = 0.8, degree_thresh = 0.9)
   # compute.modules.enrichment(counts.norm, hub_tfs)
-  # 2. Pathways activity inference
+  # 2. Pathways activity inference: only needed for dictionary
   if(verbose){
     cat("\nCalculating pathway activities............................................................\n")
   }
@@ -118,23 +118,30 @@ CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL
   if(verbose){
     cat("\nPerforming deconvolution analysis............................................................\n")
   }
-  dt = multideconv::compute.deconvolution.analysis(deconv, corr = corr, seed = 123, cells_extra = cells_extra, file_name = file_name, return = return, verbose = FALSE)
-  #dt = multideconv::deconvolution_dictionary(dt, pathways) ## Apply dictionary of deconvolution (To be added in compute.deconvolution.analysis() soon)
+  dt = multideconv::compute.deconvolution.analysis(deconv, corr = corr, corr_type = corr_type, seed = 123, batch = batch_id, cells_extra = cells_extra, file_name = file_name, return = return, verbose = FALSE)
+  dt = multideconv::deconvolution_dictionary(dt, pathways, batch_id = batch_id) ## Apply dictionary of deconvolution (To be added in compute.deconvolution.analysis() soon)
 
   # 4. Cell groups construction and scores
   if(verbose){
     cat("\nCell groups identification............................................................\n")
   }
-  cell.groups = construct_cell_groups(counts.norm, tfs, deconv, network, dt, coldata, pval = pval, high_corr_groups = high_corr_groups,
+  cell.groups = construct_cell_groups(counts.norm, tfs, deconv, network, dt, coldata, batch = batch_id, pval = pval, high_corr_groups = high_corr_groups,
                                       clustering.method = "ward.D2", trait = trait, positive = trait.positive,
                                       TF.collection, min_targets_size, tfs.pruned, universe)
+
+
+  # 5. Cell groups latent spaces
+  if(verbose){
+    cat("\nLatent spaces calculation............................................................\n")
+  }
+  latent_spaces <- compute.latent_factors(cell.groups[[1]], batch = batch_id, seed = 123)
 
   if(verbose){
     cat("\nEverything done! Results are saved in Results/ folder............................................................\n")
   }
 
   res = list("Deconvolution" = deconv, "TFs_matrix" = tfs, "TF_network" = network, "Pathways_scores" = pathways,
-             "Processed_deconvolution" = dt, "Cell_groups" = cell.groups)
+             "Processed_deconvolution" = dt, "Cell_groups" = cell.groups, "Latent_spaces" = latent_spaces)
 
   return(res)
 
@@ -184,7 +191,7 @@ CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL
 #'   return = TRUE
 #' )
 #' }
-cell.groups.computation = function(deconvolution, cell.dendrograms, tfs.module.network, return = T){
+cell.groups.computation = function(deconvolution, cell.dendrograms, tfs.module.network, batch = NULL, return = T){
 
   #cuts = c(-Inf, 0.01, 0.02, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4) #Hard coded - Because heights are based on distance we keep feature close together meaning (distance from 0.05 to max 0.3)
   cuts = c(-Inf, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.5) #Hard coded - Because heights are based on distance we keep feature close together meaning (distance from 0.05 to max 0.3)
@@ -205,7 +212,7 @@ cell.groups.computation = function(deconvolution, cell.dendrograms, tfs.module.n
         ###################################################Compute score for each cell group
         pca_group = deconvolution[,colnames(deconvolution) %in% cells, drop = F]
         color = names(cell.dendrograms)[k]
-        score = compute_composite_score(pca_group, color, tfs.module.network, discard = T)
+        score = compute_composite_score(pca_group, color, tfs.module.network, discard = T, batch = batch)
         x[[j]] = score[[1]]
         z[[j]] = score[[2]]
       }
@@ -220,8 +227,8 @@ cell.groups.computation = function(deconvolution, cell.dendrograms, tfs.module.n
 
       ###################################################Remove groups with one single feature (deprecated)
       if(length(x) != 0){
-        #groups_cut[[contador]] = remove_single_groups(x, y, z)
-        groups_cut[[contador]] = list(x, y, z)
+        groups_cut[[contador]] = remove_single_groups(x, y, z)
+        #groups_cut[[contador]] = list(x, y, z)
         contador = contador + 1
       }
 
@@ -312,7 +319,7 @@ cell.groups.computation = function(deconvolution, cell.dendrograms, tfs.module.n
 #'     tfs.module.network = network
 #' )
 #' }
-compute_cell_groups_signatures = function(deconv_res, cell_groups, features, deconvolution_test, tfs.module.network){
+compute_cell_groups_signatures = function(deconv_res, cell_groups, features, deconvolution_test, tfs.module.network, batch = NULL){
 
 
   ################################################################################Simulate cell subgroups
@@ -322,12 +329,12 @@ compute_cell_groups_signatures = function(deconv_res, cell_groups, features, dec
 
   ## Extract the deconv feature without the cluster type
   features_with_clusters <- colnames(deconv_res[["Deconvolution matrix"]])
-  has_clusters <- grepl("_Cluster_\\d+$", features_with_clusters)
+  has_clusters <- grepl("_S\\d+$", features_with_clusters)
 
   if(any(has_clusters)){
     # Extract the base name and cluster suffix from the original names
-    base_names <- gsub("_Cluster_\\d+$", "", features_with_clusters)
-    cluster_suffixes <- sub(".*(_Cluster_\\d+$)", "\\1", features_with_clusters)
+    base_names <- gsub("_S\\d+$", "", features_with_clusters)
+    cluster_suffixes <- sub(".*(_S\\d+$)", "\\1", features_with_clusters)
 
     # Create df to map the features with their corresponding clusters
     map <- data.frame(base = base_names, suffix = cluster_suffixes, stringsAsFactors = FALSE)
@@ -375,7 +382,7 @@ compute_cell_groups_signatures = function(deconv_res, cell_groups, features, dec
     color = stringr::str_split(name_cell_group, "_")[[1]][2]
     loadings_cells = cell_groups[[2]][[idx[i]]]
 
-    score = compute_composite_score(pca_cells, color, tfs.module.network, discard = T) ###Loadings are not been used from positive/negative analysis, only the cell groups. Loadings are re-calculated
+    score = compute_composite_score(pca_cells, color, tfs.module.network, discard = T, batch = batch) ###Loadings are not been used from positive/negative analysis, only the cell groups. Loadings are re-calculated
     x = score[[1]]
 
     if(nrow(data.frame(x)) > 1){ # nrow(x) > 1 means this is a vector and no NA
@@ -684,7 +691,7 @@ compute.modules.enrichment <- function(RNA.tpm, hub_tfs){
 #'                                     pval = 0.01)
 #'
 #' @export
-compute.modules.relationship <- function(matA, matB, file_name, width = 8, height = 8, par_mar = NULL, pval=0.05, padj = F, cor_type = "p", return = F, vertical=F, plot = T){
+compute.modules.relationship <- function(matA, matB, file_name, batch = NULL, width = 8, height = 8, par_mar = NULL, pval=0.05, padj = F, cor_type = "p", return = F, vertical = F, plot = T){
 
   matA = data.frame(matA)
   matB = data.frame(matB)
@@ -694,12 +701,34 @@ compute.modules.relationship <- function(matA, matB, file_name, width = 8, heigh
     stop("No equal names, verify the input objects")
   }
 
+  # ---------- PARTIAL CORRELATION IF BATCH PROVIDED ----------
+  if(!is.null(batch)){
+    if(length(batch) != nrow(matA)) stop("Length of batch must match number of samples")
 
-  # moduleTraitCor = t(sig_cor_matrix)
-  # moduleTraitPvalue = p_values
+    # Convert batch to numeric if it is factor or character
+    if(is.factor(batch) || is.character(batch)){
+      batch <- as.numeric(as.factor(batch))
+    }
 
-  moduleTraitCor = WGCNA::cor(matA, matB, method = cor_type)
-  moduleTraitPvalue = WGCNA::corPvalueStudent(moduleTraitCor, nrow(matA))
+    moduleTraitCor <- matrix(NA, nrow = ncol(matA), ncol = ncol(matB))
+    moduleTraitPvalue <- matrix(NA, nrow = ncol(matA), ncol = ncol(matB))
+    rownames(moduleTraitCor) <- colnames(matA)
+    colnames(moduleTraitCor) <- colnames(matB)
+    rownames(moduleTraitPvalue) <- colnames(matA)
+    colnames(moduleTraitPvalue) <- colnames(matB)
+
+    for(i in 1:ncol(matA)){
+      for(j in 1:ncol(matB)){
+        pc <- ppcor::pcor.test(matA[,i], matB[,j], batch)
+        moduleTraitCor[i,j] <- pc$estimate
+        moduleTraitPvalue[i,j] <- pc$p.value
+      }
+    }
+  } else {
+    # ---------- STANDARD CORRELATION ----------
+    moduleTraitCor = WGCNA::cor(matA, matB, method = cor_type)
+    moduleTraitPvalue = WGCNA::corPvalueStudent(moduleTraitCor, nrow(matA))
+  }
 
   # rev = which(colSums(moduleTraitPvalue > pval)==nrow(moduleTraitPvalue)) #check if there are features no significant with any module
   #
@@ -1209,114 +1238,195 @@ compute.TFs.activity <- function(RNA.counts, TF.collection = "CollecTRI", min_ta
 #'
 #' data("tfs.tuto")
 #' network <- compute.WTCNA(tfs, corr_mod = 0.9, clustering.method = "ward.D2", return = FALSE)
-compute.WTCNA <- function(TFs.matrix, network.type = "signed", clustering.method = "ward.D2", minMod = 15, corr_mod = 0.9, cor_type = "p", verbose = F, softPower = NULL, return = T){
+compute.WTCNA <- function(TFs.matrix, batch = FALSE, network.type = "signed", clustering.method = "ward.D2",
+                          minMod = 15, corr_mod = 0.9, cor_type = "p", verbose = F,
+                          softPower = NULL, return = T) {
 
   if(verbose){
     cat("Creating weighted TF-coactivity network......................................................................\n\n")
   }
 
-  #####Choose parameter for scale-free network topology
-  powers = c(c(1:10), seq(from = 12, to=20, by=1))
-  sink(tempfile())
-  invisible(sft <- WGCNA::pickSoftThreshold(TFs.matrix, powerVector = powers, verbose = 0, networkType = network.type))
-  sink()
-
-  if(return){
-    pdf("Results/Soft_Threshold")
-    plot(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2],
-         xlab="Soft Threshold (power)",ylab="Scale Free Topology Model Fit,signed R^2",type="n",
-         main = paste("Scale independence"))
-    graphics::text(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2], labels=powers,cex=0.9,col="red");
-    graphics::abline(h=0.90,col="red")
-    dev.off()
-  }
-
-  # Automatic or user-defined soft-threshold selection
-  if (is.null(softPower)) {
-    target = 0.9 # Target SFT.R.sq value
-    diff = abs(-sign(sft$fitIndices[, 3]) * sft$fitIndices[, 2] - target) #Calculate absolute difference
-    min_index = which.min(diff) #Identify the index with the minimum difference
-    softPower = powers[min_index]
-
-    if (verbose) {
-      cat("Automatically choosing", softPower, "as soft-threshold......................................................................\n\n")
+  if(batch){
+    if(!is.list(TFs.matrix)){
+      stop("If batch = TRUE, TFs.matrix must be a list of matrices, one per cohort")
     }
+    nCohorts <- length(TFs.matrix)
+    if(verbose) cat("Running consensus WGCNA across", nCohorts, "cohorts...\n")
+
+    # Step 1: pick soft-threshold per cohort if not provided
+    if(is.null(softPower)){
+      powers = c(1:10, 12:20)
+      softPower <- numeric(nCohorts)
+      for(i in 1:nCohorts){
+        if(verbose) cat("Picking soft threshold for cohort", i, "...\n")
+        sft <- WGCNA::pickSoftThreshold(TFs.matrix[[i]], powerVector = powers, verbose = 0)
+        target = 0.9
+        diff = abs(-sign(sft$fitIndices[,3]) * sft$fitIndices[,2] - target)
+        softPower[i] <- powers[which.min(diff)]
+        if(verbose) cat("Cohort", i, "softPower =", softPower[i], "\n")
+      }
+    } else {
+      if(length(softPower) != nCohorts){
+        stop("softPower must be a vector with one value per cohort")
+      }
+    }
+
+    # Step 2: create multiExpr list
+    multiExpr <- lapply(TFs.matrix, function(x) list(data = x))
+
+    # Step 3: run blockwiseConsensusModules
+    consensusModules <- WGCNA::blockwiseConsensusModules(
+      multiExpr,
+      power = softPower,                  # vector of powers per cohort
+      networkType = network.type,
+      minModuleSize = minMod,
+      deepSplit = 2,
+      pamRespectsDendro = FALSE,
+      mergeCutHeight = 0.25,
+      corType = ifelse(cor_type == "p", "pearson", "spearman"),
+      verbose = ifelse(verbose, 3, 0)
+    )
+
+    dynamicColors <- consensusModules$colors
+
+    # Step 4: Extract module eigengenes per cohort and scale within cohort
+    MEs_list <- consensusModules$multiMEs
+    scaled_MEs_list <- lapply(MEs_list, function(x) {
+      ME <- x$data              # extract the data.frame
+      ME_scaled <- scale(ME)    # scale columns
+      colnames(ME_scaled) <- colnames(ME)
+      return(ME_scaled)
+    })
+
+    # Step 5: concatenate scaled MEs across cohorts
+    combined_MEs <- do.call(rbind, scaled_MEs_list)
+    colnames(combined_MEs) <- gsub("ME", "", colnames(combined_MEs))
+
+    # Step 6: Map TFs to modules (same as before)
+    modtfs <- list()
+    modules <- unique(dynamicColors)
+    tfs <- colnames(TFs.matrix[[1]])
+    for(i in seq_along(modules)){
+      modtfs[[i]] <- tfs[dynamicColors == modules[i]]
+    }
+    names(modtfs) <- modules
+
+    output <- list(
+      "TFs module matrix" = combined_MEs,
+      "TFs colors" = dynamicColors,
+      "TFs per module" = modtfs,
+      "TFs_matrix" = TFs.matrix
+    )
+
+
   } else {
-    if (verbose) {
-      cat("Using user-defined soft-threshold =", softPower, "......................................................................\n\n")
+
+
+    #####Choose parameter for scale-free network topology
+    powers = c(c(1:10), seq(from = 12, to=20, by=1))
+    sink(tempfile())
+    invisible(sft <- WGCNA::pickSoftThreshold(TFs.matrix, powerVector = powers, verbose = 0, networkType = network.type))
+    sink()
+
+    if(return){
+      pdf("Results/Soft_Threshold")
+      plot(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2],
+           xlab="Soft Threshold (power)",ylab="Scale Free Topology Model Fit,signed R^2",type="n",
+           main = paste("Scale independence"))
+      graphics::text(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2], labels=powers,cex=0.9,col="red");
+      graphics::abline(h=0.90,col="red")
+      dev.off()
     }
+
+    # Automatic or user-defined soft-threshold selection
+    if (is.null(softPower)) {
+      target = 0.9 # Target SFT.R.sq value
+      diff = abs(-sign(sft$fitIndices[, 3]) * sft$fitIndices[, 2] - target) #Calculate absolute difference
+      min_index = which.min(diff) #Identify the index with the minimum difference
+      softPower = powers[min_index]
+
+      if (verbose) {
+        cat("Automatically choosing", softPower, "as soft-threshold......................................................................\n\n")
+      }
+    } else {
+      if (verbose) {
+        cat("Using user-defined soft-threshold =", softPower, "......................................................................\n\n")
+      }
+    }
+
+    if(verbose){
+      #####Co-expression matrix using nodes adjacency and topological overlapping nodes
+      cat("Calculating nodes adjacency and topological overlapping nodes.................................................\n\n")
+    }
+
+    adjacency = WGCNA::adjacency(TFs.matrix, power =softPower, type=network.type, corFnc = "cor", corOptions = list(use = cor_type))
+    TOM = WGCNA::TOMsimilarity(adjacency, TOMType = network.type, verbose = 0)
+    dissTOM = 1-TOM
+
+    #####Unsupervised hierarchical clustering using dissimilarity matrix
+    geneTree = stats::hclust(dist(dissTOM), method = clustering.method)
+    dynamicMods = dynamicTreeCut::cutreeDynamic(dendro = geneTree, distM = dissTOM,
+                                                deepSplit = 2, pamRespectsDendro = FALSE,
+                                                minClusterSize = minMod, verbose = 0);
+    dynamicColors = WGCNA::labels2colors(dynamicMods)
+
+    #####Remove variables and clean garbage
+    rm(adjacency, TOM, dissTOM)
+    gc()
+
+    if(return){
+      pdf("Results/Gene_dendrogram_and_module_colors")
+      WGCNA::plotDendroAndColors(geneTree, dynamicColors, "Dynamic Tree Cut",
+                                 dendroLabels = FALSE, hang = 0.03,
+                                 addGuide = TRUE, guideHang = 0.05,
+                                 main = "Gene dendrogram and module colors")
+      dev.off()
+    }
+
+    #####Calculate eigenvectors from modules
+    if(verbose){
+      cat("Calculating eigenvectors from modules.................................................\n\n")
+    }
+
+    MEList = WGCNA::moduleEigengenes(TFs.matrix, colors = dynamicColors, scale = T)
+    MEs = MEList$eigengenes
+    MEs = WGCNA::orderMEs(MEs)
+
+    if(verbose){
+      print(paste0("Merging modules significantly correlated with ", corr_mod, "........"))
+    }
+
+    merge = mergeModules(MEs, dynamicColors, corr_mod)
+    MEs = merge[[1]]
+    dynamicColors = merge[[2]]
+    modtfs = list()
+    for(i in 1:ncol(MEs)){
+      tfs = colnames(TFs.matrix)
+      modules = c(substring(names(MEs), 3))
+      inModule = is.finite(match(dynamicColors,modules[i]))
+      modtfs[[i]] = tfs[inModule]
+    }
+    names(modtfs) = modules
+
+    if(return){
+      pdf("Results/Gene_dendrogram_and_module_colors_after_merging")
+      WGCNA::plotDendroAndColors(geneTree, dynamicColors, "Dynamic Tree Cut",
+                                 dendroLabels = FALSE, hang = 0.03,
+                                 addGuide = TRUE, guideHang = 0.05,
+                                 main = "Gene dendrogram and module colors")
+      dev.off()
+    }
+
+    TFspropVar = WGCNA::propVarExplained(TFs.matrix, dynamicColors, MEs, corFnc = "cor", corOptions = "use = 'p'")
+
+    colnames(MEs) <- gsub("ME", "", colnames(MEs))
+
+    output = list(MEs, dynamicColors, modtfs, TFspropVar, TFs.matrix)
+    names(output) = c("TFs module matrix", "TFs colors", "TFs per module", "Proportion of variance", "TFs_matrix")
+
   }
 
-  if(verbose){
-    #####Co-expression matrix using nodes adjacency and topological overlapping nodes
-    cat("Calculating nodes adjacency and topological overlapping nodes.................................................\n\n")
-  }
-
-  adjacency = WGCNA::adjacency(TFs.matrix, power =softPower, type=network.type, corFnc = "cor", corOptions = list(use = cor_type))
-  TOM = WGCNA::TOMsimilarity(adjacency, TOMType = network.type, verbose = 0)
-  dissTOM = 1-TOM
-
-  #####Unsupervised hierarchical clustering using dissimilarity matrix
-  geneTree = stats::hclust(dist(dissTOM), method = clustering.method)
-  dynamicMods = dynamicTreeCut::cutreeDynamic(dendro = geneTree, distM = dissTOM,
-                                              deepSplit = 2, pamRespectsDendro = FALSE,
-                                              minClusterSize = minMod, verbose = 0);
-  dynamicColors = WGCNA::labels2colors(dynamicMods)
-
-  #####Remove variables and clean garbage
-  rm(adjacency, TOM, dissTOM)
-  gc()
-
-  if(return){
-    pdf("Results/Gene_dendrogram_and_module_colors")
-    WGCNA::plotDendroAndColors(geneTree, dynamicColors, "Dynamic Tree Cut",
-                        dendroLabels = FALSE, hang = 0.03,
-                        addGuide = TRUE, guideHang = 0.05,
-                        main = "Gene dendrogram and module colors")
-    dev.off()
-  }
-
-  #####Calculate eigenvectors from modules
-  if(verbose){
-    cat("Calculating eigenvectors from modules.................................................\n\n")
-  }
-
-  MEList = WGCNA::moduleEigengenes(TFs.matrix, colors = dynamicColors, scale = F) #Data already scale
-  MEs = MEList$eigengenes
-  MEs = WGCNA::orderMEs(MEs)
-
-  if(verbose){
-    print(paste0("Merging modules significantly correlated with ", corr_mod, "........"))
-  }
-
-  merge = mergeModules(MEs, dynamicColors, corr_mod)
-  MEs = merge[[1]]
-  dynamicColors = merge[[2]]
-  modtfs = list()
-  for(i in 1:ncol(MEs)){
-    tfs = colnames(TFs.matrix)
-    modules = c(substring(names(MEs), 3))
-    inModule = is.finite(match(dynamicColors,modules[i]))
-    modtfs[[i]] = tfs[inModule]
-  }
-  names(modtfs) = modules
-
-  if(return){
-    pdf("Results/Gene_dendrogram_and_module_colors_after_merging")
-    WGCNA::plotDendroAndColors(geneTree, dynamicColors, "Dynamic Tree Cut",
-                        dendroLabels = FALSE, hang = 0.03,
-                        addGuide = TRUE, guideHang = 0.05,
-                        main = "Gene dendrogram and module colors")
-    dev.off()
-  }
-
-  TFspropVar = WGCNA::propVarExplained(TFs.matrix, dynamicColors, MEs, corFnc = "cor", corOptions = "use = 'p'")
-
-  colnames(MEs) <- gsub("ME", "", colnames(MEs))
-
-  output = list(MEs, dynamicColors, modtfs, TFspropVar, TFs.matrix)
-  names(output) = c("TFs module matrix", "TFs colors", "TFs per module", "Proportion of variance", "TFs_matrix")
-
+  ## Retrieve TFs modules in .csv
   contador = 1
   tfs_modules = data.frame(matrix(nrow = length(modtfs), ncol = 2))
   colnames(tfs_modules) = c("TFs module", "Composition")
@@ -1330,9 +1440,7 @@ compute.WTCNA <- function(TFs.matrix, network.type = "signed", clustering.method
     utils::write.csv(tfs_modules, 'Results/TFs_modules.csv', row.names = F)
   }
 
-
   return(output)
-
 }
 
 #' Identify hub TFs
@@ -1539,6 +1647,18 @@ identify.cell.groups = function(features, clustering.method = "ward.D2", width =
 
   names(lis.dendrogram) = names(features_vec)
 
+  ############################Add dendrogram "all" considering all TFs modules
+  d <- stats::dist(t(TFmoduleTraitcor))
+  dendrogram_all <- stats::hclust(d, method = clustering.method)
+  if(return){
+    pdf("Results/Dendogram_cell_types_all", width = width, height = height)
+    par(mar = c(5, 2, 4, 35)) #bottom, left, top, right
+    plot(as.dendrogram(dendrogram_all), horiz= T)
+    dev.off()
+  }
+  lis.dendrogram[[length(lis.dendrogram)+1]] = dendrogram_all
+  names(lis.dendrogram)[[length(lis.dendrogram)]] = "all"
+
   return(lis.dendrogram)
 
 }
@@ -1547,7 +1667,6 @@ identify.cell.groups = function(features, clustering.method = "ward.D2", width =
 #'
 #' Builds a binary presence matrix indicating which original cell types are present in higher-level cell groups.
 #'
-#' @param deconvolution A matrix or data frame of original deconvolution results (columns = cell types).
 #' @param deconvolution.subgroupped A list containing "Deconvolution subgroups composition" per model.
 #' @param cell.groups A list containing cell group definitions, where the second element holds the groupings.
 #' @param cells_extra Optional vector of additional cell identifiers to consider during extraction.
@@ -1555,10 +1674,10 @@ identify.cell.groups = function(features, clustering.method = "ward.D2", width =
 #' @return A binary matrix (data.frame) where rows are cell groups and columns are cell types (1 = present, 0 = absent).
 #' @export
 #'
-compute.composition.matrix = function(deconvolution, deconvolution.subgroupped, cell.groups, cells_extra = NULL){
+compute.composition.matrix = function(deconvolution.subgroupped, cell.groups, cells_extra = NULL){
 
   # Initialize composition matrix
-  cells_types = extract_cells(colnames(deconvolution), cells_extra = cells_extra)
+  cells_types = extract_cells(colnames(deconvolution.subgroupped[["Deconvolution matrix"]]), cells_extra = cells_extra)
   presence_matrix <- data.frame(matrix(data = 0, nrow = length(cell.groups[[2]]), ncol = length(cells_types)))
   colnames(presence_matrix) <- cells_types
 
@@ -1631,7 +1750,7 @@ compute.composition.matrix = function(deconvolution, deconvolution.subgroupped, 
 #'   \item{loadings}{A list of numeric vectors indicating the loadings (feature contributions) for each group.}
 #' }
 #' @export
-construct_cell_groups = function(counts, tfs, deconv, network, dt, clinical, pval = 0.05, high_corr_groups = 0.8, clustering.method = "ward.D2", trait = NULL, positive = NULL, TF.collection = "CollecTRI", min_targets_size = 10, tfs.pruned = FALSE, universe = NULL){
+construct_cell_groups = function(counts, tfs, deconv, network, dt, clinical, batch = NULL, pval = 0.05, high_corr_groups = 0.8, clustering.method = "ward.D2", trait = NULL, positive = NULL, TF.collection = "CollecTRI", min_targets_size = 10, tfs.pruned = FALSE, universe = NULL){
 
   if(is.null(trait) == F){
     ##### Split between positive class and negative class
@@ -1649,7 +1768,7 @@ construct_cell_groups = function(counts, tfs, deconv, network, dt, clinical, pva
     network.positive[[1]] = create_tfs_modules(tfs.positive, network)
     network.positive[[5]] = tfs.positive
 
-    corr_modules_positive = compute.modules.relationship(network.positive[[1]], dt.positive[[1]], return = T, plot = F, pval = pval)
+    corr_modules_positive = compute.modules.relationship(network.positive[[1]], dt.positive[[1]], batch = batch, return = T, plot = F, pval = pval)
 
     ###Negative class
     traitData_negative = clinical %>%
@@ -1664,15 +1783,15 @@ construct_cell_groups = function(counts, tfs, deconv, network, dt, clinical, pva
     network.negative[[1]] = create_tfs_modules(tfs.negative, network)
     network.negative[[5]] = tfs.negative
 
-    corr_modules_negative = compute.modules.relationship(network.negative[[1]], dt.negative[[1]], return = T, plot = F, pval = pval)
+    corr_modules_negative = compute.modules.relationship(network.negative[[1]], dt.negative[[1]], batch = batch, return = T, plot = F, pval = pval)
 
     #####################################################Cell groups identification
 
     cell_dendrograms = identify.cell.groups(corr_modules_positive, clustering.method = clustering.method, height = 20, return = F)
-    cell.groups.positive = cell.groups.computation(dt.positive[[1]], cell_dendrograms, network.positive, return = F)
+    cell.groups.positive = cell.groups.computation(dt.positive[[1]], cell_dendrograms, network.positive, return = F, batch = batch)
 
     cell_dendrograms = identify.cell.groups(corr_modules_negative, clustering.method = clustering.method, height = 20, return = F)
-    cell.groups.negative = cell.groups.computation(dt.negative[[1]], cell_dendrograms, network.negative, return = F)
+    cell.groups.negative = cell.groups.computation(dt.negative[[1]], cell_dendrograms, network.negative, return = F, batch = batch)
 
     ### Join cell groups composition from both classes
     names(cell.groups.positive[[2]]) = paste0(names(cell.groups.positive[[2]]), "_positive.class")
@@ -1695,19 +1814,25 @@ construct_cell_groups = function(counts, tfs, deconv, network, dt, clinical, pva
     cell.groups = list(cell.groups.train, cell.groups.composition, cell.groups.loadings)
 
   }else{
-    corr_modules = compute.modules.relationship(network[[1]], dt[[1]], return = T, plot = F, pval = pval)
+    corr_modules = compute.modules.relationship(network[[1]], dt[[1]], batch = batch, return = T, plot = F, pval = pval)
     cell_dendrograms = identify.cell.groups(corr_modules, clustering.method = clustering.method, height = 20, return = F)
-    cell.groups = cell.groups.computation(dt[[1]], cell_dendrograms, network, return = F)
+    cell.groups = cell.groups.computation(dt[[1]], cell_dendrograms, network, batch = batch, return = F)
   }
 
   ### Combined highly corr cell groups
-  cell.groups = remove.cell.groups.corr(cell.groups, threshold = high_corr_groups)
+  #cell.groups = remove.cell.groups.corr(cell.groups, threshold = high_corr_groups)
 
   ### Remove low variance cell groups
-  zero = caret::nearZeroVar(cell.groups[[1]], saveMetrics = TRUE)
-  cell.groups[[1]] = cell.groups[[1]][, !zero$nzv]
-  cell.groups[[2]] = cell.groups[[2]][!zero$nzv]
-  cell.groups[[3]] = cell.groups[[3]][!zero$nzv]
+  # zero = caret::nearZeroVar(cell.groups[[1]], saveMetrics = TRUE)
+  # cell.groups[[1]] = cell.groups[[1]][, !zero$nzv]
+  # cell.groups[[2]] = cell.groups[[2]][!zero$nzv]
+  # cell.groups[[3]] = cell.groups[[3]][!zero$nzv]
+
+  colnames(cell.groups[[1]]) = paste0("CG", seq_along(cell.groups[[2]]))
+  names(cell.groups[[2]]) = paste0("CG", seq_along(cell.groups[[2]]))
+  names(cell.groups[[3]]) = paste0("CG", seq_along(cell.groups[[2]]))
+
+  names(cell.groups) = c("Cell_groups", "Composition", "Weights")
 
   return(cell.groups)
 }
@@ -1750,12 +1875,12 @@ compute.test.set = function(deconv_res, cell_groups, features, deconvolution_tes
 
   ## Extract the deconv feature without the cluster type
   features_with_clusters <- colnames(deconv_res[["Deconvolution matrix"]])
-  has_clusters <- grepl("_Cluster_\\d+$", features_with_clusters)
+  has_clusters <- grepl("_S\\d+$", features_with_clusters)
 
   if(any(has_clusters)){
     # Extract the base name and cluster suffix from the original names
-    base_names <- gsub("_Cluster_\\d+$", "", features_with_clusters)
-    cluster_suffixes <- sub(".*(_Cluster_\\d+$)", "\\1", features_with_clusters)
+    base_names <- gsub("_S\\d+$", "", features_with_clusters)
+    cluster_suffixes <- sub(".*(_S\\d+$)", "\\1", features_with_clusters)
 
     # Create df to map the features with their corresponding clusters
     map <- data.frame(base = base_names, suffix = cluster_suffixes, stringsAsFactors = FALSE)
@@ -2091,23 +2216,31 @@ extract_cells = function(groups, cells_extra = NULL){
   if(is.null(cells_extra) == F){
     names_cells = c(names_cells, cells_extra)
   }
-  # Create a regex pattern to match the full cell type and cluster
-  #regex_pattern <- paste0("(", paste(names_cells, collapse = "|"), ")_Cluster[0-9]+")
-  regex_pattern <- paste(names_cells, collapse = "|")
 
-  # Extract matches
-  extracted_names <- sapply(groups, function(x) {
-    match <- regexpr(regex_pattern, x)
-    if (match != -1) {
-      return(regmatches(x, match))
+  # Create regex to capture base cell type + cluster
+  # Matches known cell type, optionally followed by .Iteration.x or .Subgroup.x (dot or underscore), then _Snumber
+  regex_pattern <- paste0(
+    "(",
+    paste(names_cells, collapse = "|"),
+    ")",
+    "((?:[._](?:Subgroup|Iteration)\\.[0-9]+)*)",
+    "(?:_S[0-9]+)?"
+  )
+
+  normalized_names <- sapply(groups, function(x) {
+    m <- regexpr(regex_pattern, x, perl = TRUE)
+    if (m != -1) {
+      matched <- regmatches(x, m)
+      # remove Iteration / Subgroup artifacts
+      gsub("([._](Subgroup|Iteration)\\.[0-9]+)+", "", matched)
     } else {
-      return(NA)
+      NA
     }
   })
 
-  extracted_names <- unname(extracted_names)
-  extracted_names <- unique(na.omit(extracted_names))
-  return(extracted_names)
+  normalized_names <- unique(na.omit(normalized_names))
+
+  return(normalized_names)
 }
 
 #' Extract colors
@@ -2302,7 +2435,6 @@ remove_equal = function(cell.values, cell.composition, cell.loadings){
 #'
 remove_single_groups = function(cell.values, cell.composition, cell.loadings){
 
-  cat("Removing cell groups composed of one single feature..............................................................................\n")
   vec = c()
   for (i in 1:length(cell.composition)) {
     if(length(cell.composition[[i]])==1){
@@ -2617,18 +2749,35 @@ module_enrich = function(tpm.counts, module_color, hub_genes, tfs_universe){
 #'
 #' @export
 #'
-compute_composite_score = function(cell_group, module_group, tfs.module.network, discard = T){
+compute_composite_score = function(cell_group, module_group, tfs.module.network, batch = NULL, discard = T){
 
   modules = tfs.module.network[["TFs module matrix"]]
   tfs_all = tfs.module.network[["TFs_matrix"]]
+
+  if(!is.null(batch) & is.list(tfs_all)){
+    tfs_all <- do.call(rbind, tfs_all)
+  }
 
   ### Only in case there are groups combined
   if(length(grep(".group", module_group))==1){
     module_group = gsub(".group", "", module_group)
   }
 
-  tf_per_module_matrix = tfs_all[, colnames(tfs_all) %in% tfs.module.network[["TFs per module"]][[module_group]]]
-  tf_module_matrix = modules[,grep(module_group, colnames(modules))]
+  if(module_group != "all"){
+    tf_per_module_matrix = tfs_all[, colnames(tfs_all) %in% tfs.module.network[["TFs per module"]][[module_group]]]
+    tf_module_matrix = modules[,grep(module_group, colnames(modules)), drop = F]
+  }else{
+    tf_per_module_matrix = tfs_all
+    tf_module_matrix = modules
+  }
+
+  # ---- Regress out batch if provided ----
+  if(!is.null(batch)){
+    if(!is.numeric(batch)) batch <- as.numeric(as.factor(batch))  # Convert to numeric if needed
+    cell_group <- apply(cell_group, 2, function(x) residuals(lm(x ~ batch)))
+    tf_module_matrix <- apply(tf_module_matrix, 2, function(x) residuals(lm(x ~ batch)))
+    tf_per_module_matrix <- apply(tf_per_module_matrix, 2, function(x) residuals(lm(x ~ batch)))
+  }
 
   ### We take the TF module only to verify the overall sign of association, following analysis is done with full TF matrix per color
   signs = sign(stats::cor(cell_group, tf_module_matrix))
@@ -2896,8 +3045,8 @@ compute.test.score = function(cell_group, loadings){
 #' @export
 #'
 prepare_CellTFusion_folds <- function(data, folds = NULL, deconv = NULL, universe = NULL, paths = NULL, normalized = FALSE,
-                                      coldata, trait = NULL, trait.positive = NULL, time_var = NULL, event_var = NULL,
-                                      ncores = NULL, min_targets_size, minMod, corr_mod, corr, high_corr_groups, bestune = NULL){
+                                      coldata, trait = NULL, trait.positive = NULL, time_var = NULL, event_var = NULL, corr_type = "spearman",
+                                      ncores = NULL, batch = F, batch_id = NULL, min_targets_size, minMod, corr_mod, corr, high_corr_groups, bestune = NULL){
 
     if(!is.null(bestune)){
       # Run CellTFusion on the full training set
@@ -2960,18 +3109,20 @@ prepare_CellTFusion_folds <- function(data, folds = NULL, deconv = NULL, univers
         trait = trait,
         trait.positive = trait.positive,
         universe = universe,
+        corr_type = corr_type,
         paths = paths,
         min_targets_size   = best_celltfusion_params$min_targets_size,
         minMod             = best_celltfusion_params$minMod,
         corr_mod           = best_celltfusion_params$corr_mod,
         corr               = best_celltfusion_params$corr,
         high_corr_groups   = best_celltfusion_params$high_corr_groups,
+        batch = F, batch_id = NULL,
         return = FALSE,
         verbose = FALSE
       )
 
       # Get cell group features
-      train_cell_data_final <- train_processed_final$Cell_groups[[1]] %>%
+      train_cell_data_final <- train_processed_final$Latent_spaces$Z %>%
         data.frame()
 
       if (is.list(obs_train)) {
@@ -3009,8 +3160,9 @@ prepare_CellTFusion_folds <- function(data, folds = NULL, deconv = NULL, univers
       doParallel::registerDoParallel(cl)
 
       # Parallelize over folds
-      processed_folds <- foreach::foreach(i = seq_along(folds), .packages = c("dplyr", "CellTFusion")) %dopar% {
+      processed_folds <- foreach::foreach(i = seq_along(folds), .packages = c("dplyr")) %dopar% {
 
+        source("~/Documents/CellTFusion/R/CellTFusion.R")
         cat("Starting fold", names(folds)[i], "\n")
 
         train_idx <- folds[[i]]
@@ -3039,24 +3191,26 @@ prepare_CellTFusion_folds <- function(data, folds = NULL, deconv = NULL, univers
           message("Running fold ", names(folds)[i], ", grid ", j, " / ", nrow(custom_grid))
 
           train_processed <- CellTFusion(
-            t(train_data),
+            raw.counts = t(train_data),
             deconv = train_deconv,
             normalized = normalized,
             coldata = train_coldata,
             trait = trait,
             trait.positive = trait.positive,
             universe = universe,
+            corr_type = corr_type,
             paths = paths,
             min_targets_size = custom_grid$min_targets_size[j],
             minMod = custom_grid$minMod[j],
             corr_mod = custom_grid$corr_mod[j],
             corr = custom_grid$corr[j],
             high_corr_groups = custom_grid$high_corr_groups[j],
+            batch = F, batch_id = NULL,
             return = FALSE,
             verbose = FALSE
           )
 
-          train_cell_data <- train_processed$Cell_groups[[1]] %>%
+          train_cell_data <- train_processed$Latent_spaces$Z %>%
             data.frame()
 
           if (is.list(obs_train)) {
@@ -3081,12 +3235,14 @@ prepare_CellTFusion_folds <- function(data, folds = NULL, deconv = NULL, univers
           }
 
           # Prepare test data
-          test_data <- compute.test.set(
+          cell_groups_projection <- compute.test.set(
             train_processed$Processed_deconvolution,
             train_processed$Cell_groups,
-            colnames(train_cell_data)[!colnames(train_cell_data) %in% c("target", "time", "event")],
+            names(train_processed$Cell_groups[[2]]),
             test_deconv
           )
+
+          test_data = project_factors(train_processed$Latent_spaces$W, t(cell_groups_projection))
 
           if (is.list(obs_test)) {
             test_data <- test_data %>%
@@ -3559,4 +3715,321 @@ cell.groups.stat.analysis <- function(cell.groups, coldata, trait,
   }
 
   return(result)
+}
+
+#' Full NMF pipeline for latent immune states (single cohort)
+#'
+#' @param X                 Numeric matrix of size (samples × cell_groups)
+#' @param K_range           Vector of K to try (default = 2:6)
+#' @param remove_low_var    Logical, whether to remove low-variance groups (default = TRUE)
+#' @param min_var           Minimum variance threshold for filtering (default = 1e-5)
+#' @param nrun              Number of NMF runs per K (default = 10)
+#' @param seed              Random seed (default = 123)
+#' @return List with:
+#'         $best_K = suggested number of latent factors
+#'         $W = sample × latent states matrix for training
+#'         $H = latent states × cell group contributions
+#'         $reconstruction_errors = reconstruction errors for each K
+#'         $consensus = list of consensus matrices for each K
+compute.latent_factors <- function(X, batch = NULL, seed = 123) {
+
+  set.seed(seed)
+
+  # 2. Normalize to [0,1] (safe for NMF)
+  X_scaled <- X
+  for(j in 1:ncol(X_scaled)){
+    x <- X_scaled[, j]
+    X_scaled[, j] <- (x - min(x)) / (max(x) - min(x) + 1e-6)
+  }
+
+  # MOFA expects a list of matrices per view
+  data_list <- list(
+    RNA = t(X_scaled)  # needs features x samples
+  )
+
+  # Create MOFA object
+  MOFAobject <- MOFA2::create_mofa(data_list)
+
+  # Include batch as covariate if provided
+  if(!is.null(batch)){
+    # Convert to numeric/factor as MOFA expects a data.frame with samples as rows
+    batch_df <- data.frame(
+      sample = rownames(X_scaled),
+      covariate = "batch",
+      value = as.numeric(as.factor(batch))
+    )
+    MOFAobject <- MOFA2::set_covariates(MOFAobject, covariates = batch_df)
+  }
+
+  # Set options
+  data_opts <- MOFA2::get_default_data_options(MOFAobject)
+  model_opts <- MOFA2::get_default_model_options(MOFAobject)
+  train_opts <- MOFA2::get_default_training_options(MOFAobject)
+  train_opts$maxiter <- 500  # reduce if large dataset
+
+  # Prepare and train
+  MOFAobject <- MOFA2::prepare_mofa(
+    MOFAobject,
+    data_options = data_opts,
+    model_options = model_opts,
+    training_options = train_opts
+  )
+
+  MOFAobject <- MOFA2::run_mofa(MOFAobject, use_basilisk = TRUE)
+
+  # Extract latent factors
+  Z <- MOFA2::get_factors(MOFAobject, factors = "all")  # samples x latent factors
+
+  # Extract feature weights
+  W <- MOFA2::get_weights(MOFAobject, views = "RNA")
+
+  # 5. Expand latent factors
+  expand_latent_features <- function(W, log_transform = TRUE){
+    samples <- nrow(W)
+    factors <- colnames(W)
+    if(is.null(factors)){
+      factors <- paste0("Factor_", 1:ncol(W))
+      colnames(W) <- factors
+    }
+
+    feature_list <- list()
+    feature_list[["Original"]] <- W
+    K <- ncol(W)
+
+    # Pairwise ratios
+    for(i in 1:(K-1)){
+      for(j in (i+1):K){
+        ratio <- W[, i] / (W[, j] + 1e-6)
+        feature_list[[paste0(factors[i], "_over_", factors[j])]] <- ratio
+      }
+    }
+
+    # Pairwise differences
+    for(i in 1:(K-1)){
+      for(j in (i+1):K){
+        diff <- W[, i] - W[, j]
+        feature_list[[paste0(factors[i], "_minus_", factors[j])]] <- diff
+      }
+    }
+
+    expanded_features <- do.call(cbind, feature_list)
+    return(expanded_features)
+  }
+
+  expanded_W <- expand_latent_features(Z[[1]], log_transform = T)
+
+  return(list(
+    Z = Z[[1]],
+    W = W[[1]],
+    expanded_W = expanded_W
+  ))
+}
+
+extract_contributing_features <- function(W, comp_matrix, feature_type = c("both", "positive", "negative"), width = 10, height = 8) {
+  require(ComplexHeatmap)
+  require(circlize)
+
+  # List to store top contributors for each factor
+  top_contributors <- list()
+
+  # Loop over all factors (columns in W)
+  for (factor_name in colnames(W)) {
+
+    # 1️⃣ Extract weights for the factor
+    w <- W[, factor_name]
+
+    # 2️⃣ Data-driven threshold (top X%)
+    thr <- quantile(abs(w), 0.9, na.rm = TRUE)
+    selected_features <- w[abs(w) >= thr]
+
+    # Optional sign filtering
+    selected_features <- switch(
+      feature_type,
+      positive = selected_features[selected_features > 0],
+      negative = selected_features[selected_features < 0],
+      both     = selected_features
+    )
+
+    # Skip if nothing passes threshold
+    if (length(selected_features) == 0) {
+      message("No features passed threshold for ", factor_name)
+      next
+    }
+
+    # Order by effect size
+    selected_features <- selected_features[
+      order(selected_features)
+    ]
+
+    # 3️⃣ Subset composition matrix
+    comp_sub <- comp_matrix[names(selected_features), , drop = FALSE]
+
+    # Remove features with all zeros
+    comp_sub <- comp_sub[, colSums(comp_sub) != 0, drop = FALSE]
+
+    top_contributors[[factor_name]] <- selected_features
+
+    # 4️⃣ Column annotation
+    column_ha <- HeatmapAnnotation(
+      Contribution = anno_barplot(
+        selected_features,
+        gp = gpar(fill = ifelse(selected_features > 0, "red", "blue"))
+      )
+    )
+
+    # 5️⃣ Heatmap
+    ht <- Heatmap(
+      t(comp_sub),
+      name = "Composition",
+      top_annotation = column_ha,
+      col = c("0" = "white", "1" = "darkgreen"),
+      rect_gp = gpar(col = "grey80", lwd = 0.5),
+      cluster_rows = TRUE,
+      cluster_columns = FALSE,
+      show_row_names = TRUE,
+      show_column_names = FALSE,
+      column_title = paste("Top contributors for", factor_name)
+    )
+
+    pdf(
+      paste0("Results/Heatmap_CG_composition_", factor_name, ".pdf"),
+      width = width,
+      height = height
+    )
+    draw(ht)
+    dev.off()
+  }
+
+
+  return(top_contributors)
+}
+
+
+plot_factor_celltype_networks <- function(
+    W, comp_matrix,
+    feature_type = c("both","positive","negative"),
+    enrich_thresh = 1.5,
+    min_groups = 2,
+    layout_type = c("circle","star")
+) {
+
+  require(igraph)
+  require(scales)
+
+  # Global background frequency of each cell type
+  background_freq <- colMeans(comp_matrix)
+
+  factor_celltype_weights <- list()
+
+  for (factor_name in colnames(W)) {
+
+    ## 1️⃣ Extract top features (cell groups)
+    w <- W[, factor_name]
+    # 2️⃣ Data-driven threshold (top X%)
+    thr <- quantile(abs(w), 0.9, na.rm = TRUE)
+    selected_features <- w[abs(w) >= thr]
+
+    # Optional sign filtering
+    top_features <- switch(
+      feature_type,
+      positive = selected_features[selected_features > 0],
+      negative = selected_features[selected_features < 0],
+      both     = selected_features
+    )
+
+    if (length(top_features) == 0) next
+
+    ## 2️⃣ Subset composition matrix
+    comp_sub <- comp_matrix[rownames(comp_matrix) %in% names(top_features), , drop = FALSE]
+    comp_sub <- comp_sub[rowSums(comp_sub) > 0, , drop = FALSE]
+
+    if (nrow(comp_sub) == 0) next
+
+    ## 3️⃣ Enrichment filtering (noise removal)
+    fg_freq <- colMeans(comp_sub)
+    enrichment <- fg_freq / background_freq
+    enrichment[!is.finite(enrichment)] <- NA
+
+    keep <- which(
+      enrichment >= enrich_thresh &
+        colSums(comp_sub) >= min_groups
+    )
+
+    if (length(keep) == 0) next
+
+    comp_filt <- comp_sub[, keep, drop = FALSE]
+
+    ## 4️⃣ Edge weights
+    edge_weights <- colSums(comp_filt)
+    edge_weights <- edge_weights[edge_weights > 0]
+
+    if (length(edge_weights) == 0) next
+
+    factor_celltype_weights[[factor_name]] <- edge_weights
+
+    ## 5️⃣ Build graph
+    edges <- cbind(
+      from = factor_name,
+      to   = names(edge_weights)
+    )
+
+    g <- graph_from_edgelist(edges, directed = FALSE)
+
+    # ---- DEFINE VERTEX TYPES (FIX) ----
+    V(g)$type <- ifelse(V(g)$name == factor_name, "factor", "celltype")
+
+    # ---- VERTEX STYLING ----
+    V(g)$size <- ifelse(
+      V(g)$type == "factor",
+      18,
+      rescale(edge_weights[V(g)$name], to = c(6, 14))
+    )
+
+    V(g)$color <- ifelse(
+      V(g)$type == "factor",
+      "#E69F00",   # factor
+      "#56B4E9"    # cell types
+    )
+
+    V(g)$frame.color <- "grey20"
+    V(g)$label.color <- "black"
+    V(g)$label.cex <- 0.9
+
+    # ---- EDGE STYLING ----
+    E(g)$weight <- edge_weights
+    E(g)$width  <- rescale(E(g)$weight, to = c(1, 5))
+    E(g)$color  <- "grey40"
+
+    # ---- LAYOUT ----
+    lay <- if (layout_type == "circle") {
+      layout_in_circle(g)
+    } else {
+      layout_as_star(g, center = which(V(g)$type == "factor"))
+    }
+
+    # ---- PLOT ----
+    pdf(paste0("Results/Network_", factor_name, "_", feature_type))
+    plot(
+      g,
+      layout = lay,
+      vertex.label.family = "sans",
+      vertex.label.dist = 2,
+      vertex.label.degree = -pi/2,
+      main = paste("Cell-type niche structure of", factor_name),
+      margin = 0.2
+    )
+    dev.off()
+
+  }
+
+}
+
+project_factors <- function(W, Y_new) {
+  common_features <- intersect(rownames(W), rownames(Y_new))
+  W_sub <- W[common_features, , drop = FALSE]
+  Y_sub <- Y_new[common_features, , drop = FALSE]
+  Z_new <- t(MASS::ginv(W_sub) %*% Y_sub)
+
+  colnames(Z_new) = colnames(W)
+  return(Z_new)  # samples x factors
 }
