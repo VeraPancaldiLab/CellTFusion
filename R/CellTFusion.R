@@ -78,6 +78,13 @@ CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL
     counts.norm = raw.counts
   }
 
+  #Extract batch column if TRUE
+  if(batch){
+    batch_vec = coldata[,batch_id]
+  }else{
+    batch_vec = NULL
+  }
+
   #Deconvolution
   if(is.null(deconv)){
     if(verbose){
@@ -95,10 +102,32 @@ CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL
   }
 
   #TF activity
-  if(verbose){
+  if (verbose) {
     cat("\nCalculating TF activity............................................................\n")
   }
-  tfs = compute.TFs.activity(counts.norm, TF.collection, min_targets_size, tfs.pruned, universe)
+  if (!batch) {  ## No batch → single matrix
+    tfs <- compute.TFs.activity(counts.norm, TF.collection, min_targets_size, tfs.pruned, universe)
+  }else {
+    if(is.null(coldata) || is.null(batch_id)) {
+      stop("When batch = TRUE, coldata and batch_id must be provided")
+    }
+
+    batch_vec <- coldata[, batch_id]
+
+    if (length(batch_vec) != ncol(counts.norm)) {
+      stop("batch_id column must match number of samples")
+    }
+
+    batch_vec <- factor(batch_vec, levels = unique(batch_vec))
+    cohorts <- split(seq_len(ncol(counts.norm)), batch_vec)
+
+    tfs <- lapply(names(cohorts), function(cohort) {
+      idx <- cohorts[[cohort]]
+      compute.TFs.activity(counts.norm[, idx, drop = FALSE], TF.collection, min_targets_size, tfs.pruned, universe)
+    })
+
+    names(tfs) <- names(cohorts)
+  }
 
   # 1. TFs network construction
   if(verbose){
@@ -118,14 +147,15 @@ CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL
   if(verbose){
     cat("\nPerforming deconvolution analysis............................................................\n")
   }
-  dt = multideconv::compute.deconvolution.analysis(deconv, corr = corr, corr_type = corr_type, seed = 123, batch = batch_id, cells_extra = cells_extra, file_name = file_name, return = return, verbose = FALSE)
-  dt = multideconv::deconvolution_dictionary(dt, pathways, batch_id = batch_id) ## Apply dictionary of deconvolution (To be added in compute.deconvolution.analysis() soon)
+
+  dt = multideconv::compute.deconvolution.analysis(deconv, corr = corr, corr_type = corr_type, seed = 123, batch = batch_vec, cells_extra = cells_extra, file_name = file_name, return = return, verbose = FALSE)
+  dt = multideconv::deconvolution_dictionary(dt, pathways, batch_id = batch_vec) ## Apply dictionary of deconvolution (To be added in compute.deconvolution.analysis() soon)
 
   # 4. Cell groups construction and scores
   if(verbose){
     cat("\nCell groups identification............................................................\n")
   }
-  cell.groups = construct_cell_groups(counts.norm, tfs, deconv, network, dt, coldata, batch = batch_id, pval = pval, high_corr_groups = high_corr_groups,
+  cell.groups = construct_cell_groups(counts.norm, tfs, deconv, network, dt, coldata, batch = batch_vec, pval = pval, high_corr_groups = high_corr_groups,
                                       clustering.method = "ward.D2", trait = trait, positive = trait.positive,
                                       TF.collection, min_targets_size, tfs.pruned, universe)
 
@@ -134,7 +164,7 @@ CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL
   if(verbose){
     cat("\nLatent spaces calculation............................................................\n")
   }
-  latent_spaces <- compute.latent_factors(cell.groups[[1]], batch = batch_id, seed = 123)
+  latent_spaces <- compute.latent_factors(cell.groups[[1]], batch = batch_vec, seed = 123)
 
   if(verbose){
     cat("\nEverything done! Results are saved in Results/ folder............................................................\n")
@@ -1247,7 +1277,7 @@ compute.WTCNA <- function(TFs.matrix, batch = FALSE, network.type = "signed", cl
   }
 
   if(batch){
-    if(!is.list(TFs.matrix)){
+    if(!is.list(TFs.matrix) || is.data.frame(TFs.matrix)){
       stop("If batch = TRUE, TFs.matrix must be a list of matrices, one per cohort")
     }
     nCohorts <- length(TFs.matrix)
@@ -3116,7 +3146,7 @@ prepare_CellTFusion_folds <- function(data, folds = NULL, deconv = NULL, univers
         corr_mod           = best_celltfusion_params$corr_mod,
         corr               = best_celltfusion_params$corr,
         high_corr_groups   = best_celltfusion_params$high_corr_groups,
-        batch = F, batch_id = NULL,
+        batch = batch, batch_id = batch_id,
         return = FALSE,
         verbose = FALSE
       )
@@ -3151,18 +3181,8 @@ prepare_CellTFusion_folds <- function(data, folds = NULL, deconv = NULL, univers
         high_corr_groups = high_corr_groups
       )
 
-      ### Implement parallelization
-      if(is.null(ncores) == TRUE){
-        ncores = parallel::detectCores() - 2
-      }
-
-      cl <- parallel::makeCluster(ncores)
-      doParallel::registerDoParallel(cl)
-
       # Parallelize over folds
-      processed_folds <- foreach::foreach(i = seq_along(folds), .packages = c("dplyr")) %dopar% {
-
-        source("~/Documents/CellTFusion/R/CellTFusion.R")
+      processed_folds <- lapply(seq_along(folds), function(i) {
         cat("Starting fold", names(folds)[i], "\n")
 
         train_idx <- folds[[i]]
@@ -3205,7 +3225,7 @@ prepare_CellTFusion_folds <- function(data, folds = NULL, deconv = NULL, univers
             corr_mod = custom_grid$corr_mod[j],
             corr = custom_grid$corr[j],
             high_corr_groups = custom_grid$high_corr_groups[j],
-            batch = F, batch_id = NULL,
+            batch = batch, batch_id = batch_id,
             return = FALSE,
             verbose = FALSE
           )
@@ -3268,12 +3288,8 @@ prepare_CellTFusion_folds <- function(data, folds = NULL, deconv = NULL, univers
 
         filename = file.path("Results", paste0("fold_", names(folds)[i], ".rds"))
         saveRDS(fold_results, file = filename)
-      }
-
-      parallel::stopCluster(cl)  # stop the cluster after parallel execution
-      unregister_dopar() #Stop Dopar from running in the background
+      })
     }
-
 }
 
 unregister_dopar <- function() {
@@ -3765,7 +3781,7 @@ compute.latent_factors <- function(X, batch = NULL, seed = 123) {
   data_opts <- MOFA2::get_default_data_options(MOFAobject)
   model_opts <- MOFA2::get_default_model_options(MOFAobject)
   train_opts <- MOFA2::get_default_training_options(MOFAobject)
-  train_opts$maxiter <- 500  # reduce if large dataset
+  train_opts$maxiter <- 500
 
   # Prepare and train
   MOFAobject <- MOFA2::prepare_mofa(
