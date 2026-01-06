@@ -165,7 +165,7 @@ CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL
     cat("\nLatent spaces calculation............................................................\n")
   }
   latent_spaces <- compute.latent_factors(cell.groups[[1]], batch = batch_vec, seed = 123)
-
+  #latent_spaces = NULL
   if(verbose){
     cat("\nEverything done! Results are saved in Results/ folder............................................................\n")
   }
@@ -3152,8 +3152,11 @@ prepare_CellTFusion_folds <- function(data, folds = NULL, deconv = NULL, univers
       )
 
       # Get cell group features
-      train_cell_data_final <- train_processed_final$Latent_spaces$Z %>%
+      train_cell_data_final <- train_processed_final$Latent_spaces$expanded_Z %>%
         data.frame()
+
+      # train_cell_data_final <- train_processed_final$Cell_groups[[1]] %>%
+      #   data.frame()
 
       if (is.list(obs_train)) {
         train_cell_data_final <- train_cell_data_final %>%
@@ -3230,8 +3233,11 @@ prepare_CellTFusion_folds <- function(data, folds = NULL, deconv = NULL, univers
             verbose = FALSE
           )
 
-          train_cell_data <- train_processed$Latent_spaces$Z %>%
+          train_cell_data <- train_processed$Latent_spaces$expanded_Z %>%
             data.frame()
+
+          # train_cell_data <- train_processed$Cell_groups[[1]] %>%
+          #   data.frame()
 
           if (is.list(obs_train)) {
             train_cell_data <- train_cell_data %>%
@@ -3262,7 +3268,8 @@ prepare_CellTFusion_folds <- function(data, folds = NULL, deconv = NULL, univers
             test_deconv
           )
 
-          test_data = project_factors(train_processed$Latent_spaces$W, t(cell_groups_projection))
+          test_data = project_factors(train_processed$Latent_spaces$W, t(cell_groups_projection), expand = T)
+          #test_data = cell_groups_projection
 
           if (is.list(obs_test)) {
             test_data <- test_data %>%
@@ -3800,46 +3807,47 @@ compute.latent_factors <- function(X, batch = NULL, seed = 123) {
   W <- MOFA2::get_weights(MOFAobject, views = "RNA")
 
   # 5. Expand latent factors
-  expand_latent_features <- function(W, log_transform = TRUE){
-    samples <- nrow(W)
-    factors <- colnames(W)
-    if(is.null(factors)){
-      factors <- paste0("Factor_", 1:ncol(W))
-      colnames(W) <- factors
-    }
-
-    feature_list <- list()
-    feature_list[["Original"]] <- W
-    K <- ncol(W)
-
-    # Pairwise ratios
-    for(i in 1:(K-1)){
-      for(j in (i+1):K){
-        ratio <- W[, i] / (W[, j] + 1e-6)
-        feature_list[[paste0(factors[i], "_over_", factors[j])]] <- ratio
-      }
-    }
-
-    # Pairwise differences
-    for(i in 1:(K-1)){
-      for(j in (i+1):K){
-        diff <- W[, i] - W[, j]
-        feature_list[[paste0(factors[i], "_minus_", factors[j])]] <- diff
-      }
-    }
-
-    expanded_features <- do.call(cbind, feature_list)
-    return(expanded_features)
-  }
-
-  expanded_W <- expand_latent_features(Z[[1]], log_transform = T)
+  expanded_Z <- expand_latent_features(Z[[1]], log_transform = T)
 
   return(list(
     Z = Z[[1]],
     W = W[[1]],
-    expanded_W = expanded_W
+    expanded_Z = expanded_Z
   ))
 }
+
+expand_latent_features <- function(Z, log_transform = TRUE){
+  samples <- nrow(Z)
+  factors <- colnames(Z)
+  if(is.null(factors)){
+    factors <- paste0("Factor_", 1:ncol(Z))
+    colnames(Z) <- factors
+  }
+
+  feature_list <- list()
+  feature_list[["Original"]] <- Z
+  K <- ncol(Z)
+
+  # Pairwise ratios
+  for(i in 1:(K-1)){
+    for(j in (i+1):K){
+      ratio <- Z[, i] / (Z[, j] + 1e-6)
+      feature_list[[paste0(factors[i], "_over_", factors[j])]] <- ratio
+    }
+  }
+
+  # Pairwise differences
+  for(i in 1:(K-1)){
+    for(j in (i+1):K){
+      diff <- Z[, i] - Z[, j]
+      feature_list[[paste0(factors[i], "_minus_", factors[j])]] <- diff
+    }
+  }
+
+  expanded_features <- do.call(cbind, feature_list)
+  return(expanded_features)
+}
+
 
 extract_contributing_features <- function(W, comp_matrix, feature_type = c("both", "positive", "negative"), width = 10, height = 8) {
   require(ComplexHeatmap)
@@ -4040,12 +4048,20 @@ plot_factor_celltype_networks <- function(
 
 }
 
-project_factors <- function(W, Y_new) {
+project_factors <- function(W, Y_new, expand = F) {
   common_features <- intersect(rownames(W), rownames(Y_new))
   W_sub <- W[common_features, , drop = FALSE]
   Y_sub <- Y_new[common_features, , drop = FALSE]
   Z_new <- t(MASS::ginv(W_sub) %*% Y_sub)
 
   colnames(Z_new) = colnames(W)
-  return(Z_new)  # samples x factors
+
+  if(expand){
+    expanded_Z <- expand_latent_features(Z_new, log_transform = T)
+    return(expanded_Z)
+  }else{
+    return(Z_new)  # samples x factors
+  }
+
 }
+

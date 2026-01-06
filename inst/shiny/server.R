@@ -1,25 +1,14 @@
 library(shiny)
-library(CellTFusion)   # <-- CHANGE if your package name differs
+library(CellTFusion)
 
 server <- function(input, output, session) {
 
-  # --------------------------------------------------
-  # Store results between steps
-  # --------------------------------------------------
   results <- reactiveValues(
     raw = NULL,
-    counts = NULL,
-    deconv = NULL,
-    tfs = NULL,
-    network = NULL,
-    pathways = NULL,
-    cell_groups = NULL,
-    latent = NULL
+    res = NULL
   )
 
-  # --------------------------------------------------
-  # Load input data
-  # --------------------------------------------------
+  ## Load data
   observeEvent(input$counts, {
     results$raw <- read.csv(
       input$counts$datapath,
@@ -28,107 +17,55 @@ server <- function(input, output, session) {
     )
   })
 
-  # --------------------------------------------------
-  # 1. Normalize counts
-  # --------------------------------------------------
-  observeEvent(input$run_norm, {
+  ## Run pipeline ONCE
+  observeEvent(input$run_all, {
+
     req(results$raw)
 
-    results$counts <- normalize_counts(
+    results$res <- CellTFusion(
       raw.counts = results$raw,
-      normalized = input$normalized
-    )
-  })
 
-  # --------------------------------------------------
-  # 2. Deconvolution
-  # --------------------------------------------------
-  observeEvent(input$run_deconv, {
-    req(results$counts)
-
-    results$deconv <- run_deconvolution(
-      raw.counts = results$counts,
+      ## normalization
       normalized = input$normalized,
-      deconv_methods = c("Quantiseq", "DWLS")
-    )
-  })
 
-  # --------------------------------------------------
-  # 3. TF activity
-  # --------------------------------------------------
-  observeEvent(input$run_tfs, {
-    req(results$counts)
+      ## deconvolution
+      deconv_methods = input$deconv_methods,
 
-    results$tfs <- run_tf_activity(
-      counts.norm = results$counts,
-      TF.collection = "CollecTRI",
-      min_targets_size = 10,
-      tfs.pruned = FALSE,
-      universe = NULL
-    )
-  })
+      ## TF activity
+      TF.collection = input$TF.collection,
+      min_targets_size = input$min_targets_size,
+      tfs.pruned = input$tfs.pruned,
 
-  # --------------------------------------------------
-  # 4. TF network
-  # --------------------------------------------------
-  observeEvent(input$run_network, {
-    req(results$tfs)
+      ## network
+      minMod = input$minMod,
+      corr_mod = input$corr_mod,
 
-    results$network <- run_tf_network(
-      tfs = results$tfs,
-      batch = FALSE,
-      minMod = 10,
-      corr_mod = 0.9,
+      ## general
+      verbose = TRUE,
       return = TRUE
     )
   })
 
-  # --------------------------------------------------
-  # Run EVERYTHING (wrapper)
-  # --------------------------------------------------
-  observeEvent(input$run_all, {
-    req(results$raw)
-
-    res <- CellTFusion(
-      raw.counts = results$raw,
-      normalized = input$normalized,
-      verbose = TRUE
-    )
-
-    results$deconv <- res$Deconvolution
-    results$tfs <- res$TFs_matrix
-    results$network <- res$TF_network
-    results$pathways <- res$Pathways_scores
-    results$cell_groups <- res$Cell_groups
-    results$latent <- res$Latent_spaces
-  })
-
-  # --------------------------------------------------
-  # Outputs
-  # --------------------------------------------------
+  ## Outputs
   output$status <- renderPrint({
     list(
-      raw_loaded = !is.null(results$raw),
-      normalized = !is.null(results$counts),
-      deconvolution = !is.null(results$deconv),
-      tfs = !is.null(results$tfs),
-      network = !is.null(results$network)
+      data_loaded = !is.null(results$raw),
+      results_ready = !is.null(results$res)
     )
   })
 
   output$deconv_out <- renderTable({
-    req(results$deconv)
-    head(results$deconv)
+    req(results$res)
+    head(results$res$Deconvolution)
   })
 
   output$tfs_out <- renderTable({
-    req(results$tfs)
-    head(results$tfs)
+    req(results$res)
+    head(results$res$TFs_matrix)
   })
 
   output$network_out <- renderPrint({
-    req(results$network)
-    str(results$network)
+    req(results$res)
+    str(results$res$TF_network)
   })
-
 }
