@@ -6,6 +6,7 @@
 \usage{
 compute.WTCNA(
   TFs.matrix,
+  batch = FALSE,
   network.type = "signed",
   clustering.method = "ward.D2",
   minMod = 15,
@@ -52,7 +53,7 @@ represented by the eigenvalue of the module.
 \examples{
 
 data("tfs.tuto")
-network <- compute.WTCNA(tfs, corr_mod = 0.9, clustering.method = "ward.D2", return = FALSE)
+network <- compute.WTCNA(tfs.tuto, corr_mod = 0.9, clustering.method = "ward.D2", return = FALSE)
 }
 \references{
 Langfelder, P., & Horvath, S. (2008). WGCNA: an R package for weighted correlation network analysis.

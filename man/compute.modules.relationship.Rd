@@ -8,6 +8,7 @@ compute.modules.relationship(
   matA,
   matB,
   file_name,
+  batch = NULL,
   width = 8,
   height = 8,
   par_mar = NULL,

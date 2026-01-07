@@ -33,6 +33,6 @@ Identifies hub TFs per module using values of module membership and degree.
 data("tfs.tuto")
 data("network.tuto")
 
-hub_tfs <- identify_hub_TFs(t(tfs), network, MM_thresh = 0.8, degree_thresh = 0.9)
+hub_tfs <- identify_hub_TFs(t(tfs.tuto), network.tuto, MM_thresh = 0.8, degree_thresh = 0.9)
 
 }

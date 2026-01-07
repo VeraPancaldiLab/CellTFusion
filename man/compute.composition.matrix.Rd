@@ -5,15 +5,12 @@
 \title{Compute a cell-type composition matrix from deconvolution subgroups}
 \usage{
 compute.composition.matrix(
-  deconvolution,
   deconvolution.subgroupped,
   cell.groups,
   cells_extra = NULL
 )
 }
 \arguments{
-\item{deconvolution}{A matrix or data frame of original deconvolution results (columns = cell types).}
-
 \item{deconvolution.subgroupped}{A list containing "Deconvolution subgroups composition" per model.}
 
 \item{cell.groups}{A list containing cell group definitions, where the second element holds the groupings.}

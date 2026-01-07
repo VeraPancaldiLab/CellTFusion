@@ -6,17 +6,18 @@
 \usage{
 compute_composite_score(
   cell_group,
-  color_group,
-  tfs.module.matrix,
+  module_group,
+  tfs.module.network,
+  batch = NULL,
   discard = T
 )
 }
 \arguments{
 \item{cell_group}{A numeric matrix of cell deconvolution features for a cell group (samples x features).}
 
-\item{color_group}{A character vector indicating TF module group colors corresponding to the cell group (can be obtained via \code{extract_colors()}).}
+\item{module_group}{A character vector indicating TF module group colors corresponding to the cell group (can be obtained via \code{extract_colors()}).}
 
-\item{tfs.module.matrix}{A numeric matrix representing TF module scores across samples (samples x TF modules).}
+\item{tfs.module.network}{Output of compute.WTCNA().}
 
 \item{discard}{Logical; whether to discard cell groups whose canonical correlation is below 0.6 (default TRUE).}
 }

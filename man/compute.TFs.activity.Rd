@@ -38,7 +38,7 @@ Infers transcription factor (TF) activity from a gene expression matrix using th
 }
 \examples{
 data("counts.norm.tuto")
-tfs_activity <- compute.TFs.activity(counts.norm)
+tfs_activity <- compute.TFs.activity(counts.norm.tuto)
 
 }
 \references{

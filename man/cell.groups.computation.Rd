@@ -8,6 +8,7 @@ cell.groups.computation(
   deconvolution,
   cell.dendrograms,
   tfs.module.network,
+  batch = NULL,
   return = T
 )
 }

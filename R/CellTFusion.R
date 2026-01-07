@@ -50,9 +50,9 @@ utils::globalVariables(c("Trait", "Value" ,"level", ".", "Cells_level", "PC1", "
 #' data("traitdata.tuto")
 #'
 #' res <- CellTFusion(
-#'   raw.counts = raw.counts,
+#'   raw.counts = raw.counts.tuto,
 #'   normalized = TRUE,
-#'   coldata = traitdata,
+#'   coldata = traitdata.tuto,
 #'   deconv_methods = c("Quantiseq", "DeconRNASeq"),
 #'   file_name = "TestRun",
 #'   min_targets_size = 15,
@@ -467,8 +467,8 @@ compute_cell_groups_signatures = function(deconv_res, cell_groups, features, dec
 #' data("traitdata.tuto")
 #'
 #' compute.metadata.association(
-#'   tfs.modules = network[[1]],
-#'   coldata = traitdata,
+#'   tfs.modules = network.tuto[[1]],
+#'   coldata = traitdata.tuto,
 #'   pval = 0.05,
 #'   file.name = 'Tutorial',
 #'   width = 15,
@@ -1175,7 +1175,7 @@ compute.TF.network.classification = function(tf.network, pathways.features, retu
 #'
 #' @examples
 #' data("counts.norm.tuto")
-#' tfs_activity <- compute.TFs.activity(counts.norm)
+#' tfs_activity <- compute.TFs.activity(counts.norm.tuto)
 #'
 compute.TFs.activity <- function(RNA.counts, TF.collection = "CollecTRI", min_targets_size = 5, tfs.pruned = FALSE, universe = NULL, return = TRUE){
 
@@ -1267,7 +1267,7 @@ compute.TFs.activity <- function(RNA.counts, TF.collection = "CollecTRI", min_ta
 #' @examples
 #'
 #' data("tfs.tuto")
-#' network <- compute.WTCNA(tfs, corr_mod = 0.9, clustering.method = "ward.D2", return = FALSE)
+#' network <- compute.WTCNA(tfs.tuto, corr_mod = 0.9, clustering.method = "ward.D2", return = FALSE)
 compute.WTCNA <- function(TFs.matrix, batch = FALSE, network.type = "signed", clustering.method = "ward.D2",
                           minMod = 15, corr_mod = 0.9, cor_type = "p", verbose = F,
                           softPower = NULL, return = T) {
@@ -1497,7 +1497,7 @@ compute.WTCNA <- function(TFs.matrix, batch = FALSE, network.type = "signed", cl
 #' data("tfs.tuto")
 #' data("network.tuto")
 #'
-#' hub_tfs <- identify_hub_TFs(t(tfs), network, MM_thresh = 0.8, degree_thresh = 0.9)
+#' hub_tfs <- identify_hub_TFs(t(tfs.tuto), network.tuto, MM_thresh = 0.8, degree_thresh = 0.9)
 #'
 identify_hub_TFs <- function(datExpr, TF.network, MM_thresh = 0.8, degree_thresh = 0.9) {
   moduleEigengenes_df = TF.network[[1]]

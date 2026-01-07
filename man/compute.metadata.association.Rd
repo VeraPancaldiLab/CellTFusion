@@ -53,8 +53,8 @@ data("network.tuto")
 data("traitdata.tuto")
 
 compute.metadata.association(
-  tfs.modules = network[[1]],
-  coldata = traitdata,
+  tfs.modules = network.tuto[[1]],
+  coldata = traitdata.tuto,
   pval = 0.05,
   file.name = 'Tutorial',
   width = 15,
