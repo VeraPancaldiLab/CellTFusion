@@ -47,14 +47,14 @@ head(deconv[,1:5])
 ## **TF activity inference**
 
 To infer transcription factor activity, we will use the `viper` package (@Alvarez2016) in combination with the `CollecTRI` regulon database (@10.1093/nar/gkad841). This approach estimates TF activity based on the expression levels of their downstream target genes.
-```{r}
+```{r, eval = FALSE}
 #We first normalize by log2(TPM + 1)
 counts.norm = data.frame(ADImpute::NormalizeTPM(raw.counts, log = T))
 universe = decoupleR::get_collectri(organism = "human", split_complexes = F)
 tfs = compute.TFs.activity(counts.norm, universe = universe)
 ```
 
-```{r}
+```{r, eval = FALSE}
 head(tfs[,1:5])
 ```
 
@@ -62,25 +62,25 @@ Once features have been calculated we can start analyzing our data using CellTFu
 
 Before constructing the cell groups, we first reduce the TF activity matrix into modules of TFs that exhibit similar activity patterns across samples. For this, we apply a method inspired by the Weighted Gene Correlation Network Analysis (WGCNA) approach (@langfelder2008wgcna), adapted here for TF activity, which we refer to as Weighted TF Correlation Network Analysis (WTCNA).
 
-```{r}
+```{r, eval = FALSE}
 network = compute.WTCNA(tfs, corr_mod = 0.8, clustering.method = "ward.D2", return = T) 
 ```
 
 To explore how clinical variables are associated with the TF modules, we can run the following analysis. This function will generate and save the corresponding plots in the `Results/` directory:
 
-```{r}
+```{r, eval = FALSE}
 compute.metadata.association(network[[1]], traitdata, pval = 0.05, file.name = "Tutorial", width = 10) 
 ```
 
 To functionally characterize the TF modules, we provide a utility to estimate pathway activities using a multivariate linear model (MLM) implemented via the `decoupleR` package (@10.1093/bioadv/vbac016). By default, the `PROGENy` pathway database (@Schubert2018) is used; however, users can supply a custom gene set, in which case Gene Set Variation Analysis (GSVA) will be applied instead.
 
-```{r}
+```{r, eval = FALSE}
 pathways = compute.pathway.activity(counts.norm)
 ```
 
 To explore the relationship between features, users can run the following function. This will generate and save a labeled heatmap in the `Results/` directory, displaying the correlation between the two feature sets along with significance annotations.
 
-```{r}
+```{r, eval = FALSE}
 compute.modules.relationship(network[[1]], pathways, "Pathways_Progeny-TFs_Modules", width = 15)
 ```
 
@@ -93,7 +93,7 @@ compute.modules.enrichment(counts.norm, hub_tfs)
 
 Once the TF modules are defined and functionally characterized, we further refine the cell-type deconvolution results to reduce dimensionality and enhance statistical power in downstream association analyses. To achieve this, we use the `compute.deconvolution.analysis()` function from the `multideconv` R package. This function identifies groups of cell types with similar abundance patterns across samples and returns a reduced feature matrix.
 
-```{r}
+```{r, eval = FALSE}
 dt = multideconv::compute.deconvolution.analysis(deconv, corr = 0.7, seed = 123) 
 dt = multideconv::deconvolution_dictionary(dt, pathways) ## Apply dictionary of deconvolution (To be added in compute.deconvolution.analysis() soon)
 #Association of TFs modules with deconvolution 
@@ -108,7 +108,7 @@ Supervised analysis
 
 In this approach, we incorporate clinical traits to guide the identification of cell groups associated with specific phenotypes (e.g., treatment response).
 
-```{r}
+```{r, eval = FALSE}
 cell_groups = construct_cell_groups(counts.norm, tfs, deconv, network, dt, traitdata, pval = 0.05, 
                                     trait = "Best.Confirmed.Overall.Response", positive = "CR")
 ```
@@ -117,7 +117,7 @@ Unsupervised analysis
 
 Alternatively, we can identify cell groups solely based on molecular features without using clinical annotations.
 
-```{r}
+```{r, eval = FALSE}
 cell_groups = construct_cell_groups(counts.norm, tfs, deconv, network, dt, pval = 0.05)
 ```
 
@@ -143,7 +143,7 @@ res_krustal <- cell.groups.stat.analysis(cell.groups = cell_groups, coldata = tr
 
 For convenience, we offer an all-in-one function that automates the entire CellTFusion workflow—calculating features, performing intermediate analyses, and ultimately returning the cell group scores. To run this streamlined pipeline, simply execute:
 
-```{r}
+```{r, eval = FALSE}
 res <- CellTFusion(
   raw.counts = raw.counts,
   normalized = TRUE,
@@ -180,7 +180,7 @@ raw.counts_test = raw.counts[,-index]
 
 We performed CellTFusion in the training set
 
-```{r}
+```{r, eval = FALSE}
 res_training <- CellTFusion(
   raw.counts = raw.counts_train,
   normalized = TRUE,
@@ -198,7 +198,7 @@ res_training <- CellTFusion(
 
 Next, we train the machine learning model using the cell group scores:
 
-```{r}
+```{r, eval = FALSE}
 library(caret)
 library(pipeML)
 res = pipeML::compute_features.training.ML(features_train = res_training$Cell_groups[[1]], 
@@ -214,7 +214,7 @@ res = pipeML::compute_features.training.ML(features_train = res_training$Cell_gr
 
 We replicate the trained cell groups into an independent dataset
 
-```{r}
+```{r, eval = FALSE}
 ## Compute deconvolution in the independent set
 deconv_test = multideconv::compute.deconvolution(raw.counts_test, methods = c("Quantiseq", "Epidish"), normalized = T, return = F)
 
@@ -224,7 +224,7 @@ testing_set = compute.test.set(res_training$Processed_deconvolution, res_trainin
 
 Predicting clinical trait on the test set
 
-```{r}
+```{r, eval = FALSE}
 pred = pipeML::compute_prediction(res, testing_set, traitData_test$Best.Confirmed.Overall.Response, "PD", stack = F)
 head(pred$Metrics[,1:5])
 pred$AUC$AUROC
