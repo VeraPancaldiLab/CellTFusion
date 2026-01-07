@@ -12,6 +12,7 @@ compute.modules.relationship(
   matA,
   matB,
   file_name,
+  batch = NULL,
   width = 8,
   height = 8,
   par_mar = NULL,
@@ -121,7 +122,6 @@ pathways <- compute.pathway.activity(counts.norm.tuto)
 #> Warning: 'OmnipathR::import_omnipath_annotations' is deprecated.
 #> Use 'annotations' instead.
 #> See help("Deprecated")
-#> Warning: incomplete final line found on 'https://omnipathdb.org/resources'
 compute.modules.relationship(network.tuto[[1]],
                              pathways,
                              "Pathways_Progeny-TFs_Modules",

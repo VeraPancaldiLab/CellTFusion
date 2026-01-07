@@ -49,6 +49,8 @@ Cell groups analysis
   test
 - [`identify(`*`<cell.groups>`*`)`](https://verapancaldilab.github.io/CellTFusion/reference/identify.cell.groups.md)
   : Identify cell groups
+- [`compute.latent_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.latent_factors.md)
+  : Full NMF pipeline for latent immune states (single cohort)
 - [`identify(`*`<cell.signatures>`*`)`](https://verapancaldilab.github.io/CellTFusion/reference/identify.cell.signatures.md)
   : Identify cell presence scores across important features from the
   trained machine learning models.

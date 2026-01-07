@@ -10,6 +10,7 @@ the eigenvalue of the module.
 ``` r
 compute.WTCNA(
   TFs.matrix,
+  batch = FALSE,
   network.type = "signed",
   clustering.method = "ward.D2",
   minMod = 15,
@@ -86,6 +87,6 @@ https://doi.org/10.1186/1471-2105-9-559
 
 ``` r
 data("tfs.tuto")
-network <- compute.WTCNA(tfs, corr_mod = 0.9, clustering.method = "ward.D2", return = FALSE)
-#> Error in h(simpleError(msg, call)): error in evaluating the argument 'x' in selecting a method for function 'ncol': object 'tfs' not found
+network <- compute.WTCNA(tfs.tuto, corr_mod = 0.9, clustering.method = "ward.D2", return = FALSE)
+#> Warning: executing %dopar% sequentially: no parallel backend registered
 ```

@@ -45,6 +45,7 @@ represented by the eigenvalue of the module.</p>
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">compute.WTCNA</span><span class="op">(</span></span>
 <span>  <span class="va">TFs.matrix</span>,</span>
+<span>  batch <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  network.type <span class="op">=</span> <span class="st">"signed"</span>,</span>
 <span>  clustering.method <span class="op">=</span> <span class="st">"ward.D2"</span>,</span>
 <span>  minMod <span class="op">=</span> <span class="fl">15</span>,</span>
@@ -113,8 +114,8 @@ BMC Bioinformatics, 9, 559. https://doi.org/10.1186/1471-2105-9-559</p>
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"tfs.tuto"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">network</span> <span class="op">&lt;-</span> <span class="fu">compute.WTCNA</span><span class="op">(</span><span class="va">tfs</span>, corr_mod <span class="op">=</span> <span class="fl">0.9</span>, clustering.method <span class="op">=</span> <span class="st">"ward.D2"</span>, return <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in h(simpleError(msg, call)):</span> error in evaluating the argument 'x' in selecting a method for function 'ncol': object 'tfs' not found</span>
+<span class="r-in"><span><span class="va">network</span> <span class="op">&lt;-</span> <span class="fu">compute.WTCNA</span><span class="op">(</span><span class="va">tfs.tuto</span>, corr_mod <span class="op">=</span> <span class="fl">0.9</span>, clustering.method <span class="op">=</span> <span class="st">"ward.D2"</span>, return <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>executing %dopar% sequentially: no parallel backend registered</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

@@ -15,6 +15,7 @@ construct_cell_groups(
   network,
   dt,
   clinical,
+  batch = NULL,
   pval = 0.05,
   high_corr_groups = 0.8,
   clustering.method = "ward.D2",

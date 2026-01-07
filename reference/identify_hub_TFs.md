@@ -49,6 +49,5 @@ A list with two elements:
 data("tfs.tuto")
 data("network.tuto")
 
-hub_tfs <- identify_hub_TFs(t(tfs), network, MM_thresh = 0.8, degree_thresh = 0.9)
-#> Error: object 'network' not found
+hub_tfs <- identify_hub_TFs(t(tfs.tuto), network.tuto, MM_thresh = 0.8, degree_thresh = 0.9)
 ```

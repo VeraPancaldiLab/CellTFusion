@@ -73,5 +73,4 @@ pathways <- compute.pathway.activity(counts.norm.tuto)
 #> Warning: 'OmnipathR::import_omnipath_annotations' is deprecated.
 #> Use 'annotations' instead.
 #> See help("Deprecated")
-#> Warning: incomplete final line found on 'https://omnipathdb.org/resources'
 ```

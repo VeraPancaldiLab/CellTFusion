@@ -206,23 +206,11 @@ estimates TF activity based on the expression levels of their downstream
 target genes.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">#We first normalize by log2(TPM + 1)</span></span>
-<span><span class="va">counts.norm</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="fu">ADImpute</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/ADImpute/man/NormalizeTPM.html" class="external-link">NormalizeTPM</a></span><span class="op">(</span><span class="va">raw.counts</span>, log <span class="op">=</span> <span class="cn">T</span><span class="op">)</span><span class="op">)</span> </span>
-<span><span class="co">#&gt; Converting input to matrix.</span></span>
-<span><span class="va">tfs</span> <span class="op">=</span> <span class="fu"><a href="../reference/compute.TFs.activity.html">compute.TFs.activity</a></span><span class="op">(</span><span class="va">counts.norm</span>, TF.collection <span class="op">=</span> <span class="st">"CollecTRI"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Warning in OmnipathR::import_tf_mirna_interactions(genesymbols = TRUE, resources = "CollecTRI", : 'OmnipathR::import_tf_mirna_interactions' is deprecated.</span></span>
-<span><span class="co">#&gt; Use 'tf_mirna' instead.</span></span>
-<span><span class="co">#&gt; See help("Deprecated")</span></span>
-<span><span class="co">#&gt; Warning in readLines(con = path, encoding = encoding): incomplete final line</span></span>
-<span><span class="co">#&gt; found on 'https://omnipathdb.org/resources'</span></span></code></pre></div>
+<span><span class="va">counts.norm</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="fu">ADImpute</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/ADImpute/man/NormalizeTPM.html" class="external-link">NormalizeTPM</a></span><span class="op">(</span><span class="va">raw.counts</span>, log <span class="op">=</span> <span class="cn">T</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">universe</span> <span class="op">=</span> <span class="fu">decoupleR</span><span class="fu">::</span><span class="fu"><a href="https://saezlab.github.io/decoupleR/reference/get_collectri.html" class="external-link">get_collectri</a></span><span class="op">(</span>organism <span class="op">=</span> <span class="st">"human"</span>, split_complexes <span class="op">=</span> <span class="cn">F</span><span class="op">)</span></span>
+<span><span class="va">tfs</span> <span class="op">=</span> <span class="fu"><a href="../reference/compute.TFs.activity.html">compute.TFs.activity</a></span><span class="op">(</span><span class="va">counts.norm</span>, universe <span class="op">=</span> <span class="va">universe</span><span class="op">)</span></span></code></pre></div>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">tfs</span><span class="op">[</span>,<span class="fl">1</span><span class="op">:</span><span class="fl">5</span><span class="op">]</span><span class="op">)</span></span>
-<span><span class="co">#&gt;                       ABL1       AEBP1         AHR      AHRR       AIP</span></span>
-<span><span class="co">#&gt; SAM7f0d9cc7f001 0.44133617  0.24423916  0.10089256 -2.491850 0.7172756</span></span>
-<span><span class="co">#&gt; SAM4305ab968b90 0.17796653 -0.27814654  0.38564347 -1.409414 0.3237798</span></span>
-<span><span class="co">#&gt; SAMcf018fee2acd 0.49684957  0.07861677 -0.15318192 -2.922621 1.0245627</span></span>
-<span><span class="co">#&gt; SAMcc4675f394a1 0.01569867  0.82879897  0.77065571 -1.573287 1.0804686</span></span>
-<span><span class="co">#&gt; SAM49f9b2e57aa5 0.55063295  0.20878115  0.01259975 -2.799676 0.7715777</span></span>
-<span><span class="co">#&gt; SAM2e7aa8fa0ab3 0.65809848  0.90006143 -0.13849651 -2.485155 1.2459907</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">tfs</span><span class="op">[</span>,<span class="fl">1</span><span class="op">:</span><span class="fl">5</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
 <p>Once features have been calculated we can start analyzing our data
 using CellTFusion</p>
 <p>Before constructing the cell groups, we first reduce the TF activity
@@ -232,8 +220,7 @@ Correlation Network Analysis (WGCNA) approach (<span class="citation">Langfelder
 activity, which we refer to as Weighted TF Correlation Network Analysis
 (WTCNA).</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">network</span> <span class="op">=</span> <span class="fu"><a href="../reference/compute.WTCNA.html">compute.WTCNA</a></span><span class="op">(</span><span class="va">tfs</span>, corr_mod <span class="op">=</span> <span class="fl">0.8</span>, clustering.method <span class="op">=</span> <span class="st">"ward.D2"</span>, return <span class="op">=</span> <span class="cn">T</span><span class="op">)</span> </span>
-<span><span class="co">#&gt; Warning: executing %dopar% sequentially: no parallel backend registered</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">network</span> <span class="op">=</span> <span class="fu"><a href="../reference/compute.WTCNA.html">compute.WTCNA</a></span><span class="op">(</span><span class="va">tfs</span>, corr_mod <span class="op">=</span> <span class="fl">0.8</span>, clustering.method <span class="op">=</span> <span class="st">"ward.D2"</span>, return <span class="op">=</span> <span class="cn">T</span><span class="op">)</span> </span></code></pre></div>
 <p>To explore how clinical variables are associated with the TF modules,
 we can run the following analysis. This function will generate and save
 the corresponding plots in the <code>Results/</code> directory:</p>
@@ -247,25 +234,13 @@ et al. (<a href="#ref-Schubert2018">2018</a>)</span>) is used; however,
 users can supply a custom gene set, in which case Gene Set Variation
 Analysis (GSVA) will be applied instead.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">pathways</span> <span class="op">=</span> <span class="fu"><a href="../reference/compute.pathway.activity.html">compute.pathway.activity</a></span><span class="op">(</span><span class="va">counts.norm</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Warning in OmnipathR::get_annotation_resources(): 'OmnipathR::get_annotation_resources' is deprecated.</span></span>
-<span><span class="co">#&gt; Use 'annotation_resources' instead.</span></span>
-<span><span class="co">#&gt; See help("Deprecated")</span></span>
-<span><span class="co">#&gt; Warning in readLines(con = path, encoding = encoding): incomplete final line</span></span>
-<span><span class="co">#&gt; found on 'https://omnipathdb.org/resources'</span></span>
-<span><span class="co">#&gt; Warning in OmnipathR::import_omnipath_annotations(resources = name, ..., : 'OmnipathR::import_omnipath_annotations' is deprecated.</span></span>
-<span><span class="co">#&gt; Use 'annotations' instead.</span></span>
-<span><span class="co">#&gt; See help("Deprecated")</span></span>
-<span><span class="co">#&gt; Warning in readLines(con = path, encoding = encoding): incomplete final line</span></span>
-<span><span class="co">#&gt; found on 'https://omnipathdb.org/resources'</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">pathways</span> <span class="op">=</span> <span class="fu"><a href="../reference/compute.pathway.activity.html">compute.pathway.activity</a></span><span class="op">(</span><span class="va">counts.norm</span><span class="op">)</span></span></code></pre></div>
 <p>To explore the relationship between features, users can run the
 following function. This will generate and save a labeled heatmap in the
 <code>Results/</code> directory, displaying the correlation between the
 two feature sets along with significance annotations.</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/compute.modules.relationship.html">compute.modules.relationship</a></span><span class="op">(</span><span class="va">network</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>, <span class="va">pathways</span>, <span class="st">"Pathways_Progeny-TFs_Modules"</span>, width <span class="op">=</span> <span class="fl">15</span><span class="op">)</span></span>
-<span><span class="co">#&gt; agg_png </span></span>
-<span><span class="co">#&gt;       2</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/compute.modules.relationship.html">compute.modules.relationship</a></span><span class="op">(</span><span class="va">network</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>, <span class="va">pathways</span>, <span class="st">"Pathways_Progeny-TFs_Modules"</span>, width <span class="op">=</span> <span class="fl">15</span><span class="op">)</span></span></code></pre></div>
 <p>If pathway analysis alone does not provide sufficient insight into
 the biological relevance of each module, users can perform
 Over-Representation Analysis (ORA) using the Reactome database. The
@@ -305,17 +280,7 @@ identification of cell groups associated with specific phenotypes (e.g.,
 treatment response).</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">cell_groups</span> <span class="op">=</span> <span class="fu"><a href="../reference/construct_cell_groups.html">construct_cell_groups</a></span><span class="op">(</span><span class="va">counts.norm</span>, <span class="va">tfs</span>, <span class="va">deconv</span>, <span class="va">network</span>, <span class="va">dt</span>, <span class="va">traitdata</span>, pval <span class="op">=</span> <span class="fl">0.05</span>, </span>
-<span>                                    trait <span class="op">=</span> <span class="st">"Best.Confirmed.Overall.Response"</span>, positive <span class="op">=</span> <span class="st">"CR"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Warning in OmnipathR::import_tf_mirna_interactions(genesymbols = TRUE, resources = "CollecTRI", : 'OmnipathR::import_tf_mirna_interactions' is deprecated.</span></span>
-<span><span class="co">#&gt; Use 'tf_mirna' instead.</span></span>
-<span><span class="co">#&gt; See help("Deprecated")</span></span>
-<span><span class="co">#&gt; Warning in readLines(con = path, encoding = encoding): incomplete final line</span></span>
-<span><span class="co">#&gt; found on 'https://omnipathdb.org/resources'</span></span>
-<span><span class="co">#&gt; Warning in OmnipathR::import_tf_mirna_interactions(genesymbols = TRUE, resources = "CollecTRI", : 'OmnipathR::import_tf_mirna_interactions' is deprecated.</span></span>
-<span><span class="co">#&gt; Use 'tf_mirna' instead.</span></span>
-<span><span class="co">#&gt; See help("Deprecated")</span></span>
-<span><span class="co">#&gt; Warning in readLines(con = path, encoding = encoding): incomplete final line</span></span>
-<span><span class="co">#&gt; found on 'https://omnipathdb.org/resources'</span></span></code></pre></div>
+<span>                                    trait <span class="op">=</span> <span class="st">"Best.Confirmed.Overall.Response"</span>, positive <span class="op">=</span> <span class="st">"CR"</span><span class="op">)</span></span></code></pre></div>
 <p>Unsupervised analysis</p>
 <p>Alternatively, we can identify cell groups solely based on molecular
 features without using clinical annotations.</p>
@@ -364,120 +329,7 @@ To run this streamlined pipeline, simply execute:</p>
 <span>  pval <span class="op">=</span> <span class="fl">0.05</span>,</span>
 <span>  high_corr_groups <span class="op">=</span> <span class="fl">0.85</span>,</span>
 <span>  return <span class="op">=</span> <span class="cn">FALSE</span></span>
-<span><span class="op">)</span></span>
-<span><span class="co">#&gt; Converting input to matrix.</span></span>
-<span><span class="co">#&gt; Calculating cell type deconvolution............................................................</span></span>
-<span><span class="co">#&gt; Performing TPM normalization ................................................................................</span></span>
-<span><span class="co">#&gt; Converting input to matrix.</span></span>
-<span><span class="co">#&gt; Running deconvolution using the following methods...............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; * Quantiseq</span></span>
-<span><span class="co">#&gt; * Epidish</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Running Quantiseq...............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; &gt;&gt;&gt; Running quantiseq</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Running quanTIseq deconvolution module</span></span>
-<span><span class="co">#&gt; Gene expression normalization and re-annotation (arrays: FALSE)</span></span>
-<span><span class="co">#&gt; Removing 17 noisy genes</span></span>
-<span><span class="co">#&gt; Removing 15 genes with high expression in tumors</span></span>
-<span><span class="co">#&gt; Signature genes found in data set: 128/138 (92.75%)</span></span>
-<span><span class="co">#&gt; Mixture deconvolution (method: lsei)</span></span>
-<span><span class="co">#&gt; Deconvolution successful!</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; The following method-signature combinations are going to be calculated...............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Methods</span></span>
-<span><span class="co">#&gt; * Epidish</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Signatures</span></span>
-<span><span class="co">#&gt; * BPRNACan</span></span>
-<span><span class="co">#&gt; * BPRNACan3DProMet</span></span>
-<span><span class="co">#&gt; * BPRNACanProMet</span></span>
-<span><span class="co">#&gt; * CBSX-HNSCC-scRNAseq</span></span>
-<span><span class="co">#&gt; * CBSX-Melanoma-scRNAseq</span></span>
-<span><span class="co">#&gt; * CBSX-NSCLC-PBMCs-scRNAseq</span></span>
-<span><span class="co">#&gt; * CCLE-TIL10</span></span>
-<span><span class="co">#&gt; * LM22</span></span>
-<span><span class="co">#&gt; * TIL10</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Running Epidish...............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Running Epidish...............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Running Epidish...............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Running Epidish...............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Running Epidish...............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Running Epidish...............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Running Epidish...............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Running Epidish...............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Running Epidish...............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Preprocessing deconvolution features...............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Checking consistency in deconvolution cell fractions across patients...............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Total sum across samples of combination Quantiseq is 1</span></span>
-<span><span class="co">#&gt; Total sum across samples of combination Epidish_BPRNACan_ is 1</span></span>
-<span><span class="co">#&gt; Total sum across samples of combination Epidish_BPRNACanProMet is 1</span></span>
-<span><span class="co">#&gt; Total sum across samples of combination Epidish_BPRNACan3DProMet is 1</span></span>
-<span><span class="co">#&gt; Total sum across samples of combination Epidish_CBSX.HNSCC.scRNAseq is 1</span></span>
-<span><span class="co">#&gt; Total sum across samples of combination Epidish_CBSX.Melanoma.scRNAseq is 1</span></span>
-<span><span class="co">#&gt; Total sum across samples of combination Epidish_CBSX.NSCLC.PBMCs.scRNAseq is 1</span></span>
-<span><span class="co">#&gt; Total sum across samples of combination Epidish_CCLE.TIL10 is 1</span></span>
-<span><span class="co">#&gt; Total sum across samples of combination Epidish_TIL10 is 1</span></span>
-<span><span class="co">#&gt; Total sum across samples of combination Epidish_LM22 is 1</span></span>
-<span><span class="co">#&gt; Total sum across samples of combination Epidish_CBSX.Melanoma.scRNAseq is 1</span></span>
-<span><span class="co">#&gt; Calculating TF activity............................................................</span></span>
-<span><span class="co">#&gt; Warning in OmnipathR::import_tf_mirna_interactions(genesymbols = TRUE, resources = "CollecTRI", : 'OmnipathR::import_tf_mirna_interactions' is deprecated.</span></span>
-<span><span class="co">#&gt; Use 'tf_mirna' instead.</span></span>
-<span><span class="co">#&gt; See help("Deprecated")</span></span>
-<span><span class="co">#&gt; Warning in readLines(con = path, encoding = encoding): incomplete final line</span></span>
-<span><span class="co">#&gt; found on 'https://omnipathdb.org/resources'</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Constructing TF network............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Calculating pathway activities............................................................</span></span>
-<span><span class="co">#&gt; Warning in OmnipathR::get_annotation_resources(): 'OmnipathR::get_annotation_resources' is deprecated.</span></span>
-<span><span class="co">#&gt; Use 'annotation_resources' instead.</span></span>
-<span><span class="co">#&gt; See help("Deprecated")</span></span>
-<span><span class="co">#&gt; Warning in OmnipathR::get_annotation_resources(): incomplete final line found on 'https://omnipathdb.org/resources'</span></span>
-<span><span class="co">#&gt; Warning in OmnipathR::import_omnipath_annotations(resources = name, ..., : 'OmnipathR::import_omnipath_annotations' is deprecated.</span></span>
-<span><span class="co">#&gt; Use 'annotations' instead.</span></span>
-<span><span class="co">#&gt; See help("Deprecated")</span></span>
-<span><span class="co">#&gt; Warning in readLines(con = path, encoding = encoding): incomplete final line</span></span>
-<span><span class="co">#&gt; found on 'https://omnipathdb.org/resources'</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Performing deconvolution analysis............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Cell groups identification............................................................</span></span>
-<span><span class="co">#&gt; Warning in OmnipathR::import_tf_mirna_interactions(genesymbols = TRUE, resources = "CollecTRI", : 'OmnipathR::import_tf_mirna_interactions' is deprecated.</span></span>
-<span><span class="co">#&gt; Use 'tf_mirna' instead.</span></span>
-<span><span class="co">#&gt; See help("Deprecated")</span></span>
-<span><span class="co">#&gt; Warning in OmnipathR::import_tf_mirna_interactions(genesymbols = TRUE, resources = "CollecTRI", : incomplete final line found on 'https://omnipathdb.org/resources'</span></span>
-<span><span class="co">#&gt; Warning in OmnipathR::import_tf_mirna_interactions(genesymbols = TRUE, resources = "CollecTRI", : 'OmnipathR::import_tf_mirna_interactions' is deprecated.</span></span>
-<span><span class="co">#&gt; Use 'tf_mirna' instead.</span></span>
-<span><span class="co">#&gt; See help("Deprecated")</span></span>
-<span><span class="co">#&gt; Warning in readLines(con = path, encoding = encoding): incomplete final line</span></span>
-<span><span class="co">#&gt; found on 'https://omnipathdb.org/resources'</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Everything done! Results are saved in Results/ folder............................................................</span></span></code></pre></div>
+<span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="machine-learning-models">
@@ -515,128 +367,13 @@ follows:</p>
 <span>  pval <span class="op">=</span> <span class="fl">0.05</span>,</span>
 <span>  high_corr_groups <span class="op">=</span> <span class="fl">0.85</span>,</span>
 <span>  return <span class="op">=</span> <span class="cn">FALSE</span></span>
-<span><span class="op">)</span></span>
-<span><span class="co">#&gt; Converting input to matrix.</span></span>
-<span><span class="co">#&gt; Calculating cell type deconvolution............................................................</span></span>
-<span><span class="co">#&gt; Performing TPM normalization ................................................................................</span></span>
-<span><span class="co">#&gt; Converting input to matrix.</span></span>
-<span><span class="co">#&gt; Running deconvolution using the following methods...............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; * Quantiseq</span></span>
-<span><span class="co">#&gt; * Epidish</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Running Quantiseq...............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; &gt;&gt;&gt; Running quantiseq</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Running quanTIseq deconvolution module</span></span>
-<span><span class="co">#&gt; Gene expression normalization and re-annotation (arrays: FALSE)</span></span>
-<span><span class="co">#&gt; Removing 17 noisy genes</span></span>
-<span><span class="co">#&gt; Removing 15 genes with high expression in tumors</span></span>
-<span><span class="co">#&gt; Signature genes found in data set: 128/138 (92.75%)</span></span>
-<span><span class="co">#&gt; Mixture deconvolution (method: lsei)</span></span>
-<span><span class="co">#&gt; Deconvolution successful!</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; The following method-signature combinations are going to be calculated...............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Methods</span></span>
-<span><span class="co">#&gt; * Epidish</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Signatures</span></span>
-<span><span class="co">#&gt; * BPRNACan</span></span>
-<span><span class="co">#&gt; * BPRNACan3DProMet</span></span>
-<span><span class="co">#&gt; * BPRNACanProMet</span></span>
-<span><span class="co">#&gt; * CBSX-HNSCC-scRNAseq</span></span>
-<span><span class="co">#&gt; * CBSX-Melanoma-scRNAseq</span></span>
-<span><span class="co">#&gt; * CBSX-NSCLC-PBMCs-scRNAseq</span></span>
-<span><span class="co">#&gt; * CCLE-TIL10</span></span>
-<span><span class="co">#&gt; * LM22</span></span>
-<span><span class="co">#&gt; * TIL10</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Running Epidish...............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Running Epidish...............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Running Epidish...............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Running Epidish...............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Running Epidish...............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Running Epidish...............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Running Epidish...............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Running Epidish...............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Running Epidish...............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Preprocessing deconvolution features...............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Checking consistency in deconvolution cell fractions across patients...............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Total sum across samples of combination Quantiseq is 1</span></span>
-<span><span class="co">#&gt; Total sum across samples of combination Epidish_BPRNACan_ is 1</span></span>
-<span><span class="co">#&gt; Total sum across samples of combination Epidish_BPRNACanProMet is 1</span></span>
-<span><span class="co">#&gt; Total sum across samples of combination Epidish_BPRNACan3DProMet is 1</span></span>
-<span><span class="co">#&gt; Total sum across samples of combination Epidish_CBSX.HNSCC.scRNAseq is 1</span></span>
-<span><span class="co">#&gt; Total sum across samples of combination Epidish_CBSX.Melanoma.scRNAseq is 1</span></span>
-<span><span class="co">#&gt; Total sum across samples of combination Epidish_CBSX.NSCLC.PBMCs.scRNAseq is 1</span></span>
-<span><span class="co">#&gt; Total sum across samples of combination Epidish_CCLE.TIL10 is 1</span></span>
-<span><span class="co">#&gt; Total sum across samples of combination Epidish_TIL10 is 1</span></span>
-<span><span class="co">#&gt; Total sum across samples of combination Epidish_LM22 is 1</span></span>
-<span><span class="co">#&gt; Total sum across samples of combination Epidish_CBSX.Melanoma.scRNAseq is 1</span></span>
-<span><span class="co">#&gt; Calculating TF activity............................................................</span></span>
-<span><span class="co">#&gt; Warning in OmnipathR::import_tf_mirna_interactions(genesymbols = TRUE, resources = "CollecTRI", : 'OmnipathR::import_tf_mirna_interactions' is deprecated.</span></span>
-<span><span class="co">#&gt; Use 'tf_mirna' instead.</span></span>
-<span><span class="co">#&gt; See help("Deprecated")</span></span>
-<span><span class="co">#&gt; Warning in readLines(con = path, encoding = encoding): incomplete final line</span></span>
-<span><span class="co">#&gt; found on 'https://omnipathdb.org/resources'</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Constructing TF network............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Calculating pathway activities............................................................</span></span>
-<span><span class="co">#&gt; Warning in OmnipathR::get_annotation_resources(): 'OmnipathR::get_annotation_resources' is deprecated.</span></span>
-<span><span class="co">#&gt; Use 'annotation_resources' instead.</span></span>
-<span><span class="co">#&gt; See help("Deprecated")</span></span>
-<span><span class="co">#&gt; Warning in OmnipathR::get_annotation_resources(): incomplete final line found on 'https://omnipathdb.org/resources'</span></span>
-<span><span class="co">#&gt; Warning in OmnipathR::import_omnipath_annotations(resources = name, ..., : 'OmnipathR::import_omnipath_annotations' is deprecated.</span></span>
-<span><span class="co">#&gt; Use 'annotations' instead.</span></span>
-<span><span class="co">#&gt; See help("Deprecated")</span></span>
-<span><span class="co">#&gt; Warning in readLines(con = path, encoding = encoding): incomplete final line</span></span>
-<span><span class="co">#&gt; found on 'https://omnipathdb.org/resources'</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Performing deconvolution analysis............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Cell groups identification............................................................</span></span>
-<span><span class="co">#&gt; Warning in OmnipathR::import_tf_mirna_interactions(genesymbols = TRUE, resources = "CollecTRI", : 'OmnipathR::import_tf_mirna_interactions' is deprecated.</span></span>
-<span><span class="co">#&gt; Use 'tf_mirna' instead.</span></span>
-<span><span class="co">#&gt; See help("Deprecated")</span></span>
-<span><span class="co">#&gt; Warning in OmnipathR::import_tf_mirna_interactions(genesymbols = TRUE, resources = "CollecTRI", : incomplete final line found on 'https://omnipathdb.org/resources'</span></span>
-<span><span class="co">#&gt; Warning in OmnipathR::import_tf_mirna_interactions(genesymbols = TRUE, resources = "CollecTRI", : 'OmnipathR::import_tf_mirna_interactions' is deprecated.</span></span>
-<span><span class="co">#&gt; Use 'tf_mirna' instead.</span></span>
-<span><span class="co">#&gt; See help("Deprecated")</span></span>
-<span><span class="co">#&gt; Warning in readLines(con = path, encoding = encoding): incomplete final line</span></span>
-<span><span class="co">#&gt; found on 'https://omnipathdb.org/resources'</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Everything done! Results are saved in Results/ folder............................................................</span></span></code></pre></div>
+<span><span class="op">)</span></span></code></pre></div>
 <p>Next, we train the machine learning model using the cell group
 scores:</p>
 <div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/topepo/caret/" class="external-link">caret</a></span><span class="op">)</span></span>
-<span><span class="co">#&gt; Loading required package: ggplot2</span></span>
-<span><span class="co">#&gt; Loading required package: lattice</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/VeraPancaldiLab/pipeML" class="external-link">pipeML</a></span><span class="op">)</span></span>
-<span><span class="va">res</span> <span class="op">=</span> <span class="fu">pipeML</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/pipeML/man/compute_features.training.ML.html" class="external-link">compute_features.training.ML</a></span><span class="op">(</span>features_train <span class="op">=</span> <span class="va">res_training</span><span class="op">$</span><span class="va">Cell_groups</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>, </span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://verapancaldilab.github.io/pipeML" class="external-link">pipeML</a></span><span class="op">)</span></span>
+<span><span class="va">res</span> <span class="op">=</span> <span class="fu">pipeML</span><span class="fu">::</span><span class="fu"><a href="https://verapancaldilab.github.io/pipeML/reference/compute_features.training.ML.html" class="external-link">compute_features.training.ML</a></span><span class="op">(</span>features_train <span class="op">=</span> <span class="va">res_training</span><span class="op">$</span><span class="va">Cell_groups</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>, </span>
 <span>                                           target_var <span class="op">=</span> <span class="va">traitData_train</span><span class="op">$</span><span class="va">Best.Confirmed.Overall.Response</span>, </span>
 <span>                                           trait.positive <span class="op">=</span> <span class="st">"PD"</span>, </span>
 <span>                                           metric <span class="op">=</span> <span class="st">"AUROC"</span>, </span>
@@ -644,116 +381,19 @@ scores:</p>
 <span>                                           stack <span class="op">=</span> <span class="cn">F</span>, k_folds <span class="op">=</span> <span class="fl">2</span>, </span>
 <span>                                           n_rep <span class="op">=</span> <span class="fl">2</span>,  </span>
 <span>                                           ncores <span class="op">=</span> <span class="fl">2</span>,</span>
-<span>                                           return <span class="op">=</span> <span class="cn">F</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Best ML model found:  C50 </span></span>
-<span><span class="co">#&gt; Returning model trained</span></span></code></pre></div>
+<span>                                           return <span class="op">=</span> <span class="cn">F</span><span class="op">)</span></span></code></pre></div>
 <p>We replicate the trained cell groups into an independent dataset</p>
 <div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">## Compute deconvolution in the independent set</span></span>
 <span><span class="va">deconv_test</span> <span class="op">=</span> <span class="fu">multideconv</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/multideconv/man/compute.deconvolution.html" class="external-link">compute.deconvolution</a></span><span class="op">(</span><span class="va">raw.counts_test</span>, methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Quantiseq"</span>, <span class="st">"Epidish"</span><span class="op">)</span>, normalized <span class="op">=</span> <span class="cn">T</span>, return <span class="op">=</span> <span class="cn">F</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Performing TPM normalization ................................................................................</span></span>
-<span><span class="co">#&gt; Converting input to matrix.</span></span>
-<span><span class="co">#&gt; Running deconvolution using the following methods...............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; * Quantiseq</span></span>
-<span><span class="co">#&gt; * Epidish</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Running Quantiseq...............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; &gt;&gt;&gt; Running quantiseq</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Running quanTIseq deconvolution module</span></span>
-<span><span class="co">#&gt; Gene expression normalization and re-annotation (arrays: FALSE)</span></span>
-<span><span class="co">#&gt; Removing 17 noisy genes</span></span>
-<span><span class="co">#&gt; Removing 15 genes with high expression in tumors</span></span>
-<span><span class="co">#&gt; Signature genes found in data set: 128/138 (92.75%)</span></span>
-<span><span class="co">#&gt; Mixture deconvolution (method: lsei)</span></span>
-<span><span class="co">#&gt; Deconvolution successful!</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; The following method-signature combinations are going to be calculated...............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Methods</span></span>
-<span><span class="co">#&gt; * Epidish</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Signatures</span></span>
-<span><span class="co">#&gt; * BPRNACan</span></span>
-<span><span class="co">#&gt; * BPRNACan3DProMet</span></span>
-<span><span class="co">#&gt; * BPRNACanProMet</span></span>
-<span><span class="co">#&gt; * CBSX-HNSCC-scRNAseq</span></span>
-<span><span class="co">#&gt; * CBSX-Melanoma-scRNAseq</span></span>
-<span><span class="co">#&gt; * CBSX-NSCLC-PBMCs-scRNAseq</span></span>
-<span><span class="co">#&gt; * CCLE-TIL10</span></span>
-<span><span class="co">#&gt; * LM22</span></span>
-<span><span class="co">#&gt; * TIL10</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Running Epidish...............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Running Epidish...............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Running Epidish...............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Running Epidish...............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Running Epidish...............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Running Epidish...............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Running Epidish...............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Running Epidish...............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Running Epidish...............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Preprocessing deconvolution features...............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Checking consistency in deconvolution cell fractions across patients...............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Total sum across samples of combination Quantiseq is 1</span></span>
-<span><span class="co">#&gt; Total sum across samples of combination Epidish_BPRNACan_ is 1</span></span>
-<span><span class="co">#&gt; Total sum across samples of combination Epidish_BPRNACanProMet is 1</span></span>
-<span><span class="co">#&gt; Total sum across samples of combination Epidish_BPRNACan3DProMet is 1</span></span>
-<span><span class="co">#&gt; Total sum across samples of combination Epidish_CBSX.HNSCC.scRNAseq is 1</span></span>
-<span><span class="co">#&gt; Total sum across samples of combination Epidish_CBSX.Melanoma.scRNAseq is 1</span></span>
-<span><span class="co">#&gt; Total sum across samples of combination Epidish_CBSX.NSCLC.PBMCs.scRNAseq is 1</span></span>
-<span><span class="co">#&gt; Total sum across samples of combination Epidish_CCLE.TIL10 is 1</span></span>
-<span><span class="co">#&gt; Total sum across samples of combination Epidish_TIL10 is 1</span></span>
-<span><span class="co">#&gt; Total sum across samples of combination Epidish_LM22 is 1</span></span>
-<span><span class="co">#&gt; Total sum across samples of combination Epidish_CBSX.Melanoma.scRNAseq is 1</span></span>
 <span></span>
 <span><span class="co">## Replicate cell groups into independent set</span></span>
 <span><span class="va">testing_set</span> <span class="op">=</span> <span class="fu"><a href="../reference/compute.test.set.html">compute.test.set</a></span><span class="op">(</span><span class="va">res_training</span><span class="op">$</span><span class="va">Processed_deconvolution</span>, <span class="va">res_training</span><span class="op">$</span><span class="va">Cell_groups</span>, <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">res_training</span><span class="op">$</span><span class="va">Cell_groups</span><span class="op">[[</span><span class="fl">2</span><span class="op">]</span><span class="op">]</span><span class="op">)</span>, <span class="va">deconv_test</span><span class="op">)</span></span></code></pre></div>
 <p>Predicting clinical trait on the test set</p>
 <div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">pred</span> <span class="op">=</span> <span class="fu">pipeML</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/pipeML/man/compute_prediction.html" class="external-link">compute_prediction</a></span><span class="op">(</span><span class="va">res</span>, <span class="va">testing_set</span>, <span class="va">traitData_test</span><span class="op">$</span><span class="va">Best.Confirmed.Overall.Response</span>, <span class="st">"PD"</span>, stack <span class="op">=</span> <span class="cn">F</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Predicting target variable using provided ML model.................................................</span></span>
-<span><span class="co">#&gt; Choosing the threshold that maximizes Accuracy for calculating the confusion matrix...................................................</span></span>
-<span><span class="co">#&gt; Best threshold:  0 </span></span>
-<span><span class="co">#&gt; Accuracy:  86.842 </span></span>
-<span><span class="co">#&gt; Sensitivity:  100 </span></span>
-<span><span class="co">#&gt; Specificity:  0 </span></span>
-<span><span class="co">#&gt; F1 score:  92.958 </span></span>
-<span><span class="co">#&gt; MCC score:  0 </span></span>
-<span><span class="co">#&gt; Recall:  100 </span></span>
-<span><span class="co">#&gt; Precision:  86.842</span></span>
+<code class="sourceCode R"><span><span class="va">pred</span> <span class="op">=</span> <span class="fu">pipeML</span><span class="fu">::</span><span class="fu"><a href="https://verapancaldilab.github.io/pipeML/reference/compute_prediction.html" class="external-link">compute_prediction</a></span><span class="op">(</span><span class="va">res</span>, <span class="va">testing_set</span>, <span class="va">traitData_test</span><span class="op">$</span><span class="va">Best.Confirmed.Overall.Response</span>, <span class="st">"PD"</span>, stack <span class="op">=</span> <span class="cn">F</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">pred</span><span class="op">$</span><span class="va">Metrics</span><span class="op">[</span>,<span class="fl">1</span><span class="op">:</span><span class="fl">5</span><span class="op">]</span><span class="op">)</span></span>
-<span><span class="co">#&gt;                 yes model Sensitivity Specificity fpr</span></span>
-<span><span class="co">#&gt; SAM4305ab968b90   1  C5.0  0.03030303         1.0 0.0</span></span>
-<span><span class="co">#&gt; SAM18039827e1b9   1  C5.0  0.06060606         1.0 0.0</span></span>
-<span><span class="co">#&gt; SAM468a9e1dc821   1  C5.0  0.09090909         1.0 0.0</span></span>
-<span><span class="co">#&gt; SAMbcbc7957c264   1  C5.0  0.12121212         1.0 0.0</span></span>
-<span><span class="co">#&gt; SAM7114d99032ec   1  C5.0  0.15151515         1.0 0.0</span></span>
-<span><span class="co">#&gt; SAMbf1a3ae828e6   1  C5.0  0.15151515         0.8 0.2</span></span>
-<span><span class="va">pred</span><span class="op">$</span><span class="va">AUC</span><span class="op">$</span><span class="va">AUROC</span></span>
-<span><span class="co">#&gt; [1] 0.3393939</span></span></code></pre></div>
+<span><span class="va">pred</span><span class="op">$</span><span class="va">AUC</span><span class="op">$</span><span class="va">AUROC</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="custom-k-fold-cross-validation-with-celltfusion">
@@ -797,7 +437,7 @@ workflow:</p>
 <code class="sourceCode R"><span><span class="va">universe</span> <span class="op">&lt;-</span> <span class="fu">decoupleR</span><span class="fu">::</span><span class="fu"><a href="https://saezlab.github.io/decoupleR/reference/get_collectri.html" class="external-link">get_collectri</a></span><span class="op">(</span>organism <span class="op">=</span> <span class="st">'human'</span>, split_complexes <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span><span class="va">paths</span> <span class="op">&lt;-</span> <span class="fu">decoupleR</span><span class="fu">::</span><span class="fu"><a href="https://saezlab.github.io/decoupleR/reference/get_progeny.html" class="external-link">get_progeny</a></span><span class="op">(</span>organism <span class="op">=</span> <span class="st">'human'</span>, top <span class="op">=</span> <span class="fl">500</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">res_groups</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/pipeML/man/compute_features.training.ML.html" class="external-link">compute_features.training.ML</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">raw.counts_train</span><span class="op">)</span>, </span>
+<span><span class="va">res_groups</span> <span class="op">=</span> <span class="fu"><a href="https://verapancaldilab.github.io/pipeML/reference/compute_features.training.ML.html" class="external-link">compute_features.training.ML</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">raw.counts_train</span><span class="op">)</span>, </span>
 <span>                                          <span class="va">traitData_train</span><span class="op">$</span><span class="va">Best.Confirmed.Overall.Response</span>, </span>
 <span>                                          trait.positive <span class="op">=</span> <span class="st">"PD"</span>,</span>
 <span>                                          metric <span class="op">=</span> <span class="st">"AUROC"</span>, </span>

@@ -93,10 +93,6 @@ https://doi.org/10.1186/1471-2105-7-S1-S7
 
 ``` r
 data("counts.norm.tuto")
-tfs_activity <- compute.TFs.activity(counts.norm)
-#> Warning: 'OmnipathR::import_tf_mirna_interactions' is deprecated.
-#> Use 'tf_mirna' instead.
-#> See help("Deprecated")
-#> Warning: incomplete final line found on 'https://omnipathdb.org/resources'
-#> Error: object 'counts.norm' not found
+tfs_activity <- compute.TFs.activity(counts.norm.tuto)
+#> Error in if (.keep) . else select(., -!!evs_col): argument is of length zero
 ```

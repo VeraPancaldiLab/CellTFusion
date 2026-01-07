@@ -8,8 +8,9 @@ Computes a composite score by performing Canonical Correlation Analysis
 ``` r
 compute_composite_score(
   cell_group,
-  color_group,
-  tfs.module.matrix,
+  module_group,
+  tfs.module.network,
+  batch = NULL,
   discard = T
 )
 ```
@@ -21,16 +22,15 @@ compute_composite_score(
   A numeric matrix of cell deconvolution features for a cell group
   (samples x features).
 
-- color_group:
+- module_group:
 
   A character vector indicating TF module group colors corresponding to
   the cell group (can be obtained via
   [`extract_colors()`](https://verapancaldilab.github.io/CellTFusion/reference/extract_colors.md)).
 
-- tfs.module.matrix:
+- tfs.module.network:
 
-  A numeric matrix representing TF module scores across samples (samples
-  x TF modules).
+  Output of compute.WTCNA().
 
 - discard:
 

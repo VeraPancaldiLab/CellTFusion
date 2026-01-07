@@ -12,6 +12,8 @@ CellTFusion(
   coldata = NULL,
   trait = NULL,
   trait.positive = NULL,
+  batch = F,
+  batch_id = NULL,
   deconv_methods = c("Quantiseq", "Epidish", "DeconRNASeq", "DWLS", "CibersortX"),
   cbsx.mail = NULL,
   cbsx.token = NULL,
@@ -24,6 +26,7 @@ CellTFusion(
   minMod = 10,
   corr_mod = 0.9,
   corr = 0.7,
+  corr_type = "spearman",
   cells_extra = NULL,
   pval = 0.05,
   high_corr_groups = 0.8,
@@ -192,9 +195,9 @@ data("raw.counts.tuto")
 data("traitdata.tuto")
 
 res <- CellTFusion(
-  raw.counts = raw.counts,
+  raw.counts = raw.counts.tuto,
   normalized = TRUE,
-  coldata = traitdata,
+  coldata = traitdata.tuto,
   deconv_methods = c("Quantiseq", "DeconRNASeq"),
   file_name = "TestRun",
   min_targets_size = 15,

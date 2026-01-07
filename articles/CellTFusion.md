@@ -152,25 +152,13 @@ based on the expression levels of their downstream target genes.
 
 ``` r
 #We first normalize by log2(TPM + 1)
-counts.norm = data.frame(ADImpute::NormalizeTPM(raw.counts, log = T)) 
-#> Converting input to matrix.
-tfs = compute.TFs.activity(counts.norm, TF.collection = "CollecTRI")
-#> Warning in OmnipathR::import_tf_mirna_interactions(genesymbols = TRUE, resources = "CollecTRI", : 'OmnipathR::import_tf_mirna_interactions' is deprecated.
-#> Use 'tf_mirna' instead.
-#> See help("Deprecated")
-#> Warning in readLines(con = path, encoding = encoding): incomplete final line
-#> found on 'https://omnipathdb.org/resources'
+counts.norm = data.frame(ADImpute::NormalizeTPM(raw.counts, log = T))
+universe = decoupleR::get_collectri(organism = "human", split_complexes = F)
+tfs = compute.TFs.activity(counts.norm, universe = universe)
 ```
 
 ``` r
 head(tfs[,1:5])
-#>                       ABL1       AEBP1         AHR      AHRR       AIP
-#> SAM7f0d9cc7f001 0.44133617  0.24423916  0.10089256 -2.491850 0.7172756
-#> SAM4305ab968b90 0.17796653 -0.27814654  0.38564347 -1.409414 0.3237798
-#> SAMcf018fee2acd 0.49684957  0.07861677 -0.15318192 -2.922621 1.0245627
-#> SAMcc4675f394a1 0.01569867  0.82879897  0.77065571 -1.573287 1.0804686
-#> SAM49f9b2e57aa5 0.55063295  0.20878115  0.01259975 -2.799676 0.7715777
-#> SAM2e7aa8fa0ab3 0.65809848  0.90006143 -0.13849651 -2.485155 1.2459907
 ```
 
 Once features have been calculated we can start analyzing our data using
@@ -185,7 +173,6 @@ we refer to as Weighted TF Correlation Network Analysis (WTCNA).
 
 ``` r
 network = compute.WTCNA(tfs, corr_mod = 0.8, clustering.method = "ward.D2", return = T) 
-#> Warning: executing %dopar% sequentially: no parallel backend registered
 ```
 
 To explore how clinical variables are associated with the TF modules, we
@@ -206,16 +193,6 @@ Variation Analysis (GSVA) will be applied instead.
 
 ``` r
 pathways = compute.pathway.activity(counts.norm)
-#> Warning in OmnipathR::get_annotation_resources(): 'OmnipathR::get_annotation_resources' is deprecated.
-#> Use 'annotation_resources' instead.
-#> See help("Deprecated")
-#> Warning in readLines(con = path, encoding = encoding): incomplete final line
-#> found on 'https://omnipathdb.org/resources'
-#> Warning in OmnipathR::import_omnipath_annotations(resources = name, ..., : 'OmnipathR::import_omnipath_annotations' is deprecated.
-#> Use 'annotations' instead.
-#> See help("Deprecated")
-#> Warning in readLines(con = path, encoding = encoding): incomplete final line
-#> found on 'https://omnipathdb.org/resources'
 ```
 
 To explore the relationship between features, users can run the
@@ -225,8 +202,6 @@ sets along with significance annotations.
 
 ``` r
 compute.modules.relationship(network[[1]], pathways, "Pathways_Progeny-TFs_Modules", width = 15)
-#> agg_png 
-#>       2
 ```
 
 If pathway analysis alone does not provide sufficient insight into the
@@ -274,16 +249,6 @@ treatment response).
 ``` r
 cell_groups = construct_cell_groups(counts.norm, tfs, deconv, network, dt, traitdata, pval = 0.05, 
                                     trait = "Best.Confirmed.Overall.Response", positive = "CR")
-#> Warning in OmnipathR::import_tf_mirna_interactions(genesymbols = TRUE, resources = "CollecTRI", : 'OmnipathR::import_tf_mirna_interactions' is deprecated.
-#> Use 'tf_mirna' instead.
-#> See help("Deprecated")
-#> Warning in readLines(con = path, encoding = encoding): incomplete final line
-#> found on 'https://omnipathdb.org/resources'
-#> Warning in OmnipathR::import_tf_mirna_interactions(genesymbols = TRUE, resources = "CollecTRI", : 'OmnipathR::import_tf_mirna_interactions' is deprecated.
-#> Use 'tf_mirna' instead.
-#> See help("Deprecated")
-#> Warning in readLines(con = path, encoding = encoding): incomplete final line
-#> found on 'https://omnipathdb.org/resources'
 ```
 
 Unsupervised analysis
@@ -338,119 +303,6 @@ res <- CellTFusion(
   high_corr_groups = 0.85,
   return = FALSE
 )
-#> Converting input to matrix.
-#> Calculating cell type deconvolution............................................................
-#> Performing TPM normalization ................................................................................
-#> Converting input to matrix.
-#> Running deconvolution using the following methods...............................................................
-#> 
-#> * Quantiseq
-#> * Epidish
-#> 
-#> Running Quantiseq...............................................................
-#> 
-#> >>> Running quantiseq
-#> 
-#> Running quanTIseq deconvolution module
-#> Gene expression normalization and re-annotation (arrays: FALSE)
-#> Removing 17 noisy genes
-#> Removing 15 genes with high expression in tumors
-#> Signature genes found in data set: 128/138 (92.75%)
-#> Mixture deconvolution (method: lsei)
-#> Deconvolution successful!
-#> 
-#> The following method-signature combinations are going to be calculated...............................................................
-#> 
-#> Methods
-#> * Epidish
-#> 
-#> Signatures
-#> * BPRNACan
-#> * BPRNACan3DProMet
-#> * BPRNACanProMet
-#> * CBSX-HNSCC-scRNAseq
-#> * CBSX-Melanoma-scRNAseq
-#> * CBSX-NSCLC-PBMCs-scRNAseq
-#> * CCLE-TIL10
-#> * LM22
-#> * TIL10
-#> 
-#> Running Epidish...............................................................
-#> 
-#> 
-#> Running Epidish...............................................................
-#> 
-#> 
-#> Running Epidish...............................................................
-#> 
-#> 
-#> Running Epidish...............................................................
-#> 
-#> 
-#> Running Epidish...............................................................
-#> 
-#> 
-#> Running Epidish...............................................................
-#> 
-#> 
-#> Running Epidish...............................................................
-#> 
-#> 
-#> Running Epidish...............................................................
-#> 
-#> 
-#> Running Epidish...............................................................
-#> 
-#> Preprocessing deconvolution features...............................................................
-#> 
-#> Checking consistency in deconvolution cell fractions across patients...............................................................
-#> 
-#> 
-#> Total sum across samples of combination Quantiseq is 1
-#> Total sum across samples of combination Epidish_BPRNACan_ is 1
-#> Total sum across samples of combination Epidish_BPRNACanProMet is 1
-#> Total sum across samples of combination Epidish_BPRNACan3DProMet is 1
-#> Total sum across samples of combination Epidish_CBSX.HNSCC.scRNAseq is 1
-#> Total sum across samples of combination Epidish_CBSX.Melanoma.scRNAseq is 1
-#> Total sum across samples of combination Epidish_CBSX.NSCLC.PBMCs.scRNAseq is 1
-#> Total sum across samples of combination Epidish_CCLE.TIL10 is 1
-#> Total sum across samples of combination Epidish_TIL10 is 1
-#> Total sum across samples of combination Epidish_LM22 is 1
-#> Total sum across samples of combination Epidish_CBSX.Melanoma.scRNAseq is 1
-#> Calculating TF activity............................................................
-#> Warning in OmnipathR::import_tf_mirna_interactions(genesymbols = TRUE, resources = "CollecTRI", : 'OmnipathR::import_tf_mirna_interactions' is deprecated.
-#> Use 'tf_mirna' instead.
-#> See help("Deprecated")
-#> Warning in readLines(con = path, encoding = encoding): incomplete final line
-#> found on 'https://omnipathdb.org/resources'
-#> 
-#> Constructing TF network............................................................
-#> 
-#> Calculating pathway activities............................................................
-#> Warning in OmnipathR::get_annotation_resources(): 'OmnipathR::get_annotation_resources' is deprecated.
-#> Use 'annotation_resources' instead.
-#> See help("Deprecated")
-#> Warning in OmnipathR::get_annotation_resources(): incomplete final line found on 'https://omnipathdb.org/resources'
-#> Warning in OmnipathR::import_omnipath_annotations(resources = name, ..., : 'OmnipathR::import_omnipath_annotations' is deprecated.
-#> Use 'annotations' instead.
-#> See help("Deprecated")
-#> Warning in readLines(con = path, encoding = encoding): incomplete final line
-#> found on 'https://omnipathdb.org/resources'
-#> 
-#> Performing deconvolution analysis............................................................
-#> 
-#> Cell groups identification............................................................
-#> Warning in OmnipathR::import_tf_mirna_interactions(genesymbols = TRUE, resources = "CollecTRI", : 'OmnipathR::import_tf_mirna_interactions' is deprecated.
-#> Use 'tf_mirna' instead.
-#> See help("Deprecated")
-#> Warning in OmnipathR::import_tf_mirna_interactions(genesymbols = TRUE, resources = "CollecTRI", : incomplete final line found on 'https://omnipathdb.org/resources'
-#> Warning in OmnipathR::import_tf_mirna_interactions(genesymbols = TRUE, resources = "CollecTRI", : 'OmnipathR::import_tf_mirna_interactions' is deprecated.
-#> Use 'tf_mirna' instead.
-#> See help("Deprecated")
-#> Warning in readLines(con = path, encoding = encoding): incomplete final line
-#> found on 'https://omnipathdb.org/resources'
-#> 
-#> Everything done! Results are saved in Results/ folder............................................................
 ```
 
 ### **Machine Learning models**
@@ -494,127 +346,12 @@ res_training <- CellTFusion(
   high_corr_groups = 0.85,
   return = FALSE
 )
-#> Converting input to matrix.
-#> Calculating cell type deconvolution............................................................
-#> Performing TPM normalization ................................................................................
-#> Converting input to matrix.
-#> Running deconvolution using the following methods...............................................................
-#> 
-#> * Quantiseq
-#> * Epidish
-#> 
-#> Running Quantiseq...............................................................
-#> 
-#> >>> Running quantiseq
-#> 
-#> Running quanTIseq deconvolution module
-#> Gene expression normalization and re-annotation (arrays: FALSE)
-#> Removing 17 noisy genes
-#> Removing 15 genes with high expression in tumors
-#> Signature genes found in data set: 128/138 (92.75%)
-#> Mixture deconvolution (method: lsei)
-#> Deconvolution successful!
-#> 
-#> The following method-signature combinations are going to be calculated...............................................................
-#> 
-#> Methods
-#> * Epidish
-#> 
-#> Signatures
-#> * BPRNACan
-#> * BPRNACan3DProMet
-#> * BPRNACanProMet
-#> * CBSX-HNSCC-scRNAseq
-#> * CBSX-Melanoma-scRNAseq
-#> * CBSX-NSCLC-PBMCs-scRNAseq
-#> * CCLE-TIL10
-#> * LM22
-#> * TIL10
-#> 
-#> Running Epidish...............................................................
-#> 
-#> 
-#> Running Epidish...............................................................
-#> 
-#> 
-#> Running Epidish...............................................................
-#> 
-#> 
-#> Running Epidish...............................................................
-#> 
-#> 
-#> Running Epidish...............................................................
-#> 
-#> 
-#> Running Epidish...............................................................
-#> 
-#> 
-#> Running Epidish...............................................................
-#> 
-#> 
-#> Running Epidish...............................................................
-#> 
-#> 
-#> Running Epidish...............................................................
-#> 
-#> Preprocessing deconvolution features...............................................................
-#> 
-#> Checking consistency in deconvolution cell fractions across patients...............................................................
-#> 
-#> 
-#> Total sum across samples of combination Quantiseq is 1
-#> Total sum across samples of combination Epidish_BPRNACan_ is 1
-#> Total sum across samples of combination Epidish_BPRNACanProMet is 1
-#> Total sum across samples of combination Epidish_BPRNACan3DProMet is 1
-#> Total sum across samples of combination Epidish_CBSX.HNSCC.scRNAseq is 1
-#> Total sum across samples of combination Epidish_CBSX.Melanoma.scRNAseq is 1
-#> Total sum across samples of combination Epidish_CBSX.NSCLC.PBMCs.scRNAseq is 1
-#> Total sum across samples of combination Epidish_CCLE.TIL10 is 1
-#> Total sum across samples of combination Epidish_TIL10 is 1
-#> Total sum across samples of combination Epidish_LM22 is 1
-#> Total sum across samples of combination Epidish_CBSX.Melanoma.scRNAseq is 1
-#> Calculating TF activity............................................................
-#> Warning in OmnipathR::import_tf_mirna_interactions(genesymbols = TRUE, resources = "CollecTRI", : 'OmnipathR::import_tf_mirna_interactions' is deprecated.
-#> Use 'tf_mirna' instead.
-#> See help("Deprecated")
-#> Warning in readLines(con = path, encoding = encoding): incomplete final line
-#> found on 'https://omnipathdb.org/resources'
-#> 
-#> Constructing TF network............................................................
-#> 
-#> Calculating pathway activities............................................................
-#> Warning in OmnipathR::get_annotation_resources(): 'OmnipathR::get_annotation_resources' is deprecated.
-#> Use 'annotation_resources' instead.
-#> See help("Deprecated")
-#> Warning in OmnipathR::get_annotation_resources(): incomplete final line found on 'https://omnipathdb.org/resources'
-#> Warning in OmnipathR::import_omnipath_annotations(resources = name, ..., : 'OmnipathR::import_omnipath_annotations' is deprecated.
-#> Use 'annotations' instead.
-#> See help("Deprecated")
-#> Warning in readLines(con = path, encoding = encoding): incomplete final line
-#> found on 'https://omnipathdb.org/resources'
-#> 
-#> Performing deconvolution analysis............................................................
-#> 
-#> Cell groups identification............................................................
-#> Warning in OmnipathR::import_tf_mirna_interactions(genesymbols = TRUE, resources = "CollecTRI", : 'OmnipathR::import_tf_mirna_interactions' is deprecated.
-#> Use 'tf_mirna' instead.
-#> See help("Deprecated")
-#> Warning in OmnipathR::import_tf_mirna_interactions(genesymbols = TRUE, resources = "CollecTRI", : incomplete final line found on 'https://omnipathdb.org/resources'
-#> Warning in OmnipathR::import_tf_mirna_interactions(genesymbols = TRUE, resources = "CollecTRI", : 'OmnipathR::import_tf_mirna_interactions' is deprecated.
-#> Use 'tf_mirna' instead.
-#> See help("Deprecated")
-#> Warning in readLines(con = path, encoding = encoding): incomplete final line
-#> found on 'https://omnipathdb.org/resources'
-#> 
-#> Everything done! Results are saved in Results/ folder............................................................
 ```
 
 Next, we train the machine learning model using the cell group scores:
 
 ``` r
 library(caret)
-#> Loading required package: ggplot2
-#> Loading required package: lattice
 library(pipeML)
 res = pipeML::compute_features.training.ML(features_train = res_training$Cell_groups[[1]], 
                                            target_var = traitData_train$Best.Confirmed.Overall.Response, 
@@ -625,8 +362,6 @@ res = pipeML::compute_features.training.ML(features_train = res_training$Cell_gr
                                            n_rep = 2,  
                                            ncores = 2,
                                            return = F)
-#> Best ML model found:  C50 
-#> Returning model trained
 ```
 
 We replicate the trained cell groups into an independent dataset
@@ -634,83 +369,6 @@ We replicate the trained cell groups into an independent dataset
 ``` r
 ## Compute deconvolution in the independent set
 deconv_test = multideconv::compute.deconvolution(raw.counts_test, methods = c("Quantiseq", "Epidish"), normalized = T, return = F)
-#> Performing TPM normalization ................................................................................
-#> Converting input to matrix.
-#> Running deconvolution using the following methods...............................................................
-#> 
-#> * Quantiseq
-#> * Epidish
-#> 
-#> Running Quantiseq...............................................................
-#> 
-#> >>> Running quantiseq
-#> 
-#> Running quanTIseq deconvolution module
-#> Gene expression normalization and re-annotation (arrays: FALSE)
-#> Removing 17 noisy genes
-#> Removing 15 genes with high expression in tumors
-#> Signature genes found in data set: 128/138 (92.75%)
-#> Mixture deconvolution (method: lsei)
-#> Deconvolution successful!
-#> 
-#> The following method-signature combinations are going to be calculated...............................................................
-#> 
-#> Methods
-#> * Epidish
-#> 
-#> Signatures
-#> * BPRNACan
-#> * BPRNACan3DProMet
-#> * BPRNACanProMet
-#> * CBSX-HNSCC-scRNAseq
-#> * CBSX-Melanoma-scRNAseq
-#> * CBSX-NSCLC-PBMCs-scRNAseq
-#> * CCLE-TIL10
-#> * LM22
-#> * TIL10
-#> 
-#> Running Epidish...............................................................
-#> 
-#> 
-#> Running Epidish...............................................................
-#> 
-#> 
-#> Running Epidish...............................................................
-#> 
-#> 
-#> Running Epidish...............................................................
-#> 
-#> 
-#> Running Epidish...............................................................
-#> 
-#> 
-#> Running Epidish...............................................................
-#> 
-#> 
-#> Running Epidish...............................................................
-#> 
-#> 
-#> Running Epidish...............................................................
-#> 
-#> 
-#> Running Epidish...............................................................
-#> 
-#> Preprocessing deconvolution features...............................................................
-#> 
-#> Checking consistency in deconvolution cell fractions across patients...............................................................
-#> 
-#> 
-#> Total sum across samples of combination Quantiseq is 1
-#> Total sum across samples of combination Epidish_BPRNACan_ is 1
-#> Total sum across samples of combination Epidish_BPRNACanProMet is 1
-#> Total sum across samples of combination Epidish_BPRNACan3DProMet is 1
-#> Total sum across samples of combination Epidish_CBSX.HNSCC.scRNAseq is 1
-#> Total sum across samples of combination Epidish_CBSX.Melanoma.scRNAseq is 1
-#> Total sum across samples of combination Epidish_CBSX.NSCLC.PBMCs.scRNAseq is 1
-#> Total sum across samples of combination Epidish_CCLE.TIL10 is 1
-#> Total sum across samples of combination Epidish_TIL10 is 1
-#> Total sum across samples of combination Epidish_LM22 is 1
-#> Total sum across samples of combination Epidish_CBSX.Melanoma.scRNAseq is 1
 
 ## Replicate cell groups into independent set
 testing_set = compute.test.set(res_training$Processed_deconvolution, res_training$Cell_groups, names(res_training$Cell_groups[[2]]), deconv_test)
@@ -720,26 +378,8 @@ Predicting clinical trait on the test set
 
 ``` r
 pred = pipeML::compute_prediction(res, testing_set, traitData_test$Best.Confirmed.Overall.Response, "PD", stack = F)
-#> Predicting target variable using provided ML model.................................................
-#> Choosing the threshold that maximizes Accuracy for calculating the confusion matrix...................................................
-#> Best threshold:  0 
-#> Accuracy:  86.842 
-#> Sensitivity:  100 
-#> Specificity:  0 
-#> F1 score:  92.958 
-#> MCC score:  0 
-#> Recall:  100 
-#> Precision:  86.842
 head(pred$Metrics[,1:5])
-#>                 yes model Sensitivity Specificity fpr
-#> SAM4305ab968b90   1  C5.0  0.03030303         1.0 0.0
-#> SAM18039827e1b9   1  C5.0  0.06060606         1.0 0.0
-#> SAM468a9e1dc821   1  C5.0  0.09090909         1.0 0.0
-#> SAMbcbc7957c264   1  C5.0  0.12121212         1.0 0.0
-#> SAM7114d99032ec   1  C5.0  0.15151515         1.0 0.0
-#> SAMbf1a3ae828e6   1  C5.0  0.15151515         0.8 0.2
 pred$AUC$AUROC
-#> [1] 0.3393939
 ```
 
 ### **Custom k-fold cross validation with CellTFusion**

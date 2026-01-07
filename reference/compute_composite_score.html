@@ -42,8 +42,9 @@ between cell group features and corresponding TF module scores.</p>
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">compute_composite_score</span><span class="op">(</span></span>
 <span>  <span class="va">cell_group</span>,</span>
-<span>  <span class="va">color_group</span>,</span>
-<span>  <span class="va">tfs.module.matrix</span>,</span>
+<span>  <span class="va">module_group</span>,</span>
+<span>  <span class="va">tfs.module.network</span>,</span>
+<span>  batch <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  discard <span class="op">=</span> <span class="cn">T</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -56,12 +57,12 @@ between cell group features and corresponding TF module scores.</p>
 <dd><p>A numeric matrix of cell deconvolution features for a cell group (samples x features).</p></dd>
 
 
-<dt id="arg-color-group">color_group<a class="anchor" aria-label="anchor" href="#arg-color-group"></a></dt>
+<dt id="arg-module-group">module_group<a class="anchor" aria-label="anchor" href="#arg-module-group"></a></dt>
 <dd><p>A character vector indicating TF module group colors corresponding to the cell group (can be obtained via <code><a href="extract_colors.html">extract_colors()</a></code>).</p></dd>
 
 
-<dt id="arg-tfs-module-matrix">tfs.module.matrix<a class="anchor" aria-label="anchor" href="#arg-tfs-module-matrix"></a></dt>
-<dd><p>A numeric matrix representing TF module scores across samples (samples x TF modules).</p></dd>
+<dt id="arg-tfs-module-network">tfs.module.network<a class="anchor" aria-label="anchor" href="#arg-tfs-module-network"></a></dt>
+<dd><p>Output of compute.WTCNA().</p></dd>
 
 
 <dt id="arg-discard">discard<a class="anchor" aria-label="anchor" href="#arg-discard"></a></dt>

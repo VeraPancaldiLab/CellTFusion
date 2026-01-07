@@ -12,7 +12,8 @@ compute_cell_groups_signatures(
   cell_groups,
   features,
   deconvolution_test,
-  tfs.module.network
+  tfs.module.network,
+  batch = NULL
 )
 ```
 

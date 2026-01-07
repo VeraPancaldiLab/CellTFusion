@@ -7,7 +7,6 @@ present in higher-level cell groups.
 
 ``` r
 compute.composition.matrix(
-  deconvolution,
   deconvolution.subgroupped,
   cell.groups,
   cells_extra = NULL
@@ -15,11 +14,6 @@ compute.composition.matrix(
 ```
 
 ## Arguments
-
-- deconvolution:
-
-  A matrix or data frame of original deconvolution results (columns =
-  cell types).
 
 - deconvolution.subgroupped:
 
