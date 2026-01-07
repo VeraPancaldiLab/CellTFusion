@@ -32,6 +32,7 @@ reference:
   - cell.groups.ttest
   - cell.groups.stat.analysis
   - identify.cell.groups
+  - compute.latent_factors
   - identify.cell.signatures
 - title: Machine learning
   contents:
