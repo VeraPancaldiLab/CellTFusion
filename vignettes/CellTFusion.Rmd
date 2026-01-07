@@ -49,8 +49,9 @@ head(deconv[,1:5])
 To infer transcription factor activity, we will use the `viper` package (@Alvarez2016) in combination with the `CollecTRI` regulon database (@10.1093/nar/gkad841). This approach estimates TF activity based on the expression levels of their downstream target genes.
 ```{r}
 #We first normalize by log2(TPM + 1)
-counts.norm = data.frame(ADImpute::NormalizeTPM(raw.counts, log = T)) 
-tfs = compute.TFs.activity(counts.norm, TF.collection = "CollecTRI")
+counts.norm = data.frame(ADImpute::NormalizeTPM(raw.counts, log = T))
+universe = decoupleR::get_collectri(organism = "human", split_complexes = F)
+tfs = compute.TFs.activity(counts.norm, universe = universe)
 ```
 
 ```{r}
