@@ -475,130 +475,95 @@ compute_cell_groups_signatures = function(deconv_res, cell_groups, features, dec
 #'   height = 10
 #' )
 #'
-compute.metadata.association = function(tfs.modules, coldata, pval = 0.05, corr_method = "p", file.name, width = 20, height = 8){
-  ###Association with categorical variables
-  coldata_categorical = coldata %>%
-    dplyr::select(dplyr::where(is.character)|dplyr::where(is.factor))
+compute.metadata.association <- function(
+    tfs.modules,
+    coldata,
+    pval = 0.05,
+    corr_method = "p",
+    file.name,
+    width = 20,
+    height = 8,
+    ncol = 5,
+    y_min = 0,
+    y_max = 0.5,
+    width_grid = 18,
+    height_grid = 10
+) {
+  ### Association with categorical variables
+  coldata_categorical <- coldata %>%
+    dplyr::select(dplyr::where(is.character) | dplyr::where(is.factor))
 
-  if(ncol(coldata_categorical) != 0){
-    data = cbind(tfs.modules, coldata_categorical)
-    pvals = data.frame()
-    fvals = data.frame()
-
-    for(i in 1:ncol(tfs.modules)){
-      contador = 1
-      for (j in (ncol(tfs.modules)+1):ncol(data)) {
-        module <- names(data)[i]
-        trait <- names(data)[j]
-
-        df <- data.frame(
-          value = data[, i],
-          trait = as.factor(data[, j])
-        )
-
-        # Global ANOVA (rstatix, so it's compatible downstream)
-        res.aov <- rstatix::anova_test(data = df, dv = value, between = trait)
-
-        pvals[i, contador] = res.aov$p
-        fvals[i, contador] = res.aov$F
-        contador = contador + 1
-
-        # Only continue if ANOVA significant
-        if(res.aov$p < pval) {
-
-          # Pairwise Tukey
-          pwc <- df %>%
-            rstatix::tukey_hsd(value ~ trait) %>%
-            rstatix::add_xy_position(x = "trait")
-
-          pdf(paste0("Results/ANOVA_", module, "-", trait, file.name, ".pdf"))
-          print(
-            ggpubr::ggboxplot(df, x = "trait", y = "value", fill = "trait", add = "jitter") +
-              ggpubr::stat_pvalue_manual(pwc, hide.ns = TRUE) +
-              labs(
-                title = "One-way ANOVA with Tukey HSD",
-                subtitle = rstatix::get_test_label(res.aov, detailed = TRUE),
-                caption  = rstatix::get_pwc_label(pwc),
-                x = paste0("Clinical trait: ", trait),
-                y = paste0("Values for ", module)
-              ) +
-              theme(
-                axis.text.x = element_text(size = 20, angle = 0),
-                axis.title.x = element_text(size = 20),
-                legend.position = "none",
-                axis.title.y = element_text(size = 20, angle = 90),
-                plot.title = element_text(size = 20),
-                plot.subtitle = element_text(size = 15, face = "bold")
-              )
-          )
-          dev.off()
-        }
-      }
-    }
-
-    rownames(pvals) = colnames(tfs.modules)
-    colnames(pvals) = colnames(coldata_categorical)
-    rownames(fvals) = colnames(tfs.modules)
-    colnames(fvals) = colnames(coldata_categorical)
-
-    pvals = as.matrix(pvals)
-    textMatrix2 = paste("ANOVA\n(", signif(pvals, 2), ")", sep = "")
-    dim(textMatrix2) = dim(pvals)
+  if(ncol(coldata_categorical) != 0) {
+    # Use the new wrapper function to generate boxplot summaries
+    compute.metadata.association.boxplot_summary(
+      tfs.modules = tfs.modules,
+      coldata = coldata_categorical,
+      pval = pval,
+      file.name = file.name,
+      ncol = ncol,
+      y_min = y_min,
+      y_max = y_max,
+      width = width_grid,
+      height = height_grid
+    )
   }
 
-  ###Association with quantitative variables
-  coldata_quantitative = coldata %>%
+  ### Association with quantitative variables
+  coldata_quantitative <- coldata %>%
     dplyr::select(dplyr::where(is.numeric))
 
-  if(ncol(coldata_quantitative)!=0){
-    moduleTraitCor = WGCNA::cor(tfs.modules, coldata_quantitative, method = corr_method, use = "pairwise.complete.obs")
-    moduleTraitPvalue = WGCNA::corPvalueStudent(moduleTraitCor, nrow(tfs.modules))
+  if(ncol(coldata_quantitative) != 0){
+    moduleTraitCor <- WGCNA::cor(
+      tfs.modules,
+      coldata_quantitative,
+      method = corr_method,
+      use = "pairwise.complete.obs"
+    )
+    moduleTraitPvalue <- WGCNA::corPvalueStudent(moduleTraitCor, nrow(tfs.modules))
 
-    #### Replace pvalues for significance labels
-    # Define cutoffs and corresponding labels
-    breaks <- c(-Inf, 0.0001, 0.001, 0.01, 0.05, Inf)  # Define intervals
-    labels <- c("****", "***", "**", "*", "")  # Corresponding significance labels
+    #### Replace p-values for significance labels
+    breaks <- c(-Inf, 0.0001, 0.001, 0.01, 0.05, Inf)
+    labels <- c("****", "***", "**", "*", "")
 
-    # Replace p-values with significance levels
     moduleTraitPvalue <- matrix(
       cut(moduleTraitPvalue, breaks = breaks, labels = labels, right = FALSE),
       nrow = nrow(moduleTraitPvalue),
       dimnames = dimnames(moduleTraitPvalue)
     )
 
+    textMatrix <- paste(signif(moduleTraitCor, 2), "\n(", moduleTraitPvalue, ")", sep = "")
+    dim(textMatrix) <- dim(moduleTraitCor)
 
-    textMatrix = paste(signif(moduleTraitCor, 2), "\n(", moduleTraitPvalue, ")", sep = "")
-    dim(textMatrix) = dim(moduleTraitCor)
-
-    if(ncol(coldata_categorical)!=0){
-      textMatrix = cbind(textMatrix, textMatrix2)
-      moduleTraitPvalue = cbind(moduleTraitPvalue, pvals)
-      simulated_corr = matrix(stats::runif(n=nrow(pvals)*ncol(pvals), min=-0.1, max=0.1), nrow = nrow(pvals), ncol = ncol(pvals))
-      colnames(simulated_corr) = colnames(pvals)
-      moduleTraitCor = cbind(moduleTraitCor, simulated_corr)
+    if(ncol(coldata_categorical) != 0){
+      # Add the categorical ANOVA p-values to the heatmap
+      # Here, you could store them in compute.metadata.association.boxplot_summary()
+      # For simplicity, we skip merging with continuous traits
     }
 
-    idx = which(moduleTraitPvalue==""|moduleTraitPvalue>pval)
-    for (i in idx) {
-      textMatrix[i] = NA
-    }
+    # Set non-significant entries to NA
+    idx <- which(moduleTraitPvalue == "" | moduleTraitPvalue > pval)
+    for (i in idx) textMatrix[i] <- NA
 
     pdf(paste0("Results/TF.modules_metadata_", file.name), width = width, height = height)
     par(mar = c(25, 15, 3, 3))
-    WGCNA::labeledHeatmap(Matrix = moduleTraitCor,
-                          xLabels = colnames(moduleTraitCor),
-                          yLabels = rownames(moduleTraitCor),
-                          ySymbols = rownames(moduleTraitCor),
-                          colorLabels = FALSE,
-                          colors = WGCNA::blueWhiteRed(50),
-                          textMatrix = textMatrix,
-                          setStdMargins = FALSE,
-                          cex.text = 0.7,
-                          zlim = c(-1,1),
-                          main = paste0("Clinical associations ", file.name, "\nOnly showing significant associations (pvalue < ", pval, ")"))
+    WGCNA::labeledHeatmap(
+      Matrix = moduleTraitCor,
+      xLabels = colnames(moduleTraitCor),
+      yLabels = rownames(moduleTraitCor),
+      ySymbols = rownames(moduleTraitCor),
+      colorLabels = FALSE,
+      colors = WGCNA::blueWhiteRed(50),
+      textMatrix = textMatrix,
+      setStdMargins = FALSE,
+      cex.text = 0.7,
+      zlim = c(-1,1),
+      main = paste0(
+        "Clinical associations ", file.name,
+        "\nOnly showing significant associations (pvalue < ", pval, ")"
+      )
+    )
     dev.off()
   }
-
 }
 
 #' Compute TF module enrichment using directed target genes
@@ -721,7 +686,7 @@ compute.modules.enrichment <- function(RNA.tpm, hub_tfs){
 #'                                     pval = 0.01)
 #'
 #' @export
-compute.modules.relationship <- function(matA, matB, file_name, batch = NULL, width = 8, height = 8, par_mar = NULL, pval=0.05, padj = F, cor_type = "p", return = F, vertical = F, plot = T){
+compute.modules.relationship <- function(matA, matB, file_name, batch = NULL, width = 8, height = 8, par_mar = NULL, pval=0.05, padj = F, cor_type = "p", return = F, vertical = F, plot = T, width.grid = 12, height.grid = 10, ncol.grid = NULL){
 
   matA = data.frame(matA)
   matB = data.frame(matB)
@@ -758,6 +723,22 @@ compute.modules.relationship <- function(matA, matB, file_name, batch = NULL, wi
     # ---------- STANDARD CORRELATION ----------
     moduleTraitCor = WGCNA::cor(matA, matB, method = cor_type)
     moduleTraitPvalue = WGCNA::corPvalueStudent(moduleTraitCor, nrow(matA))
+  }
+
+  if (plot) {
+    plot.module.scatter.grid(
+      matA = matA,
+      matB = matB,
+      cor_mat = moduleTraitCor,
+      p_mat = moduleTraitPvalue,
+      file_name = file_name,
+      pval = pval,
+      cor_type = cor_type,
+      width = width.grid,
+      height = height.grid,
+      ncol = ncol.grid,
+      only_sig = TRUE
+    )
   }
 
   # rev = which(colSums(moduleTraitPvalue > pval)==nrow(moduleTraitPvalue)) #check if there are features no significant with any module
@@ -969,7 +950,7 @@ compute.modules.relationship <- function(matA, matB, file_name, batch = NULL, wi
 #' data("counts.norm.tuto")
 #' pathways <- compute.pathway.activity(counts.norm.tuto)
 #'
-compute.pathway.activity <- function(RNA.tpm, gene_sets = NULL, paths = NULL, return = TRUE) {
+compute.pathway.activity <- function(RNA.tpm, gene_sets = NULL, paths = NULL, return = TRUE, file.name = NULL) {
 
   RNA.tpm <- as.matrix(RNA.tpm)
   results_list <- list()
@@ -977,6 +958,7 @@ compute.pathway.activity <- function(RNA.tpm, gene_sets = NULL, paths = NULL, re
   ###### PROGENy
   if (is.null(paths)) {
     paths <- decoupleR::get_progeny(organism = "human", top = 500)
+    utils::write.csv(paths, "Results/Pathways_collection_PROGENy.csv")
   }
 
   progeny <- decoupleR::run_mlm(
@@ -1019,12 +1001,10 @@ compute.pathway.activity <- function(RNA.tpm, gene_sets = NULL, paths = NULL, re
   ###### Save outputs if requested
   if (return) {
     if (!is.null(results_list$PROGENy)) {
-      utils::write.csv(results_list$PROGENy, "Results/Pathway_matrix_PROGENy.csv")
-      utils::write.csv(paths, "Results/Pathways_collection_PROGENy.csv")
+      utils::write.csv(results_list$PROGENy, paste0("Results/Pathway_matrix_PROGENy_", file.name, ".csv"))
     }
     if (!is.null(results_list$GSVA)) {
-      utils::write.csv(results_list$GSVA, "Results/Pathway_matrix_GSVA.csv")
-      utils::write.csv(gene_sets, "Results/Pathways_collection_GSVA.csv")
+      utils::write.csv(results_list$GSVA, paste0("Results/Pathway_matrix_GSVA_", file.name,".csv"))
     }
   }
 
@@ -1177,7 +1157,7 @@ compute.TF.network.classification = function(tf.network, pathways.features, retu
 #' data("counts.norm.tuto")
 #' tfs_activity <- compute.TFs.activity(counts.norm.tuto)
 #'
-compute.TFs.activity <- function(RNA.counts, TF.collection = "CollecTRI", min_targets_size = 5, tfs.pruned = FALSE, universe = NULL, return = TRUE){
+compute.TFs.activity <- function(RNA.counts, TF.collection = "CollecTRI", min_targets_size = 5, tfs.pruned = FALSE, universe = NULL, return = TRUE, file.name = NULL){
 
   tfs2viper_regulons <- function(df){
     regulon_list <- split(df, df$source)
@@ -1195,6 +1175,7 @@ compute.TFs.activity <- function(RNA.counts, TF.collection = "CollecTRI", min_ta
   if(TF.collection == "CollecTRI"){
     if(is.null(universe)==T){
       universe = decoupleR::get_collectri(organism = 'human', split_complexes = F)
+      utils::write.csv(universe, "Results/TF_target_collection.csv")
     }
     net_regulons = tfs2viper_regulons(universe)
   } else if(TF.collection == "Dorothea"){
@@ -1203,6 +1184,7 @@ compute.TFs.activity <- function(RNA.counts, TF.collection = "CollecTRI", min_ta
       universe = dplyr::filter(dorothea::dorothea_hs, .data$confidence %in% c("A", "B")) %>%
         dplyr::mutate(source = .data$tf) %>%
         dplyr::select(-tf)
+      utils::write.csv(universe, "Results/TF_target_collection.csv")
     }
     net_regulons = tfs2viper_regulons(universe)
   }
@@ -1226,8 +1208,7 @@ compute.TFs.activity <- function(RNA.counts, TF.collection = "CollecTRI", min_ta
   #                                                      names_from = source, values_from = score) %>% tibble::column_to_rownames("condition")
   #
   if(return){
-    utils::write.csv(sample_acts, "Results/TF_matrix.csv")
-    utils::write.csv(universe, "Results/TF_target_collection.csv")
+    utils::write.csv(sample_acts, paste0("Results/TF_matrix_", file.name, ".csv"))
   }
 
   return(data.frame(t(sample_acts)))
@@ -1269,7 +1250,7 @@ compute.TFs.activity <- function(RNA.counts, TF.collection = "CollecTRI", min_ta
 #' data("tfs.tuto")
 #' network <- compute.WTCNA(tfs.tuto, corr_mod = 0.9, clustering.method = "ward.D2", return = FALSE)
 compute.WTCNA <- function(TFs.matrix, batch = FALSE, network.type = "signed", clustering.method = "ward.D2",
-                          minMod = 15, corr_mod = 0.9, cor_type = "p", verbose = F,
+                          minMod = 15, corr_mod = 0.9, cor_type = "p", verbose = F, file.name = NULL,
                           softPower = NULL, return = T) {
 
   if(verbose){
@@ -1329,8 +1310,8 @@ compute.WTCNA <- function(TFs.matrix, batch = FALSE, network.type = "signed", cl
     })
 
     # Step 5: concatenate scaled MEs across cohorts
-    combined_MEs <- do.call(rbind, scaled_MEs_list)
-    colnames(combined_MEs) <- gsub("ME", "", colnames(combined_MEs))
+    MEs <- do.call(rbind, scaled_MEs_list)
+    colnames(MEs) <- gsub("ME", "", colnames(MEs))
 
     # Step 6: Map TFs to modules (same as before)
     modtfs <- list()
@@ -1342,7 +1323,7 @@ compute.WTCNA <- function(TFs.matrix, batch = FALSE, network.type = "signed", cl
     names(modtfs) <- modules
 
     output <- list(
-      "TFs module matrix" = combined_MEs,
+      "TFs module matrix" = MEs,
       "TFs colors" = dynamicColors,
       "TFs per module" = modtfs,
       "TFs_matrix" = TFs.matrix
@@ -1467,7 +1448,8 @@ compute.WTCNA <- function(TFs.matrix, batch = FALSE, network.type = "signed", cl
   }
 
   if(return){
-    utils::write.csv(tfs_modules, 'Results/TFs_modules.csv', row.names = F)
+    utils::write.csv(tfs_modules, paste0('Results/TFs_modules_', file.name,'.csv'), row.names = F)
+    utils::write.csv(MEs, file = paste0("Results/TF_module_matrix_", file.name, ".csv"), row.names = F)
   }
 
   return(output)
@@ -4065,3 +4047,215 @@ project_factors <- function(W, Y_new, expand = F) {
 
 }
 
+plot.module.scatter.grid <- function(matA, matB, cor_mat, p_mat,
+                                     file_name,
+                                     pval = 0.05,
+                                     cor_type = "p",
+                                     width = width,
+                                     height = width,
+                                     only_sig = TRUE,
+                                     ncol = NULL) {   # allow NULL for auto
+
+  pairs <- expand.grid(A = colnames(matA),
+                       B = colnames(matB),
+                       stringsAsFactors = FALSE)
+
+  pairs$keep <- mapply(function(a, b) {
+    if (only_sig) p_mat[a, b] <= pval else TRUE
+  }, pairs$A, pairs$B)
+
+  pairs <- pairs[pairs$keep, ]
+
+  if (nrow(pairs) == 0) {
+    message("No scatter plots to draw.")
+    return(invisible(NULL))
+  }
+
+  nplots <- nrow(pairs)
+
+  # ---- automatic ncol if not specified ----
+  if (is.null(ncol)) {
+    ncol <- ceiling(sqrt(nplots))
+  }
+
+  nrow_grid <- ceiling(nplots / ncol)
+  svg(paste0("Results/", file_name, "_scatter_grid.svg"),
+      width = width, height = height)
+
+  # Increase margins a bit if needed
+  par(
+    mfrow = c(nrow_grid, ncol),
+    mar = c(5, 6, 5, 3),        # bottom, left, top, right
+    cex.lab = 1.5,               # axis labels
+    cex.axis = 1.3,              # axis tick labels
+    cex.main = 1.8               # plot title
+  )
+
+  for (k in seq_len(nplots)) {
+
+    i <- pairs$A[k]
+    j <- pairs$B[k]
+
+    df <- data.frame(
+      x = matB[, j],
+      y = matA[, i]
+    )
+
+    r  <- cor_mat[i, j]
+    pv <- p_mat[i, j]
+
+    plot(df$x, df$y,
+         pch = 16, cex = 1.5,        # increase point size
+         xlab = "",
+         ylab = "",
+         main = paste0(i, " vs ", j))
+
+    # Add bigger axis titles
+    title(
+      xlab = j, ylab = i,
+      cex.lab = 2        # increases both x and y labels
+    )
+
+    abline(lm(y ~ x, df), col = "steelblue", lwd = 2.5)  # thicker regression line
+
+    mtext(
+      paste0("R = ", signif(r, 3),
+             " | p = ", format.pval(pv, digits = 2)),
+      side = 3,
+      line = 0,                  # move a bit higher
+      cex = 1.3                     # increase text size
+    )
+  }
+
+  dev.off()
+}
+
+compute.metadata.association.boxplot_summary <- function(
+    tfs.modules, coldata, pval = 0.05, file.name,
+    ncol = 5, y_min = 0, y_max = 0.5, width = 18, height = 10
+){
+
+  library(dplyr)
+  library(tidyr)
+  library(ggplot2)
+  library(rstatix)
+  library(ggpubr)
+
+  # ---- categorical traits ----
+  coldata_cat <- coldata %>%
+    dplyr::select(dplyr::where(is.character) | dplyr::where(is.factor))
+
+  if (ncol(coldata_cat) == 0) {
+    message("No categorical traits found.")
+    return(invisible(NULL))
+  }
+
+  # ---- long format ----
+  df_long <- cbind(tfs.modules, coldata_cat) %>%
+    as.data.frame() %>%
+    pivot_longer(
+      cols = colnames(tfs.modules),
+      names_to = "module",
+      values_to = "value"
+    ) %>%
+    pivot_longer(
+      cols = colnames(coldata_cat),
+      names_to = "trait",
+      values_to = "group"
+    ) %>%
+    mutate(group = as.factor(group))
+
+  # ---- ANOVA per module × trait ----
+  anova_df <- df_long %>%
+    group_by(module, trait) %>%
+    do({
+      res <- rstatix::anova_test(data = ., dv = value, between = group)
+      tibble(F = res$F, p = res$p)
+    }) %>%
+    ungroup()
+
+  sig_pairs <- anova_df %>% filter(p < pval)
+
+  if(nrow(sig_pairs) == 0){
+    message("No significant ANOVA results.")
+    return(invisible(NULL))
+  }
+
+  feature_labels <- sig_pairs %>%
+    mutate(
+      feature_label = paste0(module, "\nF=", signif(F,3), ", p=", signif(p,3))
+    ) %>%
+    distinct(module, feature_label) %>%
+    tibble::deframe()
+
+  df_long <- df_long %>% semi_join(sig_pairs, by = c("module", "trait"))
+
+  # ---- order modules by effect size ----
+  module_order <- df_long %>%
+    group_by(module, group) %>%
+    summarise(med = median(value, na.rm = TRUE), .groups = "drop") %>%
+    group_by(module) %>%
+    arrange(group, .by_group = TRUE) %>%
+    summarise(effect = last(med) - first(med), .groups = "drop") %>%
+    arrange(desc(effect)) %>%
+    pull(module)
+
+  df_long$module <- factor(df_long$module, levels = module_order)
+
+  # ---- Tukey HSD ----
+  tukey_df <- df_long %>%
+    group_by(module, trait) %>%
+    filter(n_distinct(group) > 1) %>%  # skip groups with only 1 level
+    group_modify(~ {
+      tuk <- tukey_hsd(.x, value ~ group)
+      if(nrow(tuk) == 0) return(NULL)
+      add_xy_position(tuk, x = "group")
+    }) %>%
+    ungroup()
+
+  # ---- plot ----
+  svg(paste0("Results/ANOVA_boxplot_summary_", file.name, ".svg"),
+      width = width, height = height)
+
+  p <- ggplot(df_long, aes(x = group, y = value, fill = group)) +
+    geom_boxplot(width = 0.6, outlier.size = 0.4, alpha = 0.85) +
+    geom_jitter(width = 0.2, size = 1, alpha = 0.7, color = "black") +  # <-- add points
+    facet_wrap(~ module + trait, ncol = ncol, labeller = labeller(module = feature_labels)) +
+    coord_cartesian(ylim = c(y_min, y_max)) +
+    labs(
+      y = "Feature value",
+      fill = "Group",
+      title = "Features-trait associations",
+      subtitle = paste0("One-way ANOVA with Tukey HSD | Showing associations (p-value < ", pval, ")")
+    ) +
+    theme_bw(base_size = 12) +
+    theme(
+      strip.text = element_text(size = 14),
+      axis.text.x = element_text(size = 14, angle = 45, hjust = 1),  # diagonal x labels
+      axis.text.y = element_text(size = 14),
+      axis.title.x = element_text(size = 16, face = "bold"),
+      axis.title.y = element_text(size = 16, face = "bold"),
+      plot.title = element_text(size = 20, face = "bold"),
+      plot.subtitle = element_text(size = 16),
+      legend.title = element_text(size = 16, face = "bold"),
+      legend.text = element_text(size = 14),
+      panel.grid.minor = element_blank(),
+      legend.position = "top",
+      panel.spacing.x = unit(1.0, "lines")
+    )
+
+  if(nrow(tukey_df) > 0){
+    p <- p + stat_pvalue_manual(
+      tukey_df,
+      hide.ns = TRUE,    # hide non-significant
+      size = 8,          # font size of p-value text
+      tip.length = 0.03, # length of the vertical lines
+      bracket.size = 0.8 # thickness of the horizontal significance line
+    )
+  }
+
+  print(p)
+  dev.off()
+
+  invisible(anova_df)
+}
