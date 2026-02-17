@@ -534,12 +534,6 @@ compute.metadata.association <- function(
     textMatrix <- paste(signif(moduleTraitCor, 2), "\n(", moduleTraitPvalue, ")", sep = "")
     dim(textMatrix) <- dim(moduleTraitCor)
 
-    if(ncol(coldata_categorical) != 0){
-      # Add the categorical ANOVA p-values to the heatmap
-      # Here, you could store them in compute.metadata.association.boxplot_summary()
-      # For simplicity, we skip merging with continuous traits
-    }
-
     # Set non-significant entries to NA
     idx <- which(moduleTraitPvalue == "" | moduleTraitPvalue > pval)
     for (i in idx) textMatrix[i] <- NA
@@ -1762,74 +1756,11 @@ compute.composition.matrix = function(deconvolution.subgroupped, cell.groups, ce
 #'   \item{loadings}{A list of numeric vectors indicating the loadings (feature contributions) for each group.}
 #' }
 #' @export
-construct_cell_groups = function(counts, tfs, deconv, network, dt, clinical, batch = NULL, pval = 0.05, high_corr_groups = 0.8, clustering.method = "ward.D2", trait = NULL, positive = NULL, TF.collection = "CollecTRI", min_targets_size = 10, tfs.pruned = FALSE, universe = NULL){
+construct_cell_groups = function(counts, tfs, deconv, network, dt, clinical, batch = NULL, pval = 0.05, high_corr_groups = 0.8, clustering.method = "ward.D2", TF.collection = "CollecTRI", min_targets_size = 10, tfs.pruned = FALSE, universe = NULL){
 
-  if(is.null(trait) == F){
-    ##### Split between positive class and negative class
-
-    ###Positive class
-    traitData_positive = clinical %>%
-      dplyr::mutate(trait = clinical[,trait]) %>%
-      dplyr::filter(trait == positive)
-    counts.normalized.positive = counts[,colnames(counts)%in%rownames(traitData_positive)]
-    deconv.positive = deconv[rownames(traitData_positive),]
-    tfs.positive = compute.TFs.activity(counts.normalized.positive, TF.collection, min_targets_size, tfs.pruned, universe)
-    dt.positive = dt
-    network.positive = network
-    dt.positive[[1]] = multideconv::replicate_deconvolution_subgroups(dt, deconv.positive)
-    network.positive[[1]] = create_tfs_modules(tfs.positive, network)
-    network.positive[[5]] = tfs.positive
-
-    corr_modules_positive = compute.modules.relationship(network.positive[[1]], dt.positive[[1]], batch = batch, return = T, plot = F, pval = pval)
-
-    ###Negative class
-    traitData_negative = clinical %>%
-      dplyr::mutate(trait = clinical[,trait]) %>%
-      dplyr::filter(trait != positive)
-    counts.normalized.negative = counts[,rownames(traitData_negative)]
-    deconv.negative = deconv[rownames(traitData_negative),]
-    tfs.negative = compute.TFs.activity(counts.normalized.negative, TF.collection, min_targets_size, tfs.pruned, universe)
-    dt.negative = dt
-    network.negative = network
-    dt.negative[[1]] = multideconv::replicate_deconvolution_subgroups(dt, deconv.negative)
-    network.negative[[1]] = create_tfs_modules(tfs.negative, network)
-    network.negative[[5]] = tfs.negative
-
-    corr_modules_negative = compute.modules.relationship(network.negative[[1]], dt.negative[[1]], batch = batch, return = T, plot = F, pval = pval)
-
-    #####################################################Cell groups identification
-
-    cell_dendrograms = identify.cell.groups(corr_modules_positive, clustering.method = clustering.method, height = 20, return = F)
-    cell.groups.positive = cell.groups.computation(dt.positive[[1]], cell_dendrograms, network.positive, return = F, batch = batch)
-
-    cell_dendrograms = identify.cell.groups(corr_modules_negative, clustering.method = clustering.method, height = 20, return = F)
-    cell.groups.negative = cell.groups.computation(dt.negative[[1]], cell_dendrograms, network.negative, return = F, batch = batch)
-
-    ### Join cell groups composition from both classes
-    names(cell.groups.positive[[2]]) = paste0(names(cell.groups.positive[[2]]), "_positive.class")
-    names(cell.groups.negative[[2]]) = paste0(names(cell.groups.negative[[2]]), "_negative.class")
-    cell.groups.composition = c(cell.groups.positive[[2]], cell.groups.negative[[2]])
-
-    ### Join cell groups loadings
-    cell.groups.loadings = c(cell.groups.positive[[3]], cell.groups.negative[[3]])
-    names(cell.groups.loadings) = names(cell.groups.composition)
-
-    ### List cell groups values and composition
-    cell_groups = list(cell.groups.composition, cell.groups.loadings)
-
-    #Cell groups projection
-    cell.groups.train = compute_cell_groups_signatures(dt, cell_groups, names(cell_groups[[1]]), deconv, network)
-
-    cell.groups.composition = cell.groups.composition[names(cell.groups.composition) %in% colnames(cell.groups.train)]
-    cell.groups.loadings = cell.groups.loadings[names(cell.groups.loadings) %in% colnames(cell.groups.train)]
-
-    cell.groups = list(cell.groups.train, cell.groups.composition, cell.groups.loadings)
-
-  }else{
-    corr_modules = compute.modules.relationship(network[[1]], dt[[1]], batch = batch, return = T, plot = F, pval = pval)
-    cell_dendrograms = identify.cell.groups(corr_modules, clustering.method = clustering.method, height = 20, return = F)
-    cell.groups = cell.groups.computation(dt[[1]], cell_dendrograms, network, batch = batch, return = F)
-  }
+  corr_modules = compute.modules.relationship(network[[1]], dt[[1]], batch = batch, return = T, plot = F, pval = pval)
+  cell_dendrograms = identify.cell.groups(corr_modules, clustering.method = clustering.method, height = 20, return = F)
+  cell.groups = cell.groups.computation(dt[[1]], cell_dendrograms, network, batch = batch, return = F)
 
   ### Combined highly corr cell groups
   #cell.groups = remove.cell.groups.corr(cell.groups, threshold = high_corr_groups)
