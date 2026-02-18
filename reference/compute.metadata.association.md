@@ -87,18 +87,4 @@ compute.metadata.association(
   width = 15,
   height = 10
 )
-#> 
-#> Attaching package: ‘dplyr’
-#> The following objects are masked from ‘package:stats’:
-#> 
-#>     filter, lag
-#> The following objects are masked from ‘package:base’:
-#> 
-#>     intersect, setdiff, setequal, union
-#> 
-#> Attaching package: ‘rstatix’
-#> The following object is masked from ‘package:stats’:
-#> 
-#>     filter
-#> No significant pairs found in trait: Best.Confirmed.Overall.ResponseNo significant pairs found in trait: binaryResponse
 ```

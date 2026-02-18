@@ -126,7 +126,8 @@ compute.modules.relationship(network.tuto[[1]],
                              pathways,
                              "Pathways_Progeny-TFs_Modules",
                              width = 15)
-#> Error in plot.new(): figure margins too large
+#> agg_record_220886245 
+#>                    2 
 
 data("deconv_subgroups.tuto")
 corr = compute.modules.relationship(network.tuto[[1]],
