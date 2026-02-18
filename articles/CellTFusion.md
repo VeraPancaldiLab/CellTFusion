@@ -69,9 +69,13 @@ deconv = multideconv::compute.deconvolution(raw.counts, methods = c("Quantiseq",
 #> * CBSX-HNSCC-scRNAseq
 #> * CBSX-Melanoma-scRNAseq
 #> * CBSX-NSCLC-PBMCs-scRNAseq
+#> * CBSX-NSCLC-scRNAseq
 #> * CCLE-TIL10
 #> * LM22
 #> * TIL10
+#> 
+#> Running Epidish...............................................................
+#> 
 #> 
 #> Running Epidish...............................................................
 #> 
