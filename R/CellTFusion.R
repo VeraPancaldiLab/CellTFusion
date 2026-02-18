@@ -4175,51 +4175,51 @@ compute.metadata.association.boxplot_summary <- function(
 
     df_long <- cbind(tfs.modules, group = coldata_cat[[tr]]) %>%
       as.data.frame() %>%
-      pivot_longer(
+      tidyr::pivot_longer(
         cols = colnames(tfs.modules),
         names_to = "module",
         values_to = "value"
       ) %>%
-      mutate(
+      dplyr::mutate(
         trait = tr,
         group = as.factor(group)
       )
 
     # ---- ANOVA ----
     anova_df <- df_long %>%
-      group_by(module) %>%
-      do({
+      dplyr::group_by(module) %>%
+      dplyr::do({
         res <- rstatix::anova_test(data = ., dv = value, between = group)
         tibble(F = res$F, p = res$p)
       }) %>%
-      ungroup()
+      dplyr::ungroup()
 
-    sig_pairs <- anova_df %>% filter(p < pval)
+    sig_pairs <- anova_df %>% dplyr::filter(p < pval)
     if(nrow(sig_pairs) == 0){
       cat("No significant pairs found in trait:", tr)
       next
     }
 
     feature_labels <- sig_pairs %>%
-      mutate(
+      dplyr::mutate(
         feature_label = paste0(module, "\nF=", signif(F,3), ", p=", signif(p,3))
       ) %>%
-      distinct(module, feature_label) %>%
+      dplyr::distinct(module, feature_label) %>%
       tibble::deframe()
 
     df_long <- df_long %>%
-      semi_join(sig_pairs, by = "module")
+      dplyr::semi_join(sig_pairs, by = "module")
 
     # ---- Tukey ----
     tukey_df <- df_long %>%
-      group_by(module) %>%
-      filter(n_distinct(group) > 1) %>%
-      group_modify(~ {
+      dplyr::group_by(module) %>%
+      dplyr::filter(n_distinct(group) > 1) %>%
+      dplyr::group_modify(~ {
         tuk <- tukey_hsd(.x, value ~ group)
         if(nrow(tuk) == 0) return(NULL)
         add_xy_position(tuk, x = "group")
       }) %>%
-      ungroup()
+      dplyr::ungroup()
 
     # ---- SAVE SVG PER TRAIT ----
     svg(paste0("Results/ANOVA_boxplot_summary_", file.name, "_", tr, ".svg"),
