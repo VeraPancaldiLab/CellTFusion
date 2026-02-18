@@ -3766,43 +3766,60 @@ expand_latent_features <- function(Z, log_transform = TRUE){
 }
 
 
-extract_contributing_features <- function(W, comp_matrix, feature_type = c("both", "positive", "negative"), width = 10, height = 8) {
-  require(ComplexHeatmap)
-  require(circlize)
+extract_contributing_features <- function(latent_factors, dt, cell.groups, feature_type = c("both", "positive", "negative"), quantile_cutoff = 0.9) {
+
+  ################## quantile_cutoff: 0.9 --> Keep only the top 10% strongest features (within positive or negative group)
+
+  # Extract binary composition
+  comp_matrix = compute.composition.matrix(dt, cell.groups)
 
   # List to store top contributors for each factor
   top_contributors <- list()
 
+  # Extract weights
+  W = latent_factors$W
+
   # Loop over all factors (columns in W)
   for (factor_name in colnames(W)) {
 
-    # 1️⃣ Extract weights for the factor
     w <- W[, factor_name]
+    w <- w[!is.na(w)]
 
-    # 2️⃣ Data-driven threshold (top X%)
-    thr <- quantile(abs(w), 0.9, na.rm = TRUE)
-    selected_features <- w[abs(w) >= thr]
+    selected_features <- c()
 
-    # Optional sign filtering
-    selected_features <- switch(
-      feature_type,
-      positive = selected_features[selected_features > 0],
-      negative = selected_features[selected_features < 0],
-      both     = selected_features
-    )
+    if (feature_type %in% c("both", "positive")) {
 
-    # Skip if nothing passes threshold
-    if (length(selected_features) == 0) {
-      message("No features passed threshold for ", factor_name)
-      next
+      w_pos <- w[w > 0]
+
+      if (length(w_pos) > 0) {
+        thr_pos <- quantile(w_pos, quantile_cutoff, na.rm = TRUE)
+        selected_pos <- w_pos[w_pos >= thr_pos]
+        selected_features <- c(selected_features, selected_pos)
+      }
     }
 
-    # Order by effect size
+    if (feature_type %in% c("both", "negative")) {
+
+      w_neg <- w[w < 0]
+
+      if (length(w_neg) > 0) {
+        thr_neg <- quantile(abs(w_neg), quantile_cutoff, na.rm = TRUE)
+        selected_neg <- w_neg[abs(w_neg) >= thr_neg]
+        selected_features <- c(selected_features, selected_neg)
+      }
+    }
+
+    if (length(selected_features) == 0) {
+      message("No features passed threshold for ", factor_name)
+      stop()
+    }
+
+    # Order by effect size for plotting
     selected_features <- selected_features[
       order(selected_features)
     ]
 
-    # 3️⃣ Subset composition matrix
+    # Subset composition matrix
     comp_sub <- comp_matrix[names(selected_features), , drop = FALSE]
 
     # Remove features with all zeros
@@ -3810,35 +3827,35 @@ extract_contributing_features <- function(W, comp_matrix, feature_type = c("both
 
     top_contributors[[factor_name]] <- selected_features
 
-    # 4️⃣ Column annotation
-    column_ha <- HeatmapAnnotation(
-      Contribution = anno_barplot(
-        selected_features,
-        gp = gpar(fill = ifelse(selected_features > 0, "red", "blue"))
-      )
-    )
-
-    # 5️⃣ Heatmap
-    ht <- Heatmap(
-      t(comp_sub),
-      name = "Composition",
-      top_annotation = column_ha,
-      col = c("0" = "white", "1" = "darkgreen"),
-      rect_gp = gpar(col = "grey80", lwd = 0.5),
-      cluster_rows = TRUE,
-      cluster_columns = FALSE,
-      show_row_names = TRUE,
-      show_column_names = FALSE,
-      column_title = paste("Top contributors for", factor_name)
-    )
-
-    pdf(
-      paste0("Results/Heatmap_CG_composition_", factor_name, ".pdf"),
-      width = width,
-      height = height
-    )
-    draw(ht)
-    dev.off()
+    # # Column annotation
+    # column_ha <- HeatmapAnnotation(
+    #   Contribution = anno_barplot(
+    #     selected_features,
+    #     gp = gpar(fill = ifelse(selected_features > 0, "red", "blue"))
+    #   )
+    # )
+    #
+    # # Heatmap
+    # ht <- Heatmap(
+    #   t(comp_sub),
+    #   name = "Composition",
+    #   top_annotation = column_ha,
+    #   col = c("0" = "white", "1" = "darkgreen"),
+    #   rect_gp = gpar(col = "grey80", lwd = 0.5),
+    #   cluster_rows = TRUE,
+    #   cluster_columns = FALSE,
+    #   show_row_names = TRUE,
+    #   show_column_names = FALSE,
+    #   column_title = paste("Top contributors for", factor_name)
+    # )
+    #
+    # pdf(
+    #   paste0("Results/Heatmap_CG_composition_", factor_name, ".pdf"),
+    #   width = width,
+    #   height = height
+    # )
+    # draw(ht)
+    # dev.off()
   }
 
 
@@ -3846,110 +3863,156 @@ extract_contributing_features <- function(W, comp_matrix, feature_type = c("both
 }
 
 
-plot_factor_celltype_networks <- function(
-    W, comp_matrix,
-    feature_type = c("both","positive","negative"),
-    enrich_thresh = 1.5,
-    min_groups = 2,
-    layout_type = c("circle","star")
-) {
-
+compute_TME_states <- function(latent_factors, dt, cell.groups, enrich_thresh = 2, feature_type = "positive"){
   require(igraph)
   require(scales)
 
-  # Global background frequency of each cell type
-  background_freq <- colMeans(comp_matrix)
+  # Extract contributing cell groups
+  top_features_list = extract_contributing_features(latent_factors, dt, cell.groups, feature_type = feature_type)
+
+  # Binary composition
+  comp_matrix <- compute.composition.matrix(dt, cell.groups)
+
+  # Background frequency
+  background_freq <- colMeans(comp_matrix) #fraction of cell groups globally containing each cell type
 
   factor_celltype_weights <- list()
 
-  for (factor_name in colnames(W)) {
+  for (factor_name in names(top_features_list)) {
 
-    ## 1️⃣ Extract top features (cell groups)
-    w <- W[, factor_name]
-    # 2️⃣ Data-driven threshold (top X%)
-    thr <- quantile(abs(w), 0.9, na.rm = TRUE)
-    selected_features <- w[abs(w) >= thr]
-
-    # Optional sign filtering
-    top_features <- switch(
-      feature_type,
-      positive = selected_features[selected_features > 0],
-      negative = selected_features[selected_features < 0],
-      both     = selected_features
-    )
-
+    top_features <- top_features_list[[factor_name]]
     if (length(top_features) == 0) next
 
-    ## 2️⃣ Subset composition matrix
-    comp_sub <- comp_matrix[rownames(comp_matrix) %in% names(top_features), , drop = FALSE]
-    comp_sub <- comp_sub[rowSums(comp_sub) > 0, , drop = FALSE]
+    # --- Separate positive and negative CGs ---
+    pos_cg <- names(top_features[top_features > 0])
+    neg_cg <- names(top_features[top_features < 0])
 
-    if (nrow(comp_sub) == 0) next
+    comp_sub <- comp_matrix[rownames(comp_matrix) %in% names(top_features),, drop = FALSE]
 
-    ## 3️⃣ Enrichment filtering (noise removal)
-    fg_freq <- colMeans(comp_sub)
-    enrichment <- fg_freq / background_freq
-    enrichment[!is.finite(enrichment)] <- NA
+    # --- Compute signed edge weights ---
+    edge_weights <- colSums(comp_sub * top_features[rownames(comp_sub)]) #Factor→Cell Groups→Cell Types: How strongly this cell type is associated with the factor through the CGs that contain it.
+    # If a cell type appears mostly in positive CGs → positive edge
+    # If appears mostly in negative CGs → negative edge
+    # If balanced → near zero
+    edge_weights <- edge_weights[edge_weights != 0]
 
-    keep <- which(
-      enrichment >= enrich_thresh &
-        colSums(comp_sub) >= min_groups
-    )
+    # Interpretation of edge
+    #   Magnitude = cumulative strength of CGs containing it
+    #   Sign = direction of association with factor
+    #   Large positive → enriched in positive CGs
+    #   Large negative → enriched in negative CGs
 
-    if (length(keep) == 0) next
+    # --- Separate enrichment by sign ---
+    enrich_pos <- rep(NA, ncol(comp_matrix))
+    enrich_neg <- rep(NA, ncol(comp_matrix))
+    names(enrich_pos) <- colnames(comp_matrix)
+    names(enrich_neg) <- colnames(comp_matrix)
 
-    comp_filt <- comp_sub[, keep, drop = FALSE]
+    if (length(pos_cg) > 0) {
+      comp_pos <- comp_matrix[pos_cg, , drop = FALSE]
+      fg_freq_pos <- colMeans(comp_pos) #fraction of cell groups in which each cell type is present
+      enrich_pos <- fg_freq_pos / background_freq #relative enrichment of cell type in the selected top (Enriched relative to background)
+    }
 
-    ## 4️⃣ Edge weights
-    edge_weights <- colSums(comp_filt)
-    edge_weights <- edge_weights[edge_weights > 0]
+    if (length(neg_cg) > 0) {
+      comp_neg <- comp_matrix[neg_cg, , drop = FALSE]
+      fg_freq_neg <- colMeans(comp_neg)
+      enrich_neg <- fg_freq_neg / background_freq
+    }
 
-    if (length(edge_weights) == 0) next
+    # Interpretation
+    # Suppose CD4.cells_immunosuppressive appears in 70% of the selected top features (fg_freq = 0.7)
+    # - Its background frequency = 0.34408602
+    # - Enrichment = 0.7 / 0.344 ≈ 2.03 → more than 2× enriched relative to baseline
+
+    enrich_pos[!is.finite(enrich_pos)] <- NA
+    enrich_neg[!is.finite(enrich_neg)] <- NA
+
+    # --- Keep only sign-consistent enriched cell types ---
+    keep_pos <- names(which(enrich_pos >= enrich_thresh))
+    keep_neg <- names(which(enrich_neg >= enrich_thresh))
+
+    # enrichment >= enrich_thresh → cell type enriched across cell groups relative to baseline (“Is this cell type more common in my selected subset than expected based on its overall frequency?”)
+
+    # Conditional selection based on feature_type
+    keep_final <- c()
+    if (feature_type %in% c("both","positive")) {
+      keep_final <- c(keep_final, intersect(names(edge_weights[edge_weights > 0]), keep_pos))
+    }
+    if (feature_type %in% c("both","negative")) {
+      keep_final <- c(keep_final, intersect(names(edge_weights[edge_weights < 0]), keep_neg))
+    }
+
+    edge_weights <- edge_weights[keep_final]
 
     factor_celltype_weights[[factor_name]] <- edge_weights
 
-    ## 5️⃣ Build graph
+    # GRAPH
+
+    if(length(edge_weights) == 0) next
+
     edges <- cbind(
       from = factor_name,
       to   = names(edge_weights)
     )
 
+    # skip plotting if edges is empty
+    if(nrow(edges) == 0) next
+
     g <- graph_from_edgelist(edges, directed = FALSE)
 
-    # ---- DEFINE VERTEX TYPES (FIX) ----
     V(g)$type <- ifelse(V(g)$name == factor_name, "factor", "celltype")
 
-    # ---- VERTEX STYLING ----
+    # --- Node size ---
     V(g)$size <- ifelse(
       V(g)$type == "factor",
       18,
-      rescale(edge_weights[V(g)$name], to = c(6, 14))
+      rescale(abs(edge_weights[V(g)$name]), to = c(6, 14))
     )
 
-    V(g)$color <- ifelse(
-      V(g)$type == "factor",
-      "#E69F00",   # factor
-      "#56B4E9"    # cell types
-    )
+    # Node size is proportional to the absolute value of edge_weights.
+    #
+    # edge_weights for a cell type represent how strongly the factor is associated with that cell type through the cell groups:
+    #
+    #   Positive if the cell type is mostly in positive-contributing cell groups.
+    #
+    # Negative if mostly in negative-contributing cell groups.
+    #
+    # Magnitude = cumulative contribution across all cell groups for this factor.
+
+    # --- Node color ---
+    V(g)$color <- sapply(V(g)$name, function(v) {
+      if (v == factor_name) return("#E69F00")  # factor node
+      ew <- edge_weights[v]
+      if (ew > 0) {
+        return("#D55E00")  # red = positive
+      } else {
+        return("#0072B2")  # blue = negative
+      }
+    })
 
     V(g)$frame.color <- "grey20"
     V(g)$label.color <- "black"
     V(g)$label.cex <- 0.9
 
-    # ---- EDGE STYLING ----
+    # --- Edge styling ---
     E(g)$weight <- edge_weights
-    E(g)$width  <- rescale(E(g)$weight, to = c(1, 5))
-    E(g)$color  <- "grey40"
+    E(g)$width  <- rescale(abs(E(g)$weight), to = c(1, 5))
 
-    # ---- LAYOUT ----
-    lay <- if (layout_type == "circle") {
-      layout_in_circle(g)
-    } else {
-      layout_as_star(g, center = which(V(g)$type == "factor"))
-    }
+    E(g)$color <- sapply(E(g), function(e) {
+      ew <- E(g)$weight[e]
+      if (ew > 0) {
+        return("#D55E00")
+      } else {
+        return("#0072B2")
+      }
+    })
 
-    # ---- PLOT ----
-    pdf(paste0("Results/Network_", factor_name, "_", feature_type))
+    # --- Layout ---
+    lay <- layout_as_star(g, center = which(V(g)$type == "factor"))
+
+    # --- Plot ---
+    pdf(paste0("Results/Network_", factor_name, ".pdf"))
     plot(
       g,
       layout = lay,
@@ -3960,10 +4023,32 @@ plot_factor_celltype_networks <- function(
       margin = 0.2
     )
     dev.off()
-
   }
 
+  # --- Save positive and negative cell types per factor ---
+  TME_states <- list()
+
+  for (factor_name in names(factor_celltype_weights)) {
+
+    edge_weights <- factor_celltype_weights[[factor_name]]
+
+    # Positive cell types
+    pos_cells <- names(edge_weights[edge_weights > 0])
+
+    # Negative cell types
+    neg_cells <- names(edge_weights[edge_weights < 0])
+
+    # Store as two-element list with conditional selection
+    TME_states[[factor_name]] <- list(
+      TME_state_positive = if (feature_type %in% c("both","positive")) pos_cells else character(0),
+      TME_state_negative = if (feature_type %in% c("both","negative")) neg_cells else character(0)
+    )
+  }
+
+  return(TME_states)
 }
+
+
 
 project_factors <- function(W, Y_new, expand = F) {
   common_features <- intersect(rownames(W), rownames(Y_new))
