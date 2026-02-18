@@ -2161,14 +2161,15 @@ extract_cells = function(groups, cells_extra = NULL){
   }
 
   # Create regex to capture base cell type + cluster
-  # Matches known cell type, optionally followed by .Iteration.x or .Subgroup.x (dot or underscore), then _Snumber
+  # Matches known cell type, optionally followed by .Iteration.x or .Subgroup.x, then _mixed/_immunosuppressive/_immunoactive
   regex_pattern <- paste0(
     "(",
     paste(names_cells, collapse = "|"),
     ")",
     "((?:[._](?:Subgroup|Iteration)\\.[0-9]+)*)",
-    "(?:_S[0-9]+)?"
+    "_(mixed|immunosuppressive|immunoactive)"
   )
+
 
   normalized_names <- sapply(groups, function(x) {
     m <- regexpr(regex_pattern, x, perl = TRUE)
@@ -4061,6 +4062,7 @@ plot.module.scatter.grid <- function(matA, matB, cor_mat, p_mat,
   dev.off()
 }
 
+
 compute.metadata.association.boxplot_summary <- function(
     tfs.modules, coldata, pval = 0.05, file.name,
     ncol = 5, y_min = 0, y_max = 0.5, width = 18, height = 10
@@ -4072,121 +4074,104 @@ compute.metadata.association.boxplot_summary <- function(
   library(rstatix)
   library(ggpubr)
 
-  # ---- categorical traits ----
   coldata_cat <- coldata %>%
-    dplyr::select(dplyr::where(is.character) | dplyr::where(is.factor))
+    dplyr::select(where(is.character) | where(is.factor))
 
   if (ncol(coldata_cat) == 0) {
     message("No categorical traits found.")
     return(invisible(NULL))
   }
 
-  # ---- long format ----
-  df_long <- cbind(tfs.modules, coldata_cat) %>%
-    as.data.frame() %>%
-    pivot_longer(
-      cols = colnames(tfs.modules),
-      names_to = "module",
-      values_to = "value"
-    ) %>%
-    pivot_longer(
-      cols = colnames(coldata_cat),
-      names_to = "trait",
-      values_to = "group"
-    ) %>%
-    mutate(group = as.factor(group))
+  # ---- LOOP OVER EACH TRAIT ----
+  for(tr in colnames(coldata_cat)){
 
-  # ---- ANOVA per module × trait ----
-  anova_df <- df_long %>%
-    group_by(module, trait) %>%
-    do({
-      res <- rstatix::anova_test(data = ., dv = value, between = group)
-      tibble(F = res$F, p = res$p)
-    }) %>%
-    ungroup()
+    df_long <- cbind(tfs.modules, group = coldata_cat[[tr]]) %>%
+      as.data.frame() %>%
+      pivot_longer(
+        cols = colnames(tfs.modules),
+        names_to = "module",
+        values_to = "value"
+      ) %>%
+      mutate(
+        trait = tr,
+        group = as.factor(group)
+      )
 
-  sig_pairs <- anova_df %>% filter(p < pval)
+    # ---- ANOVA ----
+    anova_df <- df_long %>%
+      group_by(module) %>%
+      do({
+        res <- rstatix::anova_test(data = ., dv = value, between = group)
+        tibble(F = res$F, p = res$p)
+      }) %>%
+      ungroup()
 
-  if(nrow(sig_pairs) == 0){
-    message("No significant ANOVA results.")
-    return(invisible(NULL))
+    sig_pairs <- anova_df %>% filter(p < pval)
+    if(nrow(sig_pairs) == 0){
+      cat("No significant pairs found in trait:", tr)
+      next
+    }
+
+    feature_labels <- sig_pairs %>%
+      mutate(
+        feature_label = paste0(module, "\nF=", signif(F,3), ", p=", signif(p,3))
+      ) %>%
+      distinct(module, feature_label) %>%
+      tibble::deframe()
+
+    df_long <- df_long %>%
+      semi_join(sig_pairs, by = "module")
+
+    # ---- Tukey ----
+    tukey_df <- df_long %>%
+      group_by(module) %>%
+      filter(n_distinct(group) > 1) %>%
+      group_modify(~ {
+        tuk <- tukey_hsd(.x, value ~ group)
+        if(nrow(tuk) == 0) return(NULL)
+        add_xy_position(tuk, x = "group")
+      }) %>%
+      ungroup()
+
+    # ---- SAVE SVG PER TRAIT ----
+    svg(paste0("Results/ANOVA_boxplot_summary_", file.name, "_", tr, ".svg"),
+        width = width, height = height)
+
+    p <- ggplot(df_long, aes(x = group, y = value, fill = group)) +
+      geom_boxplot(width = 0.6, outlier.size = 0.4, alpha = 0.85) +
+      geom_jitter(width = 0.2, size = 1, alpha = 0.7, color = "black") +
+      facet_wrap(~ module, ncol = ncol,
+                 labeller = labeller(module = feature_labels)) +
+      coord_cartesian(ylim = c(y_min, y_max)) +
+      labs(
+        y = "Feature value",
+        fill = "Group",
+        title = paste0("Features-trait associations: ", tr),
+        subtitle = paste0("One-way ANOVA with Tukey HSD | p-value < ", pval)
+      ) +
+      theme_bw(base_size = 12) +
+      theme(
+        strip.text = element_text(size = 14),
+        axis.text.x = element_text(size = 14, angle = 45, hjust = 1),
+        axis.text.y = element_text(size = 14),
+        axis.title = element_text(size = 16, face = "bold"),
+        plot.title = element_text(size = 20, face = "bold"),
+        plot.subtitle = element_text(size = 16),
+        legend.position = "top"
+      )
+
+    if(nrow(tukey_df) > 0){
+      p <- p + stat_pvalue_manual(
+        tukey_df,
+        hide.ns = TRUE,
+        size = 6,
+        tip.length = 0.02,
+        bracket.size = 0.6,
+        inherit.aes = FALSE
+      )
+    }
+
+    print(p)
+    dev.off()
   }
-
-  feature_labels <- sig_pairs %>%
-    mutate(
-      feature_label = paste0(module, "\nF=", signif(F,3), ", p=", signif(p,3))
-    ) %>%
-    distinct(module, feature_label) %>%
-    tibble::deframe()
-
-  df_long <- df_long %>% semi_join(sig_pairs, by = c("module", "trait"))
-
-  # ---- order modules by effect size ----
-  module_order <- df_long %>%
-    group_by(module, group) %>%
-    summarise(med = median(value, na.rm = TRUE), .groups = "drop") %>%
-    group_by(module) %>%
-    arrange(group, .by_group = TRUE) %>%
-    summarise(effect = last(med) - first(med), .groups = "drop") %>%
-    arrange(desc(effect)) %>%
-    pull(module)
-
-  df_long$module <- factor(df_long$module, levels = module_order)
-
-  # ---- Tukey HSD ----
-  tukey_df <- df_long %>%
-    group_by(module, trait) %>%
-    filter(n_distinct(group) > 1) %>%  # skip groups with only 1 level
-    group_modify(~ {
-      tuk <- tukey_hsd(.x, value ~ group)
-      if(nrow(tuk) == 0) return(NULL)
-      add_xy_position(tuk, x = "group")
-    }) %>%
-    ungroup()
-
-  # ---- plot ----
-  svg(paste0("Results/ANOVA_boxplot_summary_", file.name, ".svg"),
-      width = width, height = height)
-
-  p <- ggplot(df_long, aes(x = group, y = value, fill = group)) +
-    geom_boxplot(width = 0.6, outlier.size = 0.4, alpha = 0.85) +
-    geom_jitter(width = 0.2, size = 1, alpha = 0.7, color = "black") +  # <-- add points
-    facet_wrap(~ module + trait, ncol = ncol, labeller = labeller(module = feature_labels)) +
-    coord_cartesian(ylim = c(y_min, y_max)) +
-    labs(
-      y = "Feature value",
-      fill = "Group",
-      title = "Features-trait associations",
-      subtitle = paste0("One-way ANOVA with Tukey HSD | Showing associations (p-value < ", pval, ")")
-    ) +
-    theme_bw(base_size = 12) +
-    theme(
-      strip.text = element_text(size = 14),
-      axis.text.x = element_text(size = 14, angle = 45, hjust = 1),  # diagonal x labels
-      axis.text.y = element_text(size = 14),
-      axis.title.x = element_text(size = 16, face = "bold"),
-      axis.title.y = element_text(size = 16, face = "bold"),
-      plot.title = element_text(size = 20, face = "bold"),
-      plot.subtitle = element_text(size = 16),
-      legend.title = element_text(size = 16, face = "bold"),
-      legend.text = element_text(size = 14),
-      panel.grid.minor = element_blank(),
-      legend.position = "top",
-      panel.spacing.x = unit(1.0, "lines")
-    )
-
-  if(nrow(tukey_df) > 0){
-    p <- p + stat_pvalue_manual(
-      tukey_df,
-      hide.ns = TRUE,    # hide non-significant
-      size = 8,          # font size of p-value text
-      tip.length = 0.03, # length of the vertical lines
-      bracket.size = 0.8 # thickness of the horizontal significance line
-    )
-  }
-
-  print(p)
-  dev.off()
-
-  invisible(anova_df)
 }
