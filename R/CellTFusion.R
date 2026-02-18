@@ -486,6 +486,7 @@ compute.metadata.association <- function(
     ncol = 5,
     y_min = 0,
     y_max = 0.5,
+    plot_grid = F,
     width_grid = 18,
     height_grid = 10
 ) {
@@ -494,18 +495,20 @@ compute.metadata.association <- function(
     dplyr::select(dplyr::where(is.character) | dplyr::where(is.factor))
 
   if(ncol(coldata_categorical) != 0) {
-    # Use the new wrapper function to generate boxplot summaries
-    compute.metadata.association.boxplot_summary(
-      tfs.modules = tfs.modules,
-      coldata = coldata_categorical,
-      pval = pval,
-      file.name = file.name,
-      ncol = ncol,
-      y_min = y_min,
-      y_max = y_max,
-      width = width_grid,
-      height = height_grid
-    )
+    if(plot_grid){
+      # Use the new wrapper function to generate boxplot summaries
+      compute.metadata.association.boxplot_summary(
+        tfs.modules = tfs.modules,
+        coldata = coldata_categorical,
+        pval = pval,
+        file.name = file.name,
+        ncol = ncol,
+        y_min = y_min,
+        y_max = y_max,
+        width = width_grid,
+        height = height_grid
+      )
+    }
   }
 
   ### Association with quantitative variables
@@ -680,7 +683,7 @@ compute.modules.enrichment <- function(RNA.tpm, hub_tfs){
 #'                                     pval = 0.01)
 #'
 #' @export
-compute.modules.relationship <- function(matA, matB, file_name, batch = NULL, width = 8, height = 8, par_mar = NULL, pval=0.05, padj = F, cor_type = "p", return = F, vertical = F, plot = T, width.grid = 12, height.grid = 10, ncol.grid = NULL){
+compute.modules.relationship <- function(matA, matB, file_name, batch = NULL, width = 8, height = 8, par_mar = NULL, pval=0.05, padj = F, cor_type = "p", return = F, vertical = F, plot = T, plot.grid = F, width.grid = 12, height.grid = 10, ncol.grid = NULL){
 
   matA = data.frame(matA)
   matB = data.frame(matB)
@@ -719,7 +722,7 @@ compute.modules.relationship <- function(matA, matB, file_name, batch = NULL, wi
     moduleTraitPvalue = WGCNA::corPvalueStudent(moduleTraitCor, nrow(matA))
   }
 
-  if (plot) {
+  if (plot.grid) {
     plot.module.scatter.grid(
       matA = matA,
       matB = matB,
