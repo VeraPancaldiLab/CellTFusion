@@ -100,4 +100,5 @@ compute.metadata.association(
 #> The following object is masked from ‘package:stats’:
 #> 
 #>     filter
+#> No significant pairs found in trait: Best.Confirmed.Overall.ResponseNo significant pairs found in trait: binaryResponse
 ```
