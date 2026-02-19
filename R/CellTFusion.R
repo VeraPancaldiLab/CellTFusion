@@ -90,9 +90,9 @@ CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL
     if(verbose){
       cat("Calculating cell type deconvolution............................................................\n")
     }
-    if(("CibersortX" %in% deconv_methods) == T){
+    if(("CBSX" %in% deconv_methods) == T){
       if(is.null(cbsx.mail)==T || is.null(cbsx.token)==T){
-        stop("No CibersortX credentials given!\n")
+        stop("No CBSX credentials given!\n")
       }else{
         deconv = multideconv::compute.deconvolution(raw.counts, normalized = normalized, methods = deconv_methods, credentials.mail = cbsx.mail, credentials.token = cbsx.token, doParallel = T, workers = 3, file_name = file_name, return = return)
       }
