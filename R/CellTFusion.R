@@ -166,12 +166,19 @@ CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL
   }
   latent_spaces <- compute.latent_factors(cell.groups[[1]], batch = batch_vec, seed = 123)
   #latent_spaces = NULL
+
+  # 6. Find TME states
+  if(verbose){
+    cat("\nTME states calculation............................................................\n")
+  }
+  TME_states = compute_TME_states(latent_spaces, dt, cell.groups)
+
   if(verbose){
     cat("\nEverything done! Results are saved in Results/ folder............................................................\n")
   }
 
   res = list("Deconvolution" = deconv, "TFs_matrix" = tfs, "TF_network" = network, "Pathways_scores" = pathways,
-             "Processed_deconvolution" = dt, "Cell_groups" = cell.groups, "Latent_spaces" = latent_spaces)
+             "Processed_deconvolution" = dt, "Cell_groups" = cell.groups, "Latent_spaces" = latent_spaces, "TME_states" = TME_states)
 
   return(res)
 
