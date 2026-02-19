@@ -66,7 +66,7 @@ utils::globalVariables(c("Trait", "Value" ,"level", ".", "Cells_level", "PC1", "
 #' )
 #'}
 #'
-CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL, trait = NULL, trait.positive = NULL, batch = F, batch_id = NULL, deconv_methods = c("Quantiseq", "Epidish", "DeconRNASeq", "DWLS", "CibersortX"), cbsx.mail = NULL, cbsx.token = NULL, file_name = NULL,
+CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL, batch = F, batch_id = NULL, deconv_methods = c("Quantiseq", "Epidish", "DeconRNASeq", "DWLS", "CibersortX"), cbsx.mail = NULL, cbsx.token = NULL, file_name = NULL,
                        TF.collection = "CollecTRI", min_targets_size = 10, tfs.pruned = FALSE, universe = NULL, paths = NULL, minMod = 10, corr_mod = 0.9, corr = 0.7, corr_type = "spearman", cells_extra = NULL, pval = 0.05, high_corr_groups = 0.8, return = T, verbose = T){
 
   set.seed(123)
@@ -155,10 +155,7 @@ CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL
   if(verbose){
     cat("\nCell groups identification............................................................\n")
   }
-  cell.groups = construct_cell_groups(counts.norm, tfs, deconv, network, dt, coldata, batch = batch_vec, pval = pval, high_corr_groups = high_corr_groups,
-                                      clustering.method = "ward.D2", trait = trait, positive = trait.positive,
-                                      TF.collection, min_targets_size, tfs.pruned, universe)
-
+  cell.groups = construct_cell_groups(network, dt, batch = batch_vec, pval = pval, high_corr_groups = high_corr_groups, clustering.method = "ward.D2")
 
   # 5. Cell groups latent spaces
   if(verbose){
@@ -1766,7 +1763,7 @@ compute.composition.matrix = function(deconvolution.subgroupped, cell.groups, ce
 #'   \item{loadings}{A list of numeric vectors indicating the loadings (feature contributions) for each group.}
 #' }
 #' @export
-construct_cell_groups = function(counts, tfs, deconv, network, dt, clinical, batch = NULL, pval = 0.05, high_corr_groups = 0.8, clustering.method = "ward.D2", TF.collection = "CollecTRI", min_targets_size = 10, tfs.pruned = FALSE, universe = NULL){
+construct_cell_groups = function(network, dt, batch = NULL, pval = 0.05, high_corr_groups = 0.8, clustering.method = "ward.D2"){
 
   corr_modules = compute.modules.relationship(network[[1]], dt[[1]], batch = batch, return = T, plot = F, pval = pval)
   cell_dendrograms = identify.cell.groups(corr_modules, clustering.method = clustering.method, height = 20, return = F)
@@ -4039,17 +4036,24 @@ compute_TME_states <- function(latent_factors, dt, cell.groups, enrich_thresh = 
 
     edge_weights <- factor_celltype_weights[[factor_name]]
 
+    TME_entry <- list()
+
     # Positive cell types
-    pos_cells <- names(edge_weights[edge_weights > 0])
+    if (feature_type %in% c("both","positive")) {
+      pos_cells <- names(edge_weights[edge_weights > 0])
+      if (length(pos_cells) > 0) TME_entry$TME_state_positive <- pos_cells
+    }
 
     # Negative cell types
-    neg_cells <- names(edge_weights[edge_weights < 0])
+    if (feature_type %in% c("both","negative")) {
+      neg_cells <- names(edge_weights[edge_weights < 0])
+      if (length(neg_cells) > 0) TME_entry$TME_state_negative <- neg_cells
+    }
 
-    # Store as two-element list with conditional selection
-    TME_states[[factor_name]] <- list(
-      TME_state_positive = if (feature_type %in% c("both","positive")) pos_cells else character(0),
-      TME_state_negative = if (feature_type %in% c("both","negative")) neg_cells else character(0)
-    )
+    # Only add factor if TME_entry has any content
+    if (length(TME_entry) > 0) {
+      TME_states[[factor_name]] <- TME_entry
+    }
   }
 
   return(TME_states)
