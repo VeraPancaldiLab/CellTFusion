@@ -1629,7 +1629,7 @@ identify.cell.groups = function(features, clustering.method = "ward.D2", width =
   }
 
   if(length(zeros)!=0){
-    moduleTraitCor = moduleTraitCor[-zeros,]
+    moduleTraitCor = moduleTraitCor[-zeros,,drop = F]
     features_vec = features_vec[-zeros]
   }
 
@@ -3020,7 +3020,7 @@ compute.test.score = function(cell_group, loadings){
 #' @export
 #'
 prepare_CellTFusion_folds <- function(data, folds = NULL, deconv = NULL, universe = NULL, paths = NULL, normalized = FALSE,
-                                      coldata, trait = NULL, trait.positive = NULL, time_var = NULL, event_var = NULL, corr_type = "spearman",
+                                      coldata, time_var = NULL, event_var = NULL, corr_type = "spearman",
                                       ncores = NULL, batch = F, batch_id = NULL, min_targets_size, minMod, corr_mod, corr, high_corr_groups, bestune = NULL){
 
     if(!is.null(bestune)){
@@ -3081,8 +3081,6 @@ prepare_CellTFusion_folds <- function(data, folds = NULL, deconv = NULL, univers
         deconv = deconv,
         normalized = normalized,
         coldata = coldata,
-        trait = trait,
-        trait.positive = trait.positive,
         universe = universe,
         corr_type = corr_type,
         paths = paths,
@@ -3097,7 +3095,7 @@ prepare_CellTFusion_folds <- function(data, folds = NULL, deconv = NULL, univers
       )
 
       # Get cell group features
-      train_cell_data_final <- train_processed_final$Latent_spaces$expanded_Z %>%
+      train_cell_data_final <- train_processed_final$Latent_spaces$Z %>%
         data.frame()
 
       # train_cell_data_final <- train_processed_final$Cell_groups[[1]] %>%
@@ -3163,8 +3161,6 @@ prepare_CellTFusion_folds <- function(data, folds = NULL, deconv = NULL, univers
             deconv = train_deconv,
             normalized = normalized,
             coldata = train_coldata,
-            trait = trait,
-            trait.positive = trait.positive,
             universe = universe,
             corr_type = corr_type,
             paths = paths,
@@ -3178,7 +3174,7 @@ prepare_CellTFusion_folds <- function(data, folds = NULL, deconv = NULL, univers
             verbose = FALSE
           )
 
-          train_cell_data <- train_processed$Latent_spaces$expanded_Z %>%
+          train_cell_data <- train_processed$Latent_spaces$Z %>%
             data.frame()
 
           # train_cell_data <- train_processed$Cell_groups[[1]] %>%
@@ -3213,7 +3209,7 @@ prepare_CellTFusion_folds <- function(data, folds = NULL, deconv = NULL, univers
             test_deconv
           )
 
-          test_data = project_factors(train_processed$Latent_spaces$W, t(cell_groups_projection), expand = T)
+          test_data = project_factors(train_processed$Latent_spaces$W, t(cell_groups_projection), expand = F)
           #test_data = cell_groups_projection
 
           if (is.list(obs_test)) {
@@ -4244,6 +4240,7 @@ compute.metadata.association.boxplot_summary <- function(
 
     df_long <- df_long %>%
       dplyr::semi_join(sig_pairs, by = "module")
+
 
     # ---- Tukey ----
     tukey_df <- df_long %>%
