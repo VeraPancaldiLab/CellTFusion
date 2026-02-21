@@ -118,7 +118,8 @@ pathways <- compute.pathway.activity(counts.norm.tuto)
 #> Warning: 'OmnipathR::get_annotation_resources' is deprecated.
 #> Use 'annotation_resources' instead.
 #> See help("Deprecated")
-#> Warning: incomplete final line found on 'https://omnipathdb.org/resources'
+#> Warning: URL 'https://omnipathdb.org/resources': Timeout of 60 seconds was reached
+#> Warning: [decoupleR] Failed to check the list of available resources in OmniPath. Proceeding anyways.
 #> Warning: 'OmnipathR::import_omnipath_annotations' is deprecated.
 #> Use 'annotations' instead.
 #> See help("Deprecated")
