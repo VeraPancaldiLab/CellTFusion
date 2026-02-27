@@ -12,8 +12,6 @@ prepare_CellTFusion_folds(
   paths = NULL,
   normalized = FALSE,
   coldata,
-  trait = NULL,
-  trait.positive = NULL,
   time_var = NULL,
   event_var = NULL,
   corr_type = "spearman",
@@ -46,10 +44,6 @@ CellTFusion will run without these features.}
 
 \item{coldata}{A data frame with metadata (e.g., sample annotations), must match the number and order of samples in \code{data}.}
 
-\item{trait}{A character string specifying the name of the column in \code{coldata} containing the trait of interest (e.g., response).}
-
-\item{trait.positive}{A character string indicating the positive class label for the trait.}
-
 \item{ncores}{Integer. Number of CPU cores to use for parallelization. If \code{NULL}, \code{parallel::detectCores() - 2} is used.}
 
 \item{min_targets_size}{Hyperparameters for CellTFusion}
@@ -65,6 +59,10 @@ These can be provided as vectors to define a tuning grid when \code{bestune = NU
 
 \item{bestune}{Optional. A data frame of tuned hyperparameters. If provided, the function skips fold construction
 and directly processes the full dataset using these values.}
+
+\item{trait}{A character string specifying the name of the column in \code{coldata} containing the trait of interest (e.g., response).}
+
+\item{trait.positive}{A character string indicating the positive class label for the trait.}
 }
 \value{
 A list with two possible structures depending on \code{bestune}:

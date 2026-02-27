@@ -4295,3 +4295,150 @@ compute.metadata.association.boxplot_summary <- function(
     dev.off()
   }
 }
+
+#' Run multivariate feature-based GSEA using limma and Hallmark gene sets
+#'
+#' This function fits a multivariate linear model for each gene using all features
+#' in \code{features_df} as continuous covariates. For each feature, it extracts
+#' the moderated t-statistics and p-values, ranks genes, and performs GSEA using
+#' the Hallmark gene sets from MSigDB. Optional dotplots for the top enriched
+#' pathways can be saved as PDFs.
+#'
+#' @param RNA.tpm A numeric matrix or data frame of gene expression values
+#'   (genes in rows, samples in columns).
+#' @param features_df A data frame of continuous features (samples in rows,
+#'   features in columns) to be modeled as covariates.
+#' @param plot_dot Logical; if TRUE, generates and saves dotplots of top
+#'   enriched Hallmark pathways for each feature. Default is TRUE.
+#' @param top_n Integer; number of top pathways to display in the dotplot. Default is 10.
+#' @param file_name Character; optional suffix for saved PDF files. Default is NULL.
+#' @param width Numeric; width of the PDF plot in inches. Default is 8.
+#' @param height Numeric; height of the PDF plot in inches. Default is 10.
+#'
+#' @return A list containing:
+#' \describe{
+#'   \item{DE_results}{A named list of \code{topTable} results for each feature,
+#'     including logFC, moderated t-statistics, p-values, and adjusted p-values.}
+#'   \item{GSEA_results}{A named list of \code{GSEA} results from
+#'     \code{clusterProfiler} for each feature.}
+#' }
+#'
+#' @details
+#' The function works as follows:
+#' \enumerate{
+#'   \item Hallmark gene sets are retrieved from MSigDB using \code{msigdbr}.
+#'   \item A multivariate linear model is fitted for each gene using \code{limma::lmFit}.
+#'   \item Empirical Bayes moderation is applied via \code{limma::eBayes}.
+#'   \item For each feature:
+#'     \enumerate{
+#'       \item Differential expression results are extracted using \code{topTable} for
+#'         the coefficient of that feature.
+#'       \item Genes are ranked by moderated t-statistics.
+#'       \item Hallmark GSEA is performed using the ranked gene list.
+#'       \item Optionally, a dotplot of the top enriched pathways is generated.
+#'     }
+#' }
+#'
+#' @import limma
+#' @import msigdbr
+#' @import clusterProfiler
+#' @import dplyr
+#' @import enrichplot
+#' @importFrom graphics dotplot
+#'
+#' @examples
+#' \dontrun{
+#'   results <- compute_factor_gsea(RNA.tpm = expression_matrix,
+#'                               features_df = feature_table,
+#'                               plot_dot = TRUE,
+#'                               top_n = 10,
+#'                               file_name = "Feature1_vs_all")
+#' }
+#'
+#' @export
+compute_factor_gsea <- function(RNA.tpm,
+                             features_df,
+                             plot_dot = TRUE,
+                             top_n = 10,
+                             file_name = NULL,
+                             width = 8,
+                             height = 10) {
+
+
+  features_df = data.frame(features_df)
+  # -----------------------------------------
+  # Retrieve Hallmark gene sets
+  # -----------------------------------------
+  hallmark_df <- msigdbr::msigdbr(species = "Homo sapiens", collection = "H")
+  gene_sets <- split(hallmark_df$gene_symbol, hallmark_df$gs_name)
+
+  term2gene <- data.frame(
+    term = rep(names(gene_sets), lengths(gene_sets)),
+    gene = unlist(gene_sets)
+  )
+
+  # -----------------------------------------
+  # Fit multivariate limma model (ALL features)
+  # -----------------------------------------
+  design <- stats::model.matrix(~ ., data = features_df)
+
+  fit <- limma::lmFit(RNA.tpm, design)
+  fit <- limma::eBayes(fit)
+
+  deg_list <- list()
+  gsea_results_list <- list()
+
+  # -----------------------------------------
+  # Loop over features (extract coefficients)
+  # -----------------------------------------
+  for (feature_name in colnames(features_df)) {
+
+    cat("Processing:", feature_name, "\n")
+
+    # Extract DE results for this feature
+    deg <- limma::topTable(fit,
+                    coef = feature_name,
+                    number = Inf,
+                    adjust.method = "BH",
+                    sort.by = "P")
+
+    deg_list[[feature_name]] <- deg
+
+    # Rank genes by moderated t-statistic
+    tstats <- fit$t[, feature_name]
+    names(tstats) <- rownames(RNA.tpm)
+    tstats <- sort(tstats, decreasing = TRUE)
+
+    # Run Hallmark GSEA
+    gsea_res <- clusterProfiler::GSEA(
+      geneList = tstats,
+      TERM2GENE = term2gene,
+      verbose = FALSE,
+      eps = 0
+    )
+
+    gsea_results_list[[feature_name]] <- gsea_res
+
+
+    # Optional plotting
+    if (plot_dot && !is.null(gsea_res) && nrow(gsea_res@result) > 0) {
+
+      if (!dir.exists("Results")) dir.create("Results")
+
+      pdf(paste0("Results/GSEA_", feature_name, "_", file_name, ".pdf"),
+          width = width,
+          height = height)
+
+      print(graphics::dotplot(gsea_res,
+                              showCategory = top_n,
+                              title = paste("Hallmark GSEA -", feature_name)))
+
+      dev.off()
+    }
+  }
+
+  return(list(
+    DE_results = deg_list,
+    GSEA_results = gsea_results_list
+  ))
+}

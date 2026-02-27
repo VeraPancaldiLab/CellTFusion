@@ -4,14 +4,20 @@
 \alias{compute.metadata.association}
 \title{Compute associations between TF module scores and clinical metadata}
 \usage{
-compute.metadata.association(
+\method{compute}{metadata.association}(
   tfs.modules,
   coldata,
   pval = 0.05,
   corr_method = "p",
   file.name,
   width = 20,
-  height = 8
+  height = 8,
+  ncol = 5,
+  y_min = 0,
+  y_max = 0.5,
+  plot_grid = F,
+  width_grid = 18,
+  height_grid = 10
 )
 }
 \arguments{

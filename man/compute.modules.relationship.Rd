@@ -4,7 +4,7 @@
 \alias{compute.modules.relationship}
 \title{Compute modules relationship}
 \usage{
-compute.modules.relationship(
+\method{compute}{modules.relationship}(
   matA,
   matB,
   file_name,
@@ -17,7 +17,11 @@ compute.modules.relationship(
   cor_type = "p",
   return = F,
   vertical = F,
-  plot = T
+  plot = T,
+  plot.grid = F,
+  width.grid = 12,
+  height.grid = 10,
+  ncol.grid = NULL
 )
 }
 \arguments{

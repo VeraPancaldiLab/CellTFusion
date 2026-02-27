@@ -4,7 +4,7 @@
 \alias{compute.test.set}
 \title{Compute composite scores on test set based on previous cell groups}
 \usage{
-compute.test.set(deconv_res, cell_groups, features, deconvolution_test)
+\method{compute}{test.set}(deconv_res, cell_groups, features, deconvolution_test)
 }
 \arguments{
 \item{deconv_res}{A list containing deconvolution results, including

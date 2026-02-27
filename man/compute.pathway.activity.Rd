@@ -4,11 +4,12 @@
 \alias{compute.pathway.activity}
 \title{Computes TF-modules pathway activities scores}
 \usage{
-compute.pathway.activity(
+\method{compute}{pathway.activity}(
   RNA.tpm,
   gene_sets = NULL,
   paths = NULL,
-  return = TRUE
+  return = TRUE,
+  file.name = NULL
 )
 }
 \arguments{

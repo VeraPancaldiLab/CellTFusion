@@ -4,7 +4,7 @@
 \alias{compute.TF.network.classification}
 \title{Compute TF Network Classification}
 \usage{
-compute.TF.network.classification(tf.network, pathways.features, return = T)
+\method{compute}{TF.network.classification}(tf.network, pathways.features, return = T)
 }
 \arguments{
 \item{tf.network}{A list containing TF module eigengenes, typically output from \code{compute.WTCNA()}}

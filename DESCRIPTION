@@ -44,6 +44,8 @@ Imports:
     scales,
     tidyr,
     utils,
+    msigdbr,
+    limma,
     viper,
     WGCNA,
     fastcluster,

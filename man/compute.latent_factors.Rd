@@ -4,7 +4,7 @@
 \alias{compute.latent_factors}
 \title{Full NMF pipeline for latent immune states (single cohort)}
 \usage{
-compute.latent_factors(X, batch = NULL, seed = 123)
+\method{compute}{latent_factors}(X, batch = NULL, seed = 123)
 }
 \arguments{
 \item{X}{Numeric matrix of size (samples × cell_groups)}

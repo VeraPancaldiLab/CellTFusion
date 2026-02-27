@@ -9,11 +9,9 @@ CellTFusion(
   deconv = NULL,
   normalized = T,
   coldata = NULL,
-  trait = NULL,
-  trait.positive = NULL,
   batch = F,
   batch_id = NULL,
-  deconv_methods = c("Quantiseq", "Epidish", "DeconRNASeq", "DWLS", "CibersortX"),
+  deconv_methods = c("Quantiseq", "CBSX", "Epidish", "DeconRNASeq", "DWLS"),
   cbsx.mail = NULL,
   cbsx.token = NULL,
   file_name = NULL,
@@ -41,10 +39,6 @@ CellTFusion(
 \item{normalized}{Logical; if TRUE, normalize raw counts to log-transformed TPM for TF computation. For deconvolution they are going to be normalize just as TPM. Default is TRUE.}
 
 \item{coldata}{(Optional) A data frame containing clinical metadata for association analysis with TF modules.}
-
-\item{trait}{Optional character: column name in \code{clinical} for trait to split by and do a supervised cell group analysis (see paper for more info). If no provided, analysis will be unsupervised.}
-
-\item{trait.positive}{Optional value defining the positive class of the \code{trait}.}
 
 \item{deconv_methods}{A character vector of deconvolution methods to apply. Default includes:
 \code{c("Quantiseq", "Epidish", "DeconRNASeq", "DWLS", "CibersortX")}.}
@@ -84,6 +78,10 @@ CellTFusion(
 \item{return}{Logical; if TRUE, returns intermediate results from internal functions. Default is TRUE.}
 
 \item{verbose}{Boolen value to whether print or no the function messages}
+
+\item{trait}{Optional character: column name in \code{clinical} for trait to split by and do a supervised cell group analysis (see paper for more info). If no provided, analysis will be unsupervised.}
+
+\item{trait.positive}{Optional value defining the positive class of the \code{trait}.}
 }
 \value{
 A list containing:

@@ -5,42 +5,32 @@
 \title{Construct cell groups based on TF networks and deconvolution}
 \usage{
 construct_cell_groups(
-  counts,
-  tfs,
-  deconv,
   network,
   dt,
-  clinical,
   batch = NULL,
   pval = 0.05,
   high_corr_groups = 0.8,
-  clustering.method = "ward.D2",
-  trait = NULL,
-  positive = NULL,
-  TF.collection = "CollecTRI",
-  min_targets_size = 10,
-  tfs.pruned = FALSE,
-  universe = NULL
+  clustering.method = "ward.D2"
 )
 }
 \arguments{
-\item{counts}{A matrix of gene expression counts (genes x samples).}
-
-\item{tfs}{A list or matrix of transcription factors used in the analysis.}
-
-\item{deconv}{A matrix of cell type proportions from deconvolution (samples x cell types).}
-
 \item{network}{A list containing TF networks for cell types.}
 
 \item{dt}{A list containing deconvolution subgroup structures.}
-
-\item{clinical}{A data frame with clinical metadata, including the trait of interest.}
 
 \item{pval}{P-value threshold used to filter module relationships. Default: 0.05.}
 
 \item{high_corr_groups}{Correlation threshold to merge or remove redundant cell groups. Default: 0.9.}
 
 \item{clustering.method}{Clustering method for hierarchical clustering. Default: "ward.D2".}
+
+\item{counts}{A matrix of gene expression counts (genes x samples).}
+
+\item{tfs}{A list or matrix of transcription factors used in the analysis.}
+
+\item{deconv}{A matrix of cell type proportions from deconvolution (samples x cell types).}
+
+\item{clinical}{A data frame with clinical metadata, including the trait of interest.}
 
 \item{trait}{Optional character: column name in \code{clinical} for trait to split by and do a supervised cell group analysis (see paper for more info). If no provided, analysis will be unsupervised.}
 

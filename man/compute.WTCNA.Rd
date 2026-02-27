@@ -4,7 +4,7 @@
 \alias{compute.WTCNA}
 \title{Compute Weighted TF-coactivity Network Analysis (WTCNA)}
 \usage{
-compute.WTCNA(
+\method{compute}{WTCNA}(
   TFs.matrix,
   batch = FALSE,
   network.type = "signed",
@@ -13,6 +13,7 @@ compute.WTCNA(
   corr_mod = 0.9,
   cor_type = "p",
   verbose = F,
+  file.name = NULL,
   softPower = NULL,
   return = T
 )

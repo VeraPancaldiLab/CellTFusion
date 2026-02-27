@@ -4,11 +4,7 @@
 \alias{compute.composition.matrix}
 \title{Compute a cell-type composition matrix from deconvolution subgroups}
 \usage{
-compute.composition.matrix(
-  deconvolution.subgroupped,
-  cell.groups,
-  cells_extra = NULL
-)
+\method{compute}{composition.matrix}(deconvolution.subgroupped, cell.groups, cells_extra = NULL)
 }
 \arguments{
 \item{deconvolution.subgroupped}{A list containing "Deconvolution subgroups composition" per model.}
