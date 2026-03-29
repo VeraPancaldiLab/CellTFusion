@@ -16,7 +16,6 @@ utils::globalVariables(c("Trait", "Value" ,"level", ".", "Cells_level", "PC1", "
 #' - `"CollecTRI"` and `"Dorothea"` use prebuilt collections from OmnipathR.
 #' - `"ARACNE"` allows user input of a custom network file in a 3-column format: `regulator`, `target`, and `mutual information`.
 #' @param min_targets_size Integer. Minimum number of target genes per regulon required for TF activity inference. Default is 5.
-#' @param tfs.pruned Logical. Whether to prune TF regulons to limit the number of target genes, which helps reduce bias introduced by TFs with large regulons. If `TRUE`, the user will be prompted to input a maximum size for regulons. Default is `FALSE`.
 #' @param universe Optional. A user-specified data frame of TF–target interactions. If not provided, the function will fetch the relevant network based on the `TF.collection` argument.
 #' @param paths Optional. A user-specified data frame of pathways gene sets. If not provided, the function will fetch the relevant pathways based on `PROGENy`.
 #' @param min_targets_size Integer; minimum number of target genes required to compute TF activity.
@@ -66,8 +65,8 @@ utils::globalVariables(c("Trait", "Value" ,"level", ".", "Cells_level", "PC1", "
 #' )
 #'}
 #'
-CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL, batch = F, batch_id = NULL, deconv_methods = c("Quantiseq", "CBSX", "Epidish", "DeconRNASeq", "DWLS"), cbsx.mail = NULL, cbsx.token = NULL, file_name = NULL,
-                       TF.collection = "CollecTRI", min_targets_size = 10, tfs.pruned = FALSE, universe = NULL, paths = NULL, minMod = 10, corr_mod = 0.9, corr = 0.7, corr_type = "spearman", cells_extra = NULL, pval = 0.05, high_corr_groups = 0.8, return = T, verbose = T){
+CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL, batch = F, batch_id = NULL, deconv_methods = c("Quantiseq", "CBSX", "Epidish", "DeconRNASeq", "DWLS"), cbsx.mail = NULL, cbsx.token = NULL, file_name = NULL, task = c("supervised", "unsupervised"),
+                       contrast = NULL, ref_level = NULL, TF.collection = "CollecTRI", min_targets_size = 3, universe = NULL, paths = NULL, minMod = 3, corr_mod = 0.9, corr = 0.7, corr_type = "spearman", cells_extra = NULL, pval = 0.05, high_corr_groups = 0.8, return = T, verbose = T){
 
   set.seed(123)
 
@@ -105,28 +104,52 @@ CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL
   if (verbose) {
     cat("\nCalculating TF activity............................................................\n")
   }
-  if (!batch) {  ## No batch → single matrix
-    tfs <- compute.TFs.activity(counts.norm, TF.collection, min_targets_size, tfs.pruned, universe)
-  }else {
-    if(is.null(coldata) || is.null(batch_id)) {
-      stop("When batch = TRUE, coldata and batch_id must be provided")
+
+  if(task == "supervised"){ ### missing to add batch variable option
+    if (verbose) {
+      cat("\nRunning supervised task............................................................\n")
     }
+    if(!is.null(contrast) && !is.null(ref_level)){
+      if(normalized){
+        res_deg = run_deg_analysis(raw.counts, coldata, contrast, ref_level = ref_level) %>%
+          dplyr::select(t) # compute DEGs for the contrast of interest
+      }else{
+        stop("For differential expression analysis, raw counts must be provided")
+      }
 
-    batch_vec <- coldata[, batch_id]
-
-    if (length(batch_vec) != ncol(counts.norm)) {
-      stop("batch_id column must match number of samples")
+      tfs_deg = compute.TFs.activity(res_deg, TF.collection, min_targets_size, universe) # compute TFs activity using DEGs as input
+      tfs_mat <- compute.TFs.activity(counts.norm, TF.collection, min_targets_size, universe) # compute TFs activity using all genes as input
+      tfs = tfs_mat[,colnames(tfs_mat) %in% colnames(tfs_deg)] # Subset the TFs matrix to keep only those TFs that are significant in the DEGs analysis
+    }else{
+      stop("For supervised analysis, contrast and ref_level must be provided")
     }
+  }else{
+    if (verbose) {
+      cat("\nRunning unsupervised task............................................................\n")
+    }
+    if (!batch) {  ## No batch → single matrix
+      tfs <- compute.TFs.activity(counts.norm, TF.collection, min_targets_size, universe)
+    }else {
+      if(is.null(coldata) || is.null(batch_id)) {
+        stop("When batch = TRUE, coldata and batch_id must be provided")
+      }
 
-    batch_vec <- factor(batch_vec, levels = unique(batch_vec))
-    cohorts <- split(seq_len(ncol(counts.norm)), batch_vec)
+      batch_vec <- coldata[, batch_id]
 
-    tfs <- lapply(names(cohorts), function(cohort) {
-      idx <- cohorts[[cohort]]
-      compute.TFs.activity(counts.norm[, idx, drop = FALSE], TF.collection, min_targets_size, tfs.pruned, universe)
-    })
+      if (length(batch_vec) != ncol(counts.norm)) {
+        stop("batch_id column must match number of samples")
+      }
 
-    names(tfs) <- names(cohorts)
+      batch_vec <- factor(batch_vec, levels = unique(batch_vec))
+      cohorts <- split(seq_len(ncol(counts.norm)), batch_vec)
+
+      tfs <- lapply(names(cohorts), function(cohort) {
+        idx <- cohorts[[cohort]]
+        compute.TFs.activity(counts.norm[, idx, drop = FALSE], TF.collection, min_targets_size, universe)
+      })
+
+      names(tfs) <- names(cohorts)
+    }
   }
 
   # 1. TFs network construction
@@ -138,11 +161,13 @@ CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL
   # cat("\nPerforming TF module characterization............................................................\n")
   # hub_tfs = identify_hub_TFs(t(tfs), network, MM_thresh = 0.8, degree_thresh = 0.9)
   # compute.modules.enrichment(counts.norm, hub_tfs)
+
   # 2. Pathways activity inference: only needed for dictionary
   if(verbose){
     cat("\nCalculating pathway activities............................................................\n")
   }
   pathways = compute.pathway.activity(counts.norm, gene_sets = NULL, paths = paths, return = return)
+
   # 3. Deconvolution analysis
   if(verbose){
     cat("\nPerforming deconvolution analysis............................................................\n")
@@ -162,13 +187,12 @@ CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL
     cat("\nLatent spaces calculation............................................................\n")
   }
   latent_spaces <- compute.latent_factors(cell.groups[[1]], batch = batch_vec, seed = 123)
-  #latent_spaces = NULL
 
   # 6. Find TME states
   if(verbose){
     cat("\nTME states calculation............................................................\n")
   }
-  TME_states = compute_TME_states(latent_spaces, dt, cell.groups)
+  TME_states = compute_TME_states(latent_spaces, dt, cell.groups, feature_type = "both")
 
   if(verbose){
     cat("\nEverything done! Results are saved in Results/ folder............................................................\n")
@@ -671,6 +695,7 @@ compute.modules.enrichment <- function(RNA.tpm, hub_tfs){
 #' }
 #' If `return = FALSE`, the function saves a heatmap of significant correlations to "Results/{file_name}.pdf".
 #'
+#' 
 #' @details
 #' The function assumes that `matA` and `matB` share the same rownames (i.e., samples in the same order). The correlation is computed using WGCNA's
 #' `cor()` and `corPvalueStudent()` functions. Insignificant correlations (based on p-value or adjusted p-value) are excluded from the visualization.
@@ -1143,7 +1168,6 @@ compute.TF.network.classification = function(tf.network, pathways.features, retu
 #' - `"CollecTRI"` and `"Dorothea"` use prebuilt collections from OmnipathR.
 #' - `"ARACNE"` allows user input of a custom network file in a 3-column format: `regulator`, `target`, and `mutual information`.
 #' @param min_targets_size Integer. Minimum number of target genes per regulon required for TF activity inference. Default is 5.
-#' @param tfs.pruned Logical. Whether to prune TF regulons to limit the number of target genes, which helps reduce bias introduced by TFs with large regulons. If `TRUE`, the user will be prompted to input a maximum size for regulons. Default is `FALSE`.
 #' @param universe Optional. A user-specified data frame of TF–target interactions. If not provided, the function will fetch the relevant network based on the `TF.collection` argument.
 #' @param return Logical; if TRUE, saves matrix in Results/ folder. Default is TRUE.
 #'
@@ -1165,27 +1189,13 @@ compute.TF.network.classification = function(tf.network, pathways.features, retu
 #' data("counts.norm.tuto")
 #' tfs_activity <- compute.TFs.activity(counts.norm.tuto)
 #'
-compute.TFs.activity <- function(RNA.counts, TF.collection = "CollecTRI", min_targets_size = 5, tfs.pruned = FALSE, universe = NULL, return = TRUE, file.name = NULL){
-
-  tfs2viper_regulons <- function(df){
-    regulon_list <- split(df, df$source)
-    regulons <- lapply(regulon_list, function(regulon) {
-      tfmode <- stats::setNames(regulon$mor, regulon$target)
-      list(tfmode = tfmode, likelihood = rep(1, length(tfmode)))
-    })
-    return(regulons)}
-
-  if(tfs.pruned==T){
-    cat("Pruned TFs is set to TRUE. Please specify the maximun size of targets allowed/n")
-    max_size_targets = as.numeric(readline(prompt = "Maximun size of TFs-targets: "))
-  }
+compute.TFs.activity <- function(RNA.counts, TF.collection = "CollecTRI", min_targets_size = 5, universe = NULL, return = TRUE, file.name = NULL){
 
   if(TF.collection == "CollecTRI"){
     if(is.null(universe)==T){
       universe = decoupleR::get_collectri(organism = 'human', split_complexes = F)
       utils::write.csv(universe, "Results/TF_target_collection.csv")
     }
-    net_regulons = tfs2viper_regulons(universe)
   } else if(TF.collection == "Dorothea"){
     if(is.null(universe)==T){
       #universe = decoupleR::get_dorothea(organism = 'human', levels = c("A", "B"))
@@ -1194,7 +1204,6 @@ compute.TFs.activity <- function(RNA.counts, TF.collection = "CollecTRI", min_ta
         dplyr::select(-tf)
       utils::write.csv(universe, "Results/TF_target_collection.csv")
     }
-    net_regulons = tfs2viper_regulons(universe)
   }
 
   if(TF.collection == "ARACNE"){
@@ -1203,18 +1212,14 @@ compute.TFs.activity <- function(RNA.counts, TF.collection = "CollecTRI", min_ta
     net_regulons <- viper::aracne2regulon(network_file, as.matrix(RNA.counts), format = "3col")
   }
 
-  if(tfs.pruned == TRUE){
-    net_regulons = viper::pruneRegulon(net_regulons, cutoff = max_size_targets)
-  }
+  sample_acts <- decoupleR::run_viper(mat = RNA.counts, network = universe,
+                                      .source = "source", minsize = min_targets_size, eset.filter = FALSE, method = "none",
+                                      verbose = FALSE, cores = 4) %>%
+    decoupleR::pivot_wider_profile(id_cols = source,
+                                   names_from = condition,
+                                   values_from = score) %>%
+    as.matrix()
 
-  sample_acts <- viper::viper(as.matrix(RNA.counts), net_regulons, minsize = min_targets_size, verbose=F, method = "none")
-
-  # sample_acts <- decoupleR::run_viper(mat = RNA.counts, network = universe,
-  #                                        .source = "source", minsize = 4, eset.filter = FALSE, method = "none",
-  #                                        verbose = FALSE)
-  # sample_acts <- sample_acts %>% tidyr::pivot_wider(id_cols = condition,
-  #                                                      names_from = source, values_from = score) %>% tibble::column_to_rownames("condition")
-  #
   if(return){
     utils::write.csv(sample_acts, paste0("Results/TF_matrix_", file.name, ".csv"))
   }
@@ -1760,7 +1765,6 @@ compute.composition.matrix = function(deconvolution.subgroupped, cell.groups, ce
 #' - `"CollecTRI"` and `"Dorothea"` use prebuilt collections from OmnipathR.
 #' - `"ARACNE"` allows user input of a custom network file in a 3-column format: `regulator`, `target`, and `mutual information`.
 #' @param min_targets_size Integer. Minimum number of target genes per regulon required for TF activity inference. Default is 5. Only needed when supervised analysis will be performed, if not, it will be ignored.
-#' @param tfs.pruned Logical. Whether to prune TF regulons to limit the number of target genes, which helps reduce bias introduced by TFs with large regulons. If `TRUE`, the user will be prompted to input a maximum size for regulons. Default is `FALSE`. Only needed when supervised analysis will be performed, if not, it will be ignored.
 #' @param universe Optional. A user-specified data frame of TF–target interactions. If not provided, the function will fetch the relevant network based on the `TF.collection` argument. Only needed when supervised analysis will be performed, if not, it will be ignored.
 #'
 #' @return A list of 3 elements:
@@ -3790,12 +3794,12 @@ expand_latent_features <- function(Z, log_transform = TRUE){
 }
 
 
-extract_contributing_features <- function(latent_factors, dt, cell.groups, feature_type = c("both", "positive", "negative"), quantile_cutoff = 0.9) {
+extract_contributing_features <- function(latent_factors, dt, cell.groups, feature_type = c("both", "positive", "negative"), quantile_cutoff = 0.7, cells_extra = NULL) {
 
   ################## quantile_cutoff: 0.9 --> Keep only the top 10% strongest features (within positive or negative group)
 
   # Extract binary composition
-  comp_matrix = compute.composition.matrix(dt, cell.groups)
+  comp_matrix = compute.composition.matrix(dt, cell.groups, cells_extra = cells_extra)
 
   # List to store top contributors for each factor
   top_contributors <- list()
@@ -3851,35 +3855,6 @@ extract_contributing_features <- function(latent_factors, dt, cell.groups, featu
 
     top_contributors[[factor_name]] <- selected_features
 
-    # # Column annotation
-    # column_ha <- HeatmapAnnotation(
-    #   Contribution = anno_barplot(
-    #     selected_features,
-    #     gp = gpar(fill = ifelse(selected_features > 0, "red", "blue"))
-    #   )
-    # )
-    #
-    # # Heatmap
-    # ht <- Heatmap(
-    #   t(comp_sub),
-    #   name = "Composition",
-    #   top_annotation = column_ha,
-    #   col = c("0" = "white", "1" = "darkgreen"),
-    #   rect_gp = gpar(col = "grey80", lwd = 0.5),
-    #   cluster_rows = TRUE,
-    #   cluster_columns = FALSE,
-    #   show_row_names = TRUE,
-    #   show_column_names = FALSE,
-    #   column_title = paste("Top contributors for", factor_name)
-    # )
-    #
-    # pdf(
-    #   paste0("Results/Heatmap_CG_composition_", factor_name, ".pdf"),
-    #   width = width,
-    #   height = height
-    # )
-    # draw(ht)
-    # dev.off()
   }
 
 
@@ -3887,15 +3862,15 @@ extract_contributing_features <- function(latent_factors, dt, cell.groups, featu
 }
 
 
-compute_TME_states <- function(latent_factors, dt, cell.groups, enrich_thresh = 2, feature_type = "positive"){
+compute_TME_states <- function(latent_factors, dt, cell.groups, enrich_thresh = 1.5, feature_type = "both", quantile_cutoff = 0.7, cells_extra = NULL){
   require(igraph)
   require(scales)
 
   # Extract contributing cell groups
-  top_features_list = extract_contributing_features(latent_factors, dt, cell.groups, feature_type = feature_type)
+  top_features_list = extract_contributing_features(latent_factors, dt, cell.groups, feature_type = feature_type, quantile_cutoff = quantile_cutoff, cells_extra = cells_extra)
 
   # Binary composition
-  comp_matrix <- compute.composition.matrix(dt, cell.groups)
+  comp_matrix <- compute.composition.matrix(dt, cell.groups, cells_extra = cells_extra)
 
   # Background frequency
   background_freq <- colMeans(comp_matrix) #fraction of cell groups globally containing each cell type
@@ -3971,7 +3946,7 @@ compute_TME_states <- function(latent_factors, dt, cell.groups, enrich_thresh = 
 
     factor_celltype_weights[[factor_name]] <- edge_weights
 
-    # GRAPH
+    ## GRAPH PLOTTING
 
     if(length(edge_weights) == 0) next
 
@@ -3998,7 +3973,7 @@ compute_TME_states <- function(latent_factors, dt, cell.groups, enrich_thresh = 
     #
     # edge_weights for a cell type represent how strongly the factor is associated with that cell type through the cell groups:
     #
-    #   Positive if the cell type is mostly in positive-contributing cell groups.
+    # Positive if the cell type is mostly in positive-contributing cell groups.
     #
     # Negative if mostly in negative-contributing cell groups.
     #
@@ -4369,7 +4344,7 @@ compute_factor_gsea <- function(RNA.tpm,
   # -----------------------------------------
   # Retrieve Hallmark gene sets
   # -----------------------------------------
-  hallmark_df <- msigdbr::msigdbr(species = "Homo sapiens", collection = "H")
+  hallmark_df <- msigdbr::msigdbr(species = "Homo sapiens", category = "H")
   gene_sets <- split(hallmark_df$gene_symbol, hallmark_df$gs_name)
 
   term2gene <- data.frame(
@@ -4429,7 +4404,7 @@ compute_factor_gsea <- function(RNA.tpm,
           width = width,
           height = height)
 
-      print(graphics::dotplot(gsea_res,
+      print(enrichplot::dotplot(gsea_res,
                               showCategory = top_n,
                               title = paste("Hallmark GSEA -", feature_name)))
 
@@ -4441,4 +4416,47 @@ compute_factor_gsea <- function(RNA.tpm,
     DE_results = deg_list,
     GSEA_results = gsea_results_list
   ))
+}
+
+
+run_deg_analysis <- function(counts, coldata, group_col, ref_level = NULL) {
+  library(edgeR)
+  library(limma)
+
+  # Prepare counts
+  counts_mat <- as.matrix(counts)
+  mode(counts_mat) <- "numeric"
+  counts_mat <- counts_mat[, rownames(coldata)]
+
+  # Create group factor
+  group <- factor(coldata[[group_col]])
+
+  # Set reference level if provided
+  if (!is.null(ref_level)) {
+    group <- relevel(group, ref = ref_level)
+  }
+
+  # Create DGE object and filter
+  dge <- DGEList(counts = counts_mat, group = group)
+  keep <- filterByExpr(dge)
+  dge <- dge[keep, , keep.lib.sizes = FALSE]
+  dge <- calcNormFactors(dge)
+
+  # Design matrix
+  design <- model.matrix(~ group)
+
+  # voom transformation
+  v <- voom(dge, design)
+
+  # Fit model
+  fit <- lmFit(v, design)
+  fit <- eBayes(fit)
+
+  # Extract coefficient name (second column of design)
+  coef_name <- colnames(design)[2]
+
+  # Get results
+  res <- topTable(fit, coef = coef_name, p.value = 0.05, number = Inf)
+
+  return(res)
 }

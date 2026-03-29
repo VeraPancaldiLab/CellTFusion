@@ -35,6 +35,27 @@ You can install the development version of `CellTFusion` from
 pak::pkg_install("VeraPancaldiLab/CellTFusion")
 ```
 
+## Launch the Shiny app
+
+You can run the CellTFusion Shiny interface in two ways.
+
+From an installed package:
+
+``` r
+library(CellTFusion)
+shiny::runApp(system.file("shiny", package = "CellTFusion"))
+```
+
+From this source repository:
+
+``` r
+shiny::runApp("inst/shiny")
+```
+
+In the app, click **Load tutorial data** for a quick demo, then click
+**Run CellTFusion**. Results and downloadable files are written to your
+working directory.
+
 ## General usage
 
 These are basic examples which shows you how to use `CellTFusion` for
