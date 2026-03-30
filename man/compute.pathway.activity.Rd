@@ -20,6 +20,8 @@
 \item{paths}{A data frame describing the pathway-gene interactions for use with PROGENy. If \code{NULL}, the human PROGENy resource (top 500 genes) will be used by default.}
 
 \item{return}{Logical; if TRUE, saves matrices in Results/ folder. Default is TRUE.}
+
+\item{file.name}{Optional character suffix used when writing output CSV files.}
 }
 \value{
 If \code{gene_sets} is \code{NULL}, a scaled matrix of PROGENy pathway activity scores (samples as rows, pathways as columns).

@@ -19,6 +19,8 @@ compute_composite_score(
 
 \item{tfs.module.network}{Output of compute.WTCNA().}
 
+\item{batch}{Optional vector indicating batch assignment for samples.}
+
 \item{discard}{Logical; whether to discard cell groups whose canonical correlation is below 0.6 (default TRUE).}
 }
 \value{

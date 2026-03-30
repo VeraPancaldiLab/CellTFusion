@@ -22,6 +22,8 @@ returned by \code{identify.cell.groups()}.}
 \item{tfs.module.network}{A list containing network information of transcription factor (TF) modules, as
 obtained from \code{compute.WTCNA()}. It should contain at least one element with TF module membership or connectivity.}
 
+\item{batch}{Optional vector indicating batch assignment for samples.}
+
 \item{return}{Logical; if TRUE (default), writes CSV files with cell group compositions and scores
 to the "Results/" folder.}
 }

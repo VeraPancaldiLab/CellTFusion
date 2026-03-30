@@ -21,6 +21,8 @@
 \arguments{
 \item{TFs.matrix}{Matrix of TF activity (samples x TFs).}
 
+\item{batch}{Logical; if TRUE, performs consensus WGCNA across cohorts provided as a list.}
+
 \item{network.type}{Network type: "signed", "unsigned", "signed hybrid", or "distance". Default is "signed".}
 
 \item{clustering.method}{Clustering method for hierarchical clustering. Default is "ward.D2".}
@@ -32,6 +34,8 @@
 \item{cor_type}{Correlation type for adjacency calculation: "p" (Pearson), "s" (Spearman). Default is "p".}
 
 \item{verbose}{Boolen value to whether print or no the function messages}
+
+\item{file.name}{Optional character suffix used when writing WTCNA outputs.}
 
 \item{softPower}{Optional numeric value specifying the soft-thresholding power to be used when constructing}
 

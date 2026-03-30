@@ -18,35 +18,13 @@ construct_cell_groups(
 
 \item{dt}{A list containing deconvolution subgroup structures.}
 
+\item{batch}{Optional vector indicating batch assignment for samples.}
+
 \item{pval}{P-value threshold used to filter module relationships. Default: 0.05.}
 
 \item{high_corr_groups}{Correlation threshold to merge or remove redundant cell groups. Default: 0.9.}
 
 \item{clustering.method}{Clustering method for hierarchical clustering. Default: "ward.D2".}
-
-\item{counts}{A matrix of gene expression counts (genes x samples).}
-
-\item{tfs}{A list or matrix of transcription factors used in the analysis.}
-
-\item{deconv}{A matrix of cell type proportions from deconvolution (samples x cell types).}
-
-\item{clinical}{A data frame with clinical metadata, including the trait of interest.}
-
-\item{trait}{Optional character: column name in \code{clinical} for trait to split by and do a supervised cell group analysis (see paper for more info). If no provided, analysis will be unsupervised.}
-
-\item{positive}{Optional value defining the positive class of the \code{trait}.}
-
-\item{TF.collection}{Character. The source of the TF–target network. Options are \code{"CollecTRI"} (default), \code{"Dorothea"}, or \code{"ARACNE"}. Only needed when supervised analysis will be performed, if not, it will be ignored.
-\itemize{
-\item \code{"CollecTRI"} and \code{"Dorothea"} use prebuilt collections from OmnipathR.
-\item \code{"ARACNE"} allows user input of a custom network file in a 3-column format: \code{regulator}, \code{target}, and \verb{mutual information}.
-}}
-
-\item{min_targets_size}{Integer. Minimum number of target genes per regulon required for TF activity inference. Default is 5. Only needed when supervised analysis will be performed, if not, it will be ignored.}
-
-\item{tfs.pruned}{Logical. Whether to prune TF regulons to limit the number of target genes, which helps reduce bias introduced by TFs with large regulons. If \code{TRUE}, the user will be prompted to input a maximum size for regulons. Default is \code{FALSE}. Only needed when supervised analysis will be performed, if not, it will be ignored.}
-
-\item{universe}{Optional. A user-specified data frame of TF–target interactions. If not provided, the function will fetch the relevant network based on the \code{TF.collection} argument. Only needed when supervised analysis will be performed, if not, it will be ignored.}
 }
 \value{
 A list of 3 elements:

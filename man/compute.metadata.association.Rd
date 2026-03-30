@@ -38,6 +38,18 @@ Options are \code{"p"} for pearson and \code{"s"} for spearman. Default is \code
 \item{width}{A numeric value indicating the width (in inches) of the output heatmap plot (default = 20).}
 
 \item{height}{A numeric value indicating the height (in inches) of the output heatmap plot (default = 8).}
+
+\item{ncol}{Integer. Number of columns in the grid of association boxplots.}
+
+\item{y_min}{Numeric. Lower y-axis limit for grid boxplots.}
+
+\item{y_max}{Numeric. Upper y-axis limit for grid boxplots.}
+
+\item{plot_grid}{Logical; if TRUE, generates a grid of boxplot summaries.}
+
+\item{width_grid}{Numeric width of the grid plot output.}
+
+\item{height_grid}{Numeric height of the grid plot output.}
 }
 \value{
 This function saves the following to the \verb{Results/} directory:

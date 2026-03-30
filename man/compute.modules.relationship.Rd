@@ -31,6 +31,8 @@
 
 \item{file_name}{A string indicating the base name (without extension) of the figure to be saved in the "Results/" folder.}
 
+\item{batch}{Optional vector indicating batch assignment for samples. If provided, partial correlations are computed controlling for batch.}
+
 \item{width}{An integer indicating the width (in inches) of the output PDF figure. Default is 8.}
 
 \item{height}{An integer indicating the height (in inches) of the output PDF figure. Default is 8.}
@@ -48,6 +50,14 @@
 \item{vertical}{Logical; if TRUE, produces a vertical heatmap (traits on x-axis, modules on y-axis). Otherwise, a horizontal layout is used. Default is FALSE.}
 
 \item{plot}{Logical; if TRUE, saves the heatmap plot as a PDF. Default is TRUE.}
+
+\item{plot.grid}{Logical; if TRUE, generates per-pair scatter grid plots for significant associations.}
+
+\item{width.grid}{Numeric width of the scatter grid output.}
+
+\item{height.grid}{Numeric height of the scatter grid output.}
+
+\item{ncol.grid}{Integer number of columns used in scatter grid layout.}
 }
 \value{
 If \code{return = TRUE}, returns a list with:

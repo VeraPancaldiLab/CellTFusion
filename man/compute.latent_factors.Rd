@@ -2,31 +2,25 @@
 % Please edit documentation in R/CellTFusion.R
 \name{compute.latent_factors}
 \alias{compute.latent_factors}
-\title{Full NMF pipeline for latent immune states (single cohort)}
+\title{Compute latent factors from cell-group features}
 \usage{
 \method{compute}{latent_factors}(X, batch = NULL, seed = 123)
 }
 \arguments{
-\item{X}{Numeric matrix of size (samples × cell_groups)}
+\item{X}{Numeric matrix of size samples x cell groups.}
 
-\item{seed}{Random seed (default = 123)}
+\item{batch}{Optional vector indicating batch assignment for samples.}
 
-\item{K_range}{Vector of K to try (default = 2:6)}
-
-\item{remove_low_var}{Logical, whether to remove low-variance groups (default = TRUE)}
-
-\item{min_var}{Minimum variance threshold for filtering (default = 1e-5)}
-
-\item{nrun}{Number of NMF runs per K (default = 10)}
+\item{seed}{Random seed used to initialize model fitting.}
 }
 \value{
-List with:
-$best_K = suggested number of latent factors
-$W = sample × latent states matrix for training
-$H = latent states × cell group contributions
-$reconstruction_errors = reconstruction errors for each K
-$consensus = list of consensus matrices for each K
+A list with latent representation and loadings:
+\itemize{
+\item \code{Z}: Sample-level latent factors.
+\item \code{W}: Feature weights per latent factor.
+\item \code{expanded_Z}: Expanded latent features used downstream.
+}
 }
 \description{
-Full NMF pipeline for latent immune states (single cohort)
+Compute latent factors from cell-group features
 }

@@ -8,8 +8,8 @@
   RNA.counts,
   TF.collection = "CollecTRI",
   min_targets_size = 5,
-  tfs.pruned = FALSE,
   universe = NULL,
+  cores = 4,
   return = TRUE,
   file.name = NULL
 )
@@ -25,11 +25,13 @@
 
 \item{min_targets_size}{Integer. Minimum number of target genes per regulon required for TF activity inference. Default is 5.}
 
-\item{tfs.pruned}{Logical. Whether to prune TF regulons to limit the number of target genes, which helps reduce bias introduced by TFs with large regulons. If \code{TRUE}, the user will be prompted to input a maximum size for regulons. Default is \code{FALSE}.}
-
 \item{universe}{Optional. A user-specified data frame of TF–target interactions. If not provided, the function will fetch the relevant network based on the \code{TF.collection} argument.}
 
+\item{cores}{Integer. Number of cores used by VIPER inference. Default is 4.}
+
 \item{return}{Logical; if TRUE, saves matrix in Results/ folder. Default is TRUE.}
+
+\item{file.name}{Optional character suffix used when writing the TF activity matrix to disk.}
 }
 \value{
 A data frame of inferred and scaled TF activity scores, with samples as rows and TFs as columns.
@@ -39,7 +41,7 @@ Infers transcription factor (TF) activity from a gene expression matrix using th
 }
 \examples{
 data("counts.norm.tuto")
-tfs_activity <- compute.TFs.activity(counts.norm.tuto)
+tfs_activity <- compute.TFs.activity(counts.norm.tuto, cores = 1)
 
 }
 \references{

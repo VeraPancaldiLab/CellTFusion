@@ -52,6 +52,7 @@ Imports:
     pheatmap,
     purrr,
     cluster,
+    clusterProfiler,
     foreach,
     OmnipathR (>= 3.10.1),
     doParallel,

@@ -27,6 +27,8 @@ test cohort. Raw (unprocessed) deconvolution output is expected.}
 
 \item{tfs.module.network}{A list from \code{compute.WTCNA()} containing the TF module network information,
 used to calculate composite scores for each group.}
+
+\item{batch}{Optional vector indicating batch assignment for samples.}
 }
 \value{
 A data frame with samples as rows and projected cell group scores as columns.

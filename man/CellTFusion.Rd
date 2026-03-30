@@ -15,12 +15,14 @@ CellTFusion(
   cbsx.mail = NULL,
   cbsx.token = NULL,
   file_name = NULL,
+  task = c("supervised", "unsupervised"),
+  contrast = NULL,
+  ref_level = NULL,
   TF.collection = "CollecTRI",
-  min_targets_size = 10,
-  tfs.pruned = FALSE,
+  min_targets_size = 3,
   universe = NULL,
   paths = NULL,
-  minMod = 10,
+  minMod = 3,
   corr_mod = 0.9,
   corr = 0.7,
   corr_type = "spearman",
@@ -40,6 +42,10 @@ CellTFusion(
 
 \item{coldata}{(Optional) A data frame containing clinical metadata for association analysis with TF modules.}
 
+\item{batch}{Logical; whether batch correction should be applied where supported. Default is FALSE.}
+
+\item{batch_id}{Optional character indicating the column name in coldata containing batch identifiers.}
+
 \item{deconv_methods}{A character vector of deconvolution methods to apply. Default includes:
 \code{c("Quantiseq", "Epidish", "DeconRNASeq", "DWLS", "CibersortX")}.}
 
@@ -49,15 +55,19 @@ CellTFusion(
 
 \item{file_name}{(Optional) Prefix for output files saved in the "Results/" directory.}
 
+\item{task}{Analysis mode. Choose between \code{"supervised"} and \code{"unsupervised"}.}
+
+\item{contrast}{Optional character indicating the condition column used for supervised DEG analysis.}
+
+\item{ref_level}{Optional character indicating the reference level for supervised DEG analysis.}
+
 \item{TF.collection}{Character. The source of the TF–target network. Options are \code{"CollecTRI"} (default), \code{"Dorothea"}, or \code{"ARACNE"}.
 \itemize{
 \item \code{"CollecTRI"} and \code{"Dorothea"} use prebuilt collections from OmnipathR.
 \item \code{"ARACNE"} allows user input of a custom network file in a 3-column format: \code{regulator}, \code{target}, and \verb{mutual information}.
 }}
 
-\item{min_targets_size}{Integer; minimum number of target genes required to compute TF activity.}
-
-\item{tfs.pruned}{Logical. Whether to prune TF regulons to limit the number of target genes, which helps reduce bias introduced by TFs with large regulons. If \code{TRUE}, the user will be prompted to input a maximum size for regulons. Default is \code{FALSE}.}
+\item{min_targets_size}{Integer. Minimum number of target genes per regulon required for TF activity inference. Default is 5.}
 
 \item{universe}{Optional. A user-specified data frame of TF–target interactions. If not provided, the function will fetch the relevant network based on the \code{TF.collection} argument.}
 
@@ -69,6 +79,8 @@ CellTFusion(
 
 \item{corr}{Numeric; correlation threshold used in the deconvolution analysis.}
 
+\item{corr_type}{Correlation type used in deconvolution analysis. Default is \code{"spearman"}.}
+
 \item{cells_extra}{A string specifying the cells names to consider and that are not including in the nomenclature of multideconv (see R package)}
 
 \item{pval}{Numeric; p-value threshold for statistical tests (e.g., metadata and relationship associations).}
@@ -78,10 +90,6 @@ CellTFusion(
 \item{return}{Logical; if TRUE, returns intermediate results from internal functions. Default is TRUE.}
 
 \item{verbose}{Boolen value to whether print or no the function messages}
-
-\item{trait}{Optional character: column name in \code{clinical} for trait to split by and do a supervised cell group analysis (see paper for more info). If no provided, analysis will be unsupervised.}
-
-\item{trait.positive}{Optional value defining the positive class of the \code{trait}.}
 }
 \value{
 A list containing:
@@ -114,9 +122,7 @@ res <- CellTFusion(
   corr_mod = 0.25,
   corr = 0.7,
   pval = 0.05,
-  high_corr_groups = 0.85,
-  trait = "Best.Confirmed.Overall.Response",
-  trait.positive = "CR"
+  high_corr_groups = 0.85
 )
 }
 

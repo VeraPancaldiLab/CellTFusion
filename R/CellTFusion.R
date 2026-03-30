@@ -7,26 +7,29 @@ utils::globalVariables(c("Trait", "Value" ,"level", ".", "Cells_level", "PC1", "
 #' @param deconv A data frame with deconvolution features (cell-type proportions as columns x samples as rows).
 #' @param normalized Logical; if TRUE, normalize raw counts to log-transformed TPM for TF computation. For deconvolution they are going to be normalize just as TPM. Default is TRUE.
 #' @param coldata (Optional) A data frame containing clinical metadata for association analysis with TF modules.
+#' @param batch Logical; whether batch correction should be applied where supported. Default is FALSE.
+#' @param batch_id Optional character indicating the column name in coldata containing batch identifiers.
 #' @param deconv_methods A character vector of deconvolution methods to apply. Default includes:
 #'   \code{c("Quantiseq", "Epidish", "DeconRNASeq", "DWLS", "CibersortX")}.
 #' @param cbsx.mail (Optional) Email credential for CIBERSORTx. Required if "CibersortX" is among deconv_methods.
 #' @param cbsx.token (Optional) Token credential for CIBERSORTx. Required if "CibersortX" is among deconv_methods.
 #' @param file_name (Optional) Prefix for output files saved in the "Results/" directory.
+#' @param task Analysis mode. Choose between \code{"supervised"} and \code{"unsupervised"}.
+#' @param contrast Optional character indicating the condition column used for supervised DEG analysis.
+#' @param ref_level Optional character indicating the reference level for supervised DEG analysis.
 #' @param TF.collection Character. The source of the TF–target network. Options are `"CollecTRI"` (default), `"Dorothea"`, or `"ARACNE"`.
 #' - `"CollecTRI"` and `"Dorothea"` use prebuilt collections from OmnipathR.
 #' - `"ARACNE"` allows user input of a custom network file in a 3-column format: `regulator`, `target`, and `mutual information`.
 #' @param min_targets_size Integer. Minimum number of target genes per regulon required for TF activity inference. Default is 5.
 #' @param universe Optional. A user-specified data frame of TF–target interactions. If not provided, the function will fetch the relevant network based on the `TF.collection` argument.
 #' @param paths Optional. A user-specified data frame of pathways gene sets. If not provided, the function will fetch the relevant pathways based on `PROGENy`.
-#' @param min_targets_size Integer; minimum number of target genes required to compute TF activity.
 #' @param minMod Integer; minimum module size for WGCNA module detection.
 #' @param corr_mod Numeric; correlation threshold for merging TF modules.
 #' @param corr Numeric; correlation threshold used in the deconvolution analysis.
+#' @param corr_type Correlation type used in deconvolution analysis. Default is \code{"spearman"}.
 #' @param cells_extra A string specifying the cells names to consider and that are not including in the nomenclature of multideconv (see R package)
 #' @param pval Numeric; p-value threshold for statistical tests (e.g., metadata and relationship associations).
 #' @param high_corr_groups Numeric; correlation threshold to identify highly similar cell groups.
-#' @param trait Optional character: column name in `clinical` for trait to split by and do a supervised cell group analysis (see paper for more info). If no provided, analysis will be unsupervised.
-#' @param trait.positive Optional value defining the positive class of the `trait`.
 #' @param return Logical; if TRUE, returns intermediate results from internal functions. Default is TRUE.
 #' @param verbose Boolen value to whether print or no the function messages
 #'
@@ -59,9 +62,7 @@ utils::globalVariables(c("Trait", "Value" ,"level", ".", "Cells_level", "PC1", "
 #'   corr_mod = 0.25,
 #'   corr = 0.7,
 #'   pval = 0.05,
-#'   high_corr_groups = 0.85,
-#'   trait = "Best.Confirmed.Overall.Response",
-#'   trait.positive = "CR"
+#'   high_corr_groups = 0.85
 #' )
 #'}
 #'
@@ -218,6 +219,7 @@ CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL
 #'
 #' @param tfs.module.network A list containing network information of transcription factor (TF) modules, as
 #' obtained from \code{compute.WTCNA()}. It should contain at least one element with TF module membership or connectivity.
+#' @param batch Optional vector indicating batch assignment for samples.
 #'
 #' @param return Logical; if TRUE (default), writes CSV files with cell group compositions and scores
 #' to the "Results/" folder.
@@ -361,6 +363,7 @@ cell.groups.computation = function(deconvolution, cell.dendrograms, tfs.module.n
 #'        test cohort. Raw (unprocessed) deconvolution output is expected.
 #' @param tfs.module.network A list from `compute.WTCNA()` containing the TF module network information,
 #'        used to calculate composite scores for each group.
+#' @param batch Optional vector indicating batch assignment for samples.
 #'
 #' @return A data frame with samples as rows and projected cell group scores as columns.
 #'         Each column corresponds to one of the selected cell groups in `features`.
@@ -486,6 +489,12 @@ compute_cell_groups_signatures = function(deconv_res, cell_groups, features, dec
 #' @param file.name Character. Base file name for saving PDF plots of results.
 #' @param width A numeric value indicating the width (in inches) of the output heatmap plot (default = 20).
 #' @param height A numeric value indicating the height (in inches) of the output heatmap plot (default = 8).
+#' @param ncol Integer. Number of columns in the grid of association boxplots.
+#' @param y_min Numeric. Lower y-axis limit for grid boxplots.
+#' @param y_max Numeric. Upper y-axis limit for grid boxplots.
+#' @param plot_grid Logical; if TRUE, generates a grid of boxplot summaries.
+#' @param width_grid Numeric width of the grid plot output.
+#' @param height_grid Numeric height of the grid plot output.
 #'
 #' @return This function saves the following to the `Results/` directory:
 #' \itemize{
@@ -678,6 +687,7 @@ compute.modules.enrichment <- function(RNA.tpm, hub_tfs){
 #' @param matA A numeric matrix or data frame of features (samples x features).
 #' @param matB A numeric matrix or data frame of features to correlate with (samples x features).
 #' @param file_name A string indicating the base name (without extension) of the figure to be saved in the "Results/" folder.
+#' @param batch Optional vector indicating batch assignment for samples. If provided, partial correlations are computed controlling for batch.
 #' @param width An integer indicating the width (in inches) of the output PDF figure. Default is 8.
 #' @param height An integer indicating the height (in inches) of the output PDF figure. Default is 8.
 #' @param par_mar A numeric vector of length 4 specifying the margin sizes (bottom, left, top, right) for the heatmap. If NULL (default), reasonable defaults are chosen based on plot orientation.
@@ -687,6 +697,10 @@ compute.modules.enrichment <- function(RNA.tpm, hub_tfs){
 #' @param return Logical; if TRUE, the function returns a list containing the correlation matrix and a named list of significant feature names per module. Default is FALSE.
 #' @param vertical Logical; if TRUE, produces a vertical heatmap (traits on x-axis, modules on y-axis). Otherwise, a horizontal layout is used. Default is FALSE.
 #' @param plot Logical; if TRUE, saves the heatmap plot as a PDF. Default is TRUE.
+#' @param plot.grid Logical; if TRUE, generates per-pair scatter grid plots for significant associations.
+#' @param width.grid Numeric width of the scatter grid output.
+#' @param height.grid Numeric height of the scatter grid output.
+#' @param ncol.grid Integer number of columns used in scatter grid layout.
 #'
 #' @return If `return = TRUE`, returns a list with:
 #' \itemize{
@@ -964,6 +978,7 @@ compute.modules.relationship <- function(matA, matB, file_name, batch = NULL, wi
 #' @param gene_sets A list of gene sets (e.g., hallmark signatures or user-defined sets). If provided, GSVA scores will be computed for these sets. Default is \code{NULL}.
 #' @param paths A data frame describing the pathway-gene interactions for use with PROGENy. If \code{NULL}, the human PROGENy resource (top 500 genes) will be used by default.
 #' @param return Logical; if TRUE, saves matrices in Results/ folder. Default is TRUE.
+#' @param file.name Optional character suffix used when writing output CSV files.
 #'
 #' @return If \code{gene_sets} is \code{NULL}, a scaled matrix of PROGENy pathway activity scores (samples as rows, pathways as columns).
 #' If \code{gene_sets} is provided, a list with two elements:
@@ -1169,7 +1184,9 @@ compute.TF.network.classification = function(tf.network, pathways.features, retu
 #' - `"ARACNE"` allows user input of a custom network file in a 3-column format: `regulator`, `target`, and `mutual information`.
 #' @param min_targets_size Integer. Minimum number of target genes per regulon required for TF activity inference. Default is 5.
 #' @param universe Optional. A user-specified data frame of TF–target interactions. If not provided, the function will fetch the relevant network based on the `TF.collection` argument.
+#' @param cores Integer. Number of cores used by VIPER inference. Default is 4.
 #' @param return Logical; if TRUE, saves matrix in Results/ folder. Default is TRUE.
+#' @param file.name Optional character suffix used when writing the TF activity matrix to disk.
 #'
 #' @return A data frame of inferred and scaled TF activity scores, with samples as rows and TFs as columns.
 #' @export
@@ -1187,9 +1204,9 @@ compute.TF.network.classification = function(tf.network, pathways.features, retu
 #'
 #' @examples
 #' data("counts.norm.tuto")
-#' tfs_activity <- compute.TFs.activity(counts.norm.tuto)
+#' tfs_activity <- compute.TFs.activity(counts.norm.tuto, cores = 1)
 #'
-compute.TFs.activity <- function(RNA.counts, TF.collection = "CollecTRI", min_targets_size = 5, universe = NULL, return = TRUE, file.name = NULL){
+compute.TFs.activity <- function(RNA.counts, TF.collection = "CollecTRI", min_targets_size = 5, universe = NULL, cores = 4, return = TRUE, file.name = NULL){
 
   if(TF.collection == "CollecTRI"){
     if(is.null(universe)==T){
@@ -1214,7 +1231,7 @@ compute.TFs.activity <- function(RNA.counts, TF.collection = "CollecTRI", min_ta
 
   sample_acts <- decoupleR::run_viper(mat = RNA.counts, network = universe,
                                       .source = "source", minsize = min_targets_size, eset.filter = FALSE, method = "none",
-                                      verbose = FALSE, cores = 4) %>%
+                                      verbose = FALSE, cores = cores) %>%
     decoupleR::pivot_wider_profile(id_cols = source,
                                    names_from = condition,
                                    values_from = score) %>%
@@ -1235,6 +1252,7 @@ compute.TFs.activity <- function(RNA.counts, TF.collection = "CollecTRI", min_ta
 #' represented by the eigenvalue of the module.
 #'
 #' @param TFs.matrix Matrix of TF activity (samples x TFs).
+#' @param batch Logical; if TRUE, performs consensus WGCNA across cohorts provided as a list.
 #' @param network.type Network type: "signed", "unsigned", "signed hybrid", or "distance". Default is "signed".
 #' @param clustering.method Clustering method for hierarchical clustering. Default is "ward.D2".
 #' @param minMod Minimum number of TFs per module. Default is 15.
@@ -1242,6 +1260,7 @@ compute.TFs.activity <- function(RNA.counts, TF.collection = "CollecTRI", min_ta
 #' @param cor_type Correlation type for adjacency calculation: "p" (Pearson), "s" (Spearman). Default is "p".
 #' @param softPower Optional numeric value specifying the soft-thresholding power to be used when constructing
 #' @param verbose Boolen value to whether print or no the function messages
+#' @param file.name Optional character suffix used when writing WTCNA outputs.
 #' @param return Logical, whether to save output plots and module list to "Results/". Default is TRUE.
 #'
 #' @return A named list with:
@@ -1750,22 +1769,12 @@ compute.composition.matrix = function(deconvolution.subgroupped, cell.groups, ce
 #' Identifies and projects cell groups using module relationships derived from TF networks and deconvolution outputs.
 #' If a binary trait is specified, the function splits the data and constructs cell groups for both classes (supervised analysis).
 #'
-#' @param counts A matrix of gene expression counts (genes x samples).
-#' @param tfs A list or matrix of transcription factors used in the analysis.
-#' @param deconv A matrix of cell type proportions from deconvolution (samples x cell types).
 #' @param network A list containing TF networks for cell types.
 #' @param dt A list containing deconvolution subgroup structures.
-#' @param clinical A data frame with clinical metadata, including the trait of interest.
+#' @param batch Optional vector indicating batch assignment for samples.
 #' @param pval P-value threshold used to filter module relationships. Default: 0.05.
 #' @param high_corr_groups Correlation threshold to merge or remove redundant cell groups. Default: 0.9.
 #' @param clustering.method Clustering method for hierarchical clustering. Default: "ward.D2".
-#' @param trait Optional character: column name in `clinical` for trait to split by and do a supervised cell group analysis (see paper for more info). If no provided, analysis will be unsupervised.
-#' @param positive Optional value defining the positive class of the `trait`.
-#' @param TF.collection Character. The source of the TF–target network. Options are `"CollecTRI"` (default), `"Dorothea"`, or `"ARACNE"`. Only needed when supervised analysis will be performed, if not, it will be ignored.
-#' - `"CollecTRI"` and `"Dorothea"` use prebuilt collections from OmnipathR.
-#' - `"ARACNE"` allows user input of a custom network file in a 3-column format: `regulator`, `target`, and `mutual information`.
-#' @param min_targets_size Integer. Minimum number of target genes per regulon required for TF activity inference. Default is 5. Only needed when supervised analysis will be performed, if not, it will be ignored.
-#' @param universe Optional. A user-specified data frame of TF–target interactions. If not provided, the function will fetch the relevant network based on the `TF.collection` argument. Only needed when supervised analysis will be performed, if not, it will be ignored.
 #'
 #' @return A list of 3 elements:
 #' \describe{
@@ -2717,6 +2726,7 @@ module_enrich = function(tpm.counts, module_color, hub_genes, tfs_universe){
 #' @param cell_group A numeric matrix of cell deconvolution features for a cell group (samples x features).
 #' @param module_group A character vector indicating TF module group colors corresponding to the cell group (can be obtained via `extract_colors()`).
 #' @param tfs.module.network Output of compute.WTCNA().
+#' @param batch Optional vector indicating batch assignment for samples.
 #' @param discard Logical; whether to discard cell groups whose canonical correlation is below 0.6 (default TRUE).
 #'
 #' @return A list with:
@@ -2973,9 +2983,12 @@ compute.test.score = function(cell_group, loadings){
 #' @param paths Optional list of prior knowledge resources for CellTFusion.
 #' @param normalized Logical. Whether the gene expression data is already normalized. Defaults to \code{FALSE}.
 #' @param coldata A data frame with metadata (e.g., sample annotations), must match the number and order of samples in \code{data}.
-#' @param trait A character string specifying the name of the column in \code{coldata} containing the trait of interest (e.g., response).
-#' @param trait.positive A character string indicating the positive class label for the trait.
+#' @param time_var Optional numeric vector with survival/censoring time values.
+#' @param event_var Optional vector with event labels used for survival tasks.
+#' @param corr_type Correlation type passed to CellTFusion. Default is \code{"spearman"}.
 #' @param ncores Integer. Number of CPU cores to use for parallelization. If \code{NULL}, \code{parallel::detectCores() - 2} is used.
+#' @param batch Logical; whether batch correction should be used. Default is \code{FALSE}.
+#' @param batch_id Optional vector of batch identifiers, aligned with samples.
 #' @param min_targets_size Hyperparameters for CellTFusion
 #' @param minMod Hyperparameters for CellTFusion
 #' @param corr_mod Hyperparameters for CellTFusion
@@ -3685,20 +3698,17 @@ cell.groups.stat.analysis <- function(cell.groups, coldata, trait,
   return(result)
 }
 
-#' Full NMF pipeline for latent immune states (single cohort)
+#' Compute latent factors from cell-group features
 #'
-#' @param X                 Numeric matrix of size (samples × cell_groups)
-#' @param K_range           Vector of K to try (default = 2:6)
-#' @param remove_low_var    Logical, whether to remove low-variance groups (default = TRUE)
-#' @param min_var           Minimum variance threshold for filtering (default = 1e-5)
-#' @param nrun              Number of NMF runs per K (default = 10)
-#' @param seed              Random seed (default = 123)
-#' @return List with:
-#'         $best_K = suggested number of latent factors
-#'         $W = sample × latent states matrix for training
-#'         $H = latent states × cell group contributions
-#'         $reconstruction_errors = reconstruction errors for each K
-#'         $consensus = list of consensus matrices for each K
+#' @param X Numeric matrix of size samples x cell groups.
+#' @param batch Optional vector indicating batch assignment for samples.
+#' @param seed Random seed used to initialize model fitting.
+#' @return A list with latent representation and loadings:
+#' \itemize{
+#'   \item \code{Z}: Sample-level latent factors.
+#'   \item \code{W}: Feature weights per latent factor.
+#'   \item \code{expanded_Z}: Expanded latent features used downstream.
+#' }
 compute.latent_factors <- function(X, batch = NULL, seed = 123) {
 
   set.seed(seed)

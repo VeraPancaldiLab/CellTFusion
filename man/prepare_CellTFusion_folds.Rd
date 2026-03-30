@@ -44,7 +44,17 @@ CellTFusion will run without these features.}
 
 \item{coldata}{A data frame with metadata (e.g., sample annotations), must match the number and order of samples in \code{data}.}
 
+\item{time_var}{Optional numeric vector with survival/censoring time values.}
+
+\item{event_var}{Optional vector with event labels used for survival tasks.}
+
+\item{corr_type}{Correlation type passed to CellTFusion. Default is \code{"spearman"}.}
+
 \item{ncores}{Integer. Number of CPU cores to use for parallelization. If \code{NULL}, \code{parallel::detectCores() - 2} is used.}
+
+\item{batch}{Logical; whether batch correction should be used. Default is \code{FALSE}.}
+
+\item{batch_id}{Optional vector of batch identifiers, aligned with samples.}
 
 \item{min_targets_size}{Hyperparameters for CellTFusion}
 
@@ -59,10 +69,6 @@ These can be provided as vectors to define a tuning grid when \code{bestune = NU
 
 \item{bestune}{Optional. A data frame of tuned hyperparameters. If provided, the function skips fold construction
 and directly processes the full dataset using these values.}
-
-\item{trait}{A character string specifying the name of the column in \code{coldata} containing the trait of interest (e.g., response).}
-
-\item{trait.positive}{A character string indicating the positive class label for the trait.}
 }
 \value{
 A list with two possible structures depending on \code{bestune}:
