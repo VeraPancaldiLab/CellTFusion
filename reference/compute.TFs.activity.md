@@ -9,13 +9,15 @@ ARACNE-inferred networks are also supported.
 ## Usage
 
 ``` r
-compute.TFs.activity(
+# S3 method for class 'TFs.activity'
+compute(
   RNA.counts,
   TF.collection = "CollecTRI",
   min_targets_size = 5,
-  tfs.pruned = FALSE,
   universe = NULL,
-  return = TRUE
+  cores = 4,
+  return = TRUE,
+  file.name = NULL
 )
 ```
 
@@ -42,22 +44,24 @@ compute.TFs.activity(
   Integer. Minimum number of target genes per regulon required for TF
   activity inference. Default is 5.
 
-- tfs.pruned:
-
-  Logical. Whether to prune TF regulons to limit the number of target
-  genes, which helps reduce bias introduced by TFs with large regulons.
-  If `TRUE`, the user will be prompted to input a maximum size for
-  regulons. Default is `FALSE`.
-
 - universe:
 
   Optional. A user-specified data frame of TF–target interactions. If
   not provided, the function will fetch the relevant network based on
   the `TF.collection` argument.
 
+- cores:
+
+  Integer. Number of cores used by VIPER inference. Default is 4.
+
 - return:
 
   Logical; if TRUE, saves matrix in Results/ folder. Default is TRUE.
+
+- file.name:
+
+  Optional character suffix used when writing the TF activity matrix to
+  disk.
 
 ## Value
 
@@ -93,6 +97,8 @@ https://doi.org/10.1186/1471-2105-7-S1-S7
 
 ``` r
 data("counts.norm.tuto")
-tfs_activity <- compute.TFs.activity(counts.norm.tuto)
-#> Error in if (.keep) . else select(., -!!evs_col): argument is of length zero
+tfs_activity <- compute.TFs.activity(counts.norm.tuto, cores = 1)
+#> Warning: 'OmnipathR::import_tf_mirna_interactions' is deprecated.
+#> Use 'tf_mirna' instead.
+#> See help("Deprecated")
 ```

@@ -37,13 +37,15 @@
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">compute.TFs.activity</span><span class="op">(</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="co"># S3 method for class 'TFs.activity'</span></span>
+<span><span class="fu">compute</span><span class="op">(</span></span>
 <span>  <span class="va">RNA.counts</span>,</span>
 <span>  TF.collection <span class="op">=</span> <span class="st">"CollecTRI"</span>,</span>
 <span>  min_targets_size <span class="op">=</span> <span class="fl">5</span>,</span>
-<span>  tfs.pruned <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  universe <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  return <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>  cores <span class="op">=</span> <span class="fl">4</span>,</span>
+<span>  return <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  file.name <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -65,16 +67,20 @@
 <dd><p>Integer. Minimum number of target genes per regulon required for TF activity inference. Default is 5.</p></dd>
 
 
-<dt id="arg-tfs-pruned">tfs.pruned<a class="anchor" aria-label="anchor" href="#arg-tfs-pruned"></a></dt>
-<dd><p>Logical. Whether to prune TF regulons to limit the number of target genes, which helps reduce bias introduced by TFs with large regulons. If <code>TRUE</code>, the user will be prompted to input a maximum size for regulons. Default is <code>FALSE</code>.</p></dd>
-
-
 <dt id="arg-universe">universe<a class="anchor" aria-label="anchor" href="#arg-universe"></a></dt>
 <dd><p>Optional. A user-specified data frame of TF–target interactions. If not provided, the function will fetch the relevant network based on the <code>TF.collection</code> argument.</p></dd>
 
 
+<dt id="arg-cores">cores<a class="anchor" aria-label="anchor" href="#arg-cores"></a></dt>
+<dd><p>Integer. Number of cores used by VIPER inference. Default is 4.</p></dd>
+
+
 <dt id="arg-return">return<a class="anchor" aria-label="anchor" href="#arg-return"></a></dt>
 <dd><p>Logical; if TRUE, saves matrix in Results/ folder. Default is TRUE.</p></dd>
+
+
+<dt id="arg-file-name">file.name<a class="anchor" aria-label="anchor" href="#arg-file-name"></a></dt>
+<dd><p>Optional character suffix used when writing the TF activity matrix to disk.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -93,8 +99,10 @@
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"counts.norm.tuto"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">tfs_activity</span> <span class="op">&lt;-</span> <span class="fu">compute.TFs.activity</span><span class="op">(</span><span class="va">counts.norm.tuto</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in if (.keep) . else select(., -!!evs_col):</span> argument is of length zero</span>
+<span class="r-in"><span><span class="va">tfs_activity</span> <span class="op">&lt;-</span> <span class="fu">compute.TFs.activity</span><span class="op">(</span><span class="va">counts.norm.tuto</span>, cores <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'OmnipathR::import_tf_mirna_interactions' is deprecated.</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> Use 'tf_mirna' instead.</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> See help("Deprecated")</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

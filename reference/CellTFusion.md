@@ -10,20 +10,20 @@ CellTFusion(
   deconv = NULL,
   normalized = T,
   coldata = NULL,
-  trait = NULL,
-  trait.positive = NULL,
   batch = F,
   batch_id = NULL,
-  deconv_methods = c("Quantiseq", "Epidish", "DeconRNASeq", "DWLS", "CibersortX"),
+  deconv_methods = c("Quantiseq", "CBSX", "Epidish", "DeconRNASeq", "DWLS"),
   cbsx.mail = NULL,
   cbsx.token = NULL,
   file_name = NULL,
+  task = c("supervised", "unsupervised"),
+  contrast = NULL,
+  ref_level = NULL,
   TF.collection = "CollecTRI",
-  min_targets_size = 10,
-  tfs.pruned = FALSE,
+  min_targets_size = 3,
   universe = NULL,
   paths = NULL,
-  minMod = 10,
+  minMod = 3,
   corr_mod = 0.9,
   corr = 0.7,
   corr_type = "spearman",
@@ -58,15 +58,15 @@ CellTFusion(
   (Optional) A data frame containing clinical metadata for association
   analysis with TF modules.
 
-- trait:
+- batch:
 
-  Optional character: column name in `clinical` for trait to split by
-  and do a supervised cell group analysis (see paper for more info). If
-  no provided, analysis will be unsupervised.
+  Logical; whether batch correction should be applied where supported.
+  Default is FALSE.
 
-- trait.positive:
+- batch_id:
 
-  Optional value defining the positive class of the `trait`.
+  Optional character indicating the column name in coldata containing
+  batch identifiers.
 
 - deconv_methods:
 
@@ -88,6 +88,20 @@ CellTFusion(
 
   (Optional) Prefix for output files saved in the "Results/" directory.
 
+- task:
+
+  Analysis mode. Choose between `"supervised"` and `"unsupervised"`.
+
+- contrast:
+
+  Optional character indicating the condition column used for supervised
+  DEG analysis.
+
+- ref_level:
+
+  Optional character indicating the reference level for supervised DEG
+  analysis.
+
 - TF.collection:
 
   Character. The source of the TF–target network. Options are
@@ -101,15 +115,8 @@ CellTFusion(
 
 - min_targets_size:
 
-  Integer; minimum number of target genes required to compute TF
-  activity.
-
-- tfs.pruned:
-
-  Logical. Whether to prune TF regulons to limit the number of target
-  genes, which helps reduce bias introduced by TFs with large regulons.
-  If `TRUE`, the user will be prompted to input a maximum size for
-  regulons. Default is `FALSE`.
+  Integer. Minimum number of target genes per regulon required for TF
+  activity inference. Default is 5.
 
 - universe:
 
@@ -134,6 +141,11 @@ CellTFusion(
 - corr:
 
   Numeric; correlation threshold used in the deconvolution analysis.
+
+- corr_type:
+
+  Correlation type used in deconvolution analysis. Default is
+  `"spearman"`.
 
 - cells_extra:
 
@@ -205,9 +217,7 @@ res <- CellTFusion(
   corr_mod = 0.25,
   corr = 0.7,
   pval = 0.05,
-  high_corr_groups = 0.85,
-  trait = "Best.Confirmed.Overall.Response",
-  trait.positive = "CR"
+  high_corr_groups = 0.85
 )
 } # }
 ```

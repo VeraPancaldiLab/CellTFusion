@@ -8,7 +8,8 @@ number of clusters.
 ## Usage
 
 ``` r
-compute.TF.network.classification(tf.network, pathways.features, return = T)
+# S3 method for class 'TF.network.classification'
+compute(tf.network, pathways.features, return = T)
 ```
 
 ## Arguments
@@ -41,16 +42,10 @@ pathways <- compute.pathway.activity(counts.norm.tuto)
 #> Warning: 'OmnipathR::get_annotation_resources' is deprecated.
 #> Use 'annotation_resources' instead.
 #> See help("Deprecated")
-#> Warning: URL 'https://omnipathdb.org/resources': Timeout of 60 seconds was reached
-#> Warning: [decoupleR] Failed to check the list of available resources in OmniPath. Proceeding anyways.
 #> Warning: 'OmnipathR::import_omnipath_annotations' is deprecated.
 #> Use 'annotations' instead.
 #> See help("Deprecated")
 tfs.modules.clusters <- compute.TF.network.classification(tf.network = network.tuto,
                                                           pathways.features = pathways,
                                                           return = FALSE)
-#> Warning: Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.
-#> ℹ Please use `linewidth` instead.
-#> ℹ The deprecated feature was likely used in the ggpubr package.
-#>   Please report the issue at <https://github.com/kassambara/ggpubr/issues>.
 ```

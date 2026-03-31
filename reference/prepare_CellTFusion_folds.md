@@ -23,8 +23,6 @@ prepare_CellTFusion_folds(
   paths = NULL,
   normalized = FALSE,
   coldata,
-  trait = NULL,
-  trait.positive = NULL,
   time_var = NULL,
   event_var = NULL,
   corr_type = "spearman",
@@ -75,19 +73,30 @@ prepare_CellTFusion_folds(
   A data frame with metadata (e.g., sample annotations), must match the
   number and order of samples in `data`.
 
-- trait:
+- time_var:
 
-  A character string specifying the name of the column in `coldata`
-  containing the trait of interest (e.g., response).
+  Optional numeric vector with survival/censoring time values.
 
-- trait.positive:
+- event_var:
 
-  A character string indicating the positive class label for the trait.
+  Optional vector with event labels used for survival tasks.
+
+- corr_type:
+
+  Correlation type passed to CellTFusion. Default is `"spearman"`.
 
 - ncores:
 
   Integer. Number of CPU cores to use for parallelization. If `NULL`,
   `parallel::detectCores() - 2` is used.
+
+- batch:
+
+  Logical; whether batch correction should be used. Default is `FALSE`.
+
+- batch_id:
+
+  Optional vector of batch identifiers, aligned with samples.
 
 - min_targets_size:
 

@@ -66,8 +66,6 @@ for subsequent model training and hyperparameter selection.</p></li>
 <span>  paths <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  normalized <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  <span class="va">coldata</span>,</span>
-<span>  trait <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  trait.positive <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  time_var <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  event_var <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  corr_type <span class="op">=</span> <span class="st">"spearman"</span>,</span>
@@ -118,16 +116,28 @@ CellTFusion will run without these features.</p></dd>
 <dd><p>A data frame with metadata (e.g., sample annotations), must match the number and order of samples in <code>data</code>.</p></dd>
 
 
-<dt id="arg-trait">trait<a class="anchor" aria-label="anchor" href="#arg-trait"></a></dt>
-<dd><p>A character string specifying the name of the column in <code>coldata</code> containing the trait of interest (e.g., response).</p></dd>
+<dt id="arg-time-var">time_var<a class="anchor" aria-label="anchor" href="#arg-time-var"></a></dt>
+<dd><p>Optional numeric vector with survival/censoring time values.</p></dd>
 
 
-<dt id="arg-trait-positive">trait.positive<a class="anchor" aria-label="anchor" href="#arg-trait-positive"></a></dt>
-<dd><p>A character string indicating the positive class label for the trait.</p></dd>
+<dt id="arg-event-var">event_var<a class="anchor" aria-label="anchor" href="#arg-event-var"></a></dt>
+<dd><p>Optional vector with event labels used for survival tasks.</p></dd>
+
+
+<dt id="arg-corr-type">corr_type<a class="anchor" aria-label="anchor" href="#arg-corr-type"></a></dt>
+<dd><p>Correlation type passed to CellTFusion. Default is <code>"spearman"</code>.</p></dd>
 
 
 <dt id="arg-ncores">ncores<a class="anchor" aria-label="anchor" href="#arg-ncores"></a></dt>
 <dd><p>Integer. Number of CPU cores to use for parallelization. If <code>NULL</code>, <code>parallel::detectCores() - 2</code> is used.</p></dd>
+
+
+<dt id="arg-batch">batch<a class="anchor" aria-label="anchor" href="#arg-batch"></a></dt>
+<dd><p>Logical; whether batch correction should be used. Default is <code>FALSE</code>.</p></dd>
+
+
+<dt id="arg-batch-id">batch_id<a class="anchor" aria-label="anchor" href="#arg-batch-id"></a></dt>
+<dd><p>Optional vector of batch identifiers, aligned with samples.</p></dd>
 
 
 <dt id="arg-min-targets-size">min_targets_size<a class="anchor" aria-label="anchor" href="#arg-min-targets-size"></a></dt>

@@ -8,7 +8,8 @@ the eigenvalue of the module.
 ## Usage
 
 ``` r
-compute.WTCNA(
+# S3 method for class 'WTCNA'
+compute(
   TFs.matrix,
   batch = FALSE,
   network.type = "signed",
@@ -17,6 +18,7 @@ compute.WTCNA(
   corr_mod = 0.9,
   cor_type = "p",
   verbose = F,
+  file.name = NULL,
   softPower = NULL,
   return = T
 )
@@ -27,6 +29,11 @@ compute.WTCNA(
 - TFs.matrix:
 
   Matrix of TF activity (samples x TFs).
+
+- batch:
+
+  Logical; if TRUE, performs consensus WGCNA across cohorts provided as
+  a list.
 
 - network.type:
 
@@ -54,6 +61,10 @@ compute.WTCNA(
 - verbose:
 
   Boolen value to whether print or no the function messages
+
+- file.name:
+
+  Optional character suffix used when writing WTCNA outputs.
 
 - softPower:
 

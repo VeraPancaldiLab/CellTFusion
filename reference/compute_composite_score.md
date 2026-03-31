@@ -32,6 +32,10 @@ compute_composite_score(
 
   Output of compute.WTCNA().
 
+- batch:
+
+  Optional vector indicating batch assignment for samples.
+
 - discard:
 
   Logical; whether to discard cell groups whose canonical correlation is

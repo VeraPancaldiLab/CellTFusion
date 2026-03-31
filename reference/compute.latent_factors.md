@@ -1,42 +1,34 @@
-# Full NMF pipeline for latent immune states (single cohort)
+# Compute latent factors from cell-group features
 
-Full NMF pipeline for latent immune states (single cohort)
+Compute latent factors from cell-group features
 
 ## Usage
 
 ``` r
-compute.latent_factors(X, batch = NULL, seed = 123)
+# S3 method for class 'latent_factors'
+compute(X, batch = NULL, seed = 123)
 ```
 
 ## Arguments
 
 - X:
 
-  Numeric matrix of size (samples × cell_groups)
+  Numeric matrix of size samples x cell groups.
+
+- batch:
+
+  Optional vector indicating batch assignment for samples.
 
 - seed:
 
-  Random seed (default = 123)
-
-- K_range:
-
-  Vector of K to try (default = 2:6)
-
-- remove_low_var:
-
-  Logical, whether to remove low-variance groups (default = TRUE)
-
-- min_var:
-
-  Minimum variance threshold for filtering (default = 1e-5)
-
-- nrun:
-
-  Number of NMF runs per K (default = 10)
+  Random seed used to initialize model fitting.
 
 ## Value
 
-List with: \$best_K = suggested number of latent factors \$W = sample ×
-latent states matrix for training \$H = latent states × cell group
-contributions \$reconstruction_errors = reconstruction errors for each K
-\$consensus = list of consensus matrices for each K
+A list with latent representation and loadings:
+
+- `Z`: Sample-level latent factors.
+
+- `W`: Feature weights per latent factor.
+
+- `expanded_Z`: Expanded latent features used downstream.

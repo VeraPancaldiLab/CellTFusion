@@ -11,7 +11,8 @@ modules.
 ## Usage
 
 ``` r
-compute.modules.enrichment(RNA.tpm, hub_tfs)
+# S3 method for class 'modules.enrichment'
+compute(RNA.tpm, hub_tfs)
 ```
 
 ## Arguments

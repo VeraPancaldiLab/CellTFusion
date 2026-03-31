@@ -49,6 +49,10 @@ compute_cell_groups_signatures(
   containing the TF module network information, used to calculate
   composite scores for each group.
 
+- batch:
+
+  Optional vector indicating batch assignment for samples.
+
 ## Value
 
 A data frame with samples as rows and projected cell group scores as

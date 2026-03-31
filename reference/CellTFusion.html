@@ -42,20 +42,20 @@
 <span>  deconv <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  normalized <span class="op">=</span> <span class="cn">T</span>,</span>
 <span>  coldata <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  trait <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  trait.positive <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  batch <span class="op">=</span> <span class="cn">F</span>,</span>
 <span>  batch_id <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  deconv_methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Quantiseq"</span>, <span class="st">"Epidish"</span>, <span class="st">"DeconRNASeq"</span>, <span class="st">"DWLS"</span>, <span class="st">"CibersortX"</span><span class="op">)</span>,</span>
+<span>  deconv_methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Quantiseq"</span>, <span class="st">"CBSX"</span>, <span class="st">"Epidish"</span>, <span class="st">"DeconRNASeq"</span>, <span class="st">"DWLS"</span><span class="op">)</span>,</span>
 <span>  cbsx.mail <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  cbsx.token <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  file_name <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  task <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"supervised"</span>, <span class="st">"unsupervised"</span><span class="op">)</span>,</span>
+<span>  contrast <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  ref_level <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  TF.collection <span class="op">=</span> <span class="st">"CollecTRI"</span>,</span>
-<span>  min_targets_size <span class="op">=</span> <span class="fl">10</span>,</span>
-<span>  tfs.pruned <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  min_targets_size <span class="op">=</span> <span class="fl">3</span>,</span>
 <span>  universe <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  paths <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  minMod <span class="op">=</span> <span class="fl">10</span>,</span>
+<span>  minMod <span class="op">=</span> <span class="fl">3</span>,</span>
 <span>  corr_mod <span class="op">=</span> <span class="fl">0.9</span>,</span>
 <span>  corr <span class="op">=</span> <span class="fl">0.7</span>,</span>
 <span>  corr_type <span class="op">=</span> <span class="st">"spearman"</span>,</span>
@@ -87,12 +87,12 @@
 <dd><p>(Optional) A data frame containing clinical metadata for association analysis with TF modules.</p></dd>
 
 
-<dt id="arg-trait">trait<a class="anchor" aria-label="anchor" href="#arg-trait"></a></dt>
-<dd><p>Optional character: column name in <code>clinical</code> for trait to split by and do a supervised cell group analysis (see paper for more info). If no provided, analysis will be unsupervised.</p></dd>
+<dt id="arg-batch">batch<a class="anchor" aria-label="anchor" href="#arg-batch"></a></dt>
+<dd><p>Logical; whether batch correction should be applied where supported. Default is FALSE.</p></dd>
 
 
-<dt id="arg-trait-positive">trait.positive<a class="anchor" aria-label="anchor" href="#arg-trait-positive"></a></dt>
-<dd><p>Optional value defining the positive class of the <code>trait</code>.</p></dd>
+<dt id="arg-batch-id">batch_id<a class="anchor" aria-label="anchor" href="#arg-batch-id"></a></dt>
+<dd><p>Optional character indicating the column name in coldata containing batch identifiers.</p></dd>
 
 
 <dt id="arg-deconv-methods">deconv_methods<a class="anchor" aria-label="anchor" href="#arg-deconv-methods"></a></dt>
@@ -112,6 +112,18 @@
 <dd><p>(Optional) Prefix for output files saved in the "Results/" directory.</p></dd>
 
 
+<dt id="arg-task">task<a class="anchor" aria-label="anchor" href="#arg-task"></a></dt>
+<dd><p>Analysis mode. Choose between <code>"supervised"</code> and <code>"unsupervised"</code>.</p></dd>
+
+
+<dt id="arg-contrast">contrast<a class="anchor" aria-label="anchor" href="#arg-contrast"></a></dt>
+<dd><p>Optional character indicating the condition column used for supervised DEG analysis.</p></dd>
+
+
+<dt id="arg-ref-level">ref_level<a class="anchor" aria-label="anchor" href="#arg-ref-level"></a></dt>
+<dd><p>Optional character indicating the reference level for supervised DEG analysis.</p></dd>
+
+
 <dt id="arg-tf-collection">TF.collection<a class="anchor" aria-label="anchor" href="#arg-tf-collection"></a></dt>
 <dd><p>Character. The source of the TF–target network. Options are <code>"CollecTRI"</code> (default), <code>"Dorothea"</code>, or <code>"ARACNE"</code>.</p><ul><li><p><code>"CollecTRI"</code> and <code>"Dorothea"</code> use prebuilt collections from OmnipathR.</p></li>
 <li><p><code>"ARACNE"</code> allows user input of a custom network file in a 3-column format: <code>regulator</code>, <code>target</code>, and <code>mutual information</code>.</p></li>
@@ -119,11 +131,7 @@
 
 
 <dt id="arg-min-targets-size">min_targets_size<a class="anchor" aria-label="anchor" href="#arg-min-targets-size"></a></dt>
-<dd><p>Integer; minimum number of target genes required to compute TF activity.</p></dd>
-
-
-<dt id="arg-tfs-pruned">tfs.pruned<a class="anchor" aria-label="anchor" href="#arg-tfs-pruned"></a></dt>
-<dd><p>Logical. Whether to prune TF regulons to limit the number of target genes, which helps reduce bias introduced by TFs with large regulons. If <code>TRUE</code>, the user will be prompted to input a maximum size for regulons. Default is <code>FALSE</code>.</p></dd>
+<dd><p>Integer. Minimum number of target genes per regulon required for TF activity inference. Default is 5.</p></dd>
 
 
 <dt id="arg-universe">universe<a class="anchor" aria-label="anchor" href="#arg-universe"></a></dt>
@@ -144,6 +152,10 @@
 
 <dt id="arg-corr">corr<a class="anchor" aria-label="anchor" href="#arg-corr"></a></dt>
 <dd><p>Numeric; correlation threshold used in the deconvolution analysis.</p></dd>
+
+
+<dt id="arg-corr-type">corr_type<a class="anchor" aria-label="anchor" href="#arg-corr-type"></a></dt>
+<dd><p>Correlation type used in deconvolution analysis. Default is <code>"spearman"</code>.</p></dd>
 
 
 <dt id="arg-cells-extra">cells_extra<a class="anchor" aria-label="anchor" href="#arg-cells-extra"></a></dt>
@@ -207,9 +219,7 @@
 <span class="r-in"><span>  corr_mod <span class="op">=</span> <span class="fl">0.25</span>,</span></span>
 <span class="r-in"><span>  corr <span class="op">=</span> <span class="fl">0.7</span>,</span></span>
 <span class="r-in"><span>  pval <span class="op">=</span> <span class="fl">0.05</span>,</span></span>
-<span class="r-in"><span>  high_corr_groups <span class="op">=</span> <span class="fl">0.85</span>,</span></span>
-<span class="r-in"><span>  trait <span class="op">=</span> <span class="st">"Best.Confirmed.Overall.Response"</span>,</span></span>
-<span class="r-in"><span>  trait.positive <span class="op">=</span> <span class="st">"CR"</span></span></span>
+<span class="r-in"><span>  high_corr_groups <span class="op">=</span> <span class="fl">0.85</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>

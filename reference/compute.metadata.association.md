@@ -9,14 +9,21 @@ are saved in the `Results/` directory.
 ## Usage
 
 ``` r
-compute.metadata.association(
+# S3 method for class 'metadata.association'
+compute(
   tfs.modules,
   coldata,
   pval = 0.05,
   corr_method = "p",
   file.name,
   width = 20,
-  height = 8
+  height = 8,
+  ncol = 5,
+  y_min = 0,
+  y_max = 0.5,
+  plot_grid = F,
+  width_grid = 18,
+  height_grid = 10
 )
 ```
 
@@ -60,6 +67,30 @@ compute.metadata.association(
 
   A numeric value indicating the height (in inches) of the output
   heatmap plot (default = 8).
+
+- ncol:
+
+  Integer. Number of columns in the grid of association boxplots.
+
+- y_min:
+
+  Numeric. Lower y-axis limit for grid boxplots.
+
+- y_max:
+
+  Numeric. Upper y-axis limit for grid boxplots.
+
+- plot_grid:
+
+  Logical; if TRUE, generates a grid of boxplot summaries.
+
+- width_grid:
+
+  Numeric width of the grid plot output.
+
+- height_grid:
+
+  Numeric height of the grid plot output.
 
 ## Value
 

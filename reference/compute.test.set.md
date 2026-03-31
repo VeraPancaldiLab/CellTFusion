@@ -9,7 +9,8 @@ scores represent summarized information from cell subgroup profiles.
 ## Usage
 
 ``` r
-compute.test.set(deconv_res, cell_groups, features, deconvolution_test)
+# S3 method for class 'test.set'
+compute(deconv_res, cell_groups, features, deconvolution_test)
 ```
 
 ## Arguments

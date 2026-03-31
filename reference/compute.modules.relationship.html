@@ -40,7 +40,8 @@ across the same set of samples, visualizing only significant associations.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">compute.modules.relationship</span><span class="op">(</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="co"># S3 method for class 'modules.relationship'</span></span>
+<span><span class="fu">compute</span><span class="op">(</span></span>
 <span>  <span class="va">matA</span>,</span>
 <span>  <span class="va">matB</span>,</span>
 <span>  <span class="va">file_name</span>,</span>
@@ -53,7 +54,11 @@ across the same set of samples, visualizing only significant associations.</p>
 <span>  cor_type <span class="op">=</span> <span class="st">"p"</span>,</span>
 <span>  return <span class="op">=</span> <span class="cn">F</span>,</span>
 <span>  vertical <span class="op">=</span> <span class="cn">F</span>,</span>
-<span>  plot <span class="op">=</span> <span class="cn">T</span></span>
+<span>  plot <span class="op">=</span> <span class="cn">T</span>,</span>
+<span>  plot.grid <span class="op">=</span> <span class="cn">F</span>,</span>
+<span>  width.grid <span class="op">=</span> <span class="fl">12</span>,</span>
+<span>  height.grid <span class="op">=</span> <span class="fl">10</span>,</span>
+<span>  ncol.grid <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -71,6 +76,10 @@ across the same set of samples, visualizing only significant associations.</p>
 
 <dt id="arg-file-name">file_name<a class="anchor" aria-label="anchor" href="#arg-file-name"></a></dt>
 <dd><p>A string indicating the base name (without extension) of the figure to be saved in the "Results/" folder.</p></dd>
+
+
+<dt id="arg-batch">batch<a class="anchor" aria-label="anchor" href="#arg-batch"></a></dt>
+<dd><p>Optional vector indicating batch assignment for samples. If provided, partial correlations are computed controlling for batch.</p></dd>
 
 
 <dt id="arg-width">width<a class="anchor" aria-label="anchor" href="#arg-width"></a></dt>
@@ -108,6 +117,22 @@ across the same set of samples, visualizing only significant associations.</p>
 <dt id="arg-plot">plot<a class="anchor" aria-label="anchor" href="#arg-plot"></a></dt>
 <dd><p>Logical; if TRUE, saves the heatmap plot as a PDF. Default is TRUE.</p></dd>
 
+
+<dt id="arg-plot-grid">plot.grid<a class="anchor" aria-label="anchor" href="#arg-plot-grid"></a></dt>
+<dd><p>Logical; if TRUE, generates per-pair scatter grid plots for significant associations.</p></dd>
+
+
+<dt id="arg-width-grid">width.grid<a class="anchor" aria-label="anchor" href="#arg-width-grid"></a></dt>
+<dd><p>Numeric width of the scatter grid output.</p></dd>
+
+
+<dt id="arg-height-grid">height.grid<a class="anchor" aria-label="anchor" href="#arg-height-grid"></a></dt>
+<dd><p>Numeric height of the scatter grid output.</p></dd>
+
+
+<dt id="arg-ncol-grid">ncol.grid<a class="anchor" aria-label="anchor" href="#arg-ncol-grid"></a></dt>
+<dd><p>Integer number of columns used in scatter grid layout.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -130,8 +155,6 @@ across the same set of samples, visualizing only significant associations.</p>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'OmnipathR::get_annotation_resources' is deprecated.</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> Use 'annotation_resources' instead.</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> See help("Deprecated")</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>URL 'https://omnipathdb.org/resources': Timeout of 60 seconds was reached</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>[decoupleR] Failed to check the list of available resources in OmniPath. Proceeding anyways.</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'OmnipathR::import_omnipath_annotations' is deprecated.</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> Use 'annotations' instead.</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> See help("Deprecated")</span>
@@ -139,8 +162,8 @@ across the same set of samples, visualizing only significant associations.</p>
 <span class="r-in"><span>                             <span class="va">pathways</span>,</span></span>
 <span class="r-in"><span>                             <span class="st">"Pathways_Progeny-TFs_Modules"</span>,</span></span>
 <span class="r-in"><span>                             width <span class="op">=</span> <span class="fl">15</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> agg_record_220886245 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                    2 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> agg_record_8ff7708489cc </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                       2 </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"deconv_subgroups.tuto"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">corr</span> <span class="op">=</span> <span class="fu">compute.modules.relationship</span><span class="op">(</span><span class="va">network.tuto</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>,</span></span>

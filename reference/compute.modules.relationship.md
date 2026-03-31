@@ -8,7 +8,8 @@ associations.
 ## Usage
 
 ``` r
-compute.modules.relationship(
+# S3 method for class 'modules.relationship'
+compute(
   matA,
   matB,
   file_name,
@@ -21,7 +22,11 @@ compute.modules.relationship(
   cor_type = "p",
   return = F,
   vertical = F,
-  plot = T
+  plot = T,
+  plot.grid = F,
+  width.grid = 12,
+  height.grid = 10,
+  ncol.grid = NULL
 )
 ```
 
@@ -40,6 +45,11 @@ compute.modules.relationship(
 
   A string indicating the base name (without extension) of the figure to
   be saved in the "Results/" folder.
+
+- batch:
+
+  Optional vector indicating batch assignment for samples. If provided,
+  partial correlations are computed controlling for batch.
 
 - width:
 
@@ -88,6 +98,23 @@ compute.modules.relationship(
 
   Logical; if TRUE, saves the heatmap plot as a PDF. Default is TRUE.
 
+- plot.grid:
+
+  Logical; if TRUE, generates per-pair scatter grid plots for
+  significant associations.
+
+- width.grid:
+
+  Numeric width of the scatter grid output.
+
+- height.grid:
+
+  Numeric height of the scatter grid output.
+
+- ncol.grid:
+
+  Integer number of columns used in scatter grid layout.
+
 ## Value
 
 If `return = TRUE`, returns a list with:
@@ -118,8 +145,6 @@ pathways <- compute.pathway.activity(counts.norm.tuto)
 #> Warning: 'OmnipathR::get_annotation_resources' is deprecated.
 #> Use 'annotation_resources' instead.
 #> See help("Deprecated")
-#> Warning: URL 'https://omnipathdb.org/resources': Timeout of 60 seconds was reached
-#> Warning: [decoupleR] Failed to check the list of available resources in OmniPath. Proceeding anyways.
 #> Warning: 'OmnipathR::import_omnipath_annotations' is deprecated.
 #> Use 'annotations' instead.
 #> See help("Deprecated")
@@ -127,8 +152,8 @@ compute.modules.relationship(network.tuto[[1]],
                              pathways,
                              "Pathways_Progeny-TFs_Modules",
                              width = 15)
-#> agg_record_220886245 
-#>                    2 
+#> agg_record_8ff7708489cc 
+#>                       2 
 
 data("deconv_subgroups.tuto")
 corr = compute.modules.relationship(network.tuto[[1]],

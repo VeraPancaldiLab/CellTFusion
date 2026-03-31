@@ -9,11 +9,13 @@ user-provided gene sets.
 ## Usage
 
 ``` r
-compute.pathway.activity(
+# S3 method for class 'pathway.activity'
+compute(
   RNA.tpm,
   gene_sets = NULL,
   paths = NULL,
-  return = TRUE
+  return = TRUE,
+  file.name = NULL
 )
 ```
 
@@ -39,6 +41,10 @@ compute.pathway.activity(
 - return:
 
   Logical; if TRUE, saves matrices in Results/ folder. Default is TRUE.
+
+- file.name:
+
+  Optional character suffix used when writing output CSV files.
 
 ## Value
 
@@ -69,8 +75,6 @@ pathways <- compute.pathway.activity(counts.norm.tuto)
 #> Warning: 'OmnipathR::get_annotation_resources' is deprecated.
 #> Use 'annotation_resources' instead.
 #> See help("Deprecated")
-#> Warning: URL 'https://omnipathdb.org/resources': Timeout of 60 seconds was reached
-#> Warning: [decoupleR] Failed to check the list of available resources in OmniPath. Proceeding anyways.
 #> Warning: 'OmnipathR::import_omnipath_annotations' is deprecated.
 #> Use 'annotations' instead.
 #> See help("Deprecated")

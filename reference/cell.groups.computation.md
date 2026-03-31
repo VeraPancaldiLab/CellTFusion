@@ -39,6 +39,10 @@ cell.groups.computation(
   It should contain at least one element with TF module membership or
   connectivity.
 
+- batch:
+
+  Optional vector indicating batch assignment for samples.
+
 - return:
 
   Logical; if TRUE (default), writes CSV files with cell group

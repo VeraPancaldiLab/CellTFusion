@@ -41,22 +41,12 @@ If a binary trait is specified, the function splits the data and constructs cell
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">construct_cell_groups</span><span class="op">(</span></span>
-<span>  <span class="va">counts</span>,</span>
-<span>  <span class="va">tfs</span>,</span>
-<span>  <span class="va">deconv</span>,</span>
 <span>  <span class="va">network</span>,</span>
 <span>  <span class="va">dt</span>,</span>
-<span>  <span class="va">clinical</span>,</span>
 <span>  batch <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  pval <span class="op">=</span> <span class="fl">0.05</span>,</span>
 <span>  high_corr_groups <span class="op">=</span> <span class="fl">0.8</span>,</span>
-<span>  clustering.method <span class="op">=</span> <span class="st">"ward.D2"</span>,</span>
-<span>  trait <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  positive <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  TF.collection <span class="op">=</span> <span class="st">"CollecTRI"</span>,</span>
-<span>  min_targets_size <span class="op">=</span> <span class="fl">10</span>,</span>
-<span>  tfs.pruned <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  universe <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  clustering.method <span class="op">=</span> <span class="st">"ward.D2"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -64,19 +54,7 @@ If a binary trait is specified, the function splits the data and constructs cell
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
 
 
-<dl><dt id="arg-counts">counts<a class="anchor" aria-label="anchor" href="#arg-counts"></a></dt>
-<dd><p>A matrix of gene expression counts (genes x samples).</p></dd>
-
-
-<dt id="arg-tfs">tfs<a class="anchor" aria-label="anchor" href="#arg-tfs"></a></dt>
-<dd><p>A list or matrix of transcription factors used in the analysis.</p></dd>
-
-
-<dt id="arg-deconv">deconv<a class="anchor" aria-label="anchor" href="#arg-deconv"></a></dt>
-<dd><p>A matrix of cell type proportions from deconvolution (samples x cell types).</p></dd>
-
-
-<dt id="arg-network">network<a class="anchor" aria-label="anchor" href="#arg-network"></a></dt>
+<dl><dt id="arg-network">network<a class="anchor" aria-label="anchor" href="#arg-network"></a></dt>
 <dd><p>A list containing TF networks for cell types.</p></dd>
 
 
@@ -84,8 +62,8 @@ If a binary trait is specified, the function splits the data and constructs cell
 <dd><p>A list containing deconvolution subgroup structures.</p></dd>
 
 
-<dt id="arg-clinical">clinical<a class="anchor" aria-label="anchor" href="#arg-clinical"></a></dt>
-<dd><p>A data frame with clinical metadata, including the trait of interest.</p></dd>
+<dt id="arg-batch">batch<a class="anchor" aria-label="anchor" href="#arg-batch"></a></dt>
+<dd><p>Optional vector indicating batch assignment for samples.</p></dd>
 
 
 <dt id="arg-pval">pval<a class="anchor" aria-label="anchor" href="#arg-pval"></a></dt>
@@ -98,32 +76,6 @@ If a binary trait is specified, the function splits the data and constructs cell
 
 <dt id="arg-clustering-method">clustering.method<a class="anchor" aria-label="anchor" href="#arg-clustering-method"></a></dt>
 <dd><p>Clustering method for hierarchical clustering. Default: "ward.D2".</p></dd>
-
-
-<dt id="arg-trait">trait<a class="anchor" aria-label="anchor" href="#arg-trait"></a></dt>
-<dd><p>Optional character: column name in <code>clinical</code> for trait to split by and do a supervised cell group analysis (see paper for more info). If no provided, analysis will be unsupervised.</p></dd>
-
-
-<dt id="arg-positive">positive<a class="anchor" aria-label="anchor" href="#arg-positive"></a></dt>
-<dd><p>Optional value defining the positive class of the <code>trait</code>.</p></dd>
-
-
-<dt id="arg-tf-collection">TF.collection<a class="anchor" aria-label="anchor" href="#arg-tf-collection"></a></dt>
-<dd><p>Character. The source of the TF–target network. Options are <code>"CollecTRI"</code> (default), <code>"Dorothea"</code>, or <code>"ARACNE"</code>. Only needed when supervised analysis will be performed, if not, it will be ignored.</p><ul><li><p><code>"CollecTRI"</code> and <code>"Dorothea"</code> use prebuilt collections from OmnipathR.</p></li>
-<li><p><code>"ARACNE"</code> allows user input of a custom network file in a 3-column format: <code>regulator</code>, <code>target</code>, and <code>mutual information</code>.</p></li>
-</ul></dd>
-
-
-<dt id="arg-min-targets-size">min_targets_size<a class="anchor" aria-label="anchor" href="#arg-min-targets-size"></a></dt>
-<dd><p>Integer. Minimum number of target genes per regulon required for TF activity inference. Default is 5. Only needed when supervised analysis will be performed, if not, it will be ignored.</p></dd>
-
-
-<dt id="arg-tfs-pruned">tfs.pruned<a class="anchor" aria-label="anchor" href="#arg-tfs-pruned"></a></dt>
-<dd><p>Logical. Whether to prune TF regulons to limit the number of target genes, which helps reduce bias introduced by TFs with large regulons. If <code>TRUE</code>, the user will be prompted to input a maximum size for regulons. Default is <code>FALSE</code>. Only needed when supervised analysis will be performed, if not, it will be ignored.</p></dd>
-
-
-<dt id="arg-universe">universe<a class="anchor" aria-label="anchor" href="#arg-universe"></a></dt>
-<dd><p>Optional. A user-specified data frame of TF–target interactions. If not provided, the function will fetch the relevant network based on the <code>TF.collection</code> argument. Only needed when supervised analysis will be performed, if not, it will be ignored.</p></dd>
 
 </dl></div>
     <div class="section level2">

@@ -6,28 +6,31 @@ Compute cell type deconvolution
 
 - [`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md)
   : Compute one-step CellTFusion
-- [`compute.TFs.activity()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.TFs.activity.md)
+- [`compute(`*`<TFs.activity>`*`)`](https://verapancaldilab.github.io/CellTFusion/reference/compute.TFs.activity.md)
   : Compute Transcription Factor (TF) activity
-- [`compute.WTCNA()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.WTCNA.md)
+- [`compute(`*`<WTCNA>`*`)`](https://verapancaldilab.github.io/CellTFusion/reference/compute.WTCNA.md)
   : Compute Weighted TF-coactivity Network Analysis (WTCNA)
-- [`compute.pathway.activity()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.pathway.activity.md)
+- [`compute(`*`<pathway.activity>`*`)`](https://verapancaldilab.github.io/CellTFusion/reference/compute.pathway.activity.md)
   : Computes TF-modules pathway activities scores
+- [`compute_factor_gsea()`](https://verapancaldilab.github.io/CellTFusion/reference/compute_factor_gsea.md)
+  : Run multivariate feature-based GSEA using limma and Hallmark gene
+  sets
 - [`identify_hub_TFs()`](https://verapancaldilab.github.io/CellTFusion/reference/identify_hub_TFs.md)
   : Identify hub TFs
 - [`construct_cell_groups()`](https://verapancaldilab.github.io/CellTFusion/reference/construct_cell_groups.md)
   : Construct cell groups based on TF networks and deconvolution
-- [`compute.test.set()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.test.set.md)
+- [`compute(`*`<test.set>`*`)`](https://verapancaldilab.github.io/CellTFusion/reference/compute.test.set.md)
   : Compute composite scores on test set based on previous cell groups
 
 ## Utils
 
 Visualization
 
-- [`compute.metadata.association()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.metadata.association.md)
+- [`compute(`*`<metadata.association>`*`)`](https://verapancaldilab.github.io/CellTFusion/reference/compute.metadata.association.md)
   : Compute associations between TF module scores and clinical metadata
-- [`compute.modules.relationship()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.modules.relationship.md)
+- [`compute(`*`<modules.relationship>`*`)`](https://verapancaldilab.github.io/CellTFusion/reference/compute.modules.relationship.md)
   : Compute modules relationship
-- [`compute.modules.enrichment()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.modules.enrichment.md)
+- [`compute(`*`<modules.enrichment>`*`)`](https://verapancaldilab.github.io/CellTFusion/reference/compute.modules.enrichment.md)
   : Compute TF module enrichment using directed target genes
 
 ## Analysis
@@ -49,8 +52,8 @@ Cell groups analysis
   test
 - [`identify(`*`<cell.groups>`*`)`](https://verapancaldilab.github.io/CellTFusion/reference/identify.cell.groups.md)
   : Identify cell groups
-- [`compute.latent_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.latent_factors.md)
-  : Full NMF pipeline for latent immune states (single cohort)
+- [`compute(`*`<latent_factors>`*`)`](https://verapancaldilab.github.io/CellTFusion/reference/compute.latent_factors.md)
+  : Compute latent factors from cell-group features
 - [`identify(`*`<cell.signatures>`*`)`](https://verapancaldilab.github.io/CellTFusion/reference/identify.cell.signatures.md)
   : Identify cell presence scores across important features from the
   trained machine learning models.
@@ -72,9 +75,9 @@ Internal use (not exported functions)
 - [`classify.deconvolution()`](https://verapancaldilab.github.io/CellTFusion/reference/classify.deconvolution.md)
   : Classify samples by high or low deconvolution values in given cell
   groups
-- [`compute.TF.network.classification()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.TF.network.classification.md)
+- [`compute(`*`<TF.network.classification>`*`)`](https://verapancaldilab.github.io/CellTFusion/reference/compute.TF.network.classification.md)
   : Compute TF Network Classification
-- [`compute.composition.matrix()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.composition.matrix.md)
+- [`compute(`*`<composition.matrix>`*`)`](https://verapancaldilab.github.io/CellTFusion/reference/compute.composition.matrix.md)
   : Compute a cell-type composition matrix from deconvolution subgroups
 - [`compute_cell_groups_signatures()`](https://verapancaldilab.github.io/CellTFusion/reference/compute_cell_groups_signatures.md)
   : Compute projected cell group scores on an independent cohort
