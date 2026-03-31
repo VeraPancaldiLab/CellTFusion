@@ -11,6 +11,7 @@ reference:
   - compute.TFs.activity
   - compute.WTCNA
   - compute.pathway.activity
+  - compute_factor_gsea
   - identify_hub_TFs
   - construct_cell_groups
   - compute.test.set
