@@ -1,6 +1,17 @@
 url: https://verapancaldilab.github.io/CellTFusion/
 template:
   bootstrap: 5
+  bslib:
+    primary: "#1B2A4A"
+
+navbar:
+  structure:
+    left:  [intro, reference, articles, tutorials, news]
+    right: [search, github, lightswitch]
+
+home:
+  title: CellTFusion
+  description: Integration of immune-cell type deconvolution and TF networks
 
 reference:
 - title: Main
