@@ -98,7 +98,11 @@ https://doi.org/10.1186/1471-2105-7-S1-S7
 ``` r
 data("counts.norm.tuto")
 tfs_activity <- compute.TFs.activity(counts.norm.tuto, cores = 1)
-#> Warning: 'OmnipathR::import_tf_mirna_interactions' is deprecated.
-#> Use 'tf_mirna' instead.
-#> See help("Deprecated")
+#> Warning: URL 'https://ftp.expasy.org/databases/uniprot/current_release/knowledgebase/complete/docs/speclist.txt': Timeout of 60 seconds was reached
+#> Warning: URL 'https://ftp.expasy.org/databases/uniprot/current_release/knowledgebase/complete/docs/speclist.txt': Timeout of 60 seconds was reached
+#> Warning: URL 'https://ftp.expasy.org/databases/uniprot/current_release/knowledgebase/complete/docs/speclist.txt': Timeout of 60 seconds was reached
+#> Warning: URL 'https://ftp.expasy.org/databases/uniprot/current_release/knowledgebase/complete/docs/speclist.txt': Timeout of 60 seconds was reached
+#> Warning: URL 'https://ftp.expasy.org/databases/uniprot/current_release/knowledgebase/complete/docs/speclist.txt': Timeout of 60 seconds was reached
+#> Warning: URL 'https://ftp.expasy.org/databases/uniprot/current_release/knowledgebase/complete/docs/speclist.txt': Timeout of 60 seconds was reached
+#> Error in if (.keep) . else select(., -!!evs_col): argument is of length zero
 ```

@@ -109,418 +109,76 @@ deconv = multideconv::compute.deconvolution(raw.counts, methods = c("Quantiseq",
 #> 
 #> Checking consistency in deconvolution cell fractions across patients...............................................................
 #> 
+#> No extra cell types provided. Only the following cell types will be considered:
 #> 
+#>  B.cells
+#> B.naive.cells
+#> B.memory.cells
+#> Macrophages.cells
+#> Macrophages.M0
+#> Macrophages.M1
+#> Macrophages.M2
+#> Monocytes
+#> Neutrophils
+#> NK.cells
+#> NK.activated
+#> NK.resting
+#> NKT.cells
+#> CD4.cells
+#> CD4.memory.activated
+#> CD4.memory.resting
+#> CD4.naive
+#> CD8.cells
+#> CD4.regulatory
+#> CD4.non.regulatory
+#> T.cells.helper
+#> T.cells.gamma.delta
+#> Dendritic.cells
+#> Dendritic.activated.cells
+#> Dendritic.resting.cells
+#> Cancer
+#> Endothelial
+#> Eosinophils
+#> Plasma
+#> Myocytes
+#> Fibroblast
+#> Mast.cells
+#> Mast.activated.cells
+#> Mast.resting.cells
+#> CAF
+#> uncharacterized_cell 
 #> 
-#> Total sum across samples of combination Quantiseq is not 1! Remember these are proportions and the total should be 1
-#> Samples which sum with combination Quantiseq is not 1:
+#> If you want to consider other cell types (e.g. from a custom signature) which are not included in the package by default (see README), please provide them in the cells_extra argument.
 #> 
-#>  SAM7f0d9cc7f001
-#> SAMcf018fee2acd
-#> SAM49f9b2e57aa5
-#> SAMdf3e42c8672a
-#> SAMd027124354ce
-#> SAMe7bf6c015192
-#> SAM6dd7ad1d797d
-#> SAMc692536a795a
-#> SAM9a2cf3c06fb3
-#> SAM557dde1b9f3e
-#> SAM23aa15d4a0b0
-#> SAMb963dda93cfd
-#> SAMbcbc7957c264
-#> SAM7fb6987514a4
-#> SAM63405b04ab2d
-#> SAM18bc1078bc15
-#> SAMd1bd63734394
-#> SAMe9ae8beb82fa
-#> SAMbe83eae4026e
-#> SAMe5bc41772bc9
-#> SAM23095936e611
-#> SAMdb3f50c9129c
-#> SAMbf1a3ae828e6
-#> SAM52e3fa3ad574
-#> SAMd4c0837b0997
-#> SAM9cafb905b36a
-#> SAM032c642382a7
-#> SAM0ce9c983b20f
-#> SAM2f228939632f
-#> SAM297c0301e861
-#> SAM1fa6bcb7fc48
-#> SAM6d2ae0c39b96
-#> SAMeff2ce356ccb
-#> SAM110501d0eedb
-#> SAM2e9ac0b1b250
-#> SAMc0ef41aa6c8b
-#> SAMd636e3461955
-#> SAMd98bac0a070f
-#> SAM8e8ef2368dfa
-#> SAMb4c7a001537d
-#> SAMfd947610629d
-#> SAM943df5cf15df
-#> SAM39eb94fa504d
-#> SAM62fb1388c871
-#> SAM2dc3f04e45e9
-#> SAM4501e41e4751
-#> SAM5b57e47fdcb3
-#> SAMae4da274eded
-#> SAMd35318127278
-#> SAM75142fcab9df
-#> SAM166a419a4e5a
-#> SAM025b45c27e05
-#> SAM560f23d6a3ad
-#> SAMf3a9bce50099
-#> SAMdab9ca8fb5de
-#> SAM34430ef08e5b
-#> SAM4b0175e8db6e
-#> SAM5e3bae090b8c
-#> SAM3cb94b0d5297
-#> SAMcb132b0cdd2c
-#> SAMe97af0feefdf
-#> SAMee3844cc0b9f
-#> SAMdad5c29dc105
-#> SAMa424c75831b4
-#> SAM45c8e6412c66
-#> SAM73663ee4a96e
-#> SAM0bdb3428bd13
-#> SAM3330c03fdf00
-#> SAM0a7c2091dd56
-#> SAM99a46b9eec27
-#> SAM553c3c35b847
-#> SAMc2a1820d4e6b
-#> SAMe1eb5d988760
-#> SAMe3210d3632b4
-#> SAMb15ad09d6e24
-#> SAM7893196e0e89
-#> SAM961d04c42bd9
-#> SAMb0d11db9aa79
-#> SAMa90d73f8d891
-#> SAM415f36ad349e
-#> SAMad83c9c53537
-#> SAM3ee5dcd894f0
-#> SAMd7d57ee3a863
-#> SAMeb29625f76a5
-#> SAM563d6233dfa2
-#> SAMd135d5867fe3
-#> SAM065890737112
-#> SAMb470eb8f04be
-#> SAM675a12a09c15
-#> SAM1e9c4d1d39ae
-#> SAM4b7ea015fd9e
-#> SAM9306c5c92444
-#> SAM63b2189c36d7
-#> SAM18be5b395318
-#> SAM6cbc10abddb0
-#> SAMdee1011782cd
-#> SAM203dcf14f927
-#> SAMe41b1e773582
-#> SAM978a587b207e
-#> SAM5234688806a7
-#> SAM2c9586161ce6
-#> SAM76a431ba6ce1
-#> SAMd3bd67996035
-#> SAMd3601288319e
-#> SAMba1a34b5a060
-#> SAM18a4dabbc557
-#> SAMfed609955db9
-#> SAMf2aae1443f67
-#> SAM2bba8cb35e48
-#> SAM5c139c5c1c4f
-#> SAM6780ed436b55
-#> SAM85f0a3ac1c45
-#> SAM49d48750e294
-#> SAM7aa01fc49a80
-#> SAMa321770ac31c
-#> SAM3894ac3956a5
-#> SAM1c0ecfb3eb63
-#> SAMbcb07ba81cee
-#> SAM9aa6a095a9d6
-#> SAM957378bd907f
-#> SAM2624229effe8
-#> SAMd2492b2a31bb
-#> SAM670649e105b5
-#> SAM5fe7a81a39dd
-#> SAM29da928587ad
-#> SAM0a0f2bac4b20
-#> SAM8e469834acc1
-#> SAM181b638b8248
-#> SAM3b15b4c6311d
-#> SAM1c8b086175ca
-#> SAMeaa477a5384b
-#> SAM1dda30f1c5be
-#> SAM9daccafc18db
-#> SAMbc8dc3a7b54e
-#> SAM7829a341b9f3
-#> SAM0f956e757453
-#> SAMb2e4a082541a
-#> SAM771445e92421
-#> SAM59fda9035d1d
-#> SAM6f2a102a99df
-#> SAMe56c96c51190
-#> SAM6662f5181f87
-#> SAM18b9351e265a
-#> SAM7fb7a13c096b
-#> SAM87a8e18eb45b
-#> SAM9725303dce0c
-#> SAM6ff654a20f98
-#> SAM94859b440b1d
-#> SAMaabf4afe4213
-#> SAMce39dd79b441
-#> SAM6964a6d7b967
-#> SAMf20b827dca51
-#> SAM31d9176e11fb
-#> SAM80c6183220e6
-#> SAM1f83ebd6be9b
-#> SAMe7e4f7c076a7
-#> SAMc6eff056c89a
-#> SAM5cfa1699bdb7
-#> SAMda4d892fddc8
-#> SAMe3d4266775a9 
-#> 
-#> Total sum across samples of combination Epidish_BPRNACan_ is 1
-#> Total sum across samples of combination Epidish_BPRNACanProMet is 1
+#> Total sum across samples of combination Epidish_BPRNACan is 1
 #> Total sum across samples of combination Epidish_BPRNACan3DProMet is 1
+#> Total sum across samples of combination Epidish_BPRNACanProMet is 1
 #> Total sum across samples of combination Epidish_CBSX.HNSCC.scRNAseq is 1
 #> Total sum across samples of combination Epidish_CBSX.Melanoma.scRNAseq is 1
 #> Total sum across samples of combination Epidish_CBSX.NSCLC.PBMCs.scRNAseq is 1
-#> 
-#> Total sum across samples of combination Epidish_CCLE.TIL10 is not 1! Remember these are proportions and the total should be 1
-#> Samples which sum with combination Epidish_CCLE.TIL10 is not 1:
-#> 
-#>  SAM7f0d9cc7f001
-#> SAMcf018fee2acd
-#> SAMe7bf6c015192
-#> SAM6dd7ad1d797d
-#> SAMc692536a795a
-#> SAM9a2cf3c06fb3
-#> SAM557dde1b9f3e
-#> SAM23aa15d4a0b0
-#> SAM7fb6987514a4
-#> SAMd1bd63734394
-#> SAMbe83eae4026e
-#> SAMe5bc41772bc9
-#> SAM7114d99032ec
-#> SAMbf1a3ae828e6
-#> SAM52e3fa3ad574
-#> SAM9cafb905b36a
-#> SAM032c642382a7
-#> SAM0ce9c983b20f
-#> SAM2f228939632f
-#> SAM1fa6bcb7fc48
-#> SAM110501d0eedb
-#> SAM2e9ac0b1b250
-#> SAMd636e3461955
-#> SAMd98bac0a070f
-#> SAM8e8ef2368dfa
-#> SAMb4c7a001537d
-#> SAMfd947610629d
-#> SAM943df5cf15df
-#> SAM39eb94fa504d
-#> SAM62fb1388c871
-#> SAMae4da274eded
-#> SAM75142fcab9df
-#> SAM166a419a4e5a
-#> SAM025b45c27e05
-#> SAM560f23d6a3ad
-#> SAMf3a9bce50099
-#> SAM34430ef08e5b
-#> SAM4b0175e8db6e
-#> SAM5e3bae090b8c
-#> SAM3cb94b0d5297
-#> SAMe97af0feefdf
-#> SAMa424c75831b4
-#> SAM73663ee4a96e
-#> SAM3330c03fdf00
-#> SAM99a46b9eec27
-#> SAM553c3c35b847
-#> SAMc2a1820d4e6b
-#> SAMe1eb5d988760
-#> SAMb15ad09d6e24
-#> SAM961d04c42bd9
-#> SAMb0d11db9aa79
-#> SAM19fec8f3b3bd
-#> SAM415f36ad349e
-#> SAMad83c9c53537
-#> SAMd135d5867fe3
-#> SAM065890737112
-#> SAMb470eb8f04be
-#> SAM4b7ea015fd9e
-#> SAM18be5b395318
-#> SAM0d855cff64e6
-#> SAM6cbc10abddb0
-#> SAM203dcf14f927
-#> SAM76a431ba6ce1
-#> SAMd3bd67996035
-#> SAMd3601288319e
-#> SAMba1a34b5a060
-#> SAMfed609955db9
-#> SAM5c139c5c1c4f
-#> SAM49d48750e294
-#> SAM7aa01fc49a80
-#> SAM1c0ecfb3eb63
-#> SAM9aa6a095a9d6
-#> SAM957378bd907f
-#> SAM670649e105b5
-#> SAM5fe7a81a39dd
-#> SAM181b638b8248
-#> SAM3b15b4c6311d
-#> SAM1dda30f1c5be
-#> SAM7829a341b9f3
-#> SAMb2e4a082541a
-#> SAM771445e92421
-#> SAMe56c96c51190
-#> SAM18b9351e265a
-#> SAM9725303dce0c
-#> SAM6ff654a20f98
-#> SAMce39dd79b441
-#> SAMf20b827dca51
-#> SAM31d9176e11fb
-#> SAM80c6183220e6
-#> SAM572f19794c96
-#> SAMe7e4f7c076a7
-#> SAMc6eff056c89a
-#> SAMda4d892fddc8 
-#> 
-#> 
-#> Total sum across samples of combination Epidish_TIL10 is not 1! Remember these are proportions and the total should be 1
-#> Samples which sum with combination Epidish_TIL10 is not 1:
-#> 
-#>  SAM7f0d9cc7f001
-#> SAMcf018fee2acd
-#> SAMdf3e42c8672a
-#> SAMe7bf6c015192
-#> SAM6dd7ad1d797d
-#> SAMc692536a795a
-#> SAM557dde1b9f3e
-#> SAM23aa15d4a0b0
-#> SAMb963dda93cfd
-#> SAM7fb6987514a4
-#> SAM63405b04ab2d
-#> SAM18bc1078bc15
-#> SAMd1bd63734394
-#> SAMbe83eae4026e
-#> SAM23095936e611
-#> SAM7114d99032ec
-#> SAMbf1a3ae828e6
-#> SAM52e3fa3ad574
-#> SAMd4c0837b0997
-#> SAM9cafb905b36a
-#> SAM032c642382a7
-#> SAM0ce9c983b20f
-#> SAM2f228939632f
-#> SAM297c0301e861
-#> SAM1fa6bcb7fc48
-#> SAM110501d0eedb
-#> SAM2e9ac0b1b250
-#> SAMd636e3461955
-#> SAMb4c7a001537d
-#> SAM39eb94fa504d
-#> SAM62fb1388c871
-#> SAM5b57e47fdcb3
-#> SAMae4da274eded
-#> SAMd35318127278
-#> SAM75142fcab9df
-#> SAM560f23d6a3ad
-#> SAMf3a9bce50099
-#> SAM34430ef08e5b
-#> SAM5e3bae090b8c
-#> SAM3cb94b0d5297
-#> SAMcb132b0cdd2c
-#> SAMe97af0feefdf
-#> SAMdad5c29dc105
-#> SAMa424c75831b4
-#> SAM45c8e6412c66
-#> SAM73663ee4a96e
-#> SAM99a46b9eec27
-#> SAM553c3c35b847
-#> SAMc2a1820d4e6b
-#> SAMe1eb5d988760
-#> SAMe3210d3632b4
-#> SAMb15ad09d6e24
-#> SAM961d04c42bd9
-#> SAMb0d11db9aa79
-#> SAM415f36ad349e
-#> SAMad83c9c53537
-#> SAM3ee5dcd894f0
-#> SAM8a1b0e02ee42
-#> SAMd7d57ee3a863
-#> SAMeb29625f76a5
-#> SAMd135d5867fe3
-#> SAM065890737112
-#> SAMb470eb8f04be
-#> SAM4b7ea015fd9e
-#> SAM9306c5c92444
-#> SAM18be5b395318
-#> SAM6cbc10abddb0
-#> SAMdee1011782cd
-#> SAM203dcf14f927
-#> SAMe41b1e773582
-#> SAM76a431ba6ce1
-#> SAMd3bd67996035
-#> SAMd3601288319e
-#> SAMba1a34b5a060
-#> SAM18a4dabbc557
-#> SAMfed609955db9
-#> SAM5c139c5c1c4f
-#> SAM6780ed436b55
-#> SAM85f0a3ac1c45
-#> SAM7aa01fc49a80
-#> SAM1c0ecfb3eb63
-#> SAMbcb07ba81cee
-#> SAM9aa6a095a9d6
-#> SAM670649e105b5
-#> SAM5fe7a81a39dd
-#> SAM29da928587ad
-#> SAM181b638b8248
-#> SAM3b15b4c6311d
-#> SAMeaa477a5384b
-#> SAM1dda30f1c5be
-#> SAM7829a341b9f3
-#> SAMb2e4a082541a
-#> SAM771445e92421
-#> SAMe56c96c51190
-#> SAM18b9351e265a
-#> SAM87a8e18eb45b
-#> SAM9725303dce0c
-#> SAMce39dd79b441
-#> SAMf20b827dca51
-#> SAM31d9176e11fb
-#> SAM80c6183220e6
-#> SAM572f19794c96
-#> SAMe7e4f7c076a7
-#> SAMc6eff056c89a
-#> SAMda4d892fddc8 
-#> 
-#> 
-#> Total sum across samples of combination Epidish_LM22 is not 1! Remember these are proportions and the total should be 1
-#> Samples which sum with combination Epidish_LM22 is not 1:
-#> 
-#>  SAMd35318127278
-#> SAM560f23d6a3ad
-#> SAM73663ee4a96e
-#> SAM5234688806a7
-#> SAMae02629a97f7
-#> SAM87a8e18eb45b 
-#> 
-#> Total sum across samples of combination Epidish_CBSX.Melanoma.scRNAseq is 1
-#> Warning in compute.deconvolution.preprocessing(data.frame(all_deconvolution_table)): 
-#> Please verify your matrix
+#> Total sum across samples of combination Epidish_CBSX.NSCLC.scRNAseq is 1
+#> Total sum across samples of combination Epidish_CCLE.TIL10 is 1
+#> Total sum across samples of combination Epidish_TIL10 is 1
+#> Total sum across samples of combination Epidish_LM22 is 1
+#> Total sum across samples of combination Quantiseq_TIL10 is 1
 ```
 
 ``` r
 head(deconv[,1:5])
-#>                 Quantiseq_TIL10_B.cells Epidish_BPRNACan_B.cells
-#> SAM7f0d9cc7f001             0.050210988             3.563950e-02
-#> SAM4305ab968b90             0.008603929             1.073465e-04
-#> SAMcf018fee2acd             0.042857608             1.708482e-02
-#> SAMcc4675f394a1             0.025216439             9.074189e-05
-#> SAM49f9b2e57aa5             0.022668958             1.900745e-02
-#> SAM2e7aa8fa0ab3             0.012022510             4.130289e-03
-#>                 Epidish_BPRNACan3DProMet_B.cells Epidish_BPRNACanProMet_B.cells
-#> SAM7f0d9cc7f001                      0.051634688                    0.061927146
-#> SAM4305ab968b90                      0.007359397                    0.013455460
-#> SAMcf018fee2acd                      0.024649003                    0.029724100
-#> SAMcc4675f394a1                      0.000000000                    0.002167176
-#> SAM49f9b2e57aa5                      0.025668504                    0.032688442
-#> SAM2e7aa8fa0ab3                      0.008716558                    0.011090919
+#>                 Epidish_BPRNACan_B.cells Epidish_BPRNACan3DProMet_B.cells
+#> SAM7f0d9cc7f001             3.563950e-02                      0.051634688
+#> SAM4305ab968b90             1.073465e-04                      0.007359397
+#> SAMcf018fee2acd             1.708482e-02                      0.024649003
+#> SAMcc4675f394a1             9.074189e-05                      0.000000000
+#> SAM49f9b2e57aa5             1.900745e-02                      0.025668504
+#> SAM2e7aa8fa0ab3             4.130289e-03                      0.008716558
+#>                 Epidish_BPRNACanProMet_B.cells
+#> SAM7f0d9cc7f001                    0.061927146
+#> SAM4305ab968b90                    0.013455460
+#> SAMcf018fee2acd                    0.029724100
+#> SAMcc4675f394a1                    0.002167176
+#> SAM49f9b2e57aa5                    0.032688442
+#> SAM2e7aa8fa0ab3                    0.011090919
 #>                 Epidish_CBSX.HNSCC.scRNAseq_B.cells
 #> SAM7f0d9cc7f001                         0.025626151
 #> SAM4305ab968b90                         0.000000000
@@ -528,6 +186,13 @@ head(deconv[,1:5])
 #> SAMcc4675f394a1                         0.001434758
 #> SAM49f9b2e57aa5                         0.137032856
 #> SAM2e7aa8fa0ab3                         0.282602048
+#>                 Epidish_CBSX.Melanoma.scRNAseq_B.cells
+#> SAM7f0d9cc7f001                            0.066233918
+#> SAM4305ab968b90                            0.008756584
+#> SAMcf018fee2acd                            0.009133098
+#> SAMcc4675f394a1                            0.000000000
+#> SAM49f9b2e57aa5                            0.036205984
+#> SAM2e7aa8fa0ab3                            0.005377105
 ```
 
 ### **TF activity inference**

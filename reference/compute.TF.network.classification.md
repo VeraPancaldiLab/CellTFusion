@@ -42,9 +42,15 @@ pathways <- compute.pathway.activity(counts.norm.tuto)
 #> Warning: 'OmnipathR::get_annotation_resources' is deprecated.
 #> Use 'annotation_resources' instead.
 #> See help("Deprecated")
+#> Warning: URL 'https://ftp.expasy.org/databases/uniprot/current_release/knowledgebase/complete/docs/speclist.txt': Timeout of 60 seconds was reached
+#> Warning: URL 'https://ftp.expasy.org/databases/uniprot/current_release/knowledgebase/complete/docs/speclist.txt': Timeout of 60 seconds was reached
+#> Warning: URL 'https://ftp.expasy.org/databases/uniprot/current_release/knowledgebase/complete/docs/speclist.txt': Timeout of 60 seconds was reached
 #> Warning: 'OmnipathR::import_omnipath_annotations' is deprecated.
 #> Use 'annotations' instead.
 #> See help("Deprecated")
+#> Warning: URL 'https://ftp.expasy.org/databases/uniprot/current_release/knowledgebase/complete/docs/speclist.txt': Timeout of 60 seconds was reached
+#> Warning: URL 'https://ftp.expasy.org/databases/uniprot/current_release/knowledgebase/complete/docs/speclist.txt': Timeout of 60 seconds was reached
+#> Warning: URL 'https://ftp.expasy.org/databases/uniprot/current_release/knowledgebase/complete/docs/speclist.txt': Timeout of 60 seconds was reached
 tfs.modules.clusters <- compute.TF.network.classification(tf.network = network.tuto,
                                                           pathways.features = pathways,
                                                           return = FALSE)
