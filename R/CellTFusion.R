@@ -4407,7 +4407,7 @@ run_deg_analysis <- function(counts, coldata, group_col, ref_level = NULL) {
 #'   \item \code{k}: The number of meta-programs used.
 #' }
 #'
-#' @keywords internal
+#' @export
 derive_meta_programs <- function(nes_mat,
                                   k          = NULL,
                                   nes_thresh = 1.0,
@@ -4521,7 +4521,7 @@ derive_meta_programs <- function(nes_mat,
 #' @return A numeric matrix of NES values with Hallmarks as rows and NMF factors
 #'   as columns. Missing Hallmark–factor combinations are set to 0.
 #'
-#' @keywords internal
+#' @export
 build_nes_matrix <- function(gsea_results) {
 
   gsea_list <- gsea_results$GSEA_results
