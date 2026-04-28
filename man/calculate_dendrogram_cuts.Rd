@@ -2,18 +2,26 @@
 % Please edit documentation in R/CellTFusion.R
 \name{calculate_dendrogram_cuts}
 \alias{calculate_dendrogram_cuts}
-\title{Calculate dendrogram cuts}
+\title{Calculate dendrogram cut heights}
 \usage{
 calculate_dendrogram_cuts(cell.group.dendrogram, n_cuts = NULL)
 }
 \arguments{
-\item{cell.group.dendrogram}{List with the cell dendrograms corresponding to each TF module obtained from identify.cell.groups()}
+\item{cell.group.dendrogram}{A list of \code{hclust} objects, one per TF module,
+as returned by \code{identify.cell.groups()}.}
 
-\item{n_cuts}{Optional parameter to limit the number of cuts the dendrogram needs to be cut (Default is NULL). If no parameter is set, number of cuts will be proportional to the height of the dendrogram.}
+\item{n_cuts}{Integer. Number of evenly spaced cut heights to generate per
+dendrogram. If \code{NULL} (default), the number is set proportional to
+the maximum dendrogram height.}
 }
 \value{
-A list with the sequence of numbers where each dendrogram will be cut
+A list of numeric vectors, one per dendrogram, containing the
+candidate cut heights.
 }
 \description{
-Calculate dendrogram cuts
+Computes a sequence of candidate cut heights for each cell-type dendrogram.
+Heights are distributed between a buffered minimum and maximum derived from
+the dendrogram's own height distribution, avoiding trivial cuts (single-element
+or all-in-one clusters).
 }
+\keyword{internal}

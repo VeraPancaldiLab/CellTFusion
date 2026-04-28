@@ -7,7 +7,7 @@
 create_tfs_modules(TF.matrix, network_tfs)
 }
 \arguments{
-\item{TF.matrix}{TFs activity matrix with samples as rows and TFs as columns.}
+\item{TF.matrix}{TFs activity matrix with samples as rows and TFs as columns (should be the output of compute.TF.activity()).}
 
 \item{network_tfs}{A TF network object obtained from compute.WTCNA() from which TF modules need to be re-create.}
 }

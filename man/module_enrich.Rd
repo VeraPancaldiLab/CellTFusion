@@ -2,22 +2,28 @@
 % Please edit documentation in R/CellTFusion.R
 \name{module_enrich}
 \alias{module_enrich}
-\title{Module enrichment}
+\title{Run Reactome pathway enrichment for a single TF module}
 \usage{
 module_enrich(tpm.counts, module_color, hub_genes, tfs_universe)
 }
 \arguments{
-\item{tpm.counts}{A matrix with normalized counts (genes as rows and samples as columns)}
+\item{tpm.counts}{A numeric matrix of normalized expression values (genes x samples).}
 
-\item{module_color}{A character vector with TF module colors.}
+\item{module_color}{Character. Name of the TF module (color label) to analyze.}
 
-\item{hub_genes}{List of hub TFs per module.}
+\item{hub_genes}{A list as returned by \code{identify_hub_TFs()}, where the first
+element maps module names to vectors of hub TF gene symbols.}
 
-\item{tfs_universe}{A matrix with TF-gene interactions}
+\item{tfs_universe}{A data frame of TF-target interactions with at minimum columns
+\code{source} (TF) and \code{target} (gene).}
 }
 \value{
-Reactome results
+A \code{ReactomePA} enrichResult object restricted to pathways with
+adjusted p-value < 0.05, or \code{NULL} if no enrichment is found.
 }
 \description{
-Module enrichment
+Given the hub TFs of a module, extracts their target genes from the TF-gene
+universe, keeps the most variable targets, and runs Reactome over-representation
+analysis using the full gene expression matrix as the background universe.
 }
+\keyword{internal}

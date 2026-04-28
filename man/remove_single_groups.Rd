@@ -2,24 +2,23 @@
 % Please edit documentation in R/CellTFusion.R
 \name{remove_single_groups}
 \alias{remove_single_groups}
-\title{Remove cell groups with only one feature}
+\title{Remove cell groups composed of a single cell type}
 \usage{
 remove_single_groups(cell.values, cell.composition, cell.loadings)
 }
 \arguments{
-\item{cell.values}{Cell groups scores}
+\item{cell.values}{A list of numeric vectors of cell group scores.}
 
-\item{cell.composition}{Cell groups composition}
+\item{cell.composition}{A list of character vectors describing cell-type membership per group.}
 
-\item{cell.loadings}{Cell groups loadings}
+\item{cell.loadings}{A list of loading vectors corresponding to each cell group.}
 }
 \value{
-A list containing
-\itemize{
-\item Cell groups scores after removal of single cell groups
-\item Cell groups composition after removal of single cell groups
-}
+A list of three elements (scores, compositions, loadings) with singleton groups
+removed, or \code{NULL} if all groups are removed.
 }
 \description{
-Remove cell groups with only one feature
+Filters out cell groups whose composition contains only one cell type, as these
+groups lack multi-cellular context.
 }
+\keyword{internal}

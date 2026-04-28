@@ -56,8 +56,10 @@ Imports:
     cluster,
     clusterProfiler,
     foreach,
+    igraph,
     OmnipathR (>= 3.10.1),
     doParallel,
+    edgeR,
     MOFA2
 Remotes: 
     VeraPancaldiLab/multideconv,

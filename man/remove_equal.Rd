@@ -2,24 +2,27 @@
 % Please edit documentation in R/CellTFusion.R
 \name{remove_equal}
 \alias{remove_equal}
-\title{Remove cell groups with equal composition}
+\title{Remove cell groups with duplicate composition}
 \usage{
 remove_equal(cell.values, cell.composition, cell.loadings)
 }
 \arguments{
-\item{cell.values}{Cell groups scores}
+\item{cell.values}{A list of numeric vectors of cell group scores.}
 
-\item{cell.composition}{Cell groups composition}
+\item{cell.composition}{A list of character vectors describing cell-type membership per group.}
 
-\item{cell.loadings}{Cell groups loadings}
+\item{cell.loadings}{A list of loading vectors corresponding to each cell group.}
 }
 \value{
-A list containing
+A list of three elements:
 \itemize{
-\item Cell groups scores after removal of equal cell groups
-\item Cell groups composition after removal of equal cell groups
+\item \code{[[1]]}: Deduplicated cell group scores.
+\item \code{[[2]]}: Deduplicated cell group compositions.
+\item \code{[[3]]}: Deduplicated cell group loadings.
 }
 }
 \description{
-Remove cell groups with equal composition
+Identifies cell groups whose cell-type composition is identical to another group
+and removes the duplicates, keeping only the first occurrence.
 }
+\keyword{internal}

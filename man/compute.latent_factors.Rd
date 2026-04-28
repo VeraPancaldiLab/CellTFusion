@@ -2,25 +2,36 @@
 % Please edit documentation in R/CellTFusion.R
 \name{compute.latent_factors}
 \alias{compute.latent_factors}
-\title{Compute latent factors from cell-group features}
+\title{Compute latent factors from cell group scores using NMF}
 \usage{
-\method{compute}{latent_factors}(X, batch = NULL, seed = 123)
+\method{compute}{latent_factors}(X, rank = NULL, seed = 123, file_name = NULL, return = TRUE)
 }
 \arguments{
-\item{X}{Numeric matrix of size samples x cell groups.}
+\item{X}{Numeric matrix of size samples x cell groups (signed CCA composite scores).}
 
-\item{batch}{Optional vector indicating batch assignment for samples.}
+\item{rank}{Integer; number of NMF factors. If NULL, estimated automatically
+via elbow on reconstruction MSE across ranks 2:8.}
 
-\item{seed}{Random seed used to initialize model fitting.}
+\item{seed}{Random seed. Default 123.}
 }
 \value{
-A list with latent representation and loadings:
+A list with:
 \itemize{
-\item \code{Z}: Sample-level latent factors.
-\item \code{W}: Feature weights per latent factor.
-\item \code{expanded_Z}: Expanded latent features used downstream.
+\item \code{Z}: Sample-level NMF factor scores (samples x rank). Non-negative.
+\item \code{W}: Feature weights per factor (2\emph{n_CGs x rank). Non-negative.
+\item \code{nmf_input}: The positive-negative split matrix fed to NMF (samples x 2}n_CGs).
+\item \code{rank}: The rank used.
 }
 }
 \description{
-Compute latent factors from cell-group features
+Decomposes signed CCA composite scores into non-negative latent factors
+by splitting each score into its positive and negative direction components,
+then applying Non-negative Matrix Factorization via RcppML (fast C++ backend).
+}
+\details{
+Signed CCA scores are decomposed as:
+score_pos = max(score, 0)  -- patient aligned with TF program
+score_neg = max(-score, 0) -- patient anti-aligned with TF program
+Both are concatenated column-wise before NMF. Column names are suffixed
+with "_pos" and "_neg" to track direction.
 }

@@ -2,16 +2,19 @@
 % Please edit documentation in R/CellTFusion.R
 \name{correlation}
 \alias{correlation}
-\title{Perform pairwise correlation across all features}
+\title{Perform pairwise Spearman correlation across all features}
 \usage{
 correlation(data)
 }
 \arguments{
-\item{data}{Matrix with features to correlate}
+\item{data}{A numeric matrix or data frame where columns are features.}
 }
 \value{
-Dataframe containing all significant correlations (pvalue < 0.05)
+A data frame of pairwise significant correlations (p < 0.05), with
+columns \code{measure1}, \code{measure2}, \code{r}, \code{p}, \code{sig_p},
+\code{p_if_sig}, \code{r_if_sig}, and \code{AbsR}, ordered by descending \code{r}.
 }
 \description{
-Perform pairwise correlation across all features
+Perform pairwise Spearman correlation across all features
 }
+\keyword{internal}

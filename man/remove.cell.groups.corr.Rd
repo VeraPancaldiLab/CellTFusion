@@ -7,23 +7,23 @@
 remove.cell.groups.corr(data, threshold = 0.95)
 }
 \arguments{
-\item{data}{A named list with three elements:
+\item{data}{A list of three elements:
 \describe{
-\item{scores}{A data frame or matrix of cell group scores.}
-\item{compositions}{A named list of cell group compositions.}
-\item{loadings}{A named list of loadings corresponding to the cell groups.}
+\item{scores}{A numeric data frame or matrix of cell group scores (samples x groups).}
+\item{compositions}{A named list of cell-type vectors describing group membership.}
+\item{loadings}{A named list of loading vectors corresponding to each cell group.}
 }}
 
-\item{threshold}{Numeric value for correlation threshold above which features are considered highly correlated (default 0.95)}
+\item{threshold}{Numeric. Correlation threshold above which one of a correlated
+pair is removed. Default is 0.95.}
 }
 \value{
-A list containing:
-\itemize{
-\item Cell group scores after removal/combination of highly correlated features
-\item Cell group compositions updated accordingly
-\item Loadings updated accordingly
-}
+A list of three elements (scores, compositions, loadings) with
+redundant cell groups removed.
 }
 \description{
-Remove highly correlated cell groups
+Computes pairwise Spearman correlations among cell group score vectors and
+removes one member of each pair whose absolute correlation exceeds
+\code{threshold}.
 }
+\keyword{internal}

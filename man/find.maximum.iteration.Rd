@@ -2,16 +2,19 @@
 % Please edit documentation in R/CellTFusion.R
 \name{find.maximum.iteration}
 \alias{find.maximum.iteration}
-\title{Find maximum iteration from subgroups}
+\title{Find maximum iteration from cell subgroups}
 \usage{
 find.maximum.iteration(cells.groups)
 }
 \arguments{
-\item{cells.groups}{Cell groups corresponding to a specific cell type.}
+\item{cells.groups}{A nested list of cell subgroups. Names of inner elements
+must follow the pattern \verb{*.Iteration.<n>} where \verb{<n>} is an integer.}
 }
 \value{
-Maximum subgroupping iteration
+An integer giving the maximum iteration number across all subgroups.
 }
 \description{
-Find maximum iteration from subgroups
+Scans a nested list of cell subgroups and returns the highest iteration number
+found across all elements.
 }
+\keyword{internal}

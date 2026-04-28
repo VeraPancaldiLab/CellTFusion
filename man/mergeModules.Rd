@@ -2,24 +2,26 @@
 % Please edit documentation in R/CellTFusion.R
 \name{mergeModules}
 \alias{mergeModules}
-\title{Merge TFs modules}
+\title{Merge highly correlated TF modules}
 \usage{
 mergeModules(data, colors, corr)
 }
 \arguments{
-\item{data}{TFs modules matrix}
+\item{data}{A numeric matrix or data frame of TF module eigengenes (samples x modules).}
 
-\item{colors}{TFs modules colors}
+\item{colors}{A character vector of module color labels aligned with the columns of \code{data}.}
 
-\item{corr}{Correlation value above which two modules are merge.}
+\item{corr}{Numeric. Spearman correlation threshold above which two modules are merged. Default 0.9.}
 }
 \value{
-A list containing
+A list of two elements:
 \itemize{
-\item Merge modules
-\item TFs module colors
+\item \code{[[1]]}: Data frame of merged module eigengenes (samples x modules).
+\item \code{[[2]]}: Updated character vector of module color labels after merging.
 }
 }
 \description{
-Identify high correlated TFs modules and merge.
+Identifies pairs of TF modules whose eigengene correlation exceeds \code{corr}
+and merges them by averaging their columns.
 }
+\keyword{internal}
