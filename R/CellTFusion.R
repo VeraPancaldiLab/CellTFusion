@@ -187,21 +187,27 @@ CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL
   if(verbose){
     cat("\nLatent spaces calculation............................................................\n")
   }
-  latent_spaces <- compute.latent_factors(cell.groups[[1]], rank = NULL, seed = 123)
-  cells_contributions = extract_cells_contributors(latent_spaces, dt, cell.groups, feature_type = "both")
+  latent_spaces <- compute.latent_factors(cell.groups[[1]], rank = NULL, seed = 123, file_name = file_name, return = return)
 
-  # 6. Find TME states
+  # 6. Extract cell niches
+  if(verbose){
+    cat("\nExtract cell niches from latent spaces............................................................\n")
+  }
+  cells_niches = compute_cells_niches(latent_spaces, dt, cell.groups, enrich_thresh = 1.5, quantile_cutoff = 0.7, cells_extra = cells_extra)
+
+  # 7. Find TME states
   if(verbose){
     cat("\nCompute TME states............................................................\n")
   }
   gsea_results <- compute_factor_gsea(
     RNA.tpm      = counts.norm,          # genes x samples
     features_df  = latent_spaces$Z,      # samples x factors
-    plot_dot     = TRUE,
+    plot_dot     = return,
     top_n        = 10,
     file_name    = file_name
   )
 
+  cat("\nMapping to metaprograms............................................................\n")
   metaprograms_mapping <- map_to_metaprograms(
     gsea_study = gsea_results,
     nes_thresh = 1.0
@@ -213,7 +219,7 @@ CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL
 
   res = list("Deconvolution" = deconv, "TFs_matrix" = tfs, "TF_network" = network, "Pathways_scores" = pathways,
              "Processed_deconvolution" = dt, "Cell_groups" = cell.groups, "Latent_spaces" = latent_spaces, 
-             "Cells_contributions" = cells_contributions, "TME_states" = metaprograms_mapping)
+             "Cells_niches" = cells_niches, "TME_states" = metaprograms_mapping)
 
   return(res)
 
@@ -359,129 +365,6 @@ cell.groups.computation = function(deconvolution, cell.dendrograms, tfs.module.n
   }
 
   return(cell.groups)
-}
-
-#' Compute projected cell group scores on an independent cohort
-#'
-#' This function computes the projection of previously defined cell groups
-#' onto an independent test cohort by applying the same composite scoring
-#' strategy used in the training data.
-#'
-#' @param deconv_res A list resulting from `multideconv::compute.deconvolution.analysis()` on the training cohort.
-#'        This list should include a component named "Deconvolution subgroups composition".
-#' @param cell_groups A list output from `cell.groups.computation()`, containing cell group scores,
-#'        feature compositions, and loadings.
-#' @param features A character vector of selected cell group names to be projected on the test data.
-#' @param deconvolution_test A matrix or data frame with deconvolution features from an independent
-#'        test cohort. Raw (unprocessed) deconvolution output is expected.
-#' @param tfs.module.network A list from `compute.WTCNA()` containing the TF module network information,
-#'        used to calculate composite scores for each group.
-#' @param batch Optional vector indicating batch assignment for samples.
-#'
-#' @return A data frame with samples as rows and projected cell group scores as columns.
-#'         Each column corresponds to one of the selected cell groups in `features`.
-#'
-#' @export
-#'
-#' @examples
-#' \dontrun{
-#' cell.groups.projected <- compute_cell_groups_signatures(
-#'     deconv_res = deconv_training,
-#'     cell_groups = cell.groups,
-#'     features = selected_features,
-#'     deconvolution_test = deconv_test,
-#'     tfs.module.network = network
-#' )
-#' }
-compute_cell_groups_signatures = function(deconv_res, cell_groups, features, deconvolution_test, tfs.module.network, batch = NULL){
-
-
-  ################################################################################Simulate cell subgroups
-  deconv_subgroups = deconv_res[["Deconvolution subgroups composition"]]
-  iterations = find.maximum.iteration(deconv_subgroups)
-
-  ## Extract the deconv feature without the cluster type
-  features_with_clusters <- colnames(deconv_res[["Deconvolution matrix"]])
-  has_clusters <- grepl("_.*(mixed|immunosuppressive|immunoactive)$", features_with_clusters)
-
-  if(any(has_clusters)){
-
-    # Base name = everything before final cluster label
-    base_names <- sub("_(mixed|immunosuppressive|immunoactive)$",
-                      "",
-                      features_with_clusters)
-
-    # Cluster suffix = cluster type
-    cluster_suffixes <- sub(".*_(mixed|immunosuppressive|immunoactive)$",
-                            "\\1",
-                            features_with_clusters)
-
-    map <- data.frame(base = base_names,
-                      suffix = cluster_suffixes,
-                      stringsAsFactors = FALSE)
-  }
-
-  if(!is.infinite(iterations)){
-    # Create same groups composition
-    for (m in 1:iterations) {
-      base_groups = list()
-      for (i in 1:length(deconv_subgroups)){
-        if(length(deconv_subgroups[[i]])!=0){
-          idy = grep(paste0("Iteration.",m), names(deconv_subgroups[[i]]))
-          if(length(idy)!=0){
-            base_groups = append(base_groups, deconv_subgroups[[i]][idy])
-          }
-        }
-      }
-
-      deconv_subgroups_values = c()
-      for (i in 1:length(base_groups)) {
-        deconv_subgroups_values = cbind(deconv_subgroups_values, matrixStats::rowMedians(as.matrix(deconvolution_test[,base_groups[[i]]]))) #Compute median using base groups
-      }
-      colnames(deconv_subgroups_values) = names(base_groups)
-      deconvolution_test = cbind(deconv_subgroups_values, deconvolution_test) # Join cell subgroups and deconv features
-
-    }
-  }
-
-  if(any(has_clusters)){
-    ## Paste the corresponding clusters to the deconvolution features
-    colnames(deconvolution_test) <- paste0(colnames(deconvolution_test), map$suffix[match(colnames(deconvolution_test), map$base)])
-  }
-
-  deconvolution_test = deconvolution_test[,colnames(deconvolution_test)%in%colnames(deconv_res[["Deconvolution matrix"]])]
-
-  # Compute composite scores
-  idx = which(names(cell_groups[[1]]) %in% features)
-  cell_dendrogram = c()
-  names = c()
-  for (i in 1:length(idx)) {
-    cells = cell_groups[[1]][[idx[i]]]
-    pca_cells = deconvolution_test[,colnames(deconvolution_test) %in% cells, drop = F]
-    pca_cells <- pca_cells[, apply(pca_cells, 2, function(x) all(!is.na(x)) && stats::var(x, na.rm = TRUE) != 0), drop = FALSE] #Drop zero-columns or NAs
-    name_cell_group = names(cell_groups[[1]][idx[i]])
-    color = stringr::str_split(name_cell_group, "_")[[1]][2]
-    loadings_cells = cell_groups[[2]][[idx[i]]]
-
-    score = compute_composite_score(pca_cells, color, tfs.module.network, discard = T, batch = batch) ###Loadings are not been used from positive/negative analysis, only the cell groups. Loadings are re-calculated
-    x = score[[1]]
-
-    if(nrow(data.frame(x)) > 1){ # nrow(x) > 1 means this is a vector and no NA
-      cell_dendrogram = cbind(cell_dendrogram, x)
-      names = c(names, names(cell_groups[[1]])[idx[i]])
-    }
-
-    #cell_dendrogram = cbind(cell_dendrogram, compute.test.score(pca_cells, loadings_cells))
-  }
-
-  if(is.null(cell_dendrogram)==T){
-    print("No composite scores because all features have zero variance.")
-  }else{
-    colnames(cell_dendrogram) = names
-    rownames(cell_dendrogram) = rownames(deconvolution_test)
-  }
-
-  return(data.frame(cell_dendrogram))
 }
 
 #' Compute associations between TF module scores and clinical metadata
@@ -1167,7 +1050,7 @@ compute.TF.network.classification = function(tf.network, pathways.features, retu
 
   if(return){
     pdf("Results/Pathways_contribution_pca.pdf", width = 12, height = 8)
-    p = ggplot(features, aes(x = reorder(Features, -PC1), y = PC1)) +
+    p = ggplot2::ggplot(features, aes(x = reorder(Features, -PC1), y = PC1)) +
       geom_bar(stat = "identity", fill = "skyblue") +
       labs(title = "Contribution of pathways",
            x = "Feature",
@@ -2190,7 +2073,7 @@ identify.cell.signatures = function(cell_groups, deconvolution_processed, TF_net
   top_colors_df = data.frame(prop.table(table(colors_groups)))
 
   #Plot scores of the colors across ML models
-  p = ggplot(top_colors_df, aes(y = Freq, x = reorder(colors_groups, -Freq, decreasing = F))) +
+  p = ggplot2::ggplot(top_colors_df, aes(y = Freq, x = reorder(colors_groups, -Freq, decreasing = F))) +
     geom_bar(stat = "identity", fill = "skyblue", width = 0.6) +
     theme_minimal() +
     labs(title = paste0("TF modules presence scores across ", nrow(presence_matrix_important), " predictive cell groups"),
@@ -3321,7 +3204,7 @@ cell.groups.ttest <- function(cell.groups, coldata, trait, pval = 0.05) {
       pdf(paste0("Results/Ttest_", trait, "_", colnames(cell.groups[[1]])[j], ".pdf"),
           width = 12, height = 9)
       print(
-        ggplot(data, aes(x = Trait, y = Value, fill = Trait)) +
+        ggplot2::ggplot(data, aes(x = Trait, y = Value, fill = Trait)) +
           geom_boxplot(outlier.shape = NA, alpha = 0.7, color = "gray30") +
           geom_jitter(width = 0.15, size = 2.5, alpha = 0.8, color = "black") +
           stat_summary(fun = median, geom = "point", shape = 23, size = 3, fill = "white") +
@@ -3468,7 +3351,7 @@ cell.groups.wilcox.test <- function(cell.groups, coldata, trait, pval = 0.05) {
       pdf(paste0("Results/Wilcoxon_", trait, "_", colnames(cell.groups[[1]])[j], ".pdf"),
           width = 12, height = 9)
       print(
-        ggplot(data, aes(x = Trait, y = Value, fill = Trait)) +
+        ggplot2::ggplot(data, aes(x = Trait, y = Value, fill = Trait)) +
           geom_boxplot(outlier.shape = NA, alpha = 0.7, color = "gray30") +  # hide boxplot outliers
           geom_jitter(width = 0.15, size = 2.5, alpha = 0.8, color = "black") +  # show all sample points
           stat_summary(fun = median, geom = "point", shape = 23,
@@ -3747,7 +3630,7 @@ cell.groups.stat.analysis <- function(cell.groups, coldata, trait,
 #' with "_pos" and "_neg" to track direction.
 #'
 #' @export
-compute.latent_factors <- function(X, rank = NULL, seed = 123) {
+compute.latent_factors <- function(X, rank = NULL, seed = 123, file_name = NULL, return = TRUE) {
 
   if (!requireNamespace("RcppML", quietly = TRUE))
     stop("Install RcppML: install.packages('RcppML')")
@@ -3815,16 +3698,16 @@ compute.latent_factors <- function(X, rank = NULL, seed = 123) {
     dplyr::arrange(factor, desc(proportion)) %>%
     dplyr::pull(sample)
 
-  p_mixture <- ggplot(
+  p_mixture <- ggplot2::ggplot(
     patient_mixture %>%
       dplyr::mutate(sample = factor(sample, levels = sample_order)),
-    aes(x = sample, y = proportion, fill = factor)
+    ggplot2::aes(x = sample, y = proportion, fill = factor)
   ) +
     ggplot2::geom_col(width = 1, position = "stack") +
     ggplot2::scale_fill_manual(values = fac_colors, name = "Factor") +
     ggplot2::scale_y_continuous(labels = scales::percent) +
     ggplot2::labs(
-      title    = "Patient TME composition — NMF factor mixture",
+      title    = "Patient TME composition - NMF factor mixture",
       subtitle = "Each bar = one patient  ·  Height = fraction of each factor",
       x        = "Patients",
       y        = "Factor proportion"
@@ -3838,14 +3721,16 @@ compute.latent_factors <- function(X, rank = NULL, seed = 123) {
     )
 
   # save plot
-  if (!dir.exists("Results")) dir.create("Results", recursive = TRUE)
-  fname <- if (!is.null(file_name)) {
-    paste0("Results/NMF_patient_mixture_", file_name, ".pdf")
-  } else {
-    "Results/NMF_patient_mixture.pdf"
+  if(return){
+    if (!dir.exists("Results")) dir.create("Results", recursive = TRUE)
+      fname <- if (!is.null(file_name)) {
+        paste0("Results/NMF_patient_mixture_", file_name, ".pdf")
+      } else {
+        "Results/NMF_patient_mixture.pdf"
+      }
+    
+      ggplot2::ggsave(fname, p_mixture, width = 14, height = 4)    
   }
-
-  ggplot2::ggsave(fname, p_mixture, width = 14, height = 4)
 
   return(list(
     Z         = Z,
@@ -3877,9 +3762,6 @@ extract_contributing_features <- function(latent_factors,
     thr <- quantile(w, quantile_cutoff, na.rm = TRUE)
     sel <- w[w >= thr]
 
-    # strip suffix — original cell group name for comp_matrix lookup
-    names(sel) <- sub("_(pos|neg)$", "", names(sel))
-
     # sort by weight descending
     sel <- sort(sel, decreasing = TRUE)
 
@@ -3889,10 +3771,11 @@ extract_contributing_features <- function(latent_factors,
   return(top_contributors)
 }
 
-extract_cells_contributors <- function(latent_factors, dt, cell.groups,
-                                    enrich_thresh   = 1.5,
-                                    quantile_cutoff = 0.7,
-                                    cells_extra     = NULL) {
+compute_cells_niches <- function(latent_factors, dt, cell.groups,
+                                 enrich_thresh   = 1.5,
+                                 quantile_cutoff = 0.7,
+                                 cells_extra     = NULL,
+                                 return = TRUE, file_name = NULL) {
 
   require(igraph)
   require(scales)
@@ -4020,17 +3903,19 @@ extract_cells_contributors <- function(latent_factors, dt, cell.groups,
     lay <- layout_as_star(g,
                            center = which(V(g)$name == factor_name))
 
-    pdf(paste0("Results/Network_", factor_name, ".pdf"))
-    plot(
-      g,
-      layout              = lay,
-      vertex.label.family = "sans",
-      vertex.label.dist   = 2,
-      vertex.label.degree = -pi / 2,
-      main                = paste("Cell-type niche structure of", factor_name),
-      margin              = 0.2
-    )
-    dev.off()
+    if(return){
+      pdf(paste0("Results/Network_", factor_name, "_", file_name, ".pdf"))
+      plot(
+        g,
+        layout              = lay,
+        vertex.label.family = "sans",
+        vertex.label.dist   = 2,
+        vertex.label.degree = -pi / 2,
+        main                = paste("Cell-type niche structure of", factor_name),
+        margin              = 0.2
+      )
+      dev.off()
+    }
   }
 
   # ── build TME states output ───────────────────────────────────────────────
@@ -4044,10 +3929,7 @@ extract_cells_contributors <- function(latent_factors, dt, cell.groups,
 
     # single list of cell types per factor — no positive/negative split
     # ordered by weight descending
-    CG_states[[factor_name]] <- list(
-      CG_state_cells  = names(sort(edge_weights, decreasing = TRUE)),
-      cell_weights     = sort(edge_weights, decreasing = TRUE)
-    )
+    CG_states[[factor_name]] <- sort(edge_weights, decreasing = TRUE)
   }
 
   return(CG_states)
@@ -4282,7 +4164,7 @@ compute.metadata.association.boxplot_summary <- function(
     svg(paste0("Results/ANOVA_boxplot_summary_", file.name, "_", tr, ".svg"),
         width = width, height = height)
 
-    p <- ggplot(df_long, aes(x = group, y = value, fill = group)) +
+    p <- ggplot2::ggplot(df_long, aes(x = group, y = value, fill = group)) +
       geom_boxplot(width = 0.6, outlier.size = 0.4, alpha = 0.85) +
       geom_jitter(width = 0.2, size = 1, alpha = 0.7, color = "black") +
       facet_wrap(~ module, ncol = ncol,

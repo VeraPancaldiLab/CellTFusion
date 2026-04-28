@@ -28,46 +28,6 @@ Load the pre-packaged example data included in CellTFusion:
 ```{r}
 raw.counts = CellTFusion::raw.counts.tuto ## Corresponds to bulk RNAseq counts
 traitdata = CellTFusion::traitdata.tuto ## Corresponds to the clinical data per samples
-source("R/CellTFusion.R") ## To be added in the package soon
-source("~/Documents/multideconv/R/cell_deconvolution.R")
-library(dplyr)
-# CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL, batch = F, batch_id = NULL, deconv_methods = c("Quantiseq", "CBSX", "Epidish", "DeconRNASeq", "DWLS"), cbsx.mail = NULL, cbsx.token = NULL, file_name = NULL, task = c("supervised", "unsupervised"),
-#                        contrast = NULL, ref_level = NULL, TF.collection = "CollecTRI", min_targets_size = 3, universe = NULL, paths = NULL, minMod = 3, corr_mod = 0.9, corr = 0.7, corr_type = "spearman", cells_extra = NULL, pval = 0.05, high_corr_groups = 0.8, return = T, verbose = T){
-
-res <- CellTFusion(
-  raw.counts = raw.counts,
-  normalized = TRUE,
-  coldata = traitdata, # Optional metadata
-  deconv_methods = c("Quantiseq", "Epidish"), # Choose from Quantiseq, Epidish, DeconRNASeq, DWLS, CibersortX
-  task = "unsupervised", # Choose between "supervised" or "unsupervised" analysis
-  file_name = "TestRun",
-  corr = 0.7,
-  pval = 0.05,
-  high_corr_groups = 0.85,
-  return = FALSE
-)
-```
-
-
-```{r}
-counts.norm = ADImpute::NormalizeTPM(raw.counts, log = T)
-gsea_results <- compute_factor_gsea(
-  RNA.tpm      = counts.norm,          # genes x samples
-  features_df  = res$Latent_spaces$Z,      # samples x factors
-  plot_dot     = TRUE,
-  top_n        = 15,
-  file_name    = "NMF_factors_melanoma"
-)
-```
-
-```{r}
-load("~/Documents/CellTFusion_paper/output/CellTFusion_TCGA.RData")
-mapping <- map_to_metaprograms(
-  gsea_study = gsea_results,
-  tcga_meta  = tcga_meta,
-  nes_thresh = 1.0
-)
-
 ```
 
 
