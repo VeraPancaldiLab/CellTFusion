@@ -22,13 +22,15 @@ CellTFusion(
   min_targets_size = 3,
   universe = NULL,
   paths = NULL,
+  gene_sets = NULL,
   minMod = 3,
   corr_mod = 0.9,
   corr = 0.7,
   corr_type = "spearman",
   cells_extra = NULL,
   pval = 0.05,
-  high_corr_groups = 0.8,
+  enrich_thresh = 1.5,
+  quantile_cutoff = 0.7,
   return = T,
   verbose = T
 )
@@ -73,6 +75,9 @@ CellTFusion(
 
 \item{paths}{Optional. A user-specified data frame of pathways gene sets. If not provided, the function will fetch the relevant pathways based on \code{PROGENy}.}
 
+\item{gene_sets}{Optional. A data frame of custom gene sets passed to \code{compute.pathway.activity()}'s
+\code{gene_sets} argument for GSVA-based scoring. If \code{NULL}, only PROGENy is used.}
+
 \item{minMod}{Integer; minimum module size for WGCNA module detection.}
 
 \item{corr_mod}{Numeric; correlation threshold for merging TF modules.}
@@ -85,7 +90,11 @@ CellTFusion(
 
 \item{pval}{Numeric; p-value threshold for statistical tests (e.g., metadata and relationship associations).}
 
-\item{high_corr_groups}{Numeric; correlation threshold to identify highly similar cell groups.}
+\item{enrich_thresh}{Numeric. Minimum enrichment ratio (foreground/background cell-type frequency)
+required to include a cell type in a latent factor's niche. Default is 1.5.}
+
+\item{quantile_cutoff}{Numeric between 0 and 1. Quantile threshold for selecting top-contributing
+cell groups per NMF factor. Default is 0.7.}
 
 \item{return}{Logical; if TRUE, returns intermediate results from internal functions. Default is TRUE.}
 
@@ -121,8 +130,7 @@ res <- CellTFusion(
   minMod = 20,
   corr_mod = 0.25,
   corr = 0.7,
-  pval = 0.05,
-  high_corr_groups = 0.85
+  pval = 0.05
 )
 }
 

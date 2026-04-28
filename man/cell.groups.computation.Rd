@@ -9,7 +9,9 @@ cell.groups.computation(
   cell.dendrograms,
   tfs.module.network,
   batch = NULL,
-  return = T
+  return = T,
+  pval = 0.05,
+  n_perm = 999
 )
 }
 \arguments{

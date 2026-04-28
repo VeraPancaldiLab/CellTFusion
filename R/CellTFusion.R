@@ -23,13 +23,18 @@ utils::globalVariables(c("Trait", "Value" ,"level", ".", "Cells_level", "PC1", "
 #' @param min_targets_size Integer. Minimum number of target genes per regulon required for TF activity inference. Default is 5.
 #' @param universe Optional. A user-specified data frame of TF–target interactions. If not provided, the function will fetch the relevant network based on the `TF.collection` argument.
 #' @param paths Optional. A user-specified data frame of pathways gene sets. If not provided, the function will fetch the relevant pathways based on `PROGENy`.
+#' @param gene_sets Optional. A data frame of custom gene sets passed to \code{compute.pathway.activity()}'s
+#'   \code{gene_sets} argument for GSVA-based scoring. If \code{NULL}, only PROGENy is used.
 #' @param minMod Integer; minimum module size for WGCNA module detection.
 #' @param corr_mod Numeric; correlation threshold for merging TF modules.
 #' @param corr Numeric; correlation threshold used in the deconvolution analysis.
 #' @param corr_type Correlation type used in deconvolution analysis. Default is \code{"spearman"}.
 #' @param cells_extra A string specifying the cells names to consider and that are not including in the nomenclature of multideconv (see R package)
 #' @param pval Numeric; p-value threshold for statistical tests (e.g., metadata and relationship associations).
-#' @param high_corr_groups Numeric; correlation threshold to identify highly similar cell groups.
+#' @param enrich_thresh Numeric. Minimum enrichment ratio (foreground/background cell-type frequency)
+#'   required to include a cell type in a latent factor's niche. Default is 1.5.
+#' @param quantile_cutoff Numeric between 0 and 1. Quantile threshold for selecting top-contributing
+#'   cell groups per NMF factor. Default is 0.7.
 #' @param return Logical; if TRUE, returns intermediate results from internal functions. Default is TRUE.
 #' @param verbose Boolen value to whether print or no the function messages
 #'
@@ -61,13 +66,12 @@ utils::globalVariables(c("Trait", "Value" ,"level", ".", "Cells_level", "PC1", "
 #'   minMod = 20,
 #'   corr_mod = 0.25,
 #'   corr = 0.7,
-#'   pval = 0.05,
-#'   high_corr_groups = 0.85
+#'   pval = 0.05
 #' )
 #'}
 #'
 CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL, batch = F, batch_id = NULL, deconv_methods = c("Quantiseq", "CBSX", "Epidish", "DeconRNASeq", "DWLS"), cbsx.mail = NULL, cbsx.token = NULL, file_name = NULL, task = c("supervised", "unsupervised"),
-                       contrast = NULL, ref_level = NULL, TF.collection = "CollecTRI", min_targets_size = 3, universe = NULL, paths = NULL, minMod = 3, corr_mod = 0.9, corr = 0.7, corr_type = "spearman", cells_extra = NULL, pval = 0.05, high_corr_groups = 0.8, return = T, verbose = T){
+                       contrast = NULL, ref_level = NULL, TF.collection = "CollecTRI", min_targets_size = 3, universe = NULL, paths = NULL, gene_sets = NULL, minMod = 3, corr_mod = 0.9, corr = 0.7, corr_type = "spearman", cells_extra = NULL, pval = 0.05, enrich_thresh = 1.5, quantile_cutoff = 0.7, return = T, verbose = T){
 
   set.seed(123)
 
@@ -167,7 +171,7 @@ CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL
   if(verbose){
     cat("\nCalculating pathway activities............................................................\n")
   }
-  pathways = compute.pathway.activity(counts.norm, gene_sets = NULL, paths = paths, return = return, file_name = file_name)
+  pathways = compute.pathway.activity(counts.norm, gene_sets = gene_sets, paths = paths, return = return, file_name = file_name)
   
   # 3. Deconvolution analysis
   if(verbose){
@@ -181,7 +185,7 @@ CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL
   if(verbose){
     cat("\nCell groups identification............................................................\n")
   }
-  cell.groups = construct_cell_groups(network, dt, batch = batch_vec, pval = pval, high_corr_groups = high_corr_groups, clustering.method = "ward.D2")
+  cell.groups = construct_cell_groups(network, dt, batch = batch_vec, pval = pval, clustering.method = "ward.D2")
 
   # 5. Cell groups latent spaces
   if(verbose){
@@ -193,7 +197,7 @@ CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL
   if(verbose){
     cat("\nExtract cell niches from latent spaces............................................................\n")
   }
-  cells_niches = compute_cells_niches(latent_spaces, dt, cell.groups, enrich_thresh = 1.5, quantile_cutoff = 0.7, cells_extra = cells_extra, return = return, file_name = file_name)
+  cells_niches = compute_cells_niches(latent_spaces, dt, cell.groups, enrich_thresh = enrich_thresh, quantile_cutoff = quantile_cutoff, cells_extra = cells_extra, return = return, file_name = file_name)
 
   # 7. Find TME states
   if(verbose){
@@ -270,14 +274,13 @@ CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL
 #'   return = TRUE
 #' )
 #' }
-cell.groups.computation = function(deconvolution, cell.dendrograms, tfs.module.network, batch = NULL, return = T){
-
-  #cuts = c(-Inf, 0.01, 0.02, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4) #Hard coded - Because heights are based on distance we keep feature close together meaning (distance from 0.05 to max 0.3)
-  cuts = c(-Inf, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.5) #Hard coded - Because heights are based on distance we keep feature close together meaning (distance from 0.05 to max 0.3)
-  #cuts = calculate_dendrogram_cuts(cell.dendrograms)
+cell.groups.computation = function(deconvolution, cell.dendrograms, tfs.module.network, batch = NULL, return = T, pval = 0.05, n_perm = 999){
 
   cell.groups = list()
+  cuts_per_dendrogram = calculate_dendrogram_cuts(cell.dendrograms)
+
   for(k in 1:length(cell.dendrograms)){
+    cuts = cuts_per_dendrogram[[k]]
     groups_cut = list()
     contador = 1
     for (i in 1:length(cuts)){
@@ -291,7 +294,7 @@ cell.groups.computation = function(deconvolution, cell.dendrograms, tfs.module.n
         ###################################################Compute score for each cell group
         pca_group = deconvolution[,colnames(deconvolution) %in% cells, drop = F]
         color = names(cell.dendrograms)[k]
-        score = compute_composite_score(pca_group, color, tfs.module.network, discard = T, batch = batch)
+        score = compute_composite_score(pca_group, color, tfs.module.network, discard = T, batch = batch, pval = pval, n_perm = n_perm)
         x[[j]] = score[[1]]
         z[[j]] = score[[2]]
       }
@@ -1608,18 +1611,6 @@ identify.cell.groups = function(features, clustering.method = "ward.D2", width =
 
   names(lis.dendrogram) = names(features_vec)
 
-  ############################Add dendrogram "all" considering all TFs modules
-  d <- stats::dist(t(TFmoduleTraitcor))
-  dendrogram_all <- stats::hclust(d, method = clustering.method)
-  if(return){
-    pdf("Results/Dendogram_cell_types_all", width = width, height = height)
-    par(mar = c(5, 2, 4, 35)) #bottom, left, top, right
-    plot(as.dendrogram(dendrogram_all), horiz= T)
-    dev.off()
-  }
-  lis.dendrogram[[length(lis.dendrogram)+1]] = dendrogram_all
-  names(lis.dendrogram)[[length(lis.dendrogram)]] = "all"
-
   return(lis.dendrogram)
 
 }
@@ -1695,9 +1686,12 @@ compute.composition.matrix = function(deconvolution.subgroupped, cell.groups, ce
 #' @param network A list containing TF networks for cell types.
 #' @param dt A list containing deconvolution subgroup structures.
 #' @param batch Optional vector indicating batch assignment for samples.
-#' @param pval P-value threshold used to filter module relationships. Default: 0.05.
-#' @param high_corr_groups Correlation threshold to merge or remove redundant cell groups. Default: 0.9.
+#' @param pval Numeric. P-value threshold applied both to filter TF module–deconvolution
+#'   feature correlations and as the significance cutoff for the CCA permutation test.
+#'   Default: 0.05.
 #' @param clustering.method Clustering method for hierarchical clustering. Default: "ward.D2".
+#' @param n_perm Integer. Number of permutations for the CCA significance test per cell group.
+#'   Higher values give more precise p-values but increase runtime. Default: 999.
 #'
 #' @return A list of 3 elements:
 #' \describe{
@@ -1706,14 +1700,11 @@ compute.composition.matrix = function(deconvolution.subgroupped, cell.groups, ce
 #'   \item{loadings}{A list of numeric vectors indicating the loadings (feature contributions) for each group.}
 #' }
 #' @export
-construct_cell_groups = function(network, dt, batch = NULL, pval = 0.05, high_corr_groups = 0.8, clustering.method = "ward.D2"){
+construct_cell_groups = function(network, dt, batch = NULL, pval = 0.05, clustering.method = "ward.D2", n_perm = 999){
 
   corr_modules = compute.modules.relationship(network[[1]], dt[[1]], batch = batch, return = T, plot = F, pval = pval)
   cell_dendrograms = identify.cell.groups(corr_modules, clustering.method = clustering.method, height = 20, return = F)
-  cell.groups = cell.groups.computation(dt[[1]], cell_dendrograms, network, batch = batch, return = F)
-
-  ### Combined highly corr cell groups
-  #cell.groups = remove.cell.groups.corr(cell.groups, threshold = high_corr_groups)
+  cell.groups = cell.groups.computation(dt[[1]], cell_dendrograms, network, batch = batch, return = F, pval = pval, n_perm = n_perm)
 
   ### Remove low variance cell groups
   # zero = caret::nearZeroVar(cell.groups[[1]], saveMetrics = TRUE)
@@ -1917,7 +1908,6 @@ extract_cells = function(groups, cells_extra = NULL){
 #' @export
 #'
 extract_colors <- function(module_colors, cell_group_name) {
-  module_colors = c(module_colors, "all")
   matches <- c() # For storing the matches
   for (color in module_colors) {
     match <- regexpr(color, cell_group_name) # Find the position of the match
@@ -2428,6 +2418,29 @@ module_enrich = function(tpm.counts, module_color, hub_genes, tfs_universe){
 
 }
 
+#' Permutation test for the first canonical correlation
+#'
+#' Estimates the null distribution of the first canonical correlation by
+#' row-permuting X and recomputing CCA \code{n_perm} times, then returns the
+#' empirical p-value (proportion of null correlations >= observed).
+#'
+#' @param X Numeric matrix (samples x features), already scaled.
+#' @param Y Numeric matrix (samples x features), already scaled.
+#' @param n_perm Integer. Number of permutations. Default 999.
+#'
+#' @return A list with \code{r} (observed first canonical correlation) and
+#'   \code{p_value} (empirical one-sided p-value).
+#'
+#' @keywords internal
+permutation_cca_test <- function(X, Y, n_perm = 999) {
+  obs_r <- stats::cancor(X, Y)$cor[1]
+  null_r <- replicate(n_perm, {
+    X_perm <- X[sample(nrow(X)), , drop = FALSE]
+    stats::cancor(X_perm, Y)$cor[1]
+  })
+  list(r = obs_r, p_value = mean(null_r >= obs_r))
+}
+
 #' Compute composite score for cell groups
 #'
 #' Computes a composite score by performing Canonical Correlation Analysis (CCA)
@@ -2437,7 +2450,10 @@ module_enrich = function(tpm.counts, module_color, hub_genes, tfs_universe){
 #' @param module_group A character vector indicating TF module group colors corresponding to the cell group (can be obtained via `extract_colors()`).
 #' @param tfs.module.network Output of compute.WTCNA().
 #' @param batch Optional vector indicating batch assignment for samples.
-#' @param discard Logical; whether to discard cell groups whose canonical correlation is below 0.6 (default TRUE).
+#' @param discard Logical; whether to discard cell groups that do not pass the
+#'   permutation test for the first canonical correlation (default TRUE).
+#' @param pval Numeric. Significance threshold for the permutation test (default 0.05).
+#' @param n_perm Integer. Number of permutations used to build the null distribution (default 999).
 #'
 #' @return A list with:
 #' \itemize{
@@ -2448,7 +2464,7 @@ module_enrich = function(tpm.counts, module_color, hub_genes, tfs_universe){
 #'
 #' @export
 #'
-compute_composite_score = function(cell_group, module_group, tfs.module.network, batch = NULL, discard = T){
+compute_composite_score = function(cell_group, module_group, tfs.module.network, batch = NULL, discard = T, pval = 0.05, n_perm = 999){
 
   modules = tfs.module.network[["TFs module matrix"]]
   tfs_all = tfs.module.network[["TFs_matrix"]]
@@ -2462,13 +2478,8 @@ compute_composite_score = function(cell_group, module_group, tfs.module.network,
     module_group = gsub(".group", "", module_group)
   }
 
-  if(module_group != "all"){
-    tf_per_module_matrix = tfs_all[, colnames(tfs_all) %in% tfs.module.network[["TFs per module"]][[module_group]]]
-    tf_module_matrix = modules[,grep(module_group, colnames(modules)), drop = F]
-  }else{
-    tf_per_module_matrix = tfs_all
-    tf_module_matrix = modules
-  }
+  tf_per_module_matrix = tfs_all[, colnames(tfs_all) %in% tfs.module.network[["TFs per module"]][[module_group]]]
+  tf_module_matrix = modules[, grep(module_group, colnames(modules)), drop = F]
 
   # ---- Regress out batch if provided ----
   if(!is.null(batch)){
@@ -2487,14 +2498,11 @@ compute_composite_score = function(cell_group, module_group, tfs.module.network,
     cell_group_matrix = scale(cell_group)
   }
 
-  # CCA analysis: First CCA is to validate the sign and discard cell types not associated with TFs moduls
-  cca_result <- stats::cancor(cell_group_matrix, tf_module_matrix) ## tf_module_matrix is already scale (check compute.WTCNA())
-
-  ###Discard cell group if rcor is not > 0.6 cause it means both linear components are not highly correlated thus they dont represent the association
-  if(discard == T){
-    rcor = cca_result$cor[1]
-
-    if(rcor < 0.6){
+  # CCA analysis: permutation test against the TF module eigengene to validate the association
+  # before committing to the full per-TF CCA projection.
+  if(discard){
+    perm <- permutation_cca_test(cell_group_matrix, tf_module_matrix, n_perm = n_perm)
+    if(perm$p_value >= pval){
       return(list("NA", "NA"))
     }
   }
@@ -2761,11 +2769,10 @@ compute.test.score = function(cell_group, projection_params){
 #' @param ncores Integer. Number of CPU cores to use for parallelization. If \code{NULL}, \code{parallel::detectCores() - 2} is used.
 #' @param batch Logical; whether batch correction should be used. Default is \code{FALSE}.
 #' @param batch_id Optional vector of batch identifiers, aligned with samples.
-#' @param min_targets_size Hyperparameters for CellTFusion
-#' @param minMod Hyperparameters for CellTFusion
-#' @param corr_mod Hyperparameters for CellTFusion
-#' @param corr Hyperparameters for CellTFusion
-#' @param high_corr_groups Hyperparameters for CellTFusion.
+#' @param min_targets_size Hyperparameter for CellTFusion: minimum TF regulon size.
+#' @param minMod Hyperparameter for CellTFusion: minimum WGCNA module size.
+#' @param corr_mod Hyperparameter for CellTFusion: module merging correlation threshold.
+#' @param corr Hyperparameter for CellTFusion: deconvolution correlation threshold.
 #'   These can be provided as vectors to define a tuning grid when \code{bestune = NULL}.
 #' @param bestune Optional. A data frame of tuned hyperparameters. If provided, the function skips fold construction
 #'   and directly processes the full dataset using these values.
@@ -2810,7 +2817,7 @@ compute.test.score = function(cell_group, projection_params){
 #'
 prepare_CellTFusion_folds <- function(data, folds = NULL, deconv = NULL, universe = NULL, paths = NULL, normalized = FALSE,
                                       coldata, time_var = NULL, event_var = NULL, corr_type = "spearman",
-                                      ncores = NULL, batch = F, batch_id = NULL, min_targets_size, minMod, corr_mod, corr, high_corr_groups, bestune = NULL){
+                                      ncores = NULL, batch = F, batch_id = NULL, min_targets_size, minMod, corr_mod, corr, bestune = NULL){
 
     if(!is.null(bestune)){
       # Run CellTFusion on the full training set
@@ -2825,42 +2832,32 @@ prepare_CellTFusion_folds <- function(data, folds = NULL, deconv = NULL, univers
         stop("Either 'target' or both 'time_var' and 'event_var' must be provided.")
       }
 
-      required_cols <- c("min_targets_size", "minMod", "corr_mod", "corr", "high_corr_groups")
+      required_cols <- c("min_targets_size", "minMod", "corr_mod", "corr")
 
       best_celltfusion_params <- if (is.data.frame(bestune)) {
-        # check whether all required columns are present
         if (all(required_cols %in% names(bestune))) {
           dplyr::select(bestune, dplyr::all_of(required_cols))
-
         } else {
-          # no tunable parameters → use fixed parameters
           message("No tunable parameters found in bestune; using fixed parameters.")
           tibble::tibble(
             min_targets_size = min_targets_size,
-            minMod = minMod,
-            corr_mod = corr_mod,
-            corr = corr,
-            high_corr_groups = high_corr_groups
+            minMod           = minMod,
+            corr_mod         = corr_mod,
+            corr             = corr
           )
         }
-
       } else if (is.list(bestune)) {
-
         if (all(required_cols %in% names(bestune))) {
           tibble::as_tibble(bestune[required_cols])
-
         } else {
           message("No tunable parameters found in bestune; using fixed parameters.")
-
           tibble::tibble(
             min_targets_size = min_targets_size,
-            minMod = minMod,
-            corr_mod = corr_mod,
-            corr = corr,
-            high_corr_groups = high_corr_groups
+            minMod           = minMod,
+            corr_mod         = corr_mod,
+            corr             = corr
           )
         }
-
       } else {
         stop("`bestune` must be a data.frame or list.")
       }
@@ -2873,11 +2870,10 @@ prepare_CellTFusion_folds <- function(data, folds = NULL, deconv = NULL, univers
         universe = universe,
         corr_type = corr_type,
         paths = paths,
-        min_targets_size   = best_celltfusion_params$min_targets_size,
-        minMod             = best_celltfusion_params$minMod,
-        corr_mod           = best_celltfusion_params$corr_mod,
-        corr               = best_celltfusion_params$corr,
-        high_corr_groups   = best_celltfusion_params$high_corr_groups,
+        min_targets_size = best_celltfusion_params$min_targets_size,
+        minMod           = best_celltfusion_params$minMod,
+        corr_mod         = best_celltfusion_params$corr_mod,
+        corr             = best_celltfusion_params$corr,
         batch = batch, batch_id = batch_id,
         return = FALSE,
         verbose = FALSE
@@ -2910,10 +2906,9 @@ prepare_CellTFusion_folds <- function(data, folds = NULL, deconv = NULL, univers
 
       custom_grid <- expand.grid(
         min_targets_size = min_targets_size,
-        minMod  = minMod,
-        corr_mod = corr_mod,
-        corr = corr,
-        high_corr_groups = high_corr_groups
+        minMod           = minMod,
+        corr_mod         = corr_mod,
+        corr             = corr
       )
 
       # Parallelize over folds
@@ -2954,10 +2949,9 @@ prepare_CellTFusion_folds <- function(data, folds = NULL, deconv = NULL, univers
             corr_type = corr_type,
             paths = paths,
             min_targets_size = custom_grid$min_targets_size[j],
-            minMod = custom_grid$minMod[j],
-            corr_mod = custom_grid$corr_mod[j],
-            corr = custom_grid$corr[j],
-            high_corr_groups = custom_grid$high_corr_groups[j],
+            minMod           = custom_grid$minMod[j],
+            corr_mod         = custom_grid$corr_mod[j],
+            corr             = custom_grid$corr[j],
             batch = batch, batch_id = batch_id,
             return = FALSE,
             verbose = FALSE
@@ -2990,16 +2984,7 @@ prepare_CellTFusion_folds <- function(data, folds = NULL, deconv = NULL, univers
             NULL
           }
 
-          # Prepare test data
-          cell_groups_projection <- compute.test.set(
-            train_processed$Processed_deconvolution,
-            train_processed$Cell_groups,
-            names(train_processed$Cell_groups[[2]]),
-            test_deconv
-          )
-
-          test_data = project_factors(train_processed$Latent_spaces$W, t(cell_groups_projection), expand = F)
-          #test_data = cell_groups_projection
+          test_data <- project_test_factors(train_processed, test_deconv)
 
           if (is.list(obs_test)) {
             test_data <- test_data %>%
@@ -3918,6 +3903,38 @@ project_factors <- function(latent_spaces, scores_test) {
   colnames(Z_test) <- paste0("Factor", seq_len(ncol(Z_test)))
 
   return(Z_test)
+}
+
+#' Project test-set samples onto training NMF factors
+#'
+#' Convenience wrapper that combines \code{compute.test.set()} and
+#' \code{project_factors()} into a single call. Given a trained
+#' \code{CellTFusion()} result and a test deconvolution matrix, it
+#' (1) reconstructs cell group composite scores for the test samples using
+#' the training CCA loadings, and (2) projects those scores onto the trained
+#' NMF latent space.
+#'
+#' @param train_processed A list returned by \code{CellTFusion()}, containing
+#'   at minimum \code{Processed_deconvolution}, \code{Cell_groups}, and
+#'   \code{Latent_spaces}.
+#' @param test_deconv A numeric matrix or data frame of deconvolution features
+#'   for the test samples (samples x cell types). Column names must match those
+#'   used during training.
+#'
+#' @return A numeric matrix (test samples x NMF factors) of non-negative
+#'   projected factor scores.
+#'
+#' @export
+project_test_factors <- function(train_processed, test_deconv) {
+
+  cell_groups_scores <- compute.test.set(
+    deconv_res        = train_processed$Processed_deconvolution,
+    cell_groups       = train_processed$Cell_groups,
+    features          = names(train_processed$Cell_groups[[2]]),
+    deconvolution_test = test_deconv
+  )
+
+  project_factors(train_processed$Latent_spaces, cell_groups_scores)
 }
 
 #' Save a grid of scatter plots for significant module–feature pairs

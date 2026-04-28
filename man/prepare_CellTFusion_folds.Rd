@@ -22,7 +22,6 @@ prepare_CellTFusion_folds(
   minMod,
   corr_mod,
   corr,
-  high_corr_groups,
   bestune = NULL
 )
 }
@@ -56,15 +55,13 @@ CellTFusion will run without these features.}
 
 \item{batch_id}{Optional vector of batch identifiers, aligned with samples.}
 
-\item{min_targets_size}{Hyperparameters for CellTFusion}
+\item{min_targets_size}{Hyperparameter for CellTFusion: minimum TF regulon size.}
 
-\item{minMod}{Hyperparameters for CellTFusion}
+\item{minMod}{Hyperparameter for CellTFusion: minimum WGCNA module size.}
 
-\item{corr_mod}{Hyperparameters for CellTFusion}
+\item{corr_mod}{Hyperparameter for CellTFusion: module merging correlation threshold.}
 
-\item{corr}{Hyperparameters for CellTFusion}
-
-\item{high_corr_groups}{Hyperparameters for CellTFusion.
+\item{corr}{Hyperparameter for CellTFusion: deconvolution correlation threshold.
 These can be provided as vectors to define a tuning grid when \code{bestune = NULL}.}
 
 \item{bestune}{Optional. A data frame of tuned hyperparameters. If provided, the function skips fold construction

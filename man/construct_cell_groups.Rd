@@ -9,8 +9,8 @@ construct_cell_groups(
   dt,
   batch = NULL,
   pval = 0.05,
-  high_corr_groups = 0.8,
-  clustering.method = "ward.D2"
+  clustering.method = "ward.D2",
+  n_perm = 999
 )
 }
 \arguments{
@@ -20,11 +20,14 @@ construct_cell_groups(
 
 \item{batch}{Optional vector indicating batch assignment for samples.}
 
-\item{pval}{P-value threshold used to filter module relationships. Default: 0.05.}
-
-\item{high_corr_groups}{Correlation threshold to merge or remove redundant cell groups. Default: 0.9.}
+\item{pval}{Numeric. P-value threshold applied both to filter TF module–deconvolution
+feature correlations and as the significance cutoff for the CCA permutation test.
+Default: 0.05.}
 
 \item{clustering.method}{Clustering method for hierarchical clustering. Default: "ward.D2".}
+
+\item{n_perm}{Integer. Number of permutations for the CCA significance test per cell group.
+Higher values give more precise p-values but increase runtime. Default: 999.}
 }
 \value{
 A list of 3 elements:

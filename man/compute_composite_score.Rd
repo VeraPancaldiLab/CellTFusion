@@ -9,7 +9,9 @@ compute_composite_score(
   module_group,
   tfs.module.network,
   batch = NULL,
-  discard = T
+  discard = T,
+  pval = 0.05,
+  n_perm = 999
 )
 }
 \arguments{
@@ -21,7 +23,12 @@ compute_composite_score(
 
 \item{batch}{Optional vector indicating batch assignment for samples.}
 
-\item{discard}{Logical; whether to discard cell groups whose canonical correlation is below 0.6 (default TRUE).}
+\item{discard}{Logical; whether to discard cell groups that do not pass the
+permutation test for the first canonical correlation (default TRUE).}
+
+\item{pval}{Numeric. Significance threshold for the permutation test (default 0.05).}
+
+\item{n_perm}{Integer. Number of permutations used to build the null distribution (default 999).}
 }
 \value{
 A list with:
