@@ -39,6 +39,8 @@ Imports:
     ggtree,
     stringr,
     tibble,
+    NMF,
+    MASS,
     ggstatsplot,
     rms (>= 6.4-1),
     scales,
@@ -75,7 +77,8 @@ Suggests:
     dorothea,
     survival,
     survminer,
-    pipeML
+    pipeML,
+    RcppML
 Config/testthat/edition: 3
 LazyData: true
 VignetteBuilder: knitr

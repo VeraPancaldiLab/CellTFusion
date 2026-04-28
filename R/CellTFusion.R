@@ -168,14 +168,14 @@ CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL
     cat("\nCalculating pathway activities............................................................\n")
   }
   pathways = compute.pathway.activity(counts.norm, gene_sets = NULL, paths = paths, return = return)
-
+  
   # 3. Deconvolution analysis
   if(verbose){
     cat("\nPerforming deconvolution analysis............................................................\n")
   }
 
-  dt = multideconv::compute.deconvolution.analysis(deconv, corr = corr, corr_type = corr_type, seed = 123, batch = batch_vec, cells_extra = cells_extra, file_name = file_name, return = return, verbose = FALSE)
-  dt = multideconv::deconvolution_dictionary(dt, pathways, batch_id = batch_vec) ## Apply dictionary of deconvolution (To be added in compute.deconvolution.analysis() soon)
+  dt = compute.deconvolution.analysis(deconv, corr = corr, corr_type = corr_type, seed = 123, batch = batch_vec, cells_extra = cells_extra, file_name = file_name, return = return, verbose = FALSE)
+  dt = deconvolution_dictionary(dt, pathways, batch_id = batch_vec) ## Apply dictionary of deconvolution (To be added in compute.deconvolution.analysis() soon)
 
   # 4. Cell groups construction and scores
   if(verbose){
@@ -187,20 +187,33 @@ CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL
   if(verbose){
     cat("\nLatent spaces calculation............................................................\n")
   }
-  latent_spaces <- compute.latent_factors(cell.groups[[1]], batch = batch_vec, seed = 123)
+  latent_spaces <- compute.latent_factors(cell.groups[[1]], rank = NULL, seed = 123)
+  cells_contributions = extract_cells_contributors(latent_spaces, dt, cell.groups, feature_type = "both")
 
   # 6. Find TME states
   if(verbose){
-    cat("\nTME states calculation............................................................\n")
+    cat("\nCompute TME states............................................................\n")
   }
-  TME_states = compute_TME_states(latent_spaces, dt, cell.groups, feature_type = "both")
+  gsea_results <- compute_factor_gsea(
+    RNA.tpm      = counts.norm,          # genes x samples
+    features_df  = latent_spaces$Z,      # samples x factors
+    plot_dot     = TRUE,
+    top_n        = 10,
+    file_name    = file_name
+  )
+
+  metaprograms_mapping <- map_to_metaprograms(
+    gsea_study = gsea_results,
+    nes_thresh = 1.0
+  )
 
   if(verbose){
     cat("\nEverything done! Results are saved in Results/ folder............................................................\n")
   }
 
   res = list("Deconvolution" = deconv, "TFs_matrix" = tfs, "TF_network" = network, "Pathways_scores" = pathways,
-             "Processed_deconvolution" = dt, "Cell_groups" = cell.groups, "Latent_spaces" = latent_spaces, "TME_states" = TME_states)
+             "Processed_deconvolution" = dt, "Cell_groups" = cell.groups, "Latent_spaces" = latent_spaces, 
+             "Cells_contributions" = cells_contributions, "TME_states" = metaprograms_mapping)
 
   return(res)
 
@@ -1237,11 +1250,13 @@ compute.TFs.activity <- function(RNA.counts, TF.collection = "CollecTRI", min_ta
                                    values_from = score) %>%
     as.matrix()
 
+  sample_acts = scale(t(sample_acts)) ## Scale NES TFs to account for variability in the number of targets per TF and make them comparable across modules
+
   if(return){
     utils::write.csv(sample_acts, paste0("Results/TF_matrix_", file.name, ".csv"))
   }
 
-  return(data.frame(t(sample_acts)))
+  return(data.frame(sample_acts))
 
 }
 
@@ -1336,7 +1351,7 @@ compute.WTCNA <- function(TFs.matrix, batch = FALSE, network.type = "signed", cl
     MEs_list <- consensusModules$multiMEs
     scaled_MEs_list <- lapply(MEs_list, function(x) {
       ME <- x$data              # extract the data.frame
-      ME_scaled <- scale(ME)    # scale columns
+      ME_scaled <- scale(ME)    # scale MEs scores to account for variabilities across cohorts even though they are already scaled at TF level (MEs can be different in scale)
       colnames(ME_scaled) <- colnames(ME)
       return(ME_scaled)
     })
@@ -1431,8 +1446,8 @@ compute.WTCNA <- function(TFs.matrix, batch = FALSE, network.type = "signed", cl
       cat("Calculating eigenvectors from modules.................................................\n\n")
     }
 
-    MEList = WGCNA::moduleEigengenes(TFs.matrix, colors = dynamicColors, scale = T)
-    MEs = MEList$eigengenes
+    MEList = WGCNA::moduleEigengenes(TFs.matrix, colors = dynamicColors, scale = F) ## turn off scaling cause the output of compute.TFs.activity() is TFs = scale(NES)
+    MEs = scale(MEList$eigengenes) # Scale MEs scores (not the same as above) and this is to have standard ranges and same input whether batch = TRUE or = FALSE (for this case)
     MEs = WGCNA::orderMEs(MEs)
 
     if(verbose){
@@ -1760,6 +1775,12 @@ compute.composition.matrix = function(deconvolution.subgroupped, cell.groups, ce
     presence_matrix = presence_matrix[,-idy]
   }
 
+  # --- MINIMAL ADDITION: duplicate rows ---
+  presence_matrix = presence_matrix[rep(1:nrow(presence_matrix), each = 2), ]
+
+  rownames(presence_matrix) = paste0(rep(names(cell.groups[[2]]), each = 2),
+                                     c("_pos","_neg"))
+
   return(presence_matrix)
 
 }
@@ -1798,9 +1819,9 @@ construct_cell_groups = function(network, dt, batch = NULL, pval = 0.05, high_co
   # cell.groups[[2]] = cell.groups[[2]][!zero$nzv]
   # cell.groups[[3]] = cell.groups[[3]][!zero$nzv]
 
-  colnames(cell.groups[[1]]) = paste0("CG", seq_along(cell.groups[[2]]))
-  names(cell.groups[[2]]) = paste0("CG", seq_along(cell.groups[[2]]))
-  names(cell.groups[[3]]) = paste0("CG", seq_along(cell.groups[[2]]))
+  # colnames(cell.groups[[1]]) = paste0("CG", seq_along(cell.groups[[2]]))
+  # names(cell.groups[[2]]) = paste0("CG", seq_along(cell.groups[[2]]))
+  # names(cell.groups[[3]]) = paste0("CG", seq_along(cell.groups[[2]]))
 
   names(cell.groups) = c("Cell_groups", "Composition", "Weights")
 
@@ -2267,7 +2288,7 @@ extract_colors <- function(module_colors, cell_group_name) {
 #'
 #' This function re-create existing TF modules on a different TF activity matrix.
 #'
-#' @param TF.matrix TFs activity matrix with samples as rows and TFs as columns.
+#' @param TF.matrix TFs activity matrix with samples as rows and TFs as columns (should be the output of compute.TF.activity()).
 #' @param network_tfs A TF network object obtained from compute.WTCNA() from which TF modules need to be re-create.
 #'
 #' @return A matrix of TFs modules scores across samples
@@ -2778,7 +2799,7 @@ compute_composite_score = function(cell_group, module_group, tfs.module.network,
   }
 
   # CCA analysis: First CCA is to validate the sign and discard cell types not associated with TFs moduls
-  cca_result <- stats::cancor(cell_group_matrix, scale(tf_module_matrix))
+  cca_result <- stats::cancor(cell_group_matrix, tf_module_matrix) ## tf_module_matrix is already scale (check compute.WTCNA())
 
   ###Discard cell group if rcor is not > 0.6 cause it means both linear components are not highly correlated thus they dont represent the association
   if(discard == T){
@@ -2792,13 +2813,13 @@ compute_composite_score = function(cell_group, module_group, tfs.module.network,
   #Once we confirmed the potential association we can further do a CCA to find a linear component that maximizes the linear relationship. If we dont do this, we will invent linear components that maximizes correlation but that were not existing before
 
   # CCA analysis: Note 'cell_group_matrix' is already scale
-  cca_result <- stats::cancor(cell_group_matrix, scale(tf_per_module_matrix)) ## Now this is done per tfs_per_module
+  cca_result <- stats::cancor(cell_group_matrix, tf_per_module_matrix) ## Now this is done per tfs_per_module (tfs are already scale check compute.TFs.activity())
 
   # Apply canonical weights to each matrix
   cell_group <- cell_group[, rownames(cca_result$xcoef), drop = F] #Ensure no features have been discard on the way and if yes, subset the matrix (CCA can discard collinear or zero variance features)
 
-  ### xcoef[,1] corresponds to the most correlated linear component
-  weighted_cell_group_matrix <- as.matrix(cell_group) %*% cca_result$xcoef[, 1] #Multiply by the original matrix even if the coefx came from the inverse matrix because we need to find the inverse relationship
+  ### xcoef[,1] corresponds to the most correlated linear component (we scale cause the coef came from the scale matrix)
+  weighted_cell_group_matrix <- scale(as.matrix(cell_group)) %*% cca_result$xcoef[, 1] #Multiply by the original matrix even if the coefx came from the inverse matrix because we need to find the inverse relationship
 
   ### MIGHT BE USEFUL AFTER TO DISCARD VARIABLES THAT DONT HELP TO THE ASSOCIATION AND REDUCE GROUP COMPOSITION
 
@@ -2951,7 +2972,8 @@ compute.test.score = function(cell_group, loadings){
   cell_group <- cell_group[, colnames(cell_group) %in% rownames(loadings), drop = F] #Ensure no features have been discard on the way and if yes, subset the matrix (CCA can discard collinear or zero variance features)
   loadings = loadings[rownames(loadings) %in% colnames(cell_group),]
 
-  weighted_cell_group_matrix <- as.matrix(cell_group) %*% loadings #Multiply by the original matrix even if the coefx came from the inverse matrix because we need to find the inverse relationship
+  # scale the cell group cause the loadings came from the CCA that was done with scale matrix, so we need to scale the test matrix to apply the same relationship
+  weighted_cell_group_matrix <- as.matrix(scale(cell_group)) %*% loadings #Multiply by the original matrix even if the coefx came from the inverse matrix because we need to find the inverse relationship
 
   return(weighted_cell_group_matrix[,1,drop=F])
 
@@ -3698,192 +3720,198 @@ cell.groups.stat.analysis <- function(cell.groups, coldata, trait,
   return(result)
 }
 
-#' Compute latent factors from cell-group features
+#' Compute latent factors from cell group scores using NMF
 #'
-#' @param X Numeric matrix of size samples x cell groups.
-#' @param batch Optional vector indicating batch assignment for samples.
-#' @param seed Random seed used to initialize model fitting.
-#' @return A list with latent representation and loadings:
+#' Decomposes signed CCA composite scores into non-negative latent factors
+#' by splitting each score into its positive and negative direction components,
+#' then applying Non-negative Matrix Factorization via RcppML (fast C++ backend).
+#'
+#' @param X Numeric matrix of size samples x cell groups (signed CCA composite scores).
+#' @param rank Integer; number of NMF factors. If NULL, estimated automatically
+#'   via elbow on reconstruction MSE across ranks 2:8.
+#' @param seed Random seed. Default 123.
+#'
+#' @return A list with:
 #' \itemize{
-#'   \item \code{Z}: Sample-level latent factors.
-#'   \item \code{W}: Feature weights per latent factor.
-#'   \item \code{expanded_Z}: Expanded latent features used downstream.
+#'   \item \code{Z}: Sample-level NMF factor scores (samples x rank). Non-negative.
+#'   \item \code{W}: Feature weights per factor (2*n_CGs x rank). Non-negative.
+#'   \item \code{nmf_input}: The positive-negative split matrix fed to NMF (samples x 2*n_CGs).
+#'   \item \code{rank}: The rank used.
 #' }
-compute.latent_factors <- function(X, batch = NULL, seed = 123) {
+#'
+#' @details
+#' Signed CCA scores are decomposed as:
+#'   score_pos = max(score, 0)  -- patient aligned with TF program
+#'   score_neg = max(-score, 0) -- patient anti-aligned with TF program
+#' Both are concatenated column-wise before NMF. Column names are suffixed
+#' with "_pos" and "_neg" to track direction.
+#'
+#' @export
+compute.latent_factors <- function(X, rank = NULL, seed = 123) {
+
+  if (!requireNamespace("RcppML", quietly = TRUE))
+    stop("Install RcppML: install.packages('RcppML')")
 
   set.seed(seed)
+  X <- as.matrix(X)
 
-  # 2. Normalize to [0,1] (safe for NMF)
-  X_scaled <- X
-  for(j in 1:ncol(X_scaled)){
-    x <- X_scaled[, j]
-    X_scaled[, j] <- (x - min(x)) / (max(x) - min(x) + 1e-6)
+  # ── Positive-negative split ───────────────────────────────────────────────
+  X_pos <- pmax(X, 0)
+  X_neg <- pmax(-X, 0)
+  colnames(X_pos) <- paste0(colnames(X), "_pos")
+  colnames(X_neg) <- paste0(colnames(X), "_neg")
+  nmf_input <- cbind(X_pos, X_neg)
+
+  A <- t(nmf_input)   # features x samples (RcppML convention)
+
+  # ── Rank estimation ───────────────────────────────────────────────────────
+  if (is.null(rank)) {
+    message("Estimating optimal rank via elbow on reconstruction MSE (ranks 2:8)...")
+    .mse <- function(A, fit) {
+      recon <- fit$w %*% diag(fit$d, nrow = length(fit$d)) %*% fit$h
+      mean((A - recon)^2)
+    }
+    mse_vals <- vapply(2:8, function(k) {
+      fit <- RcppML::nmf(A, k = k, seed = seed, verbose = FALSE)
+      .mse(A, fit)
+    }, numeric(1))
+    names(mse_vals) <- as.character(2:8)
+    d2   <- diff(diff(mse_vals))
+    rank <- as.integer(names(mse_vals)[which.min(d2) + 1L])
+    message("MSE by rank: ", paste(sprintf("k%s=%.3g", names(mse_vals), mse_vals), collapse = "  "))
+    message("Selected rank (elbow): ", rank)
   }
 
-  # MOFA expects a list of matrices per view
-  data_list <- list(
-    RNA = t(X_scaled)  # needs features x samples
-  )
+  # ── NMF fit ───────────────────────────────────────────────────────────────
+  message("Running RcppML NMF with rank = ", rank, "...")
+  nmf_res <- RcppML::nmf(A, k = rank, seed = seed, verbose = FALSE)
+  W <- as.matrix(nmf_res$w)    # features x rank
+  Z <- t(as.matrix(nmf_res$h)) # samples x rank
 
-  # Create MOFA object
-  MOFAobject <- MOFA2::create_mofa(data_list)
+  rownames(Z) <- rownames(X)
+  colnames(Z) <- paste0("Factor", seq_len(rank))
+  colnames(W) <- paste0("Factor", seq_len(rank))
+  rownames(W) <- colnames(nmf_input)
 
-  # Include batch as covariate if provided
-  if(!is.null(batch)){
-    # Convert to numeric/factor as MOFA expects a data.frame with samples as rows
-    batch_df <- data.frame(
-      sample = rownames(X_scaled),
-      covariate = "batch",
-      value = as.numeric(as.factor(batch))
+  # ── Patient mixture plot ───────────────────────────────────────────────────
+
+  # normalise Z rows to sum to 1
+  Z_norm <- sweep(Z, 1, rowSums(Z), "/")
+  Z_norm[is.nan(Z_norm)] <- 0
+
+  factor_levels <- paste0("Factor", seq_len(rank))
+  fac_colors    <- setNames(scales::hue_pal()(rank), factor_levels)
+
+  patient_mixture <- as.data.frame(Z_norm) %>%
+    dplyr::mutate(sample = rownames(Z_norm)) %>%
+    tidyr::pivot_longer(-sample,
+                         names_to  = "factor",
+                         values_to = "proportion") %>%
+    dplyr::mutate(factor = factor(factor, levels = factor_levels))
+  # order samples by dominant factor
+  sample_order <- patient_mixture %>%
+    dplyr::group_by(sample) %>%
+    dplyr::slice_max(proportion, n = 1, with_ties = FALSE) %>%
+    dplyr::arrange(factor, desc(proportion)) %>%
+    dplyr::pull(sample)
+
+  p_mixture <- ggplot(
+    patient_mixture %>%
+      dplyr::mutate(sample = factor(sample, levels = sample_order)),
+    aes(x = sample, y = proportion, fill = factor)
+  ) +
+    ggplot2::geom_col(width = 1, position = "stack") +
+    ggplot2::scale_fill_manual(values = fac_colors, name = "Factor") +
+    ggplot2::scale_y_continuous(labels = scales::percent) +
+    ggplot2::labs(
+      title    = "Patient TME composition — NMF factor mixture",
+      subtitle = "Each bar = one patient  ·  Height = fraction of each factor",
+      x        = "Patients",
+      y        = "Factor proportion"
+    ) +
+    ggplot2::theme_bw(base_size = 10) +
+    ggplot2::theme(
+      axis.text.x     = ggplot2::element_blank(),
+      axis.ticks.x    = ggplot2::element_blank(),
+      panel.grid      = ggplot2::element_blank(),
+      legend.position = "right"
     )
-    MOFAobject <- MOFA2::set_covariates(MOFAobject, covariates = batch_df)
+
+  # save plot
+  if (!dir.exists("Results")) dir.create("Results", recursive = TRUE)
+  fname <- if (!is.null(file_name)) {
+    paste0("Results/NMF_patient_mixture_", file_name, ".pdf")
+  } else {
+    "Results/NMF_patient_mixture.pdf"
   }
 
-  # Set options
-  data_opts <- MOFA2::get_default_data_options(MOFAobject)
-  model_opts <- MOFA2::get_default_model_options(MOFAobject)
-  train_opts <- MOFA2::get_default_training_options(MOFAobject)
-  train_opts$maxiter <- 500
-
-  # Prepare and train
-  MOFAobject <- MOFA2::prepare_mofa(
-    MOFAobject,
-    data_options = data_opts,
-    model_options = model_opts,
-    training_options = train_opts
-  )
-
-  MOFAobject <- MOFA2::run_mofa(MOFAobject, use_basilisk = TRUE)
-
-  # Extract latent factors
-  Z <- MOFA2::get_factors(MOFAobject, factors = "all")  # samples x latent factors
-
-  # Extract feature weights
-  W <- MOFA2::get_weights(MOFAobject, views = "RNA")
-
-  # 5. Expand latent factors
-  expanded_Z <- expand_latent_features(Z[[1]], log_transform = T)
+  ggplot2::ggsave(fname, p_mixture, width = 14, height = 4)
 
   return(list(
-    Z = Z[[1]],
-    W = W[[1]],
-    expanded_Z = expanded_Z
+    Z         = Z,
+    W         = W,
+    nmf_input = nmf_input,
+    nmf_model = nmf_res,
+    patient_mixture = patient_mixture
   ))
 }
 
-expand_latent_features <- function(Z, log_transform = TRUE){
-  samples <- nrow(Z)
-  factors <- colnames(Z)
-  if(is.null(factors)){
-    factors <- paste0("Factor_", 1:ncol(Z))
-    colnames(Z) <- factors
-  }
+extract_contributing_features <- function(latent_factors,
+  quantile_cutoff = 0.7) {
 
-  feature_list <- list()
-  feature_list[["Original"]] <- Z
-  K <- ncol(Z)
+  W <- latent_factors$W
 
-  # Pairwise ratios
-  for(i in 1:(K-1)){
-    for(j in (i+1):K){
-      ratio <- Z[, i] / (Z[, j] + 1e-6)
-      feature_list[[paste0(factors[i], "_over_", factors[j])]] <- ratio
-    }
-  }
-
-  # Pairwise differences
-  for(i in 1:(K-1)){
-    for(j in (i+1):K){
-      diff <- Z[, i] - Z[, j]
-      feature_list[[paste0(factors[i], "_minus_", factors[j])]] <- diff
-    }
-  }
-
-  expanded_features <- do.call(cbind, feature_list)
-  return(expanded_features)
-}
-
-
-extract_contributing_features <- function(latent_factors, dt, cell.groups, feature_type = c("both", "positive", "negative"), quantile_cutoff = 0.7, cells_extra = NULL) {
-
-  ################## quantile_cutoff: 0.9 --> Keep only the top 10% strongest features (within positive or negative group)
-
-  # Extract binary composition
-  comp_matrix = compute.composition.matrix(dt, cell.groups, cells_extra = cells_extra)
-
-  # List to store top contributors for each factor
   top_contributors <- list()
 
-  # Extract weights
-  W = latent_factors$W
-
-  # Loop over all factors (columns in W)
   for (factor_name in colnames(W)) {
 
     w <- W[, factor_name]
-    w <- w[!is.na(w)]
+    w <- w[!is.na(w) & w > 0]
 
-    selected_features <- c()
-
-    if (feature_type %in% c("both", "positive")) {
-
-      w_pos <- w[w > 0]
-
-      if (length(w_pos) > 0) {
-        thr_pos <- quantile(w_pos, quantile_cutoff, na.rm = TRUE)
-        selected_pos <- w_pos[w_pos >= thr_pos]
-        selected_features <- c(selected_features, selected_pos)
-      }
+    if (length(w) == 0) {
+      message("No features for ", factor_name)
+      next
     }
 
-    if (feature_type %in% c("both", "negative")) {
+    # threshold by quantile on all features regardless of _pos/_neg
+    thr <- quantile(w, quantile_cutoff, na.rm = TRUE)
+    sel <- w[w >= thr]
 
-      w_neg <- w[w < 0]
+    # strip suffix — original cell group name for comp_matrix lookup
+    names(sel) <- sub("_(pos|neg)$", "", names(sel))
 
-      if (length(w_neg) > 0) {
-        thr_neg <- quantile(abs(w_neg), quantile_cutoff, na.rm = TRUE)
-        selected_neg <- w_neg[abs(w_neg) >= thr_neg]
-        selected_features <- c(selected_features, selected_neg)
-      }
-    }
+    # sort by weight descending
+    sel <- sort(sel, decreasing = TRUE)
 
-    if (length(selected_features) == 0) {
-      message("No features passed threshold for ", factor_name)
-      stop()
-    }
-
-    # Order by effect size for plotting
-    selected_features <- selected_features[
-      order(selected_features)
-    ]
-
-    # Subset composition matrix
-    comp_sub <- comp_matrix[names(selected_features), , drop = FALSE]
-
-    # Remove features with all zeros
-    comp_sub <- comp_sub[, colSums(comp_sub) != 0, drop = FALSE]
-
-    top_contributors[[factor_name]] <- selected_features
-
+    top_contributors[[factor_name]] <- sel
   }
-
 
   return(top_contributors)
 }
 
+extract_cells_contributors <- function(latent_factors, dt, cell.groups,
+                                    enrich_thresh   = 1.5,
+                                    quantile_cutoff = 0.7,
+                                    cells_extra     = NULL) {
 
-compute_TME_states <- function(latent_factors, dt, cell.groups, enrich_thresh = 1.5, feature_type = "both", quantile_cutoff = 0.7, cells_extra = NULL){
   require(igraph)
   require(scales)
 
-  # Extract contributing cell groups
-  top_features_list = extract_contributing_features(latent_factors, dt, cell.groups, feature_type = feature_type, quantile_cutoff = quantile_cutoff, cells_extra = cells_extra)
+  if (!dir.exists("Results")) dir.create("Results", recursive = TRUE)
 
-  # Binary composition
-  comp_matrix <- compute.composition.matrix(dt, cell.groups, cells_extra = cells_extra)
+  # ── extract top contributing cell groups per factor ───────────────────────
+  # returns named list: factor → named numeric vector
+  # names = cell group names (suffix stripped), values = NMF weights (all > 0)
+  top_features_list <- extract_contributing_features(
+    latent_factors,
+    quantile_cutoff = quantile_cutoff
+  )
 
-  # Background frequency
-  background_freq <- colMeans(comp_matrix) #fraction of cell groups globally containing each cell type
+  # ── binary composition matrix ─────────────────────────────────────────────
+  # rows = cell groups, columns = cell types
+  comp_matrix     <- compute.composition.matrix(dt, cell.groups,
+                                                 cells_extra = cells_extra)
+  background_freq <- colMeans(comp_matrix)
 
   factor_celltype_weights <- list()
 
@@ -3892,18 +3920,15 @@ compute_TME_states <- function(latent_factors, dt, cell.groups, enrich_thresh = 
     top_features <- top_features_list[[factor_name]]
     if (length(top_features) == 0) next
 
-    # --- Separate positive and negative CGs ---
-    pos_cg <- names(top_features[top_features > 0])
-    neg_cg <- names(top_features[top_features < 0])
+    # restrict composition to contributing cell groups
+    comp_sub <- comp_matrix[
+      rownames(comp_matrix) %in% names(top_features), , drop = FALSE
+    ]
+    if (nrow(comp_sub) == 0) next
 
-    comp_sub <- comp_matrix[rownames(comp_matrix) %in% names(top_features),, drop = FALSE]
-
-    # --- Compute signed edge weights ---
-    edge_weights <- colSums(comp_sub * top_features[rownames(comp_sub)]) #Factor→Cell Groups→Cell Types: How strongly this cell type is associated with the factor through the CGs that contain it.
-    # If a cell type appears mostly in positive CGs → positive edge
-    # If appears mostly in negative CGs → negative edge
-    # If balanced → near zero
-    edge_weights <- edge_weights[edge_weights != 0]
+    # ── edge weights: factor → cell types ────────────────────────────────
+    # for each cell type: sum of NMF weights of cell groups containing it
+    # all weights are positive — no direction distinction
 
     # Interpretation of edge
     #   Magnitude = cumulative strength of CGs containing it
@@ -3911,73 +3936,76 @@ compute_TME_states <- function(latent_factors, dt, cell.groups, enrich_thresh = 
     #   Large positive → enriched in positive CGs
     #   Large negative → enriched in negative CGs
 
-    # --- Separate enrichment by sign ---
-    enrich_pos <- rep(NA, ncol(comp_matrix))
-    enrich_neg <- rep(NA, ncol(comp_matrix))
-    names(enrich_pos) <- colnames(comp_matrix)
-    names(enrich_neg) <- colnames(comp_matrix)
+    edge_weights <- colSums(
+      comp_sub * top_features[rownames(comp_sub)]
+    )
+    edge_weights <- edge_weights[edge_weights > 0]
 
-    if (length(pos_cg) > 0) {
-      comp_pos <- comp_matrix[pos_cg, , drop = FALSE]
-      fg_freq_pos <- colMeans(comp_pos) #fraction of cell groups in which each cell type is present
-      enrich_pos <- fg_freq_pos / background_freq #relative enrichment of cell type in the selected top (Enriched relative to background)
-    }
+    # If a cell type appears mostly in positive CGs → positive edge
+    # If appears mostly in negative CGs → negative edge
+    # If balanced → near zero
 
-    if (length(neg_cg) > 0) {
-      comp_neg <- comp_matrix[neg_cg, , drop = FALSE]
-      fg_freq_neg <- colMeans(comp_neg)
-      enrich_neg <- fg_freq_neg / background_freq
-    }
+    if (length(edge_weights) == 0) next
+
+    # ── enrichment relative to background ────────────────────────────────
+    # is this cell type more common in the top cell groups than globally?
+    # enrichment >= enrich_thresh → cell type enriched across cell groups relative to baseline (“Is this cell type more common in my selected subset than expected based on its overall frequency?”)
+
+    fg_freq <- colMeans(comp_sub)
+    enrich  <- fg_freq / background_freq
+    enrich[!is.finite(enrich)] <- NA
 
     # Interpretation
     # Suppose CD4.cells_immunosuppressive appears in 70% of the selected top features (fg_freq = 0.7)
     # - Its background frequency = 0.34408602
     # - Enrichment = 0.7 / 0.344 ≈ 2.03 → more than 2× enriched relative to baseline
 
-    enrich_pos[!is.finite(enrich_pos)] <- NA
-    enrich_neg[!is.finite(enrich_neg)] <- NA
+    keep         <- names(which(enrich >= enrich_thresh))
+    edge_weights <- edge_weights[names(edge_weights) %in% keep]
 
-    # --- Keep only sign-consistent enriched cell types ---
-    keep_pos <- names(which(enrich_pos >= enrich_thresh))
-    keep_neg <- names(which(enrich_neg >= enrich_thresh))
-
-    # enrichment >= enrich_thresh → cell type enriched across cell groups relative to baseline (“Is this cell type more common in my selected subset than expected based on its overall frequency?”)
-
-    # Conditional selection based on feature_type
-    keep_final <- c()
-    if (feature_type %in% c("both","positive")) {
-      keep_final <- c(keep_final, intersect(names(edge_weights[edge_weights > 0]), keep_pos))
-    }
-    if (feature_type %in% c("both","negative")) {
-      keep_final <- c(keep_final, intersect(names(edge_weights[edge_weights < 0]), keep_neg))
-    }
-
-    edge_weights <- edge_weights[keep_final]
+    if (length(edge_weights) == 0) next
 
     factor_celltype_weights[[factor_name]] <- edge_weights
 
-    ## GRAPH PLOTTING
-
-    if(length(edge_weights) == 0) next
-
-    edges <- cbind(
+    # ── network plot ──────────────────────────────────────────────────────
+    edges <- data.frame(
       from = factor_name,
-      to   = names(edge_weights)
+      to   = names(edge_weights),
+      stringsAsFactors = FALSE
     )
 
-    # skip plotting if edges is empty
-    if(nrow(edges) == 0) next
-
-    g <- graph_from_edgelist(edges, directed = FALSE)
+    g <- igraph::graph_from_data_frame(edges, directed = FALSE)
 
     V(g)$type <- ifelse(V(g)$name == factor_name, "factor", "celltype")
 
-    # --- Node size ---
+    # node size — factor fixed, cell types scaled by edge weight
+    ct_names  <- V(g)$name[V(g)$type == "celltype"]
+    ct_sizes  <- rescale(edge_weights[ct_names], to = c(6, 14))
+
     V(g)$size <- ifelse(
-      V(g)$type == "factor",
+      V(g)$name == factor_name,
       18,
-      rescale(abs(edge_weights[V(g)$name]), to = c(6, 14))
+      ct_sizes[V(g)$name]
     )
+
+    # node color — factor gold, cell types by edge weight magnitude
+    max_ew <- max(edge_weights)
+    V(g)$color <- sapply(V(g)$name, function(v) {
+      if (v == factor_name) return("#E69F00")
+      # shade from light to dark orange proportional to weight
+      w <- edge_weights[v] / max_ew
+      colorRampPalette(c("#F5CBA7", "#D55E00"))(100)[round(w * 99) + 1]
+    })
+
+    V(g)$frame.color <- "grey20"
+    V(g)$label.color <- "black"
+    V(g)$label.cex   <- 0.9
+
+    # edge width scaled by weight
+    ew_ordered  <- edge_weights[edges$to]
+    E(g)$weight <- ew_ordered
+    E(g)$width  <- rescale(ew_ordered, to = c(1, 5))
+    E(g)$color  <- "#D55E00"
 
     # Node size is proportional to the absolute value of edge_weights.
     #
@@ -3989,98 +4017,110 @@ compute_TME_states <- function(latent_factors, dt, cell.groups, enrich_thresh = 
     #
     # Magnitude = cumulative contribution across all cell groups for this factor.
 
-    # --- Node color ---
-    V(g)$color <- sapply(V(g)$name, function(v) {
-      if (v == factor_name) return("#E69F00")  # factor node
-      ew <- edge_weights[v]
-      if (ew > 0) {
-        return("#D55E00")  # red = positive
-      } else {
-        return("#0072B2")  # blue = negative
-      }
-    })
+    lay <- layout_as_star(g,
+                           center = which(V(g)$name == factor_name))
 
-    V(g)$frame.color <- "grey20"
-    V(g)$label.color <- "black"
-    V(g)$label.cex <- 0.9
-
-    # --- Edge styling ---
-    E(g)$weight <- edge_weights
-    E(g)$width  <- rescale(abs(E(g)$weight), to = c(1, 5))
-
-    E(g)$color <- sapply(E(g), function(e) {
-      ew <- E(g)$weight[e]
-      if (ew > 0) {
-        return("#D55E00")
-      } else {
-        return("#0072B2")
-      }
-    })
-
-    # --- Layout ---
-    lay <- layout_as_star(g, center = which(V(g)$type == "factor"))
-
-    # --- Plot ---
     pdf(paste0("Results/Network_", factor_name, ".pdf"))
     plot(
       g,
-      layout = lay,
+      layout              = lay,
       vertex.label.family = "sans",
-      vertex.label.dist = 2,
-      vertex.label.degree = -pi/2,
-      main = paste("Cell-type niche structure of", factor_name),
-      margin = 0.2
+      vertex.label.dist   = 2,
+      vertex.label.degree = -pi / 2,
+      main                = paste("Cell-type niche structure of", factor_name),
+      margin              = 0.2
     )
     dev.off()
   }
 
-  # --- Save positive and negative cell types per factor ---
-  TME_states <- list()
+  # ── build TME states output ───────────────────────────────────────────────
+  CG_states <- list()
 
   for (factor_name in names(factor_celltype_weights)) {
 
     edge_weights <- factor_celltype_weights[[factor_name]]
 
-    TME_entry <- list()
+    if (length(edge_weights) == 0) next
 
-    # Positive cell types
-    if (feature_type %in% c("both","positive")) {
-      pos_cells <- names(edge_weights[edge_weights > 0])
-      if (length(pos_cells) > 0) TME_entry$TME_state_positive <- pos_cells
-    }
-
-    # Negative cell types
-    if (feature_type %in% c("both","negative")) {
-      neg_cells <- names(edge_weights[edge_weights < 0])
-      if (length(neg_cells) > 0) TME_entry$TME_state_negative <- neg_cells
-    }
-
-    # Only add factor if TME_entry has any content
-    if (length(TME_entry) > 0) {
-      TME_states[[factor_name]] <- TME_entry
-    }
+    # single list of cell types per factor — no positive/negative split
+    # ordered by weight descending
+    CG_states[[factor_name]] <- list(
+      CG_state_cells  = names(sort(edge_weights, decreasing = TRUE)),
+      cell_weights     = sort(edge_weights, decreasing = TRUE)
+    )
   }
 
-  return(TME_states)
+  return(CG_states)
 }
 
 
+#' Project cell group scores onto trained NMF latent factors
+#'
+#' Applies the positive-negative split to new samples and projects them
+#' onto the latent space learned during training using the Moore-Penrose
+#' pseudoinverse of the scaled basis matrix W.
+#'
+#' @param latent_spaces A list returned by \code{compute.latent_factors()},
+#'   containing at minimum \code{W} (features x rank), \code{rank}, and
+#'   the RcppML model object with \code{nmf_model$d} scaling vector.
+#' @param scores_test A samples x cell groups matrix of signed CCA composite
+#'   scores for the test cohort. Column names must match those used in training
+#'   (before the _pos/_neg suffix was added).
+#'
+#' @return A non-negative matrix of size samples x rank containing the
+#'   projected NMF factor scores for the test cohort.
+#'
+#' @details
+#' The RcppML NMF decomposition is A = W %*% diag(d) %*% H, not A = W %*% H.
+#' The diagonal scaling vector d must be absorbed into W before computing
+#' the pseudoinverse, otherwise the projected scores are on the wrong scale.
+#'
+#' @export
+project_factors <- function(latent_spaces, scores_test) {
 
-project_factors <- function(W, Y_new, expand = F) {
-  common_features <- intersect(rownames(W), rownames(Y_new))
-  W_sub <- W[common_features, , drop = FALSE]
-  Y_sub <- Y_new[common_features, , drop = FALSE]
-  Z_new <- t(MASS::ginv(W_sub) %*% Y_sub)
+  scores_test <- as.matrix(scores_test)
 
-  colnames(Z_new) = colnames(W)
+  # ── Step 1: apply same pos-neg split as training ───────────────────────────
+  test_pos <- pmax(scores_test, 0)
+  test_neg <- pmax(-scores_test, 0)
+  colnames(test_pos) <- paste0(colnames(scores_test), "_pos")
+  colnames(test_neg) <- paste0(colnames(scores_test), "_neg")
+  nmf_input_test <- cbind(test_pos, test_neg)   # samples x (2 * n_CGs)
 
-  if(expand){
-    expanded_Z <- expand_latent_features(Z_new, log_transform = T)
-    return(expanded_Z)
-  }else{
-    return(Z_new)  # samples x factors
-  }
+  # ── Step 2: extract W and absorb d scaling ─────────────────────────────────
+  # RcppML stores: A ≈ W %*% diag(d) %*% H
+  # Must absorb d into W before pseudoinverse: W_scaled = W %*% diag(d)
+  W <- latent_spaces$W                          # features x rank
+  d <- latent_spaces$nmf_model$d                # length = rank
 
+  W_scaled <- W %*% diag(d, nrow = length(d))  # features x rank, d absorbed
+
+  # ── Step 3: restrict to features shared between training and test ──────────
+  common_features <- intersect(rownames(W_scaled), colnames(nmf_input_test))
+
+  if (length(common_features) == 0)
+    stop("No overlapping features between training NMF input and test scores. ",
+         "Check that column names of scores_test match training cell group names.")
+
+  if (length(common_features) < nrow(W_scaled))
+    warning(nrow(W_scaled) - length(common_features),
+            " training features missing in test cohort — projection may be degraded.")
+
+  W_sub <- W_scaled[common_features, , drop = FALSE]   # common x rank
+  Y_sub <- t(nmf_input_test[, common_features,
+                              drop = FALSE])            # common x samples
+
+  # ── Step 4: project via pseudoinverse ─────────────────────────────────────
+  # H_test = pinv(W_sub) %*% Y_sub  →  Z_test = t(H_test)
+  Z_test <- t(MASS::ginv(W_sub) %*% Y_sub)             # samples x rank
+
+  # Clamp small negatives from numerical noise in pseudoinverse
+  Z_test <- pmax(Z_test, 0)
+
+  rownames(Z_test) <- rownames(scores_test)
+  colnames(Z_test) <- paste0("Factor", seq_len(ncol(Z_test)))
+
+  return(Z_test)
 }
 
 plot.module.scatter.grid <- function(matA, matB, cor_mat, p_mat,
@@ -4443,30 +4483,262 @@ run_deg_analysis <- function(counts, coldata, group_col, ref_level = NULL) {
 
   # Set reference level if provided
   if (!is.null(ref_level)) {
-    group <- relevel(group, ref = ref_level)
+    group <- stats::relevel(group, ref = ref_level)
   }
 
   # Create DGE object and filter
-  dge <- DGEList(counts = counts_mat, group = group)
-  keep <- filterByExpr(dge)
+  dge <- edgeR::DGEList(counts = counts_mat, group = group)
+  keep <- edgeR::filterByExpr(dge)
   dge <- dge[keep, , keep.lib.sizes = FALSE]
-  dge <- calcNormFactors(dge)
+  dge <- edgeR::calcNormFactors(dge)
 
   # Design matrix
-  design <- model.matrix(~ group)
+  design <- stats::model.matrix(~ group)
 
   # voom transformation
-  v <- voom(dge, design)
+  v <- limma::voom(dge, design)
 
   # Fit model
-  fit <- lmFit(v, design)
-  fit <- eBayes(fit)
-
+  fit <- limma::lmFit(v, design)
+  fit <- limma::eBayes(fit)
   # Extract coefficient name (second column of design)
   coef_name <- colnames(design)[2]
 
   # Get results
-  res <- topTable(fit, coef = coef_name, p.value = 0.05, number = Inf)
+  res <- limma::topTable(fit, coef = coef_name, p.value = 0.05, number = Inf)
 
   return(res)
+}
+
+#' Derive TME meta-programs by clustering Hallmarks across NMF factors
+#'
+#' @param nes_mat Matrix from build_nes_matrix(): Hallmarks x factors
+#' @param k Integer. Number of meta-programs to find. If NULL, estimated
+#'   from the dendrogram. Default NULL.
+#' @param nes_thresh Minimum absolute NES to consider a Hallmark active
+#'   in a factor. Default 1.0.
+#' @param plot Logical. Plot the clustering heatmap. Default TRUE.
+#'
+#' @return List with:
+#'   $meta_programs — named list: meta-program label → Hallmark names
+#'   $hallmark_clusters — data frame: Hallmark, meta_program, mean_NES
+#'   $heatmap — pheatmap object
+derive_meta_programs <- function(nes_mat,
+                                  k          = NULL,
+                                  nes_thresh = 1.0,
+                                  plot       = TRUE) {
+
+  require(pheatmap)
+  require(dplyr)
+  require(stringr)
+
+  # ── filter: keep Hallmarks active in at least one factor ─────────────────
+  active <- apply(nes_mat, 1, function(x) any(abs(x) >= nes_thresh))
+  nes_filtered <- nes_mat[active, , drop = FALSE]
+
+  if (nrow(nes_filtered) < 3) {
+    stop("Too few active Hallmarks — lower nes_thresh")
+  }
+
+  # ── cluster Hallmarks by NES profile across factors ───────────────────────
+  # distance between Hallmarks = dissimilarity of their NES profiles
+  d  <- dist(nes_filtered, method = "euclidean")
+  hc <- hclust(d, method = "ward.D2")
+
+  # ── determine k ───────────────────────────────────────────────────────────
+  if (is.null(k)) {
+    # use elbow on within-cluster sum of squares
+    max_k <- min(10, nrow(nes_filtered) - 1)
+    wss   <- sapply(2:max_k, function(ki) {
+      cuts <- cutree(hc, k = ki)
+      sum(sapply(unique(cuts), function(cl) {
+        members <- nes_filtered[cuts == cl, , drop = FALSE]
+        if (nrow(members) == 1) return(0)
+        sum(apply(members, 2, var)) * (nrow(members) - 1)
+      }))
+    })
+    # second derivative elbow
+    d2 <- diff(diff(wss))
+    k  <- which.min(d2) + 2L
+    message("Selected k = ", k, " meta-programs")
+  }
+
+  cluster_assignments <- cutree(hc, k = k)
+
+  # ── build meta-program list ───────────────────────────────────────────────
+  meta_programs <- lapply(seq_len(k), function(cl) {
+    names(cluster_assignments)[cluster_assignments == cl]
+  })
+
+  # ── name each meta-program by its dominant Hallmarks ─────────────────────
+  meta_names <- paste0("MP", seq_len(k))
+  names(meta_programs) <- meta_names
+
+  # ── summary data frame ────────────────────────────────────────────────────
+  hallmark_df <- data.frame(
+    hallmark      = names(cluster_assignments),
+    meta_program  = meta_names[cluster_assignments],
+    cluster_id    = cluster_assignments,
+    mean_NES      = rowMeans(nes_filtered)[names(cluster_assignments)],
+    stringsAsFactors = FALSE
+  ) %>%
+    arrange(cluster_id, desc(abs(mean_NES)))
+
+  # ── heatmap ───────────────────────────────────────────────────────────────
+  p <- NULL
+  if (plot) {
+
+    # annotation: which cluster each Hallmark belongs to
+    ann_row <- data.frame(
+      Meta_program = meta_names[cluster_assignments],
+      row.names    = names(cluster_assignments)
+    )
+
+    # color per meta-program
+    mp_colors <- setNames(
+      scales::hue_pal()(k),
+      meta_names
+    )
+
+    p <- pheatmap::pheatmap(
+      nes_filtered,
+      cluster_rows     = hc,
+      cluster_cols     = TRUE,
+      cutree_rows      = k,
+      annotation_row   = ann_row,
+      annotation_colors = list(Meta_program = mp_colors),
+      color            = colorRampPalette(
+                           c("#2471A3", "white", "#C0392B"))(100),
+      breaks           = seq(-3, 3, length.out = 101),
+      fontsize_row     = 8,
+      fontsize_col     = 9,
+      main             = paste0("Hallmark meta-programs across NMF factors\n",
+                                "(TCGA reference, k = ", k, ")")
+    )
+    grid::grid.newpage()
+    grid::grid.draw(p$gtable)
+  }
+
+  list(
+    meta_programs     = meta_programs,
+    hallmark_clusters = hallmark_df,
+    nes_matrix        = nes_filtered,
+    heatmap           = p,
+    k                 = k
+  )
+}
+
+#' Build NES matrix from compute_factor_gsea() output
+#'
+#' @param gsea_results Output from compute_factor_gsea()
+#' @return Matrix of NES values: Hallmarks x factors
+#'   Missing = Hallmark not significant for that factor, filled with 0
+build_nes_matrix <- function(gsea_results) {
+
+  require(dplyr)
+
+  gsea_list <- gsea_results$GSEA_results
+
+  # get all Hallmarks seen across any factor
+  all_hallmarks <- unique(unlist(
+    lapply(gsea_list, function(res) {
+      if (is.null(res) || nrow(res@result) == 0) return(character(0))
+      res@result$ID
+    })
+  ))
+
+  # build NES matrix: hallmarks x factors
+  nes_mat <- sapply(names(gsea_list), function(fac) {
+
+    res <- gsea_list[[fac]]
+
+    # empty factor
+    if (is.null(res) || nrow(res@result) == 0) {
+      return(setNames(rep(0, length(all_hallmarks)), all_hallmarks))
+    }
+
+    # NES per hallmark — fill missing with 0
+    nes <- setNames(res@result$NES, res@result$ID)
+    scores <- setNames(rep(0, length(all_hallmarks)), all_hallmarks)
+    scores[names(nes)] <- nes
+    scores
+  })
+
+  # nes_mat is now hallmarks x factors
+  nes_mat
+}
+
+#' Map study factors to TCGA meta-programs
+#'
+#' For each study NMF factor, scores it against each TCGA meta-program
+#' by computing the mean NES of the meta-program's Hallmarks in that factor.
+#' The meta-program with the highest mean NES is the best match.
+#'
+#' @param gsea_study Output from compute_factor_gsea() on study cohort.
+#' @param tcga_meta  Output from derive_meta_programs() on TCGA.
+#' @param nes_thresh Minimum absolute NES to report a Hallmark as active.
+#'                   Default 1.0.
+#'
+#' @return Data frame with one row per study factor:
+#'   factor, best_MP, best_score, all_scores, active_hallmarks
+#'
+#' @export
+map_to_metaprograms <- function(gsea_study,
+                                 nes_thresh = 1.0) {
+
+  require(dplyr)
+  require(stringr)
+  require(msigdbr)
+
+  load(system.file("extdata", "TCGA_meta_programs.RData", package = "CellTFusion"))
+
+  # ── build study NES matrix: all 50 Hallmarks x study factors ──────────────
+  all_hallmarks <- msigdbr(species = "Homo sapiens", category = "H") %>%
+    pull(gs_name) %>% unique() %>% sort()
+
+  nes_study <- sapply(names(gsea_study$GSEA_results), function(fac) {
+    scores <- setNames(rep(0, length(all_hallmarks)), all_hallmarks)
+    res    <- gsea_study$GSEA_results[[fac]]
+    if (!is.null(res) && nrow(res@result) > 0) {
+      nes <- setNames(res@result$NES, res@result$ID)
+      scores[names(nes)] <- nes
+    }
+    scores
+  })
+  # nes_study: 50 hallmarks x study factors
+
+  # ── score each study factor against each meta-program ─────────────────────
+  # score = mean NES of the meta-program Hallmarks in this study factor
+  results <- lapply(colnames(nes_study), function(fac) {
+
+    fac_nes <- nes_study[, fac]
+    
+    # score per meta-program
+    mp_scores <- sapply(names(tcga_meta$meta_programs), function(mp) {
+      h <- intersect(tcga_meta$meta_programs[[mp]], names(fac_nes))
+      if (length(h) == 0) return(NA_real_)
+      mean(fac_nes[h])
+    })
+
+    best_mp    <- names(which.max(mp_scores))
+    best_score <- mp_scores[best_mp]
+
+    # active Hallmarks for reporting
+    active_h <- names(fac_nes)[abs(fac_nes) >= nes_thresh]
+    active_h <- str_remove(active_h, "^HALLMARK_")
+
+    data.frame(
+      factor           = fac,
+      best_MP          = best_mp,
+      best_score       = round(best_score, 3),
+      all_scores       = paste(
+        sprintf("%s:%.3f", names(mp_scores), mp_scores),
+        collapse = ", "
+      ),
+      active_hallmarks = paste(active_h, collapse = ", "),
+      stringsAsFactors = FALSE
+    )
+  })
+
+  do.call(rbind, results)
 }
