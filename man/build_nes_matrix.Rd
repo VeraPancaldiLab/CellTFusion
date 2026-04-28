@@ -19,4 +19,3 @@ as columns. Missing Hallmark–factor combinations are set to 0.
 Combines the per-factor GSEA outputs from \code{compute_factor_gsea()} into
 a single matrix. Hallmarks not significant in a given factor are filled with 0.
 }
-\keyword{internal}

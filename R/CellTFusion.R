@@ -122,8 +122,8 @@ CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL
         stop("For differential expression analysis, raw counts must be provided")
       }
 
-      tfs_deg = compute.TFs.activity(res_deg, TF.collection, min_targets_size, universe, return = return, file_name = file_name) # compute TFs activity using DEGs as input
-      tfs_mat <- compute.TFs.activity(counts.norm, TF.collection, min_targets_size, universe, return = return, file_name = file_name) # compute TFs activity using all genes as input
+      tfs_deg = compute.TFs.activity(res_deg, TF.collection, min_targets_size, universe, return = return, file.name = file_name) # compute TFs activity using DEGs as input
+      tfs_mat <- compute.TFs.activity(counts.norm, TF.collection, min_targets_size, universe, return = return, file.name = file_name) # compute TFs activity using all genes as input
       tfs = tfs_mat[,colnames(tfs_mat) %in% colnames(tfs_deg)] # Subset the TFs matrix to keep only those TFs that are significant in the DEGs analysis
     }else{
       stop("For supervised analysis, contrast and ref_level must be provided")
@@ -133,7 +133,7 @@ CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL
       cat("\nRunning unsupervised task............................................................\n")
     }
     if (!batch) {  ## No batch → single matrix
-      tfs <- compute.TFs.activity(counts.norm, TF.collection, min_targets_size, universe, return = return, file_name = file_name)
+      tfs <- compute.TFs.activity(counts.norm, TF.collection, min_targets_size, universe, return = return, file.name = file_name)
     }else {
       if(is.null(coldata) || is.null(batch_id)) {
         stop("When batch = TRUE, coldata and batch_id must be provided")
@@ -150,7 +150,7 @@ CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL
 
       tfs <- lapply(names(cohorts), function(cohort) {
         idx <- cohorts[[cohort]]
-        compute.TFs.activity(counts.norm[, idx, drop = FALSE], TF.collection, min_targets_size, universe)
+        compute.TFs.activity(counts.norm[, idx, drop = FALSE], TF.collection, min_targets_size, universe, file.name = file_name)
       })
 
       names(tfs) <- names(cohorts)
@@ -161,7 +161,9 @@ CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL
   if(verbose){
     cat("\nConstructing TF network............................................................\n")
   }
-  network = compute.WTCNA(TFs.matrix = tfs, batch = batch, network.type = "signed", clustering.method = "ward.D2", minMod, corr_mod, cor_type = "p", return = return)
+  network = compute.WTCNA(TFs.matrix = tfs, batch = batch, network.type = "signed", clustering.method = "ward.D2", minMod, corr_mod, cor_type = "p", return = return, file.name = file_name)
+
+   # 2. Deconvolution analysis and cell groups construction
   # 1.2. Modules characterization
   # cat("\nPerforming TF module characterization............................................................\n")
   # hub_tfs = identify_hub_TFs(t(tfs), network, MM_thresh = 0.8, degree_thresh = 0.9)
@@ -171,7 +173,7 @@ CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL
   if(verbose){
     cat("\nCalculating pathway activities............................................................\n")
   }
-  pathways = compute.pathway.activity(counts.norm, gene_sets = gene_sets, paths = paths, return = return, file_name = file_name)
+  pathways = compute.pathway.activity(counts.norm, gene_sets = gene_sets, paths = paths, return = return, file.name = file_name)
   
   # 3. Deconvolution analysis
   if(verbose){

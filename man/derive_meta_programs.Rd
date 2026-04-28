@@ -33,4 +33,3 @@ character vectors of Hallmark names.
 Hierarchically clusters Hallmark gene sets by their NES profile across NMF
 factors to identify recurrent transcriptional programs in the TME.
 }
-\keyword{internal}
