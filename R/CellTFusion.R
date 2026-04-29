@@ -36,6 +36,9 @@ utils::globalVariables(c("Trait", "Value" ,"level", ".", "Cells_level", "PC1", "
 #' @param quantile_cutoff Numeric between 0 and 1. Quantile threshold for selecting top-contributing
 #'   cell groups per NMF factor. Default is 0.7.
 #' @param return Logical; if TRUE, returns intermediate results from internal functions. Default is TRUE.
+#' @param cancer_type Character. TCGA cancer type abbreviation (e.g., \code{"blca"}, \code{"brca"},
+#'   \code{"cesc"}, \code{"chol"}, \code{"coad"}, \code{"skcm"}) used to load the corresponding
+#'   TCGA meta-programs for TME state mapping. Must match an available meta-program file.
 #' @param verbose Boolen value to whether print or no the function messages
 #'
 #' @return A list containing:
@@ -71,7 +74,7 @@ utils::globalVariables(c("Trait", "Value" ,"level", ".", "Cells_level", "PC1", "
 #'}
 #'
 CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL, batch = F, batch_id = NULL, deconv_methods = c("Quantiseq", "CBSX", "Epidish", "DeconRNASeq", "DWLS"), cbsx.mail = NULL, cbsx.token = NULL, file_name = NULL, task = c("supervised", "unsupervised"),
-                       contrast = NULL, ref_level = NULL, TF.collection = "CollecTRI", min_targets_size = 3, universe = NULL, paths = NULL, gene_sets = NULL, minMod = 3, corr_mod = 0.9, corr = 0.7, corr_type = "spearman", cells_extra = NULL, pval = 0.05, enrich_thresh = 1.5, quantile_cutoff = 0.7, return = T, verbose = T){
+                       contrast = NULL, ref_level = NULL, TF.collection = "CollecTRI", min_targets_size = 3, universe = NULL, paths = NULL, gene_sets = NULL, minMod = 3, corr_mod = 0.9, corr = 0.7, corr_type = "spearman", cells_extra = NULL, pval = 0.05, enrich_thresh = 1.5, quantile_cutoff = 0.7, cancer_type, return = T, verbose = T){
 
   set.seed(123)
 
@@ -187,7 +190,7 @@ CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL
   if(verbose){
     cat("\nCell groups identification............................................................\n")
   }
-  cell.groups = construct_cell_groups(network, dt, batch = batch_vec, pval = pval, clustering.method = "ward.D2")
+  cell.groups = construct_cell_groups(network, dt, batch = batch_vec, pval = pval, clustering.method = "ward.D2", dendrogram_file = file_name, return_dendrogram = return)
 
   # 5. Cell groups latent spaces
   if(verbose){
@@ -215,8 +218,9 @@ CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL
 
   cat("\nMapping to metaprograms............................................................\n")
   metaprograms_mapping <- map_to_metaprograms(
-    gsea_study = gsea_results,
-    nes_thresh = 1.0
+    gsea_study   = gsea_results,
+    cancer_type  = cancer_type,
+    nes_thresh   = 1.0
   )
 
   if(verbose){
@@ -276,58 +280,48 @@ CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL
 #'   return = TRUE
 #' )
 #' }
-cell.groups.computation = function(deconvolution, cell.dendrograms, tfs.module.network, batch = NULL, return = T, pval = 0.05, n_perm = 999){
+cell.groups.computation = function(deconvolution, cell.dendrograms, tfs.module.network, batch = NULL, return = T, pval = 0.05, n_perm = 999, dendrogram_file = NULL, return_dendrogram = FALSE){
 
   cell.groups = list()
   cuts_per_dendrogram = calculate_dendrogram_cuts(cell.dendrograms)
 
+  if(return_dendrogram){
+    plot_dendrogram_clusters(cell.dendrograms, cuts_per_dendrogram, file_name = dendrogram_file)
+  }
+
   for(k in 1:length(cell.dendrograms)){
-    cuts = cuts_per_dendrogram[[k]]
-    groups_cut = list()
-    contador = 1
-    for (i in 1:length(cuts)){
-      clusters <- dendextend::cutree(cell.dendrograms[[k]], h = cuts[i], order_clusters_as_data=FALSE)
-      y = list() #Store cell groups composition
-      x = list() #Store cell groups scores
-      z = list() #Store cell loadings
-      for (j in 1:length(table(clusters))) {
-        cells = names(clusters)[clusters==j]
-        y[[j]] = cells
-        ###################################################Compute score for each cell group
-        pca_group = deconvolution[,colnames(deconvolution) %in% cells, drop = F]
-        color = names(cell.dendrograms)[k]
-        score = compute_composite_score(pca_group, color, tfs.module.network, discard = T, batch = batch, pval = pval, n_perm = n_perm)
-        x[[j]] = score[[1]]
-        z[[j]] = score[[2]]
-      }
+    clusters = cuts_per_dendrogram[[k]]
+    names(clusters) = labels(as.dendrogram(cell.dendrograms[[k]]))
 
-      ###################################################Remove groups with no corr components
-      idy = which(x == "NA")
-      if(length(idy)>0){
-        y = y[-idy]
-        x = x[-idy]
-        z = z[-idy]
-      }
+    cluster_ids = sort(unique(clusters[clusters > 0]))  # exclude unassigned (label 0)
 
-      ###################################################Remove groups with one single feature (deprecated)
-      if(length(x) != 0){
-        groups_cut[[contador]] = remove_single_groups(x, y, z)
-        #groups_cut[[contador]] = list(x, y, z)
-        contador = contador + 1
-      }
+    y = list()
+    x = list()
+    z = list()
 
+    for (j in seq_along(cluster_ids)) {
+      cells = names(clusters)[clusters == cluster_ids[j]]
+      y[[j]] = cells
+      ###################################################Compute score for each cell group
+      pca_group = deconvolution[, colnames(deconvolution) %in% cells, drop = F]
+      color = names(cell.dendrograms)[k]
+      score = compute_composite_score(pca_group, color, tfs.module.network, discard = T, batch = batch, pval = pval, n_perm = n_perm)
+      x[[j]] = score[[1]]
+      z[[j]] = score[[2]]
     }
 
-    if(length(groups_cut)!=0){
-      # Remove NULL elements if exists
-      groups_cut <- Filter(Negate(is.null), groups_cut)
+    ###################################################Remove groups with no corr components
+    idy = which(x == "NA")
+    if(length(idy) > 0){
+      y = y[-idy]
+      x = x[-idy]
+      z = z[-idy]
+    }
 
-      cell.groups.values <- lapply(groups_cut, function(x) x[[1]])
-      cell.groups.names <- lapply(groups_cut, function(x) x[[2]])
-      cell.groups.loadings <- lapply(groups_cut, function(x) x[[3]])
-
-      ###################################################Remove groups with equal composition from different cuts (IMPORTANT TO MAKE IT WITHIN DENDROGRAM - Cell groups can have same composition but belong to a different TF module
-      cell.groups[[k]] = remove_equal(cell.groups.values, cell.groups.names, cell.groups.loadings)
+    ###################################################Remove groups with one single feature (deprecated)
+    if(length(x) != 0){
+      groups_cut = remove_single_groups(x, y, z)
+      cell.groups[[k]] = if(!is.null(groups_cut)) list(groups_cut[[1]], groups_cut[[2]], groups_cut[[3]]) else NA
     }else{
       cell.groups[[k]] <- NA #To avoid the problem when putting NULL (list ignore it and not consider it an element)
     }
@@ -1665,8 +1659,8 @@ compute.composition.matrix = function(deconvolution.subgroupped, cell.groups, ce
 
   idy = which(colSums(presence_matrix)==0)
 
-  warning("Features with no presence in cell groups:", "\n", paste0(names(idy), collapse = ", "))
   if(length(idy)!=0){
+    warning("Features with no presence in cell groups:", "\n", paste0(names(idy), collapse = ", "))
     presence_matrix = presence_matrix[,-idy]
   }
 
@@ -1702,24 +1696,13 @@ compute.composition.matrix = function(deconvolution.subgroupped, cell.groups, ce
 #'   \item{loadings}{A list of numeric vectors indicating the loadings (feature contributions) for each group.}
 #' }
 #' @export
-construct_cell_groups = function(network, dt, batch = NULL, pval = 0.05, clustering.method = "ward.D2", n_perm = 999){
+construct_cell_groups = function(network, dt, batch = NULL, pval = 0.05, clustering.method = "ward.D2", n_perm = 999, dendrogram_file = NULL, return_dendrogram = FALSE){
 
   corr_modules = compute.modules.relationship(network[[1]], dt[[1]], batch = batch, return = T, plot = F, pval = pval)
   cell_dendrograms = identify.cell.groups(corr_modules, clustering.method = clustering.method, height = 20, return = F)
-  cell.groups = cell.groups.computation(dt[[1]], cell_dendrograms, network, batch = batch, return = F, pval = pval, n_perm = n_perm)
-
-  ### Remove low variance cell groups
-  # zero = caret::nearZeroVar(cell.groups[[1]], saveMetrics = TRUE)
-  # cell.groups[[1]] = cell.groups[[1]][, !zero$nzv]
-  # cell.groups[[2]] = cell.groups[[2]][!zero$nzv]
-  # cell.groups[[3]] = cell.groups[[3]][!zero$nzv]
-
-  # colnames(cell.groups[[1]]) = paste0("CG", seq_along(cell.groups[[2]]))
-  # names(cell.groups[[2]]) = paste0("CG", seq_along(cell.groups[[2]]))
-  # names(cell.groups[[3]]) = paste0("CG", seq_along(cell.groups[[2]]))
+  cell.groups = cell.groups.computation(dt[[1]], cell_dendrograms, network, batch = batch, return = F, pval = pval, n_perm = n_perm, dendrogram_file = dendrogram_file, return_dendrogram = return_dendrogram)
 
   names(cell.groups) = c("Cell_groups", "Composition", "Weights")
-
   return(cell.groups)
 }
 
@@ -2016,9 +1999,9 @@ mergeModules = function(data, colors, corr){
       if((module1 %in% colnames(data)) && (module2 %in% colnames(data))){
         colors[which(colors%in%c(substring(module1, 3), substring(module2, 3)))] = substring(module1, 3)
         data <- data %>%
-          dplyr::mutate(new_column = rowMeans(dplyr::select(., module1, module2))) %>%
-          dplyr::rename(module1 = new_column) %>%
-          dplyr::select(., -module1, -module2)
+          dplyr::mutate(new_column = rowMeans(dplyr::select(., dplyr::all_of(c(module1, module2))))) %>%
+          dplyr::rename(!!module1 := new_column) %>%
+          dplyr::select(., -dplyr::all_of(module2))
       }
     }
   }
@@ -2141,56 +2124,68 @@ remove_single_groups = function(cell.values, cell.composition, cell.loadings){
 #'   candidate cut heights.
 #'
 #' @keywords internal
-calculate_dendrogram_cuts = function(cell.group.dendrogram, n_cuts = NULL){
+calculate_dendrogram_cuts = function(cell.group.dendrogram, deep_split = 4, min_cluster_size = 3){
 
   cuts = list()
   for (i in 1:length(cell.group.dendrogram)) {
-    dend_heights <- dendextend::heights_per_k.dendrogram(as.dendrogram(cell.group.dendrogram[[i]])) #Calculate dendrogram heights
+    hc <- as.hclust(as.dendrogram(cell.group.dendrogram[[i]]))
 
-    sorted_heights <- sort(dend_heights) # Sort heights
-    height_diffs <- diff(sorted_heights) # Calculate differences between consecutive heights
+    labels <- dynamicTreeCut::cutreeDynamic(
+      dendro         = hc,
+      method         = "tree",
+      deepSplit      = deep_split,
+      minClusterSize = min_cluster_size,
+      verbose        = 0
+    )
 
-    buffer <- median(height_diffs[height_diffs > 0]) # Buffer: take the median of the non-zero differences
-
-    # Add and rest the buffer to the minimum and maximum height respectively to avoid trivial cuts (clusters with 1 feature and cluster with all features)
-    min_height <- min(sorted_heights) + buffer
-    max_height <- max(sorted_heights) - buffer
-
-    # Ensure the buffer-adjusted min height is valid
-    if (min_height >= max_height) {
-      stop("Buffered minimum height exceeds maximum height for dendrogram")
-    }
-
-    if(is.null(n_cuts)==T){
-      number_cuts = floor(max_height) #Truncate based on highest height of dendrogram
-    }else{
-      number_cuts = n_cuts
-    }
-
-    cut_sequence <- seq(min_height, max_height, length.out = number_cuts)  # Generate a sequence of cut heights between the buffered min and max
-    #cut_sequence = cut_sequence[-c(1, length(cut_sequence))] #Remove first and last cut to avoid trivial groups (either clusters of 1 feature or a single cluster with all of them)
-    cut_sequence <- round(cut_sequence, 2)  # Round the cut heights for cleaner values (2 decimal place)
-
-    cuts[[i]] = cut_sequence
+    cuts[[i]] <- labels
   }
-
-  # #Give format to the list to have a sequence of cuts per dendrogram
-  # if(is.null(n_cuts)==F){
-  #   #Adjust to return the combinations of cuts across all dendrograms
-  #   combined_cuts <- matrix(NA, nrow = n_cuts, ncol = length(cell.group.dendrogram))
-  #
-  #   for (i in 1:length(cuts)) {
-  #     combined_cuts[1:length(cuts[[i]]), i] <- cuts[[i]]
-  #   }
-  #
-  #   combined_cuts_list <- split(combined_cuts, row(combined_cuts))
-  #   return(combined_cuts_list)
-  # }else{
-  #   return(cuts)
-  # }
 
   return(cuts)
 
+}
+
+plot_dendrogram_clusters = function(cell.group.dendrogram, cuts_per_dendrogram, file_name = NULL) {
+  plots <- list()
+
+  for (i in 1:length(cell.group.dendrogram)) {
+    dend   <- as.dendrogram(cell.group.dendrogram[[i]])
+    labels <- cuts_per_dendrogram[[i]]
+    names(labels) <- labels(dend)
+
+    n_clusters <- max(labels)
+    if (n_clusters <= 12) {
+      cluster_colors <- RColorBrewer::brewer.pal(max(3, n_clusters), "Paired")[1:n_clusters]
+    } else {
+      cluster_colors <- colorspace::rainbow_hcl(n_clusters, c = 80, l = 55)
+    }
+
+    dend <- dendextend::color_branches(dend, clusters = labels[order.dendrogram(dend)],
+                                       col = cluster_colors)
+    dend <- dendextend::set(dend, "labels", rep("", length(labels(dend))))  # suppress leaf labels
+    dend <- dendextend::set(dend, "branches_lwd", 2)
+
+    p <- dendextend::as.ggdend(dend) |>
+      ggplot2::ggplot() +
+      ggplot2::coord_flip() +
+      ggplot2::scale_y_reverse() +
+      ggplot2::ggtitle(paste("Dendrogram:", names(cell.group.dendrogram)[i])) +
+      ggplot2::theme_classic() +
+      ggplot2::theme(axis.text   = ggplot2::element_blank(),
+                     axis.ticks  = ggplot2::element_blank(),
+                     plot.title  = ggplot2::element_text(hjust = 0.5, face = "bold")) +
+      ggplot2::labs(x = NULL, y = "Height")
+
+    plots[[i]] <- p
+  }
+
+  if (!is.null(file_name)) {
+    out_path <- file.path("Results", paste0("Dendrogram_color_clusters_", file_name, ".pdf"))
+    pdf(out_path, width = 10, height = 6 * length(cell.group.dendrogram))
+    for (p in plots) print(p)
+    dev.off()
+    message("Dendrogram plots saved to: ", out_path)
+  }
 
 }
 
@@ -3761,36 +3756,36 @@ compute_cells_niches <- function(latent_factors, dt, cell.groups,
 
     g <- igraph::graph_from_data_frame(edges, directed = FALSE)
 
-    V(g)$type <- ifelse(V(g)$name == factor_name, "factor", "celltype")
+    igraph::V(g)$type <- ifelse(igraph::V(g)$name == factor_name, "factor", "celltype")
 
     # node size — factor fixed, cell types scaled by edge weight
-    ct_names  <- V(g)$name[V(g)$type == "celltype"]
-    ct_sizes  <- rescale(edge_weights[ct_names], to = c(6, 14))
+    ct_names  <- igraph::V(g)$name[igraph::V(g)$type == "celltype"]
+    ct_sizes  <- scales::rescale(edge_weights[ct_names], to = c(6, 14))
 
-    V(g)$size <- ifelse(
-      V(g)$name == factor_name,
+    igraph::V(g)$size <- ifelse(
+      igraph::V(g)$name == factor_name,
       18,
-      ct_sizes[V(g)$name]
+      ct_sizes[igraph::V(g)$name]
     )
 
     # node color — factor gold, cell types by edge weight magnitude
     max_ew <- max(edge_weights)
-    V(g)$color <- sapply(V(g)$name, function(v) {
+    igraph::V(g)$color <- sapply(igraph::V(g)$name, function(v) {
       if (v == factor_name) return("#E69F00")
       # shade from light to dark orange proportional to weight
       w <- edge_weights[v] / max_ew
       colorRampPalette(c("#F5CBA7", "#D55E00"))(100)[round(w * 99) + 1]
     })
 
-    V(g)$frame.color <- "grey20"
-    V(g)$label.color <- "black"
-    V(g)$label.cex   <- 0.9
+    igraph::V(g)$frame.color <- "grey20"
+    igraph::V(g)$label.color <- "black"
+    igraph::V(g)$label.cex   <- 0.9
 
     # edge width scaled by weight
     ew_ordered  <- edge_weights[edges$to]
-    E(g)$weight <- ew_ordered
-    E(g)$width  <- rescale(ew_ordered, to = c(1, 5))
-    E(g)$color  <- "#D55E00"
+    igraph::E(g)$weight <- ew_ordered
+    igraph::E(g)$width  <- scales::rescale(ew_ordered, to = c(1, 5))
+    igraph::E(g)$color  <- "#D55E00"
 
     # Node size is proportional to the absolute value of edge_weights.
     #
@@ -3802,8 +3797,8 @@ compute_cells_niches <- function(latent_factors, dt, cell.groups,
     #
     # Magnitude = cumulative contribution across all cell groups for this factor.
 
-    lay <- layout_as_star(g,
-                           center = which(V(g)$name == factor_name))
+    lay <- igraph::layout_as_star(g,
+                           center = which(igraph::V(g)$name == factor_name))
 
     if(return){
       pdf(paste0("Results/Network_", factor_name, "_", file_name, ".pdf"))
@@ -4254,7 +4249,7 @@ compute_factor_gsea <- function(RNA.tpm,
   # -----------------------------------------
   # Retrieve Hallmark gene sets
   # -----------------------------------------
-  hallmark_df <- msigdbr::msigdbr(species = "Homo sapiens", category = "H")
+  hallmark_df <- msigdbr::msigdbr(species = "Homo sapiens", collection = "H")
   gene_sets <- split(hallmark_df$gene_symbol, hallmark_df$gs_name)
 
   term2gene <- data.frame(
@@ -4299,7 +4294,8 @@ compute_factor_gsea <- function(RNA.tpm,
       geneList = tstats,
       TERM2GENE = term2gene,
       verbose = FALSE,
-      eps = 0
+      eps = 0,
+      nPermSimple = 10000
     )
 
     gsea_results_list[[feature_name]] <- gsea_res
@@ -4412,7 +4408,7 @@ run_deg_analysis <- function(counts, coldata, group_col, ref_level = NULL) {
 #' @export
 derive_meta_programs <- function(nes_mat,
                                   k          = NULL,
-                                  nes_thresh = 1.0,
+                                  nes_thresh = 1.0, file_name = NULL,
                                   plot       = TRUE) {
 
   # ── filter: keep Hallmarks active in at least one factor ─────────────────
@@ -4483,6 +4479,8 @@ derive_meta_programs <- function(nes_mat,
       meta_names
     )
 
+    pdf(paste0("Results/TCGA_meta_programs_", file_name, ".pdf"),
+        width = 8, height = 10)
     p <- pheatmap::pheatmap(
       nes_filtered,
       cluster_rows     = hc,
@@ -4498,8 +4496,8 @@ derive_meta_programs <- function(nes_mat,
       main             = paste0("Hallmark meta-programs across NMF factors\n",
                                 "(TCGA reference, k = ", k, ")")
     )
-    grid::grid.newpage()
-    grid::grid.draw(p$gtable)
+    dev.off()
+
   }
 
   list(
@@ -4564,7 +4562,9 @@ build_nes_matrix <- function(gsea_results) {
 #' The meta-program with the highest mean NES is the best match.
 #'
 #' @param gsea_study Output from compute_factor_gsea() on study cohort.
-#' @param tcga_meta  Output from derive_meta_programs() on TCGA.
+#' @param cancer_type Character. TCGA cancer type abbreviation (e.g., \code{"blca"}, \code{"brca"},
+#'   \code{"cesc"}, \code{"chol"}, \code{"coad"}, \code{"skcm"}) identifying which pre-built
+#'   TCGA meta-program file to load from \code{inst/extdata/}.
 #' @param nes_thresh Minimum absolute NES to report a Hallmark as active.
 #'                   Default 1.0.
 #'
@@ -4573,13 +4573,22 @@ build_nes_matrix <- function(gsea_results) {
 #'
 #' @export
 map_to_metaprograms <- function(gsea_study,
+                                 cancer_type,
                                  nes_thresh = 1.0) {
 
-  load(system.file("extdata", "TCGA_meta_programs.RData", package = "CellTFusion"))
+  cancer_type <- tolower(cancer_type)
+  mp_file <- system.file("extdata",
+                         paste0("TCGA_meta_programs_", cancer_type, ".RData"),
+                         package = "CellTFusion")
+  if (mp_file == "") {
+    stop("No meta-program file found for cancer type '", cancer_type,
+         "'. Available types: blca, brca, cesc, chol, coad, skcm.")
+  }
+  load(mp_file)
 
   # ── build study NES matrix: all 50 Hallmarks x study factors ──────────────
-  all_hallmarks <- msigdbr(species = "Homo sapiens", category = "H") %>%
-    pull(gs_name) %>% unique() %>% sort()
+  all_hallmarks <- msigdbr::msigdbr(species = "Homo sapiens", collection = "H") %>%
+    dplyr::pull(gs_name) %>% unique() %>% sort()
 
   nes_study <- sapply(names(gsea_study$GSEA_results), function(fac) {
     scores <- setNames(rep(0, length(all_hallmarks)), all_hallmarks)
@@ -4599,8 +4608,8 @@ map_to_metaprograms <- function(gsea_study,
     fac_nes <- nes_study[, fac]
     
     # score per meta-program
-    mp_scores <- sapply(names(tcga_meta$meta_programs), function(mp) {
-      h <- intersect(tcga_meta$meta_programs[[mp]], names(fac_nes))
+    mp_scores <- sapply(names(meta_programs), function(mp) {
+      h <- intersect(meta_programs[[mp]], names(fac_nes))
       if (length(h) == 0) return(NA_real_)
       mean(fac_nes[h])
     })
@@ -4610,7 +4619,7 @@ map_to_metaprograms <- function(gsea_study,
 
     # active Hallmarks for reporting
     active_h <- names(fac_nes)[abs(fac_nes) >= nes_thresh]
-    active_h <- str_remove(active_h, "^HALLMARK_")
+    active_h <- stringr::str_remove(active_h, "^HALLMARK_")
 
     data.frame(
       factor           = fac,

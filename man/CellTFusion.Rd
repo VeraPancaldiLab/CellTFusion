@@ -31,6 +31,7 @@ CellTFusion(
   pval = 0.05,
   enrich_thresh = 1.5,
   quantile_cutoff = 0.7,
+  cancer_type,
   return = T,
   verbose = T
 )
@@ -95,6 +96,10 @@ required to include a cell type in a latent factor's niche. Default is 1.5.}
 
 \item{quantile_cutoff}{Numeric between 0 and 1. Quantile threshold for selecting top-contributing
 cell groups per NMF factor. Default is 0.7.}
+
+\item{cancer_type}{Character. TCGA cancer type abbreviation (e.g., \code{"blca"}, \code{"brca"},
+\code{"cesc"}, \code{"chol"}, \code{"coad"}, \code{"skcm"}) used to load the corresponding
+TCGA meta-programs for TME state mapping. Must match an available meta-program file.}
 
 \item{return}{Logical; if TRUE, returns intermediate results from internal functions. Default is TRUE.}
 

@@ -4,7 +4,13 @@
 \alias{derive_meta_programs}
 \title{Derive TME meta-programs by clustering Hallmarks across NMF factors}
 \usage{
-derive_meta_programs(nes_mat, k = NULL, nes_thresh = 1, plot = TRUE)
+derive_meta_programs(
+  nes_mat,
+  k = NULL,
+  nes_thresh = 1,
+  file_name = NULL,
+  plot = TRUE
+)
 }
 \arguments{
 \item{nes_mat}{A numeric matrix of NES values (Hallmarks x factors) as

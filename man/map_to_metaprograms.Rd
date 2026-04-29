@@ -4,15 +4,17 @@
 \alias{map_to_metaprograms}
 \title{Map study factors to TCGA meta-programs}
 \usage{
-map_to_metaprograms(gsea_study, nes_thresh = 1)
+map_to_metaprograms(gsea_study, cancer_type, nes_thresh = 1)
 }
 \arguments{
 \item{gsea_study}{Output from compute_factor_gsea() on study cohort.}
 
+\item{cancer_type}{Character. TCGA cancer type abbreviation (e.g., \code{"blca"}, \code{"brca"},
+\code{"cesc"}, \code{"chol"}, \code{"coad"}, \code{"skcm"}) identifying which pre-built
+TCGA meta-program file to load from \code{inst/extdata/}.}
+
 \item{nes_thresh}{Minimum absolute NES to report a Hallmark as active.
 Default 1.0.}
-
-\item{tcga_meta}{Output from derive_meta_programs() on TCGA.}
 }
 \value{
 Data frame with one row per study factor:

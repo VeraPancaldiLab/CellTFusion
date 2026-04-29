@@ -4,7 +4,11 @@
 \alias{calculate_dendrogram_cuts}
 \title{Calculate dendrogram cut heights}
 \usage{
-calculate_dendrogram_cuts(cell.group.dendrogram, n_cuts = NULL)
+calculate_dendrogram_cuts(
+  cell.group.dendrogram,
+  deep_split = 4,
+  min_cluster_size = 3
+)
 }
 \arguments{
 \item{cell.group.dendrogram}{A list of \code{hclust} objects, one per TF module,

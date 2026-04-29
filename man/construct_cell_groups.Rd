@@ -10,7 +10,9 @@ construct_cell_groups(
   batch = NULL,
   pval = 0.05,
   clustering.method = "ward.D2",
-  n_perm = 999
+  n_perm = 999,
+  dendrogram_file = NULL,
+  return_dendrogram = FALSE
 )
 }
 \arguments{

@@ -11,7 +11,9 @@ cell.groups.computation(
   batch = NULL,
   return = T,
   pval = 0.05,
-  n_perm = 999
+  n_perm = 999,
+  dendrogram_file = NULL,
+  return_dendrogram = FALSE
 )
 }
 \arguments{
