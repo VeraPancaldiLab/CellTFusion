@@ -2181,7 +2181,7 @@ plot_dendrogram_clusters = function(cell.group.dendrogram, cuts_per_dendrogram, 
 
   if (!is.null(file_name)) {
     out_path <- file.path("Results", paste0("Dendrogram_color_clusters_", file_name, ".pdf"))
-    pdf(out_path, width = 10, height = 6 * length(cell.group.dendrogram))
+    pdf(out_path, width = 10, height = 12)
     for (p in plots) print(p)
     dev.off()
     message("Dendrogram plots saved to: ", out_path)
@@ -4608,8 +4608,8 @@ map_to_metaprograms <- function(gsea_study,
     fac_nes <- nes_study[, fac]
     
     # score per meta-program
-    mp_scores <- sapply(names(meta_programs), function(mp) {
-      h <- intersect(meta_programs[[mp]], names(fac_nes))
+    mp_scores <- sapply(names(meta_programs$meta_programs), function(mp) {
+      h <- intersect(meta_programs$meta_programs[[mp]], names(fac_nes))
       if (length(h) == 0) return(NA_real_)
       mean(fac_nes[h])
     })
