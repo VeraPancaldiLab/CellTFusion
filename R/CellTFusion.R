@@ -4659,6 +4659,10 @@ map_factors_to_metaprograms <- function(gsea_study,
   result_df
 }
 
+#' @rdname map_to_metaprograms
+#' @export
+map_to_metaprograms <- map_factors_to_metaprograms
+
 #' Annotate meta-programs with Bagaev TME subtypes
 #'
 #' Assigns each meta-program a TME subtype (IE, IE/F, F, D) by majority vote
