@@ -211,13 +211,13 @@ CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL
   gsea_results <- compute_factor_gsea(
     RNA.tpm      = counts.norm,          # genes x samples
     features_df  = latent_spaces$Z,      # samples x factors
-    plot_dot     = return,
+    plot_dot     = FALSE,
     top_n        = 10,
     file_name    = file_name
   )
 
   cat("\nMapping to metaprograms............................................................\n")
-  metaprograms_mapping <- map_to_metaprograms(
+  metaprograms_mapping <- map_factors_to_metaprograms(
     gsea_study   = gsea_results,
     cancer_type  = cancer_type,
     nes_thresh   = 1.0
@@ -1288,7 +1288,7 @@ compute.WTCNA <- function(TFs.matrix, batch = FALSE, network.type = "signed", cl
     sink()
 
     if(return){
-      pdf("Results/Soft_Threshold")
+      pdf("Results/Soft_Threshold.pdf")
       plot(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2],
            xlab="Soft Threshold (power)",ylab="Scale Free Topology Model Fit,signed R^2",type="n",
            main = paste("Scale independence"))
@@ -1334,7 +1334,7 @@ compute.WTCNA <- function(TFs.matrix, batch = FALSE, network.type = "signed", cl
     gc()
 
     if(return){
-      pdf("Results/Gene_dendrogram_and_module_colors")
+      pdf("Results/Gene_dendrogram_and_module_colors.pdf")
       WGCNA::plotDendroAndColors(geneTree, dynamicColors, "Dynamic Tree Cut",
                                  dendroLabels = FALSE, hang = 0.03,
                                  addGuide = TRUE, guideHang = 0.05,
@@ -1368,7 +1368,7 @@ compute.WTCNA <- function(TFs.matrix, batch = FALSE, network.type = "signed", cl
     names(modtfs) = modules
 
     if(return){
-      pdf("Results/Gene_dendrogram_and_module_colors_after_merging")
+      pdf("Results/Gene_dendrogram_and_module_colors_after_merging.pdf")
       WGCNA::plotDendroAndColors(geneTree, dynamicColors, "Dynamic Tree Cut",
                                  dendroLabels = FALSE, hang = 0.03,
                                  addGuide = TRUE, guideHang = 0.05,
@@ -2000,8 +2000,8 @@ mergeModules = function(data, colors, corr){
         colors[which(colors%in%c(substring(module1, 3), substring(module2, 3)))] = substring(module1, 3)
         data <- data %>%
           dplyr::mutate(new_column = rowMeans(dplyr::select(., dplyr::all_of(c(module1, module2))))) %>%
-          dplyr::rename(!!module1 := new_column) %>%
-          dplyr::select(., -dplyr::all_of(module2))
+          dplyr::select(., -dplyr::all_of(c(module1, module2))) %>%
+          dplyr::rename(!!module1 := new_column)
       }
     }
   }
@@ -4386,6 +4386,9 @@ run_deg_analysis <- function(counts, coldata, group_col, ref_level = NULL) {
 #'
 #' Hierarchically clusters Hallmark gene sets by their NES profile across NMF
 #' factors to identify recurrent transcriptional programs in the TME.
+#' Optionally annotates each NMF factor with a Bagaev et al. (2021) MFP
+#' subtype (IE, IE/F, F, D) when \code{Z}, \code{annot}, and
+#' \code{cancer_name} are all supplied.
 #'
 #' @param nes_mat A numeric matrix of NES values (Hallmarks x factors) as
 #'   returned by \code{build_nes_matrix()}.
@@ -4394,6 +4397,15 @@ run_deg_analysis <- function(counts, coldata, group_col, ref_level = NULL) {
 #' @param nes_thresh Numeric. Minimum absolute NES for a Hallmark to be
 #'   considered active in a factor. Default 1.0.
 #' @param plot Logical. If \code{TRUE} (default), saves a clustering heatmap.
+#' @param Z Optional samples x factors numeric matrix of NMF factor scores.
+#'   Required for Bagaev MFP annotation.
+#' @param annot Optional data frame loaded from \code{annotation.tsv}. If
+#'   \code{NULL} (default), loaded automatically from
+#'   \code{inst/extdata/annotation.tsv} when \code{Z} and \code{cancer_name}
+#'   are provided.
+#' @param cancer_name Optional character string matching the
+#'   \code{TCGA_project} field (case-insensitive, e.g. \code{"skcm"}).
+#'   Required for Bagaev MFP annotation.
 #'
 #' @return A list with:
 #' \itemize{
@@ -4403,13 +4415,20 @@ run_deg_analysis <- function(counts, coldata, group_col, ref_level = NULL) {
 #'     \code{meta_program}, and \code{mean_NES}.
 #'   \item \code{heatmap}: The \code{pheatmap} object.
 #'   \item \code{k}: The number of meta-programs used.
+#'   \item \code{factor_mfp}: (Only when \code{Z}, \code{annot}, and
+#'     \code{cancer_name} are provided) Data frame with columns
+#'     \code{factor}, \code{best_MFP}, \code{cor_IE}, \code{cor_IEF},
+#'     \code{cor_F}, \code{cor_D}, \code{n_samples}.
 #' }
 #'
 #' @export
-derive_meta_programs <- function(nes_mat,
-                                  k          = NULL,
-                                  nes_thresh = 1.0, file_name = NULL,
-                                  plot       = TRUE) {
+derive_meta_programs <- function(nes_mat, gsea_results,
+                                 k          = NULL,
+                                 nes_thresh = 1.0, file_name = NULL,
+                                 plot       = TRUE) {
+
+  ### Build NES matrix from GSEA results
+  nes_mat <- build_nes_matrix(gsea_results)
 
   # ── filter: keep Hallmarks active in at least one factor ─────────────────
   active <- apply(nes_mat, 1, function(x) any(abs(x) >= nes_thresh))
@@ -4453,16 +4472,6 @@ derive_meta_programs <- function(nes_mat,
   meta_names <- paste0("MP", seq_len(k))
   names(meta_programs) <- meta_names
 
-  # ── summary data frame ────────────────────────────────────────────────────
-  hallmark_df <- data.frame(
-    hallmark      = names(cluster_assignments),
-    meta_program  = meta_names[cluster_assignments],
-    cluster_id    = cluster_assignments,
-    mean_NES      = rowMeans(nes_filtered)[names(cluster_assignments)],
-    stringsAsFactors = FALSE
-  ) %>%
-    arrange(cluster_id, desc(abs(mean_NES)))
-
   # ── heatmap ───────────────────────────────────────────────────────────────
   p <- NULL
   if (plot) {
@@ -4500,13 +4509,14 @@ derive_meta_programs <- function(nes_mat,
 
   }
 
-  list(
-    meta_programs     = meta_programs,
-    hallmark_clusters = hallmark_df,
-    nes_matrix        = nes_filtered,
-    heatmap           = p,
-    k                 = k
+  df <- data.frame(
+    meta_program = names(meta_programs),
+    hallmarks    = vapply(meta_programs, paste, character(1L), collapse = ", "),
+    stringsAsFactors = FALSE,
+    row.names = NULL
   )
+
+  return(df)
 }
 
 #' Build a Hallmarks x factors NES matrix from GSEA results
@@ -4559,7 +4569,10 @@ build_nes_matrix <- function(gsea_results) {
 #'
 #' For each study NMF factor, scores it against each TCGA meta-program
 #' by computing the mean NES of the meta-program's Hallmarks in that factor.
-#' The meta-program with the highest mean NES is the best match.
+#' The meta-program with the highest mean NES is the best match. If Bagaev
+#' MFP annotations are available (either embedded in the loaded
+#' meta-program object or in \code{inst/extdata/bagaev_factor_annotations.RData}),
+#' a \code{mfp_label} column is appended to the output.
 #'
 #' @param gsea_study Output from compute_factor_gsea() on study cohort.
 #' @param cancer_type Character. TCGA cancer type abbreviation (e.g., \code{"blca"}, \code{"brca"},
@@ -4572,19 +4585,22 @@ build_nes_matrix <- function(gsea_results) {
 #'   factor, best_MP, best_score, all_scores, active_hallmarks
 #'
 #' @export
-map_to_metaprograms <- function(gsea_study,
-                                 cancer_type,
-                                 nes_thresh = 1.0) {
+map_factors_to_metaprograms <- function(gsea_study,
+                                cancer_type,
+                                nes_thresh = 1.0, mp_file = NULL) {
 
-  cancer_type <- tolower(cancer_type)
-  mp_file <- system.file("extdata",
-                         paste0("TCGA_meta_programs_", cancer_type, ".RData"),
-                         package = "CellTFusion")
-  if (mp_file == "") {
-    stop("No meta-program file found for cancer type '", cancer_type,
-         "'. Available types: blca, brca, cesc, chol, coad, skcm.")
+  if(is.null(mp_file)){
+    cancer_type <- tolower(cancer_type)
+    mp_file <- system.file("extdata",
+                          paste0("TCGA_meta_programs_", cancer_type, ".RData"),
+                          package = "CellTFusion")
+    if (mp_file == "") {
+      stop("No meta-program file found for cancer type '", cancer_type,
+          "'. Available types: blca, brca, cesc, chol, coad, skcm.")
+    }
+
+    load(mp_file)
   }
-  load(mp_file)
 
   # ── build study NES matrix: all 50 Hallmarks x study factors ──────────────
   all_hallmarks <- msigdbr::msigdbr(species = "Homo sapiens", collection = "H") %>%
@@ -4606,20 +4622,17 @@ map_to_metaprograms <- function(gsea_study,
   results <- lapply(colnames(nes_study), function(fac) {
 
     fac_nes <- nes_study[, fac]
-    
-    # score per meta-program
-    mp_scores <- sapply(names(meta_programs$meta_programs), function(mp) {
-      h <- intersect(meta_programs$meta_programs[[mp]], names(fac_nes))
+
+    mp_scores <- sapply(meta_programs$meta_program, function(mp) {
+      hallmarks <- strsplit(
+        meta_programs$hallmarks[meta_programs$meta_program == mp], ", ")[[1]]
+      h <- intersect(hallmarks, names(fac_nes))
       if (length(h) == 0) return(NA_real_)
       mean(fac_nes[h])
     })
 
     best_mp    <- names(which.max(mp_scores))
     best_score <- mp_scores[best_mp]
-
-    # active Hallmarks for reporting
-    active_h <- names(fac_nes)[abs(fac_nes) >= nes_thresh]
-    active_h <- stringr::str_remove(active_h, "^HALLMARK_")
 
     data.frame(
       factor           = fac,
@@ -4629,10 +4642,202 @@ map_to_metaprograms <- function(gsea_study,
         sprintf("%s:%.3f", names(mp_scores), mp_scores),
         collapse = ", "
       ),
-      active_hallmarks = paste(active_h, collapse = ", "),
       stringsAsFactors = FALSE
     )
   })
 
-  do.call(rbind, results)
+  result_df <- do.call(rbind, results)
+
+  # attach TME subtype from reference if available
+  if ("TME_subtype" %in% colnames(meta_programs)) {
+    result_df <- merge(result_df,
+                       meta_programs[, c("meta_program", "TME_subtype")],
+                       by.x = "best_MP", by.y = "meta_program",
+                       all.x = TRUE, sort = FALSE)
+  }
+
+  result_df
+}
+
+#' Annotate meta-programs with Bagaev TME subtypes
+#'
+#' Assigns each meta-program a TME subtype (IE, IE/F, F, D) by majority vote
+#' across the TCGA factors that were mapped to it.
+#'
+#' @param meta_programs_df Data frame output of \code{derive_meta_programs()},
+#'   with columns \code{meta_program} and \code{hallmarks}.
+#' @param factor_tme_df Data frame output of \code{map_factors_to_TME()},
+#'   with columns \code{factor} and \code{best_MFP}.
+#' @param factors_mp_df Data frame output of \code{map_factors_to_metaprograms()}
+#'   run on the TCGA factors themselves, with columns \code{factor} and
+#'   \code{best_MP}.
+#'
+#' @return \code{meta_programs_df} with an additional \code{TME_subtype} column.
+#'
+#' @export
+annotate_metaprograms_TME <- function(meta_programs_df, factor_tme_df,
+                                      factors_mp_df) {
+
+  all_mps <- meta_programs_df$meta_program
+
+  # parse all_scores into a factor x MP score matrix
+  score_mat <- do.call(rbind, lapply(seq_len(nrow(factors_mp_df)), function(i) {
+    pairs  <- strsplit(factors_mp_df$all_scores[i], ", ")[[1]]
+    kv     <- strsplit(pairs, ":")
+    scores <- setNames(
+      as.numeric(vapply(kv, `[[`, character(1L), 2L)),
+      vapply(kv, `[[`, character(1L), 1L)
+    )
+    scores[all_mps]
+  }))
+  rownames(score_mat) <- factors_mp_df$factor
+
+  mfp_lookup <- setNames(factor_tme_df$best_MFP, factor_tme_df$factor)
+
+  # for each MP, weighted majority vote across factors with positive score
+  assign_mfp <- function(mp) {
+    w      <- score_mat[, mp]
+    w[is.na(w)] <- 0
+    pos    <- w > 0
+    if (!any(pos)) return("uncharacterized")
+    labels  <- mfp_lookup[rownames(score_mat)[pos]]
+    weights <- w[pos]
+    labels  <- labels[!is.na(labels) & labels != "uncharacterized"]
+    weights <- weights[names(labels)]
+    if (length(labels) == 0) return("uncharacterized")
+    agg    <- tapply(weights, labels, sum)
+    winner <- names(which(agg == max(agg)))
+    if (length(winner) > 1) return("uncharacterized")
+    winner
+  }
+
+  mp_mfp_df <- data.frame(
+    meta_program = all_mps,
+    TME_subtype  = vapply(all_mps, assign_mfp, character(1L)),
+    stringsAsFactors = FALSE
+  )
+
+  merge(meta_programs_df, mp_mfp_df, by = "meta_program", all.x = TRUE)
+}
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Bagaev MFP annotation helpers
+# ─────────────────────────────────────────────────────────────────────────────
+
+#' Annotate NMF factors with Bagaev et al. (2021) MFP subtypes
+#'
+#' For a single cancer type, matches TCGA patients present in the NMF factor
+#' score matrix \code{Z} to the Bagaev annotation, then computes Spearman
+#' correlations between each factor and each one-hot-encoded MFP subtype
+#' (IE, IE/F, F, D). The best-matching subtype per factor is returned; factors
+#' with a maximum absolute correlation below 0.15 are labelled
+#' \code{"uncharacterized"}.
+#'
+#' @param cancer_name Character. Cancer type abbreviation matching the
+#'   \code{TCGA_project} column of \code{annot} (case-insensitive,
+#'   e.g. \code{"skcm"}).
+#' @param Z Numeric matrix. Samples x factors NMF score matrix (row names =
+#'   TCGA barcodes).
+#' @param meta_programs Output list from \code{derive_meta_programs()} — used
+#'   only for its structure; the annotation is factor-level, not Hallmark-level.
+#' @param annot Optional data frame with row names set to TCGA barcodes and
+#'   columns \code{TCGA_project} and \code{MFP}. If \code{NULL} (default),
+#'   loaded automatically from \code{inst/extdata/annotation.tsv}.
+#'
+#' @return A data frame with columns \code{factor}, \code{best_MFP},
+#'   \code{kw_pval}, \code{median_IE}, \code{median_IEF}, \code{median_F},
+#'   \code{median_D}, \code{n_samples}, or \code{NULL} if fewer than 10
+#'   patients are matched.
+#'
+#' @export
+map_factors_to_TME <- function(cancer_name, Z) {
+
+  # annot_file <- system.file("extdata", "annotation.tsv", package = "CellTFusion")
+  # if (annot_file == "") stop("annotation.tsv not found in inst/extdata.")
+  annot_file = "~/Documents/CellTFusion/inst/extdata/annotation.tsv"
+  annot <- read.delim(annot_file, row.names = 1, check.names = FALSE,
+                      stringsAsFactors = FALSE)
+  
+  # ── subset annotation to this cancer type ────────────────────────────────
+  annot_ct <- annot[toupper(annot$TCGA_project) == toupper(cancer_name), ,
+                    drop = FALSE]
+  if (nrow(annot_ct) == 0) {
+    warning("No annotation rows found for cancer type '", cancer_name, "'.")
+    return(NULL)
+  }
+
+  # ── harmonize barcodes: keep only first 3 TCGA parts (TCGA-XX-XXXX) ─────
+  trunc_barcode <- function(x, sep = "-") {
+    parts <- strsplit(x, sep, fixed = TRUE)
+    vapply(parts, function(p) paste(p[seq_len(min(3L, length(p)))], collapse = "-"),
+           character(1L))
+  }
+
+  # Z rownames may use "." instead of "-" (R coerces "-" in colnames/rownames)
+  z_sep   <- if (any(grepl(".", rownames(Z), fixed = TRUE)) &&
+                 !any(grepl("-", rownames(Z), fixed = TRUE))) "." else "-"
+  rownames(Z) = trunc_barcode(rownames(Z), sep = z_sep)
+  rownames(annot_ct) = trunc_barcode(rownames(annot_ct), sep = "-")
+
+  # remove duplicates introduced by truncation — keep first occurrence
+  Z        <- Z[!duplicated(rownames(Z)), , drop = FALSE]
+  annot_ct <- annot_ct[!duplicated(rownames(annot_ct)), , drop = FALSE]
+
+  common_short <- intersect(rownames(Z), rownames(annot_ct))
+
+  if (length(common_short) < 10) {
+    warning("Only ", length(common_short), " matched patients for '",
+            cancer_name, "' — skipping Bagaev annotation.")
+    return(NULL)
+  }
+
+  Z_matched    <- Z[rownames(Z) %in% common_short, , drop = FALSE]
+  annot_matched <- annot_ct[rownames(annot_ct) %in% common_short, , drop = FALSE]
+
+  # align rows using truncated barcodes
+  Z_matched    <- Z_matched[rownames(annot_matched), , drop = FALSE]
+
+  if(all.equal(rownames(Z_matched), rownames(annot_matched))==F) {
+    stop("NMF matrix and TME annotation are not aligned")
+  } 
+
+  # ── drop rows with NA/empty MFP ──────────────────────────────────────────
+  mfp_vals  <- annot_matched$MFP
+  Z_matched <- Z_matched[!is.na(mfp_vals), , drop = FALSE]
+  mfp_vals  <- factor(mfp_vals[!is.na(mfp_vals)], levels = c("IE", "IE/F", "F", "D"))
+
+  n_samples <- nrow(Z_matched)
+
+  # ── Kruskal-Wallis + median-based labeling ────────────────────────────────
+  result_rows <- lapply(colnames(Z_matched), function(fac) {
+    fac_scores <- Z_matched[, fac]
+
+    # Kruskal-Wallis across the 4 MFP groups
+    kw       <- kruskal.test(fac_scores ~ mfp_vals)
+    kw_pval  <- kw$p.value
+
+    # median factor score per group — label = group with highest median
+    group_medians <- tapply(fac_scores, mfp_vals, median, na.rm = TRUE)
+
+    best_mfp <- if (kw_pval < 0.05) {
+      names(which.max(group_medians))
+    } else {
+      "uncharacterized"
+    }
+
+    data.frame(
+      factor           = fac,
+      best_MFP         = best_mfp,
+      kw_pval          = round(kw_pval, 4),
+      median_IE        = round(group_medians["IE"],   4),
+      median_IEF       = round(group_medians["IE/F"], 4),
+      median_F         = round(group_medians["F"],    4),
+      median_D         = round(group_medians["D"],    4),
+      n_samples        = n_samples,
+      stringsAsFactors = FALSE,
+      row.names        = NULL
+    )
+  })
+
+  do.call(rbind, result_rows)
 }
