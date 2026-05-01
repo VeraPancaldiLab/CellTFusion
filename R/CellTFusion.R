@@ -4422,35 +4422,27 @@ run_deg_analysis <- function(counts, coldata, group_col, ref_level = NULL) {
 #' }
 #'
 #' @export
-derive_meta_programs <- function(nes_mat, gsea_results,
+derive_meta_programs <- function(gsea_results,
                                  k          = NULL,
-                                 nes_thresh = 1.0, file_name = NULL,
+                                 file_name = NULL,
                                  plot       = TRUE) {
 
   ### Build NES matrix from GSEA results
   nes_mat <- build_nes_matrix(gsea_results)
 
-  # ── filter: keep Hallmarks active in at least one factor ─────────────────
-  active <- apply(nes_mat, 1, function(x) any(abs(x) >= nes_thresh))
-  nes_filtered <- nes_mat[active, , drop = FALSE]
-
-  if (nrow(nes_filtered) < 3) {
-    stop("Too few active Hallmarks — lower nes_thresh")
-  }
-
   # ── cluster Hallmarks by NES profile across factors ───────────────────────
   # distance between Hallmarks = dissimilarity of their NES profiles
-  d  <- dist(nes_filtered, method = "euclidean")
+  d  <- dist(nes_mat, method = "euclidean")
   hc <- hclust(d, method = "ward.D2")
 
   # ── determine k ───────────────────────────────────────────────────────────
   if (is.null(k)) {
     # use elbow on within-cluster sum of squares
-    max_k <- min(10, nrow(nes_filtered) - 1)
+    max_k <- min(10, nrow(nes_mat) - 1)
     wss   <- sapply(2:max_k, function(ki) {
       cuts <- cutree(hc, k = ki)
       sum(sapply(unique(cuts), function(cl) {
-        members <- nes_filtered[cuts == cl, , drop = FALSE]
+        members <- nes_mat[cuts == cl, , drop = FALSE]
         if (nrow(members) == 1) return(0)
         sum(apply(members, 2, var)) * (nrow(members) - 1)
       }))
@@ -4491,7 +4483,7 @@ derive_meta_programs <- function(nes_mat, gsea_results,
     pdf(paste0("Results/TCGA_meta_programs_", file_name, ".pdf"),
         width = 8, height = 10)
     p <- pheatmap::pheatmap(
-      nes_filtered,
+      nes_mat,
       cluster_rows     = hc,
       cluster_cols     = TRUE,
       cutree_rows      = k,
@@ -4587,7 +4579,8 @@ build_nes_matrix <- function(gsea_results) {
 #' @export
 map_factors_to_metaprograms <- function(gsea_study,
                                 cancer_type,
-                                nes_thresh = 1.0, mp_file = NULL) {
+                                nes_thresh = 1.0, mp_file = NULL,
+                                plot = TRUE, file_name = NULL) {
 
   if(is.null(mp_file)){
     cancer_type <- tolower(cancer_type)
@@ -4656,12 +4649,100 @@ map_factors_to_metaprograms <- function(gsea_study,
                        all.x = TRUE, sort = FALSE)
   }
 
+  # ── plot: mapping confidence — all MP scores per factor ───────────────────
+  if (plot) {
+
+    if (!dir.exists("Results")) dir.create("Results")
+
+    mfp_colors <- c(
+      "IE"              = "#2166AC",
+      "IE/F"            = "#92C5DE",
+      "F"               = "#F4A582",
+      "D"               = "#B2182B",
+      "uncharacterized" = "#AAAAAA"
+    )
+
+    # parse all_scores back into long format
+    score_long <- do.call(rbind, lapply(seq_len(nrow(result_df)), function(i) {
+      pairs  <- strsplit(result_df$all_scores[i], ", ")[[1]]
+      kv     <- strsplit(pairs, ":")
+      data.frame(
+        factor = result_df$factor[i],
+        MP     = vapply(kv, `[[`, character(1L), 1L),
+        score  = as.numeric(vapply(kv, `[[`, character(1L), 2L)),
+        stringsAsFactors = FALSE
+      )
+    }))
+
+    # mark which MP is the winner for each factor
+    score_long$is_best <- paste(score_long$factor, score_long$MP) %in%
+      paste(result_df$factor, result_df$best_MP)
+
+    # attach TME_subtype label to winner for color
+    tme_lookup <- if ("TME_subtype" %in% colnames(result_df)) {
+      setNames(result_df$TME_subtype, result_df$factor)
+    } else {
+      setNames(rep("uncharacterized", nrow(result_df)), result_df$factor)
+    }
+    score_long$TME_subtype <- ifelse(
+      score_long$is_best,
+      tme_lookup[score_long$factor],
+      NA_character_
+    )
+
+    # order factors by their best_score descending — most confident mappings first
+    factor_order <- result_df$factor[order(result_df$best_score, decreasing = TRUE)]
+    score_long$factor <- factor(score_long$factor, levels = factor_order)
+    score_long$MP     <- factor(score_long$MP,
+                                levels = unique(meta_programs$meta_program))
+
+    p <- ggplot2::ggplot(score_long,
+                         ggplot2::aes(x = MP, y = score)) +
+      # all MP scores as grey points
+      ggplot2::geom_col(fill = "#DDDDDD", width = 0.6) +
+      # winning MP highlighted and colored by TME subtype
+      ggplot2::geom_col(
+        data = score_long[score_long$is_best, ],
+        ggplot2::aes(fill = TME_subtype),
+        width = 0.6
+      ) +
+      ggplot2::scale_fill_manual(values = mfp_colors, name = "TME subtype",
+                                 na.translate = FALSE) +
+      # horizontal line at 0 for reference
+      ggplot2::geom_hline(yintercept = 0, linewidth = 0.3, colour = "black") +
+      ggplot2::facet_wrap(~ factor, scales = "free_y") +
+      ggplot2::labs(
+        title    = "Study factor to meta-program mapping confidence",
+        subtitle = "Grey bars = all MP scores. Colored bar = winning MP (color = TME subtype).",
+        x        = "Meta-program",
+        y        = "Mean NES score"
+      ) +
+      ggplot2::theme_bw(base_size = 11) +
+      ggplot2::theme(
+        axis.text.x     = ggplot2::element_text(angle = 40, hjust = 1, size = 7),
+        strip.text      = ggplot2::element_text(size = 8),
+        legend.position = "right"
+      )
+
+    fname <- paste0("Results/factor_MP_mapping",
+                    if (!is.null(file_name)) paste0("_", file_name) else "",
+                    ".pdf")
+
+    n_fac  <- length(unique(score_long$factor))
+    n_cols <- min(3L, n_fac)
+    n_rows <- ceiling(n_fac / n_cols)
+
+    ggplot2::ggsave(fname, plot = p,
+                    width     = n_cols * 3.5,
+                    height    = n_rows * 3,
+                    device    = grDevices::cairo_pdf,
+                    limitsize = FALSE)
+
+    message("Saved factor-to-MP mapping plot to: ", fname)
+  }
+
   result_df
 }
-
-#' @rdname map_to_metaprograms
-#' @export
-map_to_metaprograms <- map_factors_to_metaprograms
 
 #' Annotate meta-programs with Bagaev TME subtypes
 #'
@@ -4706,12 +4787,10 @@ annotate_metaprograms_TME <- function(meta_programs_df, factor_tme_df,
     if (!any(pos)) return("uncharacterized")
     labels  <- mfp_lookup[rownames(score_mat)[pos]]
     weights <- w[pos]
-    labels  <- labels[!is.na(labels) & labels != "uncharacterized"]
-    weights <- weights[names(labels)]
     if (length(labels) == 0) return("uncharacterized")
     agg    <- tapply(weights, labels, sum)
     winner <- names(which(agg == max(agg)))
-    if (length(winner) > 1) return("uncharacterized")
+    if (length(winner) > 1 || winner == "uncharacterized") return("uncharacterized")
     winner
   }
 
@@ -4722,6 +4801,7 @@ annotate_metaprograms_TME <- function(meta_programs_df, factor_tme_df,
   )
 
   merge(meta_programs_df, mp_mfp_df, by = "meta_program", all.x = TRUE)
+
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -4754,7 +4834,7 @@ annotate_metaprograms_TME <- function(meta_programs_df, factor_tme_df,
 #'   patients are matched.
 #'
 #' @export
-map_factors_to_TME <- function(cancer_name, Z) {
+map_factors_to_TME <- function(cancer_name, Z, plot = TRUE, file_name = NULL) {
 
   # annot_file <- system.file("extdata", "annotation.tsv", package = "CellTFusion")
   # if (annot_file == "") stop("annotation.tsv not found in inst/extdata.")
@@ -4843,5 +4923,73 @@ map_factors_to_TME <- function(cancer_name, Z) {
     )
   })
 
-  do.call(rbind, result_rows)
+  result_df = do.call(rbind, result_rows)
+
+  # ── plot: factor scores by MFP group ─────────────────────────────────────
+  if (plot) {
+
+    if (!dir.exists("Results")) dir.create("Results")
+
+    # MFP colors consistent with Bagaev palette
+    mfp_colors <- c("IE" = "#2166AC", "IE/F" = "#92C5DE", "F" = "#F4A582", "D" = "#B2182B")
+
+    # build long-format data frame for ggplot
+    plot_df <- data.frame(
+      sample  = rep(rownames(Z_matched), ncol(Z_matched)),
+      factor  = rep(colnames(Z_matched), each = nrow(Z_matched)),
+      score   = as.vector(Z_matched),
+      MFP     = rep(as.character(mfp_vals), ncol(Z_matched)),
+      stringsAsFactors = FALSE
+    )
+    plot_df$MFP    <- factor(plot_df$MFP,    levels = c("IE", "IE/F", "F", "D"))
+    plot_df$factor <- factor(plot_df$factor, levels = colnames(Z_matched))
+
+    # label each facet with KW p-value and best_MFP
+    facet_labels <- setNames(
+      paste0(result_df$factor,
+             "\np = ", result_df$kw_pval,
+             "  [", result_df$best_MFP, "]"),
+      result_df$factor
+    )
+
+    p <- ggplot2::ggplot(plot_df,
+                         ggplot2::aes(x = MFP, y = score, fill = MFP)) +
+      ggplot2::geom_violin(alpha = 0.6, trim = TRUE, scale = "width") +
+      ggplot2::geom_boxplot(width = 0.15, outlier.size = 0.5,
+                            fill = "white", alpha = 0.8) +
+      ggplot2::scale_fill_manual(values = mfp_colors) +
+      ggplot2::facet_wrap(~ factor, scales = "free_y",
+                          labeller = ggplot2::labeller(factor = facet_labels)) +
+      ggplot2::labs(
+        title    = paste0("NMF factor scores by Bagaev MFP subtype - ", toupper(cancer_name)),
+        subtitle = paste0(n_samples, " matched samples"),
+        x        = "MFP subtype",
+        y        = "NMF factor score"
+      ) +
+      ggplot2::theme_bw(base_size = 11) +
+      ggplot2::theme(
+        legend.position  = "none",
+        strip.text       = ggplot2::element_text(size = 8),
+        axis.text.x      = ggplot2::element_text(angle = 30, hjust = 1)
+      )
+
+    fname <- paste0("Results/TME_factors_MFP_",
+                    tolower(cancer_name),
+                    if (!is.null(file_name)) paste0("_", file_name) else "",
+                    ".pdf")
+
+    # dynamic sizing: ~2 columns, height scales with number of factors
+    n_fac  <- ncol(Z_matched)
+    n_cols <- 3L
+    n_rows <- ceiling(n_fac / n_cols)
+
+    ggplot2::ggsave(fname, plot = p,
+                    width  = n_cols * 3,
+                    height = n_rows * 3,
+                    limitsize = FALSE)
+
+    message("Saved TME factor plot to: ", fname)
+  }
+
+  result_df
 }
