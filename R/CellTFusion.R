@@ -211,7 +211,7 @@ CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL
   gsea_results <- compute_factor_gsea(
     RNA.tpm      = counts.norm,          # genes x samples
     features_df  = latent_spaces$Z,      # samples x factors
-    plot_dot     = FALSE,
+    plot_dot     = TRUE,
     top_n        = 10,
     file_name    = file_name
   )
@@ -220,7 +220,7 @@ CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL
   metaprograms_mapping <- map_factors_to_metaprograms(
     gsea_study   = gsea_results,
     cancer_type  = cancer_type,
-    nes_thresh   = 1.0
+    plot = TRUE, file_name = file_name
   )
 
   if(verbose){
@@ -4579,7 +4579,7 @@ build_nes_matrix <- function(gsea_results) {
 #' @export
 map_factors_to_metaprograms <- function(gsea_study,
                                 cancer_type,
-                                nes_thresh = 1.0, mp_file = NULL,
+                                mp_file = NULL,
                                 plot = TRUE, file_name = NULL) {
 
   if(is.null(mp_file)){

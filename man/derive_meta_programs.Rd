@@ -4,25 +4,31 @@
 \alias{derive_meta_programs}
 \title{Derive TME meta-programs by clustering Hallmarks across NMF factors}
 \usage{
-derive_meta_programs(
-  nes_mat,
-  k = NULL,
-  nes_thresh = 1,
-  file_name = NULL,
-  plot = TRUE
-)
+derive_meta_programs(gsea_results, k = NULL, file_name = NULL, plot = TRUE)
 }
 \arguments{
-\item{nes_mat}{A numeric matrix of NES values (Hallmarks x factors) as
-returned by \code{build_nes_matrix()}.}
-
 \item{k}{Integer. Number of meta-programs (clusters) to extract. If
 \code{NULL} (default), estimated automatically from the dendrogram.}
+
+\item{plot}{Logical. If \code{TRUE} (default), saves a clustering heatmap.}
+
+\item{nes_mat}{A numeric matrix of NES values (Hallmarks x factors) as
+returned by \code{build_nes_matrix()}.}
 
 \item{nes_thresh}{Numeric. Minimum absolute NES for a Hallmark to be
 considered active in a factor. Default 1.0.}
 
-\item{plot}{Logical. If \code{TRUE} (default), saves a clustering heatmap.}
+\item{Z}{Optional samples x factors numeric matrix of NMF factor scores.
+Required for Bagaev MFP annotation.}
+
+\item{annot}{Optional data frame loaded from \code{annotation.tsv}. If
+\code{NULL} (default), loaded automatically from
+\code{inst/extdata/annotation.tsv} when \code{Z} and \code{cancer_name}
+are provided.}
+
+\item{cancer_name}{Optional character string matching the
+\code{TCGA_project} field (case-insensitive, e.g. \code{"skcm"}).
+Required for Bagaev MFP annotation.}
 }
 \value{
 A list with:
@@ -33,9 +39,16 @@ character vectors of Hallmark names.
 \code{meta_program}, and \code{mean_NES}.
 \item \code{heatmap}: The \code{pheatmap} object.
 \item \code{k}: The number of meta-programs used.
+\item \code{factor_mfp}: (Only when \code{Z}, \code{annot}, and
+\code{cancer_name} are provided) Data frame with columns
+\code{factor}, \code{best_MFP}, \code{cor_IE}, \code{cor_IEF},
+\code{cor_F}, \code{cor_D}, \code{n_samples}.
 }
 }
 \description{
 Hierarchically clusters Hallmark gene sets by their NES profile across NMF
 factors to identify recurrent transcriptional programs in the TME.
+Optionally annotates each NMF factor with a Bagaev et al. (2021) MFP
+subtype (IE, IE/F, F, D) when \code{Z}, \code{annot}, and
+\code{cancer_name} are all supplied.
 }
