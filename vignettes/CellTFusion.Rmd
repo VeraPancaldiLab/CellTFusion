@@ -124,20 +124,25 @@ cell_groups = construct_cell_groups(counts.norm, tfs, deconv, network, dt, pval 
 
 ## **Analize results**
 
-To evaluate the association between cell group scores and a clinical trait, you can perform statistical tests such as Fisher’s exact test, ANOVA, or any other supported method (Wilcoxon, Kruskal–Wallis, t-test) using the unified function `cell.groups.stat.analysis()`.
+To evaluate the association between scores and a clinical trait, you can perform statistical tests such as Fisher’s exact test, ANOVA, or any other supported method (Wilcoxon, Kruskal–Wallis, t-test) using the unified function `scores.stat.analysis()`. It accepts cell group scores, NMF latent factors (`compute.latent.factors()` output), or any samples × features matrix.
 
 ```{r, eval = FALSE}
-res_fisher <- cell.groups.stat.analysis(cell.groups = cell_groups, coldata = traitdata, 
-                                        trait = "Best.Confirmed.Overall.Response", method = "fisher", pval = 0.05)
+res_fisher <- scores.stat.analysis(scores = cell_groups, coldata = traitdata,
+                                   trait = "Best.Confirmed.Overall.Response", method = "fisher", pval = 0.05)
 
-res_anova <- cell.groups.stat.analysis(cell.groups = cell_groups, coldata = traitdata,
-                                       trait = "Best.Confirmed.Overall.Response", method = "anova", pval = 0.05)
+res_anova <- scores.stat.analysis(scores = cell_groups, coldata = traitdata,
+                                  trait = "Best.Confirmed.Overall.Response", method = "anova", pval = 0.05)
 
-res_wilcox <- cell.groups.stat.analysis(cell.groups = cell_groups, coldata = traitdata, 
-                                        trait = "Best.Confirmed.Overall.Response", method = "wilcox", pval = 0.05)
+res_wilcox <- scores.stat.analysis(scores = cell_groups, coldata = traitdata,
+                                   trait = "Best.Confirmed.Overall.Response", method = "wilcox", pval = 0.05)
 
-res_krustal <- cell.groups.stat.analysis(cell.groups = cell_groups, coldata = traitdata,
-                                         trait = "Best.Confirmed.Overall.Response", method = "krustal", pval = 0.05)
+res_kruskal <- scores.stat.analysis(scores = cell_groups, coldata = traitdata,
+                                    trait = "Best.Confirmed.Overall.Response", method = "kruskal", pval = 0.05)
+
+# Also works directly with NMF latent factors:
+nmf <- compute.latent.factors(cell_groups)
+res_nmf <- scores.stat.analysis(scores = nmf, coldata = traitdata,
+                                trait = "Best.Confirmed.Overall.Response", method = "anova", pval = 0.05)
 ```
 
 ## **One-step CellTFusion**

@@ -2,7 +2,7 @@
 utils::globalVariables(c("Trait", "Value" ,"level", ".", "Cells_level", "PC1", "Features", "tf", "Module", "shap_value", "mean_shap", "direction", "Feature", "Impact", "values", "ind", "Freq", "new_column", ".data", "id", "value", "P", "p", "sig_p", "r", "i"))
 
 #' Compute one-step CellTFusion
-#'
+#' 
 #' @param raw.counts A matrix of raw gene expression counts (genes as rows, samples as columns).
 #' @param deconv A data frame with deconvolution features (cell-type proportions as columns x samples as rows).
 #' @param normalized Logical; if TRUE, normalize raw counts to log-transformed TPM for TF computation. For deconvolution they are going to be normalize just as TPM. Default is TRUE.
@@ -36,9 +36,11 @@ utils::globalVariables(c("Trait", "Value" ,"level", ".", "Cells_level", "PC1", "
 #' @param quantile_cutoff Numeric between 0 and 1. Quantile threshold for selecting top-contributing
 #'   cell groups per NMF factor. Default is 0.7.
 #' @param return Logical; if TRUE, returns intermediate results from internal functions. Default is TRUE.
-#' @param cancer_type Character. TCGA cancer type abbreviation (e.g., \code{"blca"}, \code{"brca"},
-#'   \code{"cesc"}, \code{"chol"}, \code{"coad"}, \code{"skcm"}) used to load the corresponding
-#'   TCGA meta-programs for TME state mapping. Must match an available meta-program file.
+#' @param cancer_type Character. TCGA cancer type abbreviation (e.g., \code{"blca"}, \code{"skcm"}).
+#'   Used for two purposes: (1) loading TCGA meta-programs for TME state mapping, and (2) when
+#'   \code{TF.collection = "ARACNE"}, locating the ARACNe network at
+#'   \code{input/ARACNE/<cancer_type>/network/network.txt}. If \code{NULL} and only one ARACNe
+#'   network exists under \code{input/ARACNE/}, it is auto-detected.
 #' @param verbose Boolen value to whether print or no the function messages
 #'
 #' @return A list containing:
@@ -74,7 +76,7 @@ utils::globalVariables(c("Trait", "Value" ,"level", ".", "Cells_level", "PC1", "
 #'}
 #'
 CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL, batch = F, batch_id = NULL, deconv_methods = c("Quantiseq", "CBSX", "Epidish", "DeconRNASeq", "DWLS"), cbsx.mail = NULL, cbsx.token = NULL, file_name = NULL, task = c("supervised", "unsupervised"),
-                       contrast = NULL, ref_level = NULL, TF.collection = "CollecTRI", min_targets_size = 3, universe = NULL, paths = NULL, gene_sets = NULL, minMod = 3, corr_mod = 0.9, corr = 0.7, corr_type = "spearman", cells_extra = NULL, pval = 0.05, enrich_thresh = 1.5, quantile_cutoff = 0.7, cancer_type, return = T, verbose = T){
+                       contrast = NULL, ref_level = NULL, TF.collection = "CollecTRI", min_targets_size = 3, universe = NULL, paths = NULL, gene_sets = NULL, minMod = 3, corr_mod = 0.9, corr = 0.7, corr_type = "spearman", cells_extra = NULL, pval = 0.05, enrich_thresh = 1.5, quantile_cutoff = 0.7, cancer_type = NULL, return = T, verbose = T){
 
   set.seed(123)
 
@@ -108,6 +110,11 @@ CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL
     }
   }
 
+  # Validate sample alignment between counts and deconv
+  if (!isTRUE(all.equal(colnames(counts.norm), rownames(deconv)))) {
+    stop("Sample mismatch between counts columns and deconvolution rows.")
+  }
+
   #TF activity
   if (verbose) {
     cat("\nCalculating TF activity............................................................\n")
@@ -125,8 +132,8 @@ CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL
         stop("For differential expression analysis, raw counts must be provided")
       }
 
-      tfs_deg = compute.TFs.activity(res_deg, TF.collection, min_targets_size, universe, return = return, file.name = file_name) # compute TFs activity using DEGs as input
-      tfs_mat <- compute.TFs.activity(counts.norm, TF.collection, min_targets_size, universe, return = return, file.name = file_name) # compute TFs activity using all genes as input
+      tfs_deg = compute.TFs.activity(res_deg, TF.collection, min_targets_size, universe, cancer.type = cancer_type,return = return, file.name = file_name) # compute TFs activity using DEGs as input
+      tfs_mat <- compute.TFs.activity(counts.norm, TF.collection, min_targets_size, universe, cancer.type = cancer_type,return = return, file.name = file_name) # compute TFs activity using all genes as input
       tfs = tfs_mat[,colnames(tfs_mat) %in% colnames(tfs_deg)] # Subset the TFs matrix to keep only those TFs that are significant in the DEGs analysis
     }else{
       stop("For supervised analysis, contrast and ref_level must be provided")
@@ -136,7 +143,7 @@ CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL
       cat("\nRunning unsupervised task............................................................\n")
     }
     if (!batch) {  ## No batch → single matrix
-      tfs <- compute.TFs.activity(counts.norm, TF.collection, min_targets_size, universe, return = return, file.name = file_name)
+      tfs <- compute.TFs.activity(counts.norm, TF.collection, min_targets_size, universe, cancer.type = cancer_type,return = return, file.name = file_name)
     }else {
       if(is.null(coldata) || is.null(batch_id)) {
         stop("When batch = TRUE, coldata and batch_id must be provided")
@@ -153,7 +160,7 @@ CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL
 
       tfs <- lapply(names(cohorts), function(cohort) {
         idx <- cohorts[[cohort]]
-        compute.TFs.activity(counts.norm[, idx, drop = FALSE], TF.collection, min_targets_size, universe, file.name = file_name)
+        compute.TFs.activity(counts.norm[, idx, drop = FALSE], TF.collection, min_targets_size, universe, cancer.type = cancer_type,file.name = paste0(file_name, "_", cohort), return = return)
       })
 
       names(tfs) <- names(cohorts)
@@ -211,7 +218,7 @@ CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL
   gsea_results <- compute_factor_gsea(
     RNA.tpm      = counts.norm,          # genes x samples
     features_df  = latent_spaces$Z,      # samples x factors
-    plot_dot     = TRUE,
+    plot_dot     = return,
     top_n        = 10,
     file_name    = file_name
   )
@@ -220,7 +227,7 @@ CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL
   metaprograms_mapping <- map_factors_to_metaprograms(
     gsea_study   = gsea_results,
     cancer_type  = cancer_type,
-    plot = TRUE, file_name = file_name
+    plot = return, file_name = file_name
   )
 
   if(verbose){
@@ -229,7 +236,7 @@ CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL
 
   res = list("Deconvolution" = deconv, "TFs_matrix" = tfs, "TF_network" = network, "Pathways_scores" = pathways,
              "Processed_deconvolution" = dt, "Cell_groups" = cell.groups, "Latent_spaces" = latent_spaces, 
-             "Cells_niches" = cells_niches, "TME_states" = metaprograms_mapping)
+             "Cells_niches" = cells_niches, "TME_states" = metaprograms_mapping$factor_mapping, "Metaprograms_reference" = metaprograms_mapping$reference)
 
   return(res)
 
@@ -639,10 +646,8 @@ compute.modules.relationship <- function(matA, matB, file_name, batch = NULL, wi
   matA = data.frame(matA)
   matB = data.frame(matB)
 
-  ##check if names from both features are the same
-  if(all(rownames(matA)==rownames(matB)) == F){
+  if(length(rownames(matA)) == 0 || !all(rownames(matA) == rownames(matB)))
     stop("No equal names, verify the input objects")
-  }
 
   # ---------- PARTIAL CORRELATION IF BATCH PROVIDED ----------
   if(!is.null(batch)){
@@ -901,7 +906,9 @@ compute.modules.relationship <- function(matA, matB, file_name, batch = NULL, wi
 #'
 compute.pathway.activity <- function(RNA.tpm, gene_sets = NULL, paths = NULL, return = TRUE, file.name = NULL) {
 
-  RNA.tpm <- as.matrix(RNA.tpm)
+  rn <- rownames(RNA.tpm)
+  RNA.tpm <- apply(as.matrix(RNA.tpm), 2, as.numeric)
+  rownames(RNA.tpm) <- rn
   results_list <- list()
 
   ###### PROGENy
@@ -909,6 +916,7 @@ compute.pathway.activity <- function(RNA.tpm, gene_sets = NULL, paths = NULL, re
   if (is.null(paths)) {
     if (file.exists(progeny_cache_file)) {
       paths <- utils::read.csv(progeny_cache_file, row.names = 1)
+      cat("Using cached PROGENy pathways collection from ", progeny_cache_file, "\n")
     } else {
       paths <- decoupleR::get_progeny(organism = "human", top = 500)
       utils::write.csv(paths, progeny_cache_file)
@@ -964,11 +972,16 @@ compute.pathway.activity <- function(RNA.tpm, gene_sets = NULL, paths = NULL, re
 
   ###### RETURN FORMAT LOGIC
   # If only one element → return it directly (matrix)
+  # standardise column names so they are valid R identifiers (consistent with caret internals)
+  results_list <- lapply(results_list, function(df) {
+    colnames(df) <- make.names(colnames(df))
+    df
+  })
+
   if (length(results_list) == 1) {
     return(results_list[[1]])
   }
 
-  # If both → return the list
   return(results_list)
 }
 
@@ -1112,52 +1125,115 @@ compute.TF.network.classification = function(tf.network, pathways.features, retu
 #' data("counts.norm.tuto")
 #' tfs_activity <- compute.TFs.activity(counts.norm.tuto, cores = 1)
 #'
-compute.TFs.activity <- function(RNA.counts, TF.collection = "CollecTRI", min_targets_size = 5, universe = NULL, cores = 4, return = TRUE, file.name = NULL){
+compute.TFs.activity <- function(RNA.counts, TF.collection = "CollecTRI", min_targets_size = 5, universe = NULL, cancer.type = NULL, cores = 3, scale = TRUE, return = TRUE, file.name = NULL){
 
   tf_cache_file <- "Results/TF_target_collection.csv"
-  if(TF.collection == "CollecTRI"){
-    if(is.null(universe)){
-      if(file.exists(tf_cache_file)){
-        universe = utils::read.csv(tf_cache_file, row.names = 1)
-      } else {
-        universe = decoupleR::get_collectri(organism = 'human', split_complexes = F)
-        utils::write.csv(universe, tf_cache_file)
-      }
-    }
-  } else if(TF.collection == "Dorothea"){
-    if(is.null(universe)){
-      if(file.exists(tf_cache_file)){
-        universe = utils::read.csv(tf_cache_file, row.names = 1)
-      } else {
-        universe = dplyr::filter(dorothea::dorothea_hs, .data$confidence %in% c("A", "B")) %>%
-          dplyr::mutate(source = .data$tf) %>%
-          dplyr::select(-tf)
-        utils::write.csv(universe, tf_cache_file)
-      }
-    }
-  }
 
   if(TF.collection == "ARACNE"){
-    cat("For ARACNE analysis you need to specify the path of your network file. Remember this file should be a 3 columns text file, with regulator in the first column, target in the second and mutual information in the third column")
-    network_file = readline(prompt = "Path for network file from aracne (no quotes): ")
-    net_regulons <- viper::aracne2regulon(network_file, as.matrix(RNA.counts), format = "3col")
+
+    if(is.null(cancer.type)){
+      # auto-discover when only one network exists
+      candidates <- list.files("input/ARACNE", pattern = "^network\\.txt$",
+                               recursive = TRUE, full.names = TRUE)
+      if(length(candidates) == 0)
+        stop("TF.collection = 'ARACNE' requires a 'cancer.type' or a network.txt under input/ARACNE/")
+      if(length(candidates) > 1)
+        stop("Multiple ARACNe networks found. Specify 'cancer.type' (e.g. cancer.type = 'skcm'):\n",
+             paste(dirname(dirname(candidates)), collapse = "\n"))
+      aracne.network <- candidates[1]
+      cat("Auto-detected ARACNe network:", aracne.network, "\n")
+    } else {
+      aracne.network <- file.path("input/ARACNE", cancer.type, "network/network.txt")
+      if(!file.exists(aracne.network))
+        stop("ARACNe network not found for cancer type '", cancer.type, "': ", aracne.network)
+    }
+
+    cat("Loading ARACNe network from:", aracne.network, "\n")
+    # Read network edges, filter to genes present in expression matrix
+    aracne_net <- utils::read.table(aracne.network, header = TRUE, sep = "\t") %>%
+      dplyr::select(source = Regulator, target = Target) %>%
+      dplyr::filter(source %in% rownames(RNA.counts) & target %in% rownames(RNA.counts))
+
+    # Compute Spearman correlation between every TF and its targets in one matrix op
+    # (this is exactly what TFmode1 does internally)
+    all_tfs     <- unique(aracne_net$source)
+    all_targets <- unique(aracne_net$target)
+    cor_mat <- suppressWarnings(
+      stats::cor(t(RNA.counts[all_tfs, , drop = FALSE]),
+                 t(RNA.counts[all_targets, , drop = FALSE]),
+                 method = "spearman")
+    )
+
+    # mor = sign of Spearman correlation — +1 activation, -1 repression
+    universe <- aracne_net %>%
+      dplyr::mutate(mor = cor_mat[cbind(source, target)]) %>%
+      dplyr::mutate(mor = sign(mor)) %>%
+      dplyr::filter(!is.na(mor) & mor != 0)
+
+    cat("Computing TF activities...\n")
+    
+    sample_acts <- decoupleR::decouple( mat     = RNA.counts,
+                                        network = universe,
+                                        .source = "source",
+                                        .target = "target",
+                                        minsize = min_targets_size
+                                      ) %>%
+      dplyr::filter(.data$statistic == "consensus") %>%
+      decoupleR::pivot_wider_profile(id_cols     = source,
+                                     names_from  = condition,
+                                     values_from = score) %>%
+      as.matrix() %>%
+      t()
+
+  } else {
+
+    if(TF.collection == "CollecTRI"){
+      if(is.null(universe)){
+        if(file.exists(tf_cache_file)){
+          universe = utils::read.csv(tf_cache_file, row.names = 1)
+          cat("Using cached TF-target collection from", tf_cache_file, "\n")
+        } else {
+          universe = decoupleR::get_collectri(organism = 'human', split_complexes = F)
+          utils::write.csv(universe, tf_cache_file)
+        }
+      }
+    } else if(TF.collection == "Dorothea"){
+      if(is.null(universe)){
+        if(file.exists(tf_cache_file)){
+          universe = utils::read.csv(tf_cache_file, row.names = 1)
+        } else {
+          universe = dplyr::filter(dorothea::dorothea_hs, .data$confidence %in% c("A", "B")) %>%
+            dplyr::mutate(source = .data$tf) %>%
+            dplyr::select(-tf)
+          utils::write.csv(universe, tf_cache_file)
+        }
+      }
+    }
+
+    sample_acts <- decoupleR::decouple(mat     = RNA.counts,
+                                       network = universe,
+                                      .source = "source",
+                                      .target = "target",
+                                    ) %>%
+                                      dplyr::filter(.data$statistic == "consensus") %>%
+                                      decoupleR::pivot_wider_profile(id_cols     = source,
+                                                                     names_from  = condition,
+                                                                     values_from = score) %>%
+                                      as.matrix() %>%
+                                      t()
+
   }
 
-  sample_acts <- decoupleR::run_viper(mat = RNA.counts, network = universe,
-                                      .source = "source", minsize = min_targets_size, eset.filter = FALSE, method = "none",
-                                      verbose = FALSE, cores = cores) %>%
-    decoupleR::pivot_wider_profile(id_cols = source,
-                                   names_from = condition,
-                                   values_from = score) %>%
-    as.matrix()
-
-  sample_acts = scale(t(sample_acts)) ## Scale NES TFs to account for variability in the number of targets per TF and make them comparable across modules
+  sample_acts <- sample_acts[colnames(RNA.counts), , drop = FALSE]
+  sample_acts <- if (scale) base::scale(sample_acts) else sample_acts
 
   if(return){
     utils::write.csv(sample_acts, paste0("Results/TF_matrix_", file.name, ".csv"))
   }
 
-  return(data.frame(sample_acts))
+  result <- data.frame(sample_acts)
+  colnames(result) <- make.names(colnames(result))
+  return(result)
 
 }
 
@@ -1230,7 +1306,11 @@ compute.WTCNA <- function(TFs.matrix, batch = FALSE, network.type = "signed", cl
       }
     }
 
-    # Step 2: create multiExpr list
+    # Step 2: intersect TFs across cohorts so all matrices share the same columns
+    common_tfs <- Reduce(intersect, lapply(TFs.matrix, colnames))
+    if (length(common_tfs) == 0) stop("No common TFs found across cohorts")
+    TFs.matrix <- lapply(TFs.matrix, function(x) x[, common_tfs, drop = FALSE])
+
     multiExpr <- lapply(TFs.matrix, function(x) list(data = x))
 
     # Step 3: run blockwiseConsensusModules
@@ -2734,283 +2814,6 @@ compute.test.score = function(cell_group, projection_params){
   return(as.matrix(cell_group_scaled) %*% xcoef)
 }
 
-#' Prepare CellTFusion folds for cross-validation with training and test data
-#'
-#' This function prepares data for k-fold cross-validation using the CellTFusion framework.
-#' It supports two modes of operation:
-#' \enumerate{
-#'   \item If a set of tuned hyperparameters is provided via \code{bestune}, the function will
-#'   process the full dataset once with those parameters and return a single processed training set.
-#'   \item If no tuned parameters are provided, the function will construct fold-specific training
-#'   and test datasets, expanding over a grid of CellTFusion hyperparameters and returning them
-#'   for subsequent model training and hyperparameter selection.
-#' }
-#'
-#' For each fold, training and test sets are generated by running the \code{CellTFusion()} pipeline
-#' on the training data (gene expression and optional deconvolution features). The trained
-#' projection is then applied to the test data to ensure comparability between folds.
-#'
-#' @param data A data frame containing gene expression data (samples x genes) and a column named \code{target}
-#'   indicating class labels.
-#' @param folds A list of integer vectors indicating row indices for the training set in each fold.
-#'   The test set is implicitly defined as the complement.
-#' @param deconv A matrix or data frame of deconvolution features (samples x features). If \code{NULL},
-#'   CellTFusion will run without these features.
-#' @param universe Optional universe of features for CellTFusion.
-#' @param paths Optional list of prior knowledge resources for CellTFusion.
-#' @param normalized Logical. Whether the gene expression data is already normalized. Defaults to \code{FALSE}.
-#' @param coldata A data frame with metadata (e.g., sample annotations), must match the number and order of samples in \code{data}.
-#' @param time_var Optional numeric vector with survival/censoring time values.
-#' @param event_var Optional vector with event labels used for survival tasks.
-#' @param corr_type Correlation type passed to CellTFusion. Default is \code{"spearman"}.
-#' @param ncores Integer. Number of CPU cores to use for parallelization. If \code{NULL}, \code{parallel::detectCores() - 2} is used.
-#' @param batch Logical; whether batch correction should be used. Default is \code{FALSE}.
-#' @param batch_id Optional vector of batch identifiers, aligned with samples.
-#' @param min_targets_size Hyperparameter for CellTFusion: minimum TF regulon size.
-#' @param minMod Hyperparameter for CellTFusion: minimum WGCNA module size.
-#' @param corr_mod Hyperparameter for CellTFusion: module merging correlation threshold.
-#' @param corr Hyperparameter for CellTFusion: deconvolution correlation threshold.
-#'   These can be provided as vectors to define a tuning grid when \code{bestune = NULL}.
-#' @param bestune Optional. A data frame of tuned hyperparameters. If provided, the function skips fold construction
-#'   and directly processes the full dataset using these values.
-#'
-#' @return A list with two possible structures depending on \code{bestune}:
-#' \itemize{
-#'   \item If \code{bestune} is provided:
-#'     \itemize{
-#'       \item \code{train_cell_data_final}: Final processed cell group feature matrix for the full dataset, including the \code{target} column.
-#'       \item \code{custom_output}: The full CellTFusion object from training.
-#'       \item \code{best_celltfusion_params}: The tuned hyperparameters used.
-#'     }
-#'   \item If \code{bestune} is \code{NULL}:
-#'     \itemize{
-#'       \item \code{processed_folds}: A list of folds. Each fold contains:
-#'         \itemize{
-#'           \item \code{train_data}: Processed training data with cell group features and \code{target}.
-#'           \item \code{test_data}: Projected test data in the learned feature space.
-#'           \item \code{obs_test}: True class labels for the test set.
-#'           \item \code{rowIndex}: Row indices corresponding to the test samples.
-#'           \item \code{fold_name}: Fold identifier (if provided).
-#'           \item \code{params}: Hyperparameter values used for this fold.
-#'         }
-#'     }
-#' }
-#'
-#' @details
-#' When \code{bestune = NULL}, the function expands all possible hyperparameter combinations
-#' via \code{expand.grid()} and runs CellTFusion separately for each fold and parameter set.
-#' This can be computationally expensive, so the function supports parallelization via
-#' \pkg{foreach}, \pkg{doParallel}, and \pkg{parallel}.
-#'
-#' The results of this function are designed to be passed directly to \code{compute_custom_k_fold_CV()}
-#' for hyperparameter selection and model evaluation.
-#'
-#' @importFrom dplyr mutate select
-#' @importFrom stats setNames
-#' @importFrom parallel makeCluster stopCluster detectCores
-#' @importFrom doParallel registerDoParallel
-#' @importFrom foreach foreach %dopar%
-#' @export
-#'
-prepare_CellTFusion_folds <- function(data, folds = NULL, deconv = NULL, universe = NULL, paths = NULL, normalized = FALSE,
-                                      coldata, time_var = NULL, event_var = NULL, corr_type = "spearman",
-                                      ncores = NULL, batch = F, batch_id = NULL, min_targets_size, minMod, corr_mod, corr, bestune = NULL){
-
-    if(!is.null(bestune)){
-      # Run CellTFusion on the full training set
-      obs_train <- NULL
-
-      if ("target" %in% colnames(data)) {
-        obs_train <- data$target
-        data$target <- NULL
-      } else if (!is.null(time_var) && !is.null(event_var)) {
-        obs_train <- list(time = time_var, event = as.numeric(event_var == trait.positive))
-      } else {
-        stop("Either 'target' or both 'time_var' and 'event_var' must be provided.")
-      }
-
-      required_cols <- c("min_targets_size", "minMod", "corr_mod", "corr")
-
-      best_celltfusion_params <- if (is.data.frame(bestune)) {
-        if (all(required_cols %in% names(bestune))) {
-          dplyr::select(bestune, dplyr::all_of(required_cols))
-        } else {
-          message("No tunable parameters found in bestune; using fixed parameters.")
-          tibble::tibble(
-            min_targets_size = min_targets_size,
-            minMod           = minMod,
-            corr_mod         = corr_mod,
-            corr             = corr
-          )
-        }
-      } else if (is.list(bestune)) {
-        if (all(required_cols %in% names(bestune))) {
-          tibble::as_tibble(bestune[required_cols])
-        } else {
-          message("No tunable parameters found in bestune; using fixed parameters.")
-          tibble::tibble(
-            min_targets_size = min_targets_size,
-            minMod           = minMod,
-            corr_mod         = corr_mod,
-            corr             = corr
-          )
-        }
-      } else {
-        stop("`bestune` must be a data.frame or list.")
-      }
-
-      train_processed_final <- CellTFusion(
-        t(data),
-        deconv = deconv,
-        normalized = normalized,
-        coldata = coldata,
-        universe = universe,
-        corr_type = corr_type,
-        paths = paths,
-        min_targets_size = best_celltfusion_params$min_targets_size,
-        minMod           = best_celltfusion_params$minMod,
-        corr_mod         = best_celltfusion_params$corr_mod,
-        corr             = best_celltfusion_params$corr,
-        batch = batch, batch_id = batch_id,
-        return = FALSE,
-        verbose = FALSE
-      )
-
-      # Get cell group features
-      train_cell_data_final <- train_processed_final$Latent_spaces$Z %>%
-        data.frame()
-
-      # train_cell_data_final <- train_processed_final$Cell_groups[[1]] %>%
-      #   data.frame()
-
-      if (is.list(obs_train)) {
-        train_cell_data_final <- train_cell_data_final %>%
-          dplyr::mutate(
-            time  = obs_train$time,
-            event = obs_train$event
-          )
-      } else {
-        train_cell_data_final <- train_cell_data_final %>%
-          dplyr::mutate(target = obs_train)
-      }
-
-      custom_output = train_processed_final
-
-      res = list(train_cell_data_final, custom_output, best_celltfusion_params)
-
-      return(res)
-    }else{ ### Means best tune need to be find
-
-      custom_grid <- expand.grid(
-        min_targets_size = min_targets_size,
-        minMod           = minMod,
-        corr_mod         = corr_mod,
-        corr             = corr
-      )
-
-      # Parallelize over folds
-      processed_folds <- lapply(seq_along(folds), function(i) {
-        cat("Starting fold", names(folds)[i], "\n")
-
-        train_idx <- folds[[i]]
-        test_idx <- setdiff(seq_len(nrow(data)), train_idx)
-
-        ## Subset data
-        train_data <- data[train_idx, , drop = FALSE]
-        train_deconv <- deconv[train_idx, , drop = FALSE]
-        train_coldata <- coldata[train_idx, , drop = FALSE]
-
-        # Determine target or time/event
-        if ("target" %in% colnames(train_data)) {
-          obs_train <- train_data$target
-          train_data$target <- NULL
-
-        } else if (!is.null(time_var) && !is.null(event_var)) {
-          obs_train <- list(
-            time  = time_var[train_idx],
-            event = as.numeric(event_var[train_idx] == trait.positive)
-          )
-        } else {
-          stop("Either 'target' or both 'time_var' and 'event_var' must be provided.")
-        }
-
-        fold_results <- lapply(seq_len(nrow(custom_grid)), function(j) {
-          message("Running fold ", names(folds)[i], ", grid ", j, " / ", nrow(custom_grid))
-
-          train_processed <- CellTFusion(
-            raw.counts = t(train_data),
-            deconv = train_deconv,
-            normalized = normalized,
-            coldata = train_coldata,
-            universe = universe,
-            corr_type = corr_type,
-            paths = paths,
-            min_targets_size = custom_grid$min_targets_size[j],
-            minMod           = custom_grid$minMod[j],
-            corr_mod         = custom_grid$corr_mod[j],
-            corr             = custom_grid$corr[j],
-            batch = batch, batch_id = batch_id,
-            return = FALSE,
-            verbose = FALSE
-          )
-
-          train_cell_data <- train_processed$Latent_spaces$Z %>%
-            data.frame()
-
-          # train_cell_data <- train_processed$Cell_groups[[1]] %>%
-          #   data.frame()
-
-          if (is.list(obs_train)) {
-            train_cell_data <- train_cell_data %>%
-              dplyr::mutate(
-                time = obs_train$time,
-                event = obs_train$event
-              )
-          } else {
-            train_cell_data <- train_cell_data %>%
-              dplyr::mutate(target = obs_train)
-          }
-
-          # Prepare test data
-          test_deconv <- deconv[test_idx, , drop = FALSE]
-          obs_test <- if ("target" %in% colnames(data)) {
-            data$target[test_idx]
-          } else if (!is.null(time_var) && !is.null(event_var)) {
-            list(time = time_var[test_idx], event = as.numeric(event_var[test_idx] == trait.positive))
-          } else {
-            NULL
-          }
-
-          test_data <- project_test_factors(train_processed, test_deconv)
-
-          if (is.list(obs_test)) {
-            test_data <- test_data %>%
-              dplyr::mutate(
-                time  = obs_test$time,
-                event = obs_test$event
-              )
-          }
-
-          list(
-            train_data = train_cell_data,
-            test_data = test_data,
-            obs_test = obs_test,
-            rowIndex = test_idx,
-            fold_name = names(folds)[i],
-            params = custom_grid[j, ]
-          )
-        })
-
-        if (nrow(custom_grid) == 1) {
-          fold_results <- fold_results[[1]]
-        }
-
-        filename = file.path("Results", paste0("fold_", names(folds)[i], ".rds"))
-        saveRDS(fold_results, file = filename)
-      })
-    }
-}
-
 #' Unregister a parallel backend registered with doParallel
 #'
 #' Switches the foreach backend back to sequential execution and calls
@@ -3042,7 +2845,7 @@ unregister_dopar <- function() {
 #'         Returns \code{NULL} if no significant groups are found.
 #' @export
 #'
-cell.groups.ttest <- function(cell.groups, coldata, trait, pval = 0.05) {
+scores.ttest <- function(scores, coldata, trait, pval = 0.05) {
   sig = c()
   coldata[, trait] = as.factor(coldata[, trait])
 
@@ -3050,109 +2853,50 @@ cell.groups.ttest <- function(cell.groups, coldata, trait, pval = 0.05) {
     stop("T-test requires a binary trait (exactly two groups).")
   }
 
-  for (j in 1:ncol(cell.groups[[1]])) {
-    data = data.frame(Value = cell.groups[[1]][, j], Trait = coldata[, trait])
+  for (j in 1:ncol(scores[[1]])) {
+    data = data.frame(Value = scores[[1]][, j], Trait = coldata[, trait])
 
     res.ttest <- stats::t.test(Value ~ Trait, data = data, var.equal = FALSE)
 
     if (round(res.ttest$p.value, 5) <= pval) {
-      cat("Significant p-value after T-test for", colnames(cell.groups[[1]])[j], "\n")
+      cat("Significant p-value after T-test for", colnames(scores[[1]])[j], "\n")
 
-      pdf(paste0("Results/Ttest_", trait, "_", colnames(cell.groups[[1]])[j], ".pdf"),
-          width = 12, height = 9)
+      n_labels  <- data %>% dplyr::count(Trait) %>%
+        dplyr::mutate(label = paste0(as.character(Trait), "\n(n=", n, ")"))
+      label_map <- setNames(n_labels$label, as.character(n_labels$Trait))
+
+      stat_test <- data %>%
+        rstatix::t_test(Value ~ Trait, var.equal = FALSE) %>%
+        rstatix::add_xy_position(x = "Trait") %>%
+        dplyr::mutate(p.format = ifelse(p < 0.001, "< 0.001", as.character(round(p, 4))))
+
+      pdf(paste0("Results/Ttest_", trait, "_", colnames(scores[[1]])[j], ".pdf"),
+          width = 7, height = 6)
       print(
-        ggplot2::ggplot(data, aes(x = Trait, y = Value, fill = Trait)) +
-          geom_boxplot(outlier.shape = NA, alpha = 0.7, color = "gray30") +
-          geom_jitter(width = 0.15, size = 2.5, alpha = 0.8, color = "black") +
-          stat_summary(fun = median, geom = "point", shape = 23, size = 3, fill = "white") +
-          scale_fill_brewer(palette = "Set2") +
-          labs(
-            title = paste0("Student's t-test - ", colnames(cell.groups[[1]])[j]),
-            subtitle = paste0("P-value: ", round(res.ttest$p.value, 5)),
-            x = paste0("Clinical trait: ", trait),
-            y = "Cell group score"
+        ggplot2::ggplot(data, ggplot2::aes(x = Trait, y = Value, fill = Trait)) +
+          ggplot2::geom_violin(alpha = 0.35, trim = FALSE, color = NA) +
+          ggplot2::geom_boxplot(width = 0.14, outlier.shape = NA, alpha = 0.85,
+                                color = "gray25", linewidth = 0.5) +
+          ggplot2::geom_jitter(width = 0.07, size = 1.6, alpha = 0.45, color = "gray20") +
+          ggpubr::stat_pvalue_manual(stat_test, label = "p = {p.format}",
+                                     tip.length = 0.02, size = 4.5, bracket.size = 0.5) +
+          ggplot2::scale_x_discrete(labels = label_map) +
+          ggplot2::scale_fill_brewer(palette = "Set2") +
+          ggplot2::labs(
+            title    = colnames(scores[[1]])[j],
+            subtitle = paste0("Student's t-test  ·  ", trait),
+            x        = NULL,
+            y        = "Score"
           ) +
-          theme_minimal(base_size = 16) +
-          theme(
-            axis.text.x = element_text(size = 20),
-            axis.title.x = element_text(size = 20),
-            legend.title = element_text(size = 15),
-            legend.text = element_text(size = 12),
-            axis.title.y = element_text(size = 20, angle = 90),
-            plot.title = element_text(size = 20),
-            plot.subtitle = element_text(size = 15, face = "bold")
-          ) +
-          scale_fill_discrete(name = trait)
-      )
-      dev.off()
-
-      sig = c(sig, j)
-    }
-  }
-
-  if (length(sig) == 0) {
-    message("No significant cell groups (p-value < ", pval, ") after t-test.")
-    return(NULL)
-  } else {
-    cell.groups.sig = list()
-    cell.groups.sig[[1]] = cell.groups[[1]][, sig, drop = FALSE]
-    cell.groups.sig[[2]] = cell.groups[[2]][sig]
-    cell.groups.sig[[3]] = cell.groups[[3]][sig]
-    return(cell.groups.sig)
-  }
-}
-
-#' Kruskal–Wallis test for multi-group comparisons
-#'
-#' Performs a Kruskal–Wallis test to compare cell group scores across multiple trait levels.
-#' Significant results are visualized as annotated boxplots with Dunn post-hoc tests.
-#'
-#' @param cell.groups A list containing cell group score data, metadata, and identifiers.
-#' @param coldata A data frame containing sample annotations, including the grouping trait.
-#' @param trait Character. Name of the column in `coldata` used as the grouping variable.
-#' @param pval Numeric. P-value threshold for significance (default = 0.05).
-#'
-#' @return A list containing only significant cell groups after Kruskal–Wallis test.
-#'         Returns \code{NULL} if no significant groups are found.
-#' @export
-#'
-cell.groups.kruskal.test <- function(cell.groups, coldata, trait, pval = 0.05) {
-  sig = c()
-  coldata[, trait] = as.factor(coldata[, trait])
-
-  for (j in 1:ncol(cell.groups[[1]])) {
-    data = data.frame(Value = cell.groups[[1]][, j], Trait = coldata[, trait])
-
-    # Perform Kruskal–Wallis test
-    res.kruskal <- rstatix::kruskal_test(Value ~ Trait, data = data)
-
-    if (res.kruskal$p < pval) {
-      cat("Significant p-value after Kruskal–Wallis test for", colnames(cell.groups[[1]])[j], "\n")
-
-      # Dunn post-hoc test + positions for significance annotation
-      pwc <- data %>%
-        rstatix::dunn_test(Value ~ Trait, p.adjust.method = "BH") %>%
-        rstatix::add_xy_position(x = "Trait")
-
-      pdf(paste0("Results/Kruskal_", trait, "_", colnames(cell.groups[[1]])[j], ".pdf"),
-          width = 12, height = 9)
-      print(
-        ggpubr::ggboxplot(data, x = "Trait", y = "Value", fill = "Trait", add = "jitter") +
-          ggpubr::stat_pvalue_manual(pwc, hide.ns = TRUE) +
-          labs(
-            title = "Kruskal–Wallis Test with Dunn Post-hoc",
-            subtitle = rstatix::get_test_label(res.kruskal, detailed = TRUE),
-            caption = rstatix::get_pwc_label(pwc),
-            x = paste0("Clinical trait: ", trait),
-            y = paste0("Values for ", colnames(cell.groups[[1]])[j])
-          ) +
-          theme(
-            axis.text.x = element_text(size = 20),
-            axis.title.x = element_text(size = 20),
-            axis.title.y = element_text(size = 20, angle = 90),
-            plot.title = element_text(size = 20),
-            plot.subtitle = element_text(size = 15, face = "bold"),
-            legend.position = "none"
+          ggplot2::theme_classic(base_size = 13) +
+          ggplot2::theme(
+            legend.position  = "none",
+            axis.text.x      = ggplot2::element_text(size = 12, color = "black"),
+            axis.text.y      = ggplot2::element_text(size = 11),
+            axis.title.y     = ggplot2::element_text(size = 13),
+            plot.title       = ggplot2::element_text(size = 14, face = "bold"),
+            plot.subtitle    = ggplot2::element_text(size = 10, color = "gray45"),
+            panel.grid.major.y = ggplot2::element_line(color = "gray92", linewidth = 0.4)
           )
       )
       dev.off()
@@ -3162,32 +2906,119 @@ cell.groups.kruskal.test <- function(cell.groups, coldata, trait, pval = 0.05) {
   }
 
   if (length(sig) == 0) {
-    message("No significant cell groups (p-value < ", pval, ") after Kruskal–Wallis test.")
+    message("No significant features (p-value < ", pval, ") after t-test.")
     return(NULL)
   } else {
-    cell.groups.sig = list()
-    cell.groups.sig[[1]] = cell.groups[[1]][, sig, drop = FALSE]
-    cell.groups.sig[[2]] = cell.groups[[2]][sig]
-    cell.groups.sig[[3]] = cell.groups[[3]][sig]
-    return(cell.groups.sig)
+    sig.scores = list()
+    sig.scores[[1]] = scores[[1]][, sig, drop = FALSE]
+    if (length(scores) >= 2) sig.scores[[2]] = scores[[2]][sig]
+    if (length(scores) >= 3) sig.scores[[3]] = scores[[3]][sig]
+    return(sig.scores)
+  }
+}
+
+#' Kruskal–Wallis test for multi-group comparisons
+#'
+#' Performs a Kruskal–Wallis test to compare scores across multiple trait levels.
+#' Significant results are visualized as annotated boxplots with Dunn post-hoc tests.
+#'
+#' @param scores A list, NMF output from \code{compute.latent_factors()}, or a score matrix.
+#'   When a list, the first element must be a samples × features score matrix.
+#' @param coldata A data frame containing sample annotations, including the grouping trait.
+#' @param trait Character. Name of the column in `coldata` used as the grouping variable.
+#' @param pval Numeric. P-value threshold for significance (default = 0.05).
+#'
+#' @return A list containing only significant features after Kruskal–Wallis test.
+#'         Returns \code{NULL} if no significant features are found.
+#' @export
+#'
+scores.kruskal.test <- function(scores, coldata, trait, pval = 0.05) {
+  sig = c()
+  coldata[, trait] = as.factor(coldata[, trait])
+
+  for (j in 1:ncol(scores[[1]])) {
+    data = data.frame(Value = scores[[1]][, j], Trait = coldata[, trait])
+
+    # Perform Kruskal–Wallis test
+    res.kruskal <- rstatix::kruskal_test(Value ~ Trait, data = data)
+
+    if (res.kruskal$p < pval) {
+      cat("Significant p-value after Kruskal–Wallis test for", colnames(scores[[1]])[j], "\n")
+
+      # Dunn post-hoc test + positions for significance annotation
+      pwc <- data %>%
+        rstatix::dunn_test(Value ~ Trait, p.adjust.method = "BH") %>%
+        rstatix::add_xy_position(x = "Trait")
+
+      n_labels  <- data %>% dplyr::count(Trait) %>%
+        dplyr::mutate(label = paste0(as.character(Trait), "\n(n=", n, ")"))
+      label_map <- setNames(n_labels$label, as.character(n_labels$Trait))
+
+      pdf(paste0("Results/Kruskal_", trait, "_", colnames(scores[[1]])[j], ".pdf"),
+          width = 8, height = 6)
+      print(
+        ggplot2::ggplot(data, ggplot2::aes(x = Trait, y = Value, fill = Trait)) +
+          ggplot2::geom_violin(alpha = 0.35, trim = FALSE, color = NA) +
+          ggplot2::geom_boxplot(width = 0.14, outlier.shape = NA, alpha = 0.85,
+                                color = "gray25", linewidth = 0.5) +
+          ggplot2::geom_jitter(width = 0.07, size = 1.6, alpha = 0.45, color = "gray20") +
+          ggpubr::stat_pvalue_manual(pwc, hide.ns = TRUE, label = "p.adj.signif",
+                                     tip.length = 0.02, size = 5, bracket.size = 0.5) +
+          ggplot2::scale_x_discrete(labels = label_map) +
+          ggplot2::scale_fill_brewer(palette = "Set2") +
+          ggplot2::labs(
+            title    = colnames(scores[[1]])[j],
+            subtitle = paste0("Kruskal–Wallis  ·  Dunn post-hoc (BH)  ·  ", trait),
+            caption  = rstatix::get_pwc_label(pwc),
+            x        = NULL,
+            y        = "Score"
+          ) +
+          ggplot2::theme_classic(base_size = 13) +
+          ggplot2::theme(
+            legend.position  = "none",
+            axis.text.x      = ggplot2::element_text(size = 12, color = "black"),
+            axis.text.y      = ggplot2::element_text(size = 11),
+            axis.title.y     = ggplot2::element_text(size = 13),
+            plot.title       = ggplot2::element_text(size = 14, face = "bold"),
+            plot.subtitle    = ggplot2::element_text(size = 10, color = "gray45"),
+            plot.caption     = ggplot2::element_text(size = 9, color = "gray55"),
+            panel.grid.major.y = ggplot2::element_line(color = "gray92", linewidth = 0.4)
+          )
+      )
+      dev.off()
+
+      sig = c(sig, j)
+    }
+  }
+
+  if (length(sig) == 0) {
+    message("No significant features (p-value < ", pval, ") after Kruskal–Wallis test.")
+    return(NULL)
+  } else {
+    sig.scores = list()
+    sig.scores[[1]] = scores[[1]][, sig, drop = FALSE]
+    if (length(scores) >= 2) sig.scores[[2]] = scores[[2]][sig]
+    if (length(scores) >= 3) sig.scores[[3]] = scores[[3]][sig]
+    return(sig.scores)
   }
 }
 
 #' Wilcoxon rank-sum test for binary traits
 #'
-#' Performs a Wilcoxon rank-sum (Mann–Whitney U) test comparing cell group scores
-#' between two levels of a binary clinical trait.
+#' Performs a Wilcoxon rank-sum (Mann–Whitney U) test comparing scores between
+#' two levels of a binary clinical trait.
 #' Significant features are plotted as boxplots and saved to the "Results/" folder.
 #'
-#' @param cell.groups A list containing cell group scores and associated metadata.
+#' @param scores A list, NMF output from \code{compute.latent_factors()}, or a score matrix.
+#'   When a list, the first element must be a samples × features score matrix.
 #' @param coldata A data frame containing sample annotations and clinical traits.
 #' @param trait Character. Name of the column in `coldata` used as the binary grouping variable.
 #' @param pval Numeric. P-value threshold for significance (default = 0.05).
 #'
-#' @return A list containing significant cell groups or \code{NULL} if none are found.
+#' @return A list containing significant features or \code{NULL} if none are found.
 #' @export
 #'
-cell.groups.wilcox.test <- function(cell.groups, coldata, trait, pval = 0.05) {
+scores.wilcox.test <- function(scores, coldata, trait, pval = 0.05) {
   sig = c()
   coldata[, trait] = as.factor(coldata[, trait])
 
@@ -3195,111 +3026,51 @@ cell.groups.wilcox.test <- function(cell.groups, coldata, trait, pval = 0.05) {
     stop("Wilcoxon test requires a binary trait (exactly two groups).")
   }
 
-  for (j in 1:ncol(cell.groups[[1]])) {
-    data = data.frame(Value = cell.groups[[1]][, j], Trait = coldata[, trait])
+  for (j in 1:ncol(scores[[1]])) {
+    data = data.frame(Value = scores[[1]][, j], Trait = coldata[, trait])
 
     # Perform Wilcoxon rank-sum test
     res.test <- stats::wilcox.test(Value ~ Trait, data = data, exact = FALSE)
 
     if (round(res.test$p.value, 5) <= pval) {
-      cat("Significant p-value after Wilcoxon test for", colnames(cell.groups[[1]])[j], "\n")
+      cat("Significant p-value after Wilcoxon test for", colnames(scores[[1]])[j], "\n")
 
-      # Save boxplot
-      pdf(paste0("Results/Wilcoxon_", trait, "_", colnames(cell.groups[[1]])[j], ".pdf"),
-          width = 12, height = 9)
+      n_labels  <- data %>% dplyr::count(Trait) %>%
+        dplyr::mutate(label = paste0(as.character(Trait), "\n(n=", n, ")"))
+      label_map <- setNames(n_labels$label, as.character(n_labels$Trait))
+
+      stat_test <- data %>%
+        rstatix::wilcox_test(Value ~ Trait, exact = FALSE) %>%
+        rstatix::add_xy_position(x = "Trait") %>%
+        dplyr::mutate(p.format = ifelse(p < 0.001, "< 0.001", as.character(round(p, 4))))
+
+      pdf(paste0("Results/Wilcoxon_", trait, "_", colnames(scores[[1]])[j], ".pdf"),
+          width = 7, height = 6)
       print(
-        ggplot2::ggplot(data, aes(x = Trait, y = Value, fill = Trait)) +
-          geom_boxplot(outlier.shape = NA, alpha = 0.7, color = "gray30") +  # hide boxplot outliers
-          geom_jitter(width = 0.15, size = 2.5, alpha = 0.8, color = "black") +  # show all sample points
-          stat_summary(fun = median, geom = "point", shape = 23,
-                       size = 3, fill = "white") +
-          scale_fill_brewer(palette = "Set2") +
-          labs(
-            title = paste0("Wilcoxon Test - ", colnames(cell.groups[[1]])[j]),
-            subtitle = paste0("P-value: ", round(res.test$p.value, 5)),
-            x = paste0("Clinical trait: ", trait),
-            y = "Cell group score"
+        ggplot2::ggplot(data, ggplot2::aes(x = Trait, y = Value, fill = Trait)) +
+          ggplot2::geom_violin(alpha = 0.35, trim = FALSE, color = NA) +
+          ggplot2::geom_boxplot(width = 0.14, outlier.shape = NA, alpha = 0.85,
+                                color = "gray25", linewidth = 0.5) +
+          ggplot2::geom_jitter(width = 0.07, size = 1.6, alpha = 0.45, color = "gray20") +
+          ggpubr::stat_pvalue_manual(stat_test, label = "p = {p.format}",
+                                     tip.length = 0.02, size = 4.5, bracket.size = 0.5) +
+          ggplot2::scale_x_discrete(labels = label_map) +
+          ggplot2::scale_fill_brewer(palette = "Set2") +
+          ggplot2::labs(
+            title    = colnames(scores[[1]])[j],
+            subtitle = paste0("Wilcoxon rank-sum test  ·  ", trait),
+            x        = NULL,
+            y        = "Score"
           ) +
-          theme_minimal(base_size = 16) +
-          theme(
-            axis.text.x = element_text(size = 20),
-            axis.title.x = element_text(size = 20),
-            legend.title = element_text(size = 15),
-            legend.text = element_text(size = 12),
-            axis.title.y = element_text(size = 20, angle = 90),
-            plot.title = element_text(size = 20),
-            plot.subtitle = element_text(size = 15, face = "bold")
-          ) +
-          scale_fill_discrete(name = trait)
-      )
-      dev.off()
-
-      sig = c(sig, j)
-    }
-  }
-
-  # Collect significant cell groups
-  if (length(sig) == 0) {
-    message("No significant cell groups (p-value < ", pval, ") after Wilcoxon test.")
-    return(invisible(NULL))
-  } else {
-    cell.groups.sig = list()
-    cell.groups.sig[[1]] = cell.groups[[1]][, sig, drop = FALSE]
-    cell.groups.sig[[2]] = cell.groups[[2]][sig]
-    cell.groups.sig[[3]] = cell.groups[[3]][sig]
-    return(cell.groups.sig)
-  }
-}
-
-#' One-way ANOVA test for multi-group comparisons
-#'
-#' Performs one-way ANOVA to test for differences in cell group scores across multiple levels of a trait.
-#' Tukey post-hoc tests are used to identify pairwise differences and significance is visualized as annotated boxplots.
-#'
-#' @param cell.groups A list containing cell group score data, metadata, and identifiers.
-#' @param coldata A data frame containing sample annotations including the grouping variable.
-#' @param trait Character. Name of the column in `coldata` used for the grouping variable.
-#' @param pval Numeric. P-value threshold for significance (default = 0.05).
-#'
-#' @return A list of significant cell groups or \code{NULL} if none are significant.
-#' @export
-#'
-cell.groups.anova.test = function(cell.groups, coldata, trait, pval = 0.05){
-  sig = c()
-  coldata[, trait] = as.factor(coldata[, trait])
-
-  for (j in 1:ncol(cell.groups[[1]])) {
-    data = data.frame(Value = cell.groups[[1]][, j], Trait = coldata[, trait])
-    res.aov <- rstatix::anova_test(data = data, dv = Value, between = Trait)
-
-    if (res.aov$p < pval) {
-      cat("Significant p-value after ANOVA for", colnames(cell.groups[[1]])[j], "\n")
-
-      # Tukey post-hoc test + position for significance annotation
-      pwc <- data %>%
-        rstatix::tukey_hsd(Value ~ Trait) %>%
-        rstatix::add_xy_position(x = "Trait")
-
-      # Generate annotated boxplot (same style as first function)
-      pdf(paste0("Results/ANOVA_", trait, "_", colnames(cell.groups[[1]])[j], ".pdf"),
-          width = 12, height = 9)
-      print(
-        ggpubr::ggboxplot(data, x = "Trait", y = "Value", fill = "Trait", add = "jitter") +
-          ggpubr::stat_pvalue_manual(pwc, hide.ns = TRUE) +
-          labs(
-            title = "One-way ANOVA with Tukey HSD",
-            subtitle = rstatix::get_test_label(res.aov, detailed = TRUE),
-            caption = rstatix::get_pwc_label(pwc),
-            x = paste0("Clinical trait: ", trait),
-            y = paste0("Values for ", colnames(cell.groups[[1]])[j])
-          ) +
-          theme(
-            axis.text.x = element_text(size = 20, angle = 0),
-            axis.title.x = element_text(size = 20),
-            legend.position = "none",
-            axis.title.y = element_text(size = 20, angle = 90),
-            plot.title = element_text(size = 20),
-            plot.subtitle = element_text(size = 15, face = "bold")
+          ggplot2::theme_classic(base_size = 13) +
+          ggplot2::theme(
+            legend.position  = "none",
+            axis.text.x      = ggplot2::element_text(size = 12, color = "black"),
+            axis.text.y      = ggplot2::element_text(size = 11),
+            axis.title.y     = ggplot2::element_text(size = 13),
+            plot.title       = ggplot2::element_text(size = 14, face = "bold"),
+            plot.subtitle    = ggplot2::element_text(size = 10, color = "gray45"),
+            panel.grid.major.y = ggplot2::element_line(color = "gray92", linewidth = 0.4)
           )
       )
       dev.off()
@@ -3308,148 +3079,244 @@ cell.groups.anova.test = function(cell.groups, coldata, trait, pval = 0.05){
     }
   }
 
-  cell.groups.sig = list()
   if (length(sig) == 0) {
-    message("No significant cell groups (p-value < ", pval, ") after ANOVA test")
-    return(NULL)
+    message("No significant features (p-value < ", pval, ") after Wilcoxon test.")
+    return(invisible(NULL))
   } else {
-    cell.groups.sig[[1]] = cell.groups[[1]][, sig, drop = FALSE]
-    cell.groups.sig[[2]] = cell.groups[[2]][sig]
-    cell.groups.sig[[3]] = cell.groups[[3]][sig]
-    return(cell.groups.sig)
+    sig.scores = list()
+    sig.scores[[1]] = scores[[1]][, sig, drop = FALSE]
+    if (length(scores) >= 2) sig.scores[[2]] = scores[[2]][sig]
+    if (length(scores) >= 3) sig.scores[[3]] = scores[[3]][sig]
+    return(sig.scores)
   }
 }
 
-#' Fisher test using cell groups scores
+#' One-way ANOVA test for multi-group comparisons
 #'
-#' @param cell.groups A list where the first element is a data frame of cell group scores,
-#'        and the second element contains metadata or labels for these groups.
+#' Performs one-way ANOVA to test for differences in scores across multiple levels of a trait.
+#' Tukey post-hoc tests are used to identify pairwise differences and significance is visualized as annotated boxplots.
+#'
+#' @param scores A list, NMF output from \code{compute.latent_factors()}, or a score matrix.
+#'   When a list, the first element must be a samples × features score matrix.
+#' @param coldata A data frame containing sample annotations including the grouping variable.
+#' @param trait Character. Name of the column in `coldata` used for the grouping variable.
+#' @param pval Numeric. P-value threshold for significance (default = 0.05).
+#'
+#' @return A list of significant features or \code{NULL} if none are significant.
+#' @export
+#'
+scores.anova.test = function(scores, coldata, trait, pval = 0.05){
+  sig = c()
+  coldata[, trait] = as.factor(coldata[, trait])
+
+  for (j in 1:ncol(scores[[1]])) {
+    data = data.frame(Value = scores[[1]][, j], Trait = coldata[, trait])
+    res.aov <- rstatix::anova_test(data = data, dv = Value, between = Trait)
+
+    if (res.aov$p < pval) {
+      cat("Significant p-value after ANOVA for", colnames(scores[[1]])[j], "\n")
+
+      # Tukey post-hoc test + position for significance annotation
+      pwc <- data %>%
+        rstatix::tukey_hsd(Value ~ Trait) %>%
+        rstatix::add_xy_position(x = "Trait")
+
+      n_labels  <- data %>% dplyr::count(Trait) %>%
+        dplyr::mutate(label = paste0(as.character(Trait), "\n(n=", n, ")"))
+      label_map <- setNames(n_labels$label, as.character(n_labels$Trait))
+
+      pdf(paste0("Results/ANOVA_", trait, "_", colnames(scores[[1]])[j], ".pdf"),
+          width = 8, height = 6)
+      print(
+        ggplot2::ggplot(data, ggplot2::aes(x = Trait, y = Value, fill = Trait)) +
+          ggplot2::geom_violin(alpha = 0.35, trim = FALSE, color = NA) +
+          ggplot2::geom_boxplot(width = 0.14, outlier.shape = NA, alpha = 0.85,
+                                color = "gray25", linewidth = 0.5) +
+          ggplot2::geom_jitter(width = 0.07, size = 1.6, alpha = 0.45, color = "gray20") +
+          ggpubr::stat_pvalue_manual(pwc, hide.ns = TRUE, label = "p.adj.signif",
+                                     tip.length = 0.02, size = 5, bracket.size = 0.5) +
+          ggplot2::scale_x_discrete(labels = label_map) +
+          ggplot2::scale_fill_brewer(palette = "Set2") +
+          ggplot2::labs(
+            title    = colnames(scores[[1]])[j],
+            subtitle = paste0("One-way ANOVA  ·  Tukey HSD  ·  ", trait),
+            caption  = rstatix::get_pwc_label(pwc),
+            x        = NULL,
+            y        = "Score"
+          ) +
+          ggplot2::theme_classic(base_size = 13) +
+          ggplot2::theme(
+            legend.position  = "none",
+            axis.text.x      = ggplot2::element_text(size = 12, color = "black"),
+            axis.text.y      = ggplot2::element_text(size = 11),
+            axis.title.y     = ggplot2::element_text(size = 13),
+            plot.title       = ggplot2::element_text(size = 14, face = "bold"),
+            plot.subtitle    = ggplot2::element_text(size = 10, color = "gray45"),
+            plot.caption     = ggplot2::element_text(size = 9, color = "gray55"),
+            panel.grid.major.y = ggplot2::element_line(color = "gray92", linewidth = 0.4)
+          )
+      )
+      dev.off()
+
+      sig = c(sig, j)
+    }
+  }
+
+  sig.scores = list()
+  if (length(sig) == 0) {
+    message("No significant features (p-value < ", pval, ") after ANOVA test")
+    return(NULL)
+  } else {
+    sig.scores[[1]] = scores[[1]][, sig, drop = FALSE]
+    if (length(scores) >= 2) sig.scores[[2]] = scores[[2]][sig]
+    if (length(scores) >= 3) sig.scores[[3]] = scores[[3]][sig]
+    return(sig.scores)
+  }
+}
+
+#' Fisher's exact test for score-trait association
+#'
+#' @param scores A list, NMF output from \code{compute.latent_factors()}, or a score matrix.
+#'   When a list, the first element must be a samples × features score matrix.
+#'   Continuous scores are binarised at the median into High/Low groups.
 #' @param coldata A data frame containing the clinical or experimental traits.
 #' @param trait Character. Name of the column in `coldata` to test with Fisher's exact test.
 #' @param pval Numeric. P-value threshold for significance (default 0.05).
 #'
-#' @return A list containing the significant cell groups after Fisher test. Additionally,
+#' @return A list containing the significant features after Fisher test. Additionally,
 #'         it saves corresponding barplot visualizations in the "Results/" folder.
 #' @export
 #'
-cell.groups.fisher.test = function(cell.groups, coldata, trait, pval = 0.05){
+scores.fisher.test = function(scores, coldata, trait, pval = 0.05){
 
   sig = c()
-  coldata[,trait] = as.factor(coldata[,trait])
+  coldata[, trait] = as.factor(coldata[, trait])
 
-  for (j in 1:ncol(cell.groups[[1]])) {
+  for (j in 1:ncol(scores[[1]])) {
     coldata = coldata %>%
-      dplyr::mutate(level = cell.groups[[1]][,j],
-                    Cells_level = ifelse(level > summary(level)[3], 'High', 'Low'))
+      dplyr::mutate(level = scores[[1]][, j],
+                    score_level = ifelse(level > summary(level)[3], 'High', 'Low'))
 
-    contingency = table(coldata[,"Cells_level"], coldata[,trait])
+    contingency = table(coldata[, "score_level"], coldata[, trait])
     test = stats::fisher.test(contingency)
 
-    ##Extract only significant features
-    if(round(test$p.value, 5) <= pval){
-      cat("Significant pval after doing Fisher test for", colnames(cell.groups[[1]])[j], "\n")
-      df = data.frame("Cells_level" = coldata[,"Cells_level"], "Trait" = coldata[,trait])
-      pdf(paste0("Results/Fisher_", trait, "_", colnames(cell.groups[[1]])[j], ".pdf"), width = 12, height = 9)
-      print(ggstatsplot::ggbarstats(df, Cells_level, Trait, results.subtitle = F,
-                                    title= paste0("Dendrogram_", colnames(cell.groups[[1]])[j]),
-                                    subtitle = paste0("Fisher's exact test, p-value = ", ifelse(test$p.value < 0.001, "< 0.001", round(test$p.value, 5))))+
-              ggplot2::theme(plot.title = ggplot2::element_text(size=15), axis.text = ggplot2::element_text(size=14), legend.title = ggplot2::element_text(size=14)))
+    if (round(test$p.value, 5) <= pval) {
+      cat("Significant pval after doing Fisher test for", colnames(scores[[1]])[j], "\n")
+      df = data.frame("score_level" = coldata[, "score_level"], "Trait" = coldata[, trait])
+      p_label <- ifelse(test$p.value < 0.001, "< 0.001", paste0("= ", round(test$p.value, 4)))
+      pdf(paste0("Results/Fisher_", trait, "_", colnames(scores[[1]])[j], ".pdf"), width = 8, height = 6)
+      print(
+        ggstatsplot::ggbarstats(df, score_level, Trait, results.subtitle = FALSE,
+                                title        = colnames(scores[[1]])[j],
+                                subtitle     = paste0("Fisher's exact test  ·  p ", p_label, "  ·  ", trait),
+                                xlab         = trait,
+                                legend.title = "Score level") +
+          ggplot2::theme(
+            plot.title    = ggplot2::element_text(size = 14, face = "bold"),
+            plot.subtitle = ggplot2::element_text(size = 10, color = "gray45"),
+            axis.text     = ggplot2::element_text(size = 12),
+            axis.title    = ggplot2::element_text(size = 13),
+            legend.title  = ggplot2::element_text(size = 12),
+            legend.text   = ggplot2::element_text(size = 11)
+          )
+      )
       dev.off()
 
       sig = c(j, sig)
     }
   }
 
-  cell.groups.sig = list()
-  cell.groups.sig[[1]] = cell.groups[[1]][,sig]
-  cell.groups.sig[[2]] = cell.groups[[2]][sig]
-  cell.groups.sig[[3]] = cell.groups[[3]][sig]
-
-  if(length(sig)==0){
-    message("No significant cell groups (pvalue < ", pval, ") after Fisher test")
-  }else{
-    return(cell.groups.sig)
+  sig.scores = list()
+  if (length(sig) == 0) {
+    message("No significant features (pvalue < ", pval, ") after Fisher test")
+    return(NULL)
+  } else {
+    sig.scores[[1]] = scores[[1]][, sig, drop = FALSE]
+    if (length(scores) >= 2) sig.scores[[2]] = scores[[2]][sig]
+    if (length(scores) >= 3) sig.scores[[3]] = scores[[3]][sig]
+    return(sig.scores)
   }
 
 }
 
-#' Perform statistical analysis on cell group scores using a specified test
-#'
-#' This function provides a unified interface to perform one of several
-#' statistical tests (Fisher’s exact, Wilcoxon rank-sum, ANOVA, Kruskal–Wallis,
-#' or Student’s t-test) on cell group scores in relation to a given clinical or
-#' experimental trait. The choice of test is specified by the `method` argument.
-#' Each test identifies significant associations and saves a corresponding
-#' visualization for each significant feature in the "Results/" directory.
-#'
-#' @param cell.groups A list where:
-#'   \itemize{
-#'     \item The first element is a data frame or matrix containing cell group scores
-#'           (rows = samples, columns = cell groups).
-#'     \item The second and third elements contain corresponding metadata or annotations
-#'           for these groups (e.g., names, features, etc.).
-#'   }
-#' @param coldata A data frame containing clinical or experimental metadata for samples.
-#'   Must include the column specified in `trait`.
-#' @param trait Character. The name of the column in `coldata` representing the clinical
-#'   or experimental trait to test against (e.g., response, subtype, etc.).
-#' @param method Character. Statistical test to perform. One of:
-#'   \itemize{
-#'     \item `"fisher"` — Fisher’s exact test (for categorical data)
-#'     \item `"wilcox"` — Wilcoxon rank-sum test (non-parametric, binary traits)
-#'     \item `"anova"` — One-way ANOVA (parametric, >2 groups)
-#'     \item `"kruskal"` — Kruskal–Wallis test (non-parametric, >2 groups)
-#'     \item `"ttest"` — Student’s t-test (parametric, binary traits)
-#'   }
-#'   Defaults to all available options, but only one can be used per call.
-#' @param pval Numeric. P-value threshold for significance (default: 0.05).
-#'
-#' @details
-#' The function automatically calls the corresponding statistical test function
-#' based on the `method` argument:
-#' \itemize{
-#'   \item `cell.groups.fisher.test()`
-#'   \item `cell.groups.wilcox.test()`
-#'   \item `cell.groups.anova.test()`
-#'   \item `cell.groups.kruskal.test()`
-#'   \item `cell.groups.ttest()`
-#' }
-#'
-#' Each test produces both a statistical result and visual outputs (PDF plots)
-#' stored in the `"Results/"` folder. These visualizations include the relevant
-#' test results (p-values) annotated on the plots.
-#'
-#' @return A list of significant cell groups, where:
-#'   \itemize{
-#'     \item The first element contains the subset of the original score matrix
-#'           for significant features.
-#'     \item The second and third elements contain associated metadata or feature
-#'           annotations.
-#'   }
-#'   Returns `NULL` if no significant features are found.
-#'
-#' @examples
-#' \dontrun{
-#' # Example usage:
-#' sig.groups <- cell.groups.stat.analysis(cell.groups, coldata, trait = "response",
-#'                                         method = "kruskal", pval = 0.05)
-#' }
-#'
-#' @export
-#'
-cell.groups.stat.analysis <- function(cell.groups, coldata, trait,
-                                      method = c("fisher", "wilcox", "anova", "kruskal", "ttest"),
-                                      pval = 0.05) {
+#’ Perform statistical analysis on scores using a specified test
+#’
+#’ Unified interface for testing associations between any score matrix and a
+#’ clinical/experimental trait. Accepts cell group scores, NMF latent factors
+#’ (output of \code{compute.latent_factors()}), or any samples × features matrix.
+#’
+#’ @param scores A list, NMF output from \code{compute.latent_factors()}, or a
+#’   score matrix (samples × features). When a list, the first element must be
+#’   the score matrix; optional second and third elements are passed through to
+#’   the returned result unchanged.
+#’ @param coldata A data frame containing clinical or experimental metadata for samples.
+#’   Must include the column specified in `trait`.
+#’ @param trait Character. The name of the column in `coldata` representing the clinical
+#’   or experimental trait to test against (e.g., response, subtype, etc.).
+#’ @param method Character. Statistical test to perform. One of:
+#’   \itemize{
+#’     \item `"fisher"` — Fisher’s exact test (scores binarised at median)
+#’     \item `"wilcox"` — Wilcoxon rank-sum test (non-parametric, binary traits)
+#’     \item `"anova"` — One-way ANOVA (parametric, >2 groups)
+#’     \item `"kruskal"` — Kruskal–Wallis test (non-parametric, >2 groups)
+#’     \item `"ttest"` — Student’s t-test (parametric, binary traits)
+#’   }
+#’   Defaults to all available options, but only one can be used per call.
+#’ @param pval Numeric. P-value threshold for significance (default: 0.05).
+#’
+#’ @details
+#’ The function automatically calls the corresponding statistical test function
+#’ based on the `method` argument:
+#’ \itemize{
+#’   \item \code{scores.fisher.test()}
+#’   \item \code{scores.wilcox.test()}
+#’   \item \code{scores.anova.test()}
+#’   \item \code{scores.kruskal.test()}
+#’   \item \code{scores.ttest()}
+#’ }
+#’
+#’ Each test produces both a statistical result and visual outputs (PDF plots)
+#’ stored in the `"Results/"` folder. These visualizations include the relevant
+#’ test results (p-values) annotated on the plots.
+#’
+#’ @return A list of significant features, where the first element contains the
+#’   subset of the original score matrix for significant features. Optional
+#’   second and third elements (from the input list) are subsetted accordingly.
+#’   Returns `NULL` if no significant features are found.
+#’
+#’ @examples
+#’ \dontrun{
+#’ # Cell group scores
+#’ sig <- scores.stat.analysis(cell.groups, coldata, trait = "response",
+#’                             method = "kruskal", pval = 0.05)
+#’
+#’ # NMF latent factors
+#’ nmf <- compute.latent.factors(cell.groups)
+#’ sig <- scores.stat.analysis(nmf, coldata, trait = "response", method = "anova")
+#’ }
+#’
+#’ @export
+#’
+scores.stat.analysis <- function(scores, coldata, trait,
+                                 method = c("fisher", "wilcox", "anova", "kruskal", "ttest"),
+                                 pval = 0.05) {
   method <- match.arg(method)
 
-  message("Running ", toupper(method), " test for cell group comparison...\n")
+  # Accept NMF output from compute.latent_factors() (has $Z) or a raw score matrix
+  if (!is.null(scores$Z)) {
+    scores <- list(scores$Z)
+  } else if (is.matrix(scores) || is.data.frame(scores)) {
+    scores <- list(scores)
+  }
+
+  message("Running ", toupper(method), " test for score comparison...\n")
 
   result <- switch(method,
-                   fisher   = cell.groups.fisher.test(cell.groups, coldata, trait, pval),
-                   wilcox   = cell.groups.wilcox.test(cell.groups, coldata, trait, pval),
-                   anova    = cell.groups.anova.test(cell.groups, coldata, trait, pval),
-                   kruskal  = cell.groups.kruskal.test(cell.groups, coldata, trait, pval),
-                   ttest    = cell.groups.ttest(cell.groups, coldata, trait, pval))
+                   fisher   = scores.fisher.test(scores, coldata, trait, pval),
+                   wilcox   = scores.wilcox.test(scores, coldata, trait, pval),
+                   anova    = scores.anova.test(scores, coldata, trait, pval),
+                   kruskal  = scores.kruskal.test(scores, coldata, trait, pval),
+                   ttest    = scores.ttest(scores, coldata, trait, pval))
 
   if (is.null(result)) {
     message("No significant features found using ", method, " test (p < ", pval, ").")
@@ -4252,11 +4119,6 @@ compute_factor_gsea <- function(RNA.tpm,
   hallmark_df <- msigdbr::msigdbr(species = "Homo sapiens", collection = "H")
   gene_sets <- split(hallmark_df$gene_symbol, hallmark_df$gs_name)
 
-  term2gene <- data.frame(
-    term = rep(names(gene_sets), lengths(gene_sets)),
-    gene = unlist(gene_sets)
-  )
-
   # -----------------------------------------
   # Fit multivariate limma model (ALL features)
   # -----------------------------------------
@@ -4284,36 +4146,47 @@ compute_factor_gsea <- function(RNA.tpm,
 
     deg_list[[feature_name]] <- deg
 
-    # Rank genes by moderated t-statistic
+    # Rank genes by moderated t-statistic (coding genes only)
     tstats <- fit$t[, feature_name]
     names(tstats) <- rownames(RNA.tpm)
+    tstats <- tstats[nchar(names(tstats)) > 0 & !is.na(names(tstats))]
     tstats <- sort(tstats, decreasing = TRUE)
 
-    # Run Hallmark GSEA
-    gsea_res <- clusterProfiler::GSEA(
-      geneList = tstats,
-      TERM2GENE = term2gene,
-      verbose = FALSE,
-      eps = 0,
+    # Run Hallmark GSEA via fgsea
+    gsea_res <- fgsea::fgsea(
+      pathways    = gene_sets,
+      stats       = tstats,
+      eps         = 0,
       nPermSimple = 10000
     )
+    gsea_res <- gsea_res[order(gsea_res$pval), ]
 
     gsea_results_list[[feature_name]] <- gsea_res
 
-
     # Optional plotting
-    if (plot_dot && !is.null(gsea_res) && nrow(gsea_res@result) > 0) {
+    if (plot_dot && !is.null(gsea_res) && nrow(gsea_res) > 0) {
 
       if (!dir.exists("Results")) dir.create("Results")
+
+      plot_df <- utils::head(gsea_res[order(gsea_res$padj), ], top_n)
+      plot_df$pathway <- sub("^HALLMARK_", "", plot_df$pathway)
+      plot_df$pathway <- factor(plot_df$pathway, levels = rev(plot_df$pathway))
+
+      p <- ggplot2::ggplot(plot_df,
+               ggplot2::aes(x = NES, y = pathway,
+                            size = -log10(padj + 1e-10),
+                            colour = NES)) +
+        ggplot2::geom_point() +
+        ggplot2::scale_colour_gradient2(low = "blue", mid = "white", high = "red") +
+        ggplot2::labs(title = paste("Hallmark GSEA -", feature_name),
+                      x = "NES", y = NULL,
+                      size = "-log10(padj)", colour = "NES") +
+        ggplot2::theme_bw()
 
       pdf(paste0("Results/GSEA_", feature_name, "_", file_name, ".pdf"),
           width = width,
           height = height)
-
-      print(enrichplot::dotplot(gsea_res,
-                              showCategory = top_n,
-                              title = paste("Hallmark GSEA -", feature_name)))
-
+      print(p)
       dev.off()
     }
   }
@@ -4531,8 +4404,8 @@ build_nes_matrix <- function(gsea_results) {
   # get all Hallmarks seen across any factor
   all_hallmarks <- unique(unlist(
     lapply(gsea_list, function(res) {
-      if (is.null(res) || nrow(res@result) == 0) return(character(0))
-      res@result$ID
+      if (is.null(res) || nrow(res) == 0) return(character(0))
+      res$pathway
     })
   ))
 
@@ -4542,12 +4415,12 @@ build_nes_matrix <- function(gsea_results) {
     res <- gsea_list[[fac]]
 
     # empty factor
-    if (is.null(res) || nrow(res@result) == 0) {
+    if (is.null(res) || nrow(res) == 0) {
       return(setNames(rep(0, length(all_hallmarks)), all_hallmarks))
     }
 
     # NES per hallmark — fill missing with 0
-    nes <- setNames(res@result$NES, res@result$ID)
+    nes <- setNames(res$NES, res$pathway)
     scores <- setNames(rep(0, length(all_hallmarks)), all_hallmarks)
     scores[names(nes)] <- nes
     scores
@@ -4584,13 +4457,22 @@ map_factors_to_metaprograms <- function(gsea_study,
 
   if(is.null(mp_file)){
     cancer_type <- tolower(cancer_type)
-    mp_file <- system.file("extdata",
-                          paste0("TCGA_meta_programs_", cancer_type, ".RData"),
-                          package = "CellTFusion")
-    if (mp_file == "") {
+
+    # Local path for development — uncomment system.file block below for package release
+    mp_file <- file.path("~/Documents/CellTFusion/inst/extdata",
+                         paste0("TCGA_meta_programs_", cancer_type, ".RData"))
+    if (!file.exists(mp_file)) {
       stop("No meta-program file found for cancer type '", cancer_type,
-          "'. Available types: blca, brca, cesc, chol, coad, skcm.")
+           "'. Available types: blca, skcm.")
     }
+
+    # mp_file <- system.file("extdata",
+    #                        paste0("TCGA_meta_programs_", cancer_type, ".RData"),
+    #                        package = "CellTFusion")
+    # if (mp_file == "") {
+    #   stop("No meta-program file found for cancer type '", cancer_type,
+    #        "'. Available types: blca, brca, cesc, chol, coad, skcm.")
+    # }
 
     load(mp_file)
   }
@@ -4602,8 +4484,8 @@ map_factors_to_metaprograms <- function(gsea_study,
   nes_study <- sapply(names(gsea_study$GSEA_results), function(fac) {
     scores <- setNames(rep(0, length(all_hallmarks)), all_hallmarks)
     res    <- gsea_study$GSEA_results[[fac]]
-    if (!is.null(res) && nrow(res@result) > 0) {
-      nes <- setNames(res@result$NES, res@result$ID)
+    if (!is.null(res) && nrow(res) > 0) {
+      nes <- setNames(res$NES, res$pathway)
       scores[names(nes)] <- nes
     }
     scores
@@ -4613,7 +4495,7 @@ map_factors_to_metaprograms <- function(gsea_study,
   # ── score each study factor against each meta-program ─────────────────────
   # score = mean NES of the meta-program Hallmarks in this study factor
   results <- lapply(colnames(nes_study), function(fac) {
-
+    message("Processing: ", fac)
     fac_nes <- nes_study[, fac]
 
     mp_scores <- sapply(meta_programs$meta_program, function(mp) {
@@ -4621,11 +4503,12 @@ map_factors_to_metaprograms <- function(gsea_study,
         meta_programs$hallmarks[meta_programs$meta_program == mp], ", ")[[1]]
       h <- intersect(hallmarks, names(fac_nes))
       if (length(h) == 0) return(NA_real_)
-      mean(fac_nes[h])
+      mean(fac_nes[h], na.rm = TRUE)
     })
 
-    best_mp    <- names(which.max(mp_scores))
-    best_score <- mp_scores[best_mp]
+    idx        <- which.max(mp_scores)
+    best_mp    <- if (length(idx) > 0 && mp_scores[idx] > 0) names(idx)     else NA_character_
+    best_score <- if (length(idx) > 0 && mp_scores[idx] > 0) mp_scores[idx] else NA_real_
 
     data.frame(
       factor           = fac,
@@ -4690,17 +4573,14 @@ map_factors_to_metaprograms <- function(gsea_study,
       NA_character_
     )
 
-    # order factors by their best_score descending — most confident mappings first
-    factor_order <- result_df$factor[order(result_df$best_score, decreasing = TRUE)]
+    factor_order <- colnames(nes_study)
     score_long$factor <- factor(score_long$factor, levels = factor_order)
     score_long$MP     <- factor(score_long$MP,
                                 levels = unique(meta_programs$meta_program))
 
     p <- ggplot2::ggplot(score_long,
                          ggplot2::aes(x = MP, y = score)) +
-      # all MP scores as grey points
       ggplot2::geom_col(fill = "#DDDDDD", width = 0.6) +
-      # winning MP highlighted and colored by TME subtype
       ggplot2::geom_col(
         data = score_long[score_long$is_best, ],
         ggplot2::aes(fill = TME_subtype),
@@ -4708,7 +4588,6 @@ map_factors_to_metaprograms <- function(gsea_study,
       ) +
       ggplot2::scale_fill_manual(values = mfp_colors, name = "TME subtype",
                                  na.translate = FALSE) +
-      # horizontal line at 0 for reference
       ggplot2::geom_hline(yintercept = 0, linewidth = 0.3, colour = "black") +
       ggplot2::facet_wrap(~ factor, scales = "free_y") +
       ggplot2::labs(
@@ -4724,7 +4603,7 @@ map_factors_to_metaprograms <- function(gsea_study,
         legend.position = "right"
       )
 
-    fname <- paste0("Results/factor_MP_mapping",
+    fname <- paste0("Results/Factor_MP_mapping",
                     if (!is.null(file_name)) paste0("_", file_name) else "",
                     ".pdf")
 
@@ -4741,7 +4620,7 @@ map_factors_to_metaprograms <- function(gsea_study,
     message("Saved factor-to-MP mapping plot to: ", fname)
   }
 
-  result_df
+  list(factor_mapping = result_df, reference = meta_programs)
 }
 
 #' Annotate meta-programs with Bagaev TME subtypes
