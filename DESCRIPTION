@@ -73,7 +73,6 @@ Suggests:
     dorothea,
     survival,
     survminer,
-    pipeML,
     RcppML,
     MOFA2,
     NMF,
