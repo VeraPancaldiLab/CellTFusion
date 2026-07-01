@@ -1,6 +1,3 @@
-CellTFusion
-================
-
 # CellTFusion <a href="https://verapancaldilab.github.io/CellTFusion/"><img src="man/figures/logo.png" align="right" height="139" alt="CellTFusion logo" /></a>
 
 Integration of immune-cell type deconvolution features and

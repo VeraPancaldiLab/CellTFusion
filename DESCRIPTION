@@ -1,6 +1,6 @@
 Package: CellTFusion
 Title: Integration of immune-cell type deconvolution features and prior-knowledge networks of TFs-gene interactions to characterize potential cell states of the tumor microenvironment using bulk RNAseq data
-Version: 0.0.0.9000
+Version: 0.0.1
 Authors@R: c( 
     person("Marcelo", "Hurtado", , "marcelo.hurtado@inserm.fr", role = c("aut", "cre"),
            comment = c(ORCID = "0009-0004-6712-0864")),

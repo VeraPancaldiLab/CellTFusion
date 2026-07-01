@@ -13,6 +13,16 @@ home:
   title: CellTFusion
   description: Integration of immune-cell type deconvolution and TF networks
 
+articles:
+- title: Tutorials
+  navbar: Tutorials
+  contents:
+  - articles/01-feature-computation
+  - articles/02-cell-groups
+  - articles/03-analysis
+  - articles/04-one-step-pipeline
+  - articles/05-machine-learning
+
 reference:
 - title: Main
   desc: >
