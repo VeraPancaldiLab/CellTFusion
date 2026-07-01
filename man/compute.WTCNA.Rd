@@ -29,7 +29,7 @@
 
 \item{minMod}{Minimum number of TFs per module. Default is 15.}
 
-\item{corr_mod}{Correlation threshold (0–1) for merging similar modules. Default is 0.9.}
+\item{corr_mod}{Correlation threshold (0-1) for merging similar modules. Default is 0.9.}
 
 \item{cor_type}{Correlation type for adjacency calculation: "p" (Pearson), "s" (Spearman). Default is "p".}
 

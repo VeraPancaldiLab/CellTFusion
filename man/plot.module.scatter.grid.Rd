@@ -2,7 +2,7 @@
 % Please edit documentation in R/CellTFusion.R
 \name{plot.module.scatter.grid}
 \alias{plot.module.scatter.grid}
-\title{Save a grid of scatter plots for significant module–feature pairs}
+\title{Save a grid of scatter plots for significant module-feature pairs}
 \usage{
 \method{plot}{module.scatter.grid}(
   matA,

@@ -1,5 +1,35 @@
 
-utils::globalVariables(c("Trait", "Value" ,"level", ".", "Cells_level", "PC1", "Features", "tf", "Module", "shap_value", "mean_shap", "direction", "Feature", "Impact", "values", "ind", "Freq", "new_column", ".data", "id", "value", "P", "p", "sig_p", "r", "i"))
+utils::globalVariables(c("Trait", "Value" ,"level", ".", "Cells_level", "PC1", "Features", "tf", "Module", "shap_value", "mean_shap", "direction", "Feature", "Impact", "values", "ind", "Freq", "new_column", ".data", "id", "value", "P", "p", "sig_p", "r", "i",
+                         ":=", "MFP", "MP", "NES", "Regulator", "TME_subtype", "Target", "as.hclust",
+                         "condition", "coord_cartesian", "dist", "facet_wrap", "feature_label",
+                         "geom_jitter", "group", "gs_name", "hclust", "kruskal.test", "labeller",
+                         "lm", "meta_programs", "module", "mor", "mtext", "order.dendrogram", "padj",
+                         "pathway", "proportion", "quantile", "read.delim", "residuals", "score",
+                         "score_level", "setNames", "stat_pvalue_manual", "svg", "target", "theme_bw", "title",
+                         "compute.deconvolution.analysis", "n", "n_distinct"))
+
+#' @importFrom grDevices colorRampPalette svg
+#' @importFrom graphics mtext title
+#' @importFrom stats as.hclust dist hclust kruskal.test lm order.dendrogram quantile residuals setNames
+#' @importFrom utils read.delim
+#' @importFrom RColorBrewer brewer.pal
+#' @importFrom colorspace rainbow_hcl
+#' @importFrom fgsea fgsea
+#' @importFrom ppcor pcor.test
+#' @rawNamespace export(compute.TFs.activity)
+#' @rawNamespace export(compute.WTCNA)
+#' @rawNamespace export(compute.pathway.activity)
+#' @rawNamespace export(compute.TF.network.classification)
+#' @rawNamespace export(compute.metadata.association)
+#' @rawNamespace export(compute.latent_factors)
+#' @rawNamespace export(compute.modules.relationship)
+#' @rawNamespace export(compute.modules.enrichment)
+#' @rawNamespace export(compute.composition.matrix)
+#' @rawNamespace export(compute.test.set)
+NULL
+
+compute <- function(x, ...) UseMethod("compute")
+
 
 #' Compute one-step CellTFusion
 #' 
@@ -17,11 +47,11 @@ utils::globalVariables(c("Trait", "Value" ,"level", ".", "Cells_level", "PC1", "
 #' @param task Analysis mode. Choose between \code{"supervised"} and \code{"unsupervised"}.
 #' @param contrast Optional character indicating the condition column used for supervised DEG analysis.
 #' @param ref_level Optional character indicating the reference level for supervised DEG analysis.
-#' @param TF.collection Character. The source of the TF–target network. Options are `"CollecTRI"` (default), `"Dorothea"`, or `"ARACNE"`.
+#' @param TF.collection Character. The source of the TF-target network. Options are `"CollecTRI"` (default), `"Dorothea"`, or `"ARACNE"`.
 #' - `"CollecTRI"` and `"Dorothea"` use prebuilt collections from OmnipathR.
 #' - `"ARACNE"` allows user input of a custom network file in a 3-column format: `regulator`, `target`, and `mutual information`.
 #' @param min_targets_size Integer. Minimum number of target genes per regulon required for TF activity inference. Default is 5.
-#' @param universe Optional. A user-specified data frame of TF–target interactions. If not provided, the function will fetch the relevant network based on the `TF.collection` argument.
+#' @param universe Optional. A user-specified data frame of TF-target interactions. If not provided, the function will fetch the relevant network based on the `TF.collection` argument.
 #' @param paths Optional. A user-specified data frame of pathways gene sets. If not provided, the function will fetch the relevant pathways based on `PROGENy`.
 #' @param gene_sets Optional. A data frame of custom gene sets passed to \code{compute.pathway.activity()}'s
 #'   \code{gene_sets} argument for GSVA-based scoring. If \code{NULL}, only PROGENy is used.
@@ -142,7 +172,7 @@ CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL
     if (verbose) {
       cat("\nRunning unsupervised task............................................................\n")
     }
-    if (!batch) {  ## No batch → single matrix
+    if (!batch) {  ## No batch -> single matrix
       tfs <- compute.TFs.activity(counts.norm, TF.collection, min_targets_size, universe, cancer.type = cancer_type,return = return, file.name = file_name)
     }else {
       if(is.null(coldata) || is.null(batch_id)) {
@@ -191,7 +221,6 @@ CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL
   }
 
   dt = compute.deconvolution.analysis(deconv, corr = corr, corr_type = corr_type, seed = 123, batch = batch_vec, cells_extra = cells_extra, file_name = file_name, return = return, verbose = FALSE)
-  dt = deconvolution_dictionary(dt, pathways, batch_id = batch_vec) ## Apply dictionary of deconvolution (To be added in compute.deconvolution.analysis() soon)
 
   # 4. Cell groups construction and scores
   if(verbose){
@@ -256,9 +285,12 @@ CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL
 #' @param tfs.module.network A list containing network information of transcription factor (TF) modules, as
 #' obtained from \code{compute.WTCNA()}. It should contain at least one element with TF module membership or connectivity.
 #' @param batch Optional vector indicating batch assignment for samples.
-#'
 #' @param return Logical; if TRUE (default), writes CSV files with cell group compositions and scores
 #' to the "Results/" folder.
+#' @param pval Numeric. P-value threshold for statistical tests. Default is 0.05.
+#' @param n_perm Integer. Number of permutations for significance testing. Default is 999.
+#' @param dendrogram_file Optional character. File path to save dendrogram plot.
+#' @param return_dendrogram Logical. If TRUE, includes the dendrogram in the returned list. Default FALSE.
 #'
 #' @return A list of three elements:
 #' \describe{
@@ -405,8 +437,6 @@ cell.groups.computation = function(deconvolution, cell.dendrograms, tfs.module.n
 #' }
 #' The function does not return an object to the R environment.
 #'
-#' @export
-#'
 #' @examples
 #'
 #' data("network.tuto")
@@ -535,7 +565,6 @@ compute.metadata.association <- function(
 #' Pathways shared between multiple modules are filtered using a Venn diagram-based comparison
 #' to retain only module-specific results.
 #'
-#' @export
 #'
 #' @examples
 #' \dontrun{
@@ -640,7 +669,6 @@ compute.modules.enrichment <- function(RNA.tpm, hub_tfs){
 #'                                     return = TRUE,
 #'                                     pval = 0.01)
 #'
-#' @export
 compute.modules.relationship <- function(matA, matB, file_name, batch = NULL, width = 8, height = 8, par_mar = NULL, pval=0.05, padj = F, cor_type = "p", return = F, vertical = F, plot = T, plot.grid = F, width.grid = 12, height.grid = 10, ncol.grid = NULL){
 
   matA = data.frame(matA)
@@ -893,10 +921,9 @@ compute.modules.relationship <- function(matA, matB, file_name, batch = NULL, wi
 #'   \item \code{sample_acts_gsva}: A scaled matrix of GSVA scores based on the provided gene sets.
 #' }
 #'
-#' @export
 #'
 #' @references
-#' Schubert M, Klinger B, Klünemann M, Sieber A, Uhlitz F, Sauer S, Garnett MJ, Blüthgen N, Saez-Rodriguez J.
+#' Schubert M, Klinger B, Kluenemann M, Sieber A, Uhlitz F, Sauer S, Garnett MJ, Bluethgen N, Saez-Rodriguez J.
 #' Perturbation-response genes reveal signaling footprints in cancer gene expression. Nature Communications. 2018. \doi{10.1038/s41467-017-02391-6}
 #'
 #' @examples
@@ -971,7 +998,7 @@ compute.pathway.activity <- function(RNA.tpm, gene_sets = NULL, paths = NULL, re
   }
 
   ###### RETURN FORMAT LOGIC
-  # If only one element → return it directly (matrix)
+  # If only one element -> return it directly (matrix)
   # standardise column names so they are valid R identifiers (consistent with caret internals)
   results_list <- lapply(results_list, function(df) {
     colnames(df) <- make.names(colnames(df))
@@ -995,16 +1022,16 @@ compute.pathway.activity <- function(RNA.tpm, gene_sets = NULL, paths = NULL, re
 #' @param return Logical. If TRUE, intermediate plots (e.g. silhouette, dendrogram, PCA) are saved in the \code{Results/} directory. Default is TRUE.
 #'
 #' @return A named list of TF module clusters.
-#' @export
 #'
 #' @examples
-#'
+#' \dontrun{
 #' data("network.tuto")
 #' data("counts.norm.tuto")
 #' pathways <- compute.pathway.activity(counts.norm.tuto)
 #' tfs.modules.clusters <- compute.TF.network.classification(tf.network = network.tuto,
 #'                                                           pathways.features = pathways,
 #'                                                           return = FALSE)
+#' }
 #'
 compute.TF.network.classification = function(tf.network, pathways.features, return = T){
 
@@ -1095,29 +1122,30 @@ compute.TF.network.classification = function(tf.network, pathways.features, retu
 
 #' Compute Transcription Factor (TF) activity
 #'
-#' Infers transcription factor (TF) activity from a gene expression matrix using the VIPER algorithm (Alvarez et al., 2016). The function requires a TF–target gene regulatory network, which can be provided by the user or obtained from OmnipathR resources such as CollecTRI or Dorothea. ARACNE-inferred networks are also supported.
+#' Infers transcription factor (TF) activity from a gene expression matrix using the VIPER algorithm (Alvarez et al., 2016). The function requires a TF-target gene regulatory network, which can be provided by the user or obtained from OmnipathR resources such as CollecTRI or Dorothea. ARACNE-inferred networks are also supported.
 #'
 #' @param RNA.counts A gene expression matrix with genes as rows and samples as columns. The matrix should be normalized (e.g., TPM, log2CPM, etc.).
-#' @param TF.collection Character. The source of the TF–target network. Options are `"CollecTRI"` (default), `"Dorothea"`, or `"ARACNE"`.
+#' @param TF.collection Character. The source of the TF-target network. Options are `"CollecTRI"` (default), `"Dorothea"`, or `"ARACNE"`.
 #' - `"CollecTRI"` and `"Dorothea"` use prebuilt collections from OmnipathR.
 #' - `"ARACNE"` allows user input of a custom network file in a 3-column format: `regulator`, `target`, and `mutual information`.
 #' @param min_targets_size Integer. Minimum number of target genes per regulon required for TF activity inference. Default is 5.
-#' @param universe Optional. A user-specified data frame of TF–target interactions. If not provided, the function will fetch the relevant network based on the `TF.collection` argument.
+#' @param universe Optional. A user-specified data frame of TF-target interactions. If not provided, the function will fetch the relevant network based on the `TF.collection` argument.
+#' @param cancer.type Optional character. Cancer type label used when caching the TF collection.
 #' @param cores Integer. Number of cores used by VIPER inference. Default is 4.
+#' @param scale Logical. If TRUE (default), z-score scales the TF activity matrix across samples.
 #' @param return Logical; if TRUE, saves matrix in Results/ folder. Default is TRUE.
 #' @param file.name Optional character suffix used when writing the TF activity matrix to disk.
 #'
 #' @return A data frame of inferred and scaled TF activity scores, with samples as rows and TFs as columns.
-#' @export
 #'
 #' @references
-#' Alvarez, M. et al. (2016). Functional characterization of somatic mutations in cancer using network-based inference of protein activity. *Nature Genetics*, 48(8), 838–847. https://doi.org/10.1038/ng.3593
+#' Alvarez, M. et al. (2016). Functional characterization of somatic mutations in cancer using network-based inference of protein activity. *Nature Genetics*, 48(8), 838-847. https://doi.org/10.1038/ng.3593
 #'
-#' Türei, D., Korcsmáros, T., & Saez-Rodriguez, J. (2016). OmniPath: guidelines and gateway for literature-curated signaling pathway resources. *Nature Methods*, 13(12), 966–967. https://doi.org/10.1038/nmeth.4077
+#' Tuerei, D., Korcsmaros, T., & Saez-Rodriguez, J. (2016). OmniPath: guidelines and gateway for literature-curated signaling pathway resources. *Nature Methods*, 13(12), 966-967. https://doi.org/10.1038/nmeth.4077
 #'
 #' Garcia-Alonso, L. et al. (2019). Benchmark and integration of resources for the estimation of human transcription factor activities. *Genome Research*. https://doi.org/10.1101/gr.240663.118
 #'
-#' Lachmann, A. et al. (2016). ARACNe-AP: gene network reverse engineering through adaptive partitioning inference of mutual information. *Bioinformatics*, 32(14), 2233–2235. https://doi.org/10.1093/bioinformatics/btw216
+#' Lachmann, A. et al. (2016). ARACNe-AP: gene network reverse engineering through adaptive partitioning inference of mutual information. *Bioinformatics*, 32(14), 2233-2235. https://doi.org/10.1093/bioinformatics/btw216
 #'
 #' Margolin, A.A. et al. (2006). ARACNE: an algorithm for the reconstruction of gene regulatory networks in a mammalian cellular context. *BMC Bioinformatics*, 7(Suppl 1), S7. https://doi.org/10.1186/1471-2105-7-S1-S7
 #'
@@ -1143,7 +1171,7 @@ compute.TFs.activity <- function(RNA.counts, TF.collection = "CollecTRI", min_ta
       aracne.network <- candidates[1]
       cat("Auto-detected ARACNe network:", aracne.network, "\n")
     } else {
-      aracne.network <- file.path("input/ARACNE", cancer.type, "network/network.txt")
+      aracne.network <- file.path("~/Documents/CellTFusion_paper/input/ARACNE", cancer.type, "network/network.txt")
       if(!file.exists(aracne.network))
         stop("ARACNe network not found for cancer type '", cancer.type, "': ", aracne.network)
     }
@@ -1164,7 +1192,7 @@ compute.TFs.activity <- function(RNA.counts, TF.collection = "CollecTRI", min_ta
                  method = "spearman")
     )
 
-    # mor = sign of Spearman correlation — +1 activation, -1 repression
+    # mor = sign of Spearman correlation - +1 activation, -1 repression
     universe <- aracne_net %>%
       dplyr::mutate(mor = cor_mat[cbind(source, target)]) %>%
       dplyr::mutate(mor = sign(mor)) %>%
@@ -1248,7 +1276,7 @@ compute.TFs.activity <- function(RNA.counts, TF.collection = "CollecTRI", min_ta
 #' @param network.type Network type: "signed", "unsigned", "signed hybrid", or "distance". Default is "signed".
 #' @param clustering.method Clustering method for hierarchical clustering. Default is "ward.D2".
 #' @param minMod Minimum number of TFs per module. Default is 15.
-#' @param corr_mod Correlation threshold (0–1) for merging similar modules. Default is 0.9.
+#' @param corr_mod Correlation threshold (0-1) for merging similar modules. Default is 0.9.
 #' @param cor_type Correlation type for adjacency calculation: "p" (Pearson), "s" (Spearman). Default is "p".
 #' @param softPower Optional numeric value specifying the soft-thresholding power to be used when constructing
 #' @param verbose Boolen value to whether print or no the function messages
@@ -1267,7 +1295,6 @@ compute.TFs.activity <- function(RNA.counts, TF.collection = "CollecTRI", min_ta
 #' Langfelder, P., & Horvath, S. (2008). WGCNA: an R package for weighted correlation network analysis.
 #' BMC Bioinformatics, 9, 559. https://doi.org/10.1186/1471-2105-9-559
 #'
-#' @export
 #'
 #' @examples
 #'
@@ -1700,7 +1727,6 @@ identify.cell.groups = function(features, clustering.method = "ward.D2", width =
 #' @param cells_extra Optional vector of additional cell identifiers to consider during extraction.
 #'
 #' @return A binary matrix (data.frame) where rows are cell groups and columns are cell types (1 = present, 0 = absent).
-#' @export
 #'
 compute.composition.matrix = function(deconvolution.subgroupped, cell.groups, cells_extra = NULL){
 
@@ -1762,12 +1788,14 @@ compute.composition.matrix = function(deconvolution.subgroupped, cell.groups, ce
 #' @param network A list containing TF networks for cell types.
 #' @param dt A list containing deconvolution subgroup structures.
 #' @param batch Optional vector indicating batch assignment for samples.
-#' @param pval Numeric. P-value threshold applied both to filter TF module–deconvolution
+#' @param pval Numeric. P-value threshold applied both to filter TF module-deconvolution
 #'   feature correlations and as the significance cutoff for the CCA permutation test.
 #'   Default: 0.05.
 #' @param clustering.method Clustering method for hierarchical clustering. Default: "ward.D2".
 #' @param n_perm Integer. Number of permutations for the CCA significance test per cell group.
 #'   Higher values give more precise p-values but increase runtime. Default: 999.
+#' @param dendrogram_file Optional character. File path to save dendrogram plot output.
+#' @param return_dendrogram Logical. If TRUE, includes the dendrogram in the returned list. Default FALSE.
 #'
 #' @return A list of 3 elements:
 #' \describe{
@@ -1815,7 +1843,6 @@ construct_cell_groups = function(network, dt, batch = NULL, pval = 0.05, cluster
 #' Then it extracts the relevant cells for each feature and calculates composite
 #' scores.
 #'
-#' @export
 compute.test.set = function(deconv_res, cell_groups, features, deconvolution_test){
 
   ################################################################################Simulate cell subgroups
@@ -2832,11 +2859,11 @@ unregister_dopar <- function() {
 
 #' Student's t-test for cell group comparisons
 #'
-#' Performs a Student’s t-test comparing cell group scores between two groups of a binary trait.
+#' Performs a Student's t-test comparing cell group scores between two groups of a binary trait.
 #' Significant features are plotted as boxplots and saved as PDF files in the "Results/" directory.
 #'
-#' @param cell.groups A list where the first element is a data frame or matrix of cell group scores,
-#'        and the second and third elements contain metadata or identifiers for the cell groups.
+#' @param scores A list or matrix of cell group scores. When a list, the first element must be
+#'        a data frame or matrix of scores (samples x features).
 #' @param coldata A data frame containing sample-level annotations including the trait to test.
 #' @param trait Character. Name of the column in `coldata` used as the grouping variable.
 #' @param pval Numeric. P-value threshold for significance (default = 0.05).
@@ -2884,7 +2911,7 @@ scores.ttest <- function(scores, coldata, trait, pval = 0.05) {
           ggplot2::scale_fill_brewer(palette = "Set2") +
           ggplot2::labs(
             title    = colnames(scores[[1]])[j],
-            subtitle = paste0("Student's t-test  ·  ", trait),
+            subtitle = paste0("Student's t-test | ", trait),
             x        = NULL,
             y        = "Score"
           ) +
@@ -2917,18 +2944,18 @@ scores.ttest <- function(scores, coldata, trait, pval = 0.05) {
   }
 }
 
-#' Kruskal–Wallis test for multi-group comparisons
+#' Kruskal-Wallis test for multi-group comparisons
 #'
-#' Performs a Kruskal–Wallis test to compare scores across multiple trait levels.
+#' Performs a Kruskal-Wallis test to compare scores across multiple trait levels.
 #' Significant results are visualized as annotated boxplots with Dunn post-hoc tests.
 #'
 #' @param scores A list, NMF output from \code{compute.latent_factors()}, or a score matrix.
-#'   When a list, the first element must be a samples × features score matrix.
+#'   When a list, the first element must be a samples x features score matrix.
 #' @param coldata A data frame containing sample annotations, including the grouping trait.
 #' @param trait Character. Name of the column in `coldata` used as the grouping variable.
 #' @param pval Numeric. P-value threshold for significance (default = 0.05).
 #'
-#' @return A list containing only significant features after Kruskal–Wallis test.
+#' @return A list containing only significant features after Kruskal-Wallis test.
 #'         Returns \code{NULL} if no significant features are found.
 #' @export
 #'
@@ -2939,11 +2966,11 @@ scores.kruskal.test <- function(scores, coldata, trait, pval = 0.05) {
   for (j in 1:ncol(scores[[1]])) {
     data = data.frame(Value = scores[[1]][, j], Trait = coldata[, trait])
 
-    # Perform Kruskal–Wallis test
+    # Perform Kruskal-Wallis test
     res.kruskal <- rstatix::kruskal_test(Value ~ Trait, data = data)
 
     if (res.kruskal$p < pval) {
-      cat("Significant p-value after Kruskal–Wallis test for", colnames(scores[[1]])[j], "\n")
+      cat("Significant p-value after Kruskal-Wallis test for", colnames(scores[[1]])[j], "\n")
 
       # Dunn post-hoc test + positions for significance annotation
       pwc <- data %>%
@@ -2968,7 +2995,7 @@ scores.kruskal.test <- function(scores, coldata, trait, pval = 0.05) {
           ggplot2::scale_fill_brewer(palette = "Set2") +
           ggplot2::labs(
             title    = colnames(scores[[1]])[j],
-            subtitle = paste0("Kruskal–Wallis  ·  Dunn post-hoc (BH)  ·  ", trait),
+            subtitle = paste0("Kruskal-Wallis | Dunn post-hoc (BH) | ", trait),
             caption  = rstatix::get_pwc_label(pwc),
             x        = NULL,
             y        = "Score"
@@ -2992,7 +3019,7 @@ scores.kruskal.test <- function(scores, coldata, trait, pval = 0.05) {
   }
 
   if (length(sig) == 0) {
-    message("No significant features (p-value < ", pval, ") after Kruskal–Wallis test.")
+    message("No significant features (p-value < ", pval, ") after Kruskal-Wallis test.")
     return(NULL)
   } else {
     sig.scores = list()
@@ -3005,12 +3032,12 @@ scores.kruskal.test <- function(scores, coldata, trait, pval = 0.05) {
 
 #' Wilcoxon rank-sum test for binary traits
 #'
-#' Performs a Wilcoxon rank-sum (Mann–Whitney U) test comparing scores between
+#' Performs a Wilcoxon rank-sum (Mann-Whitney U) test comparing scores between
 #' two levels of a binary clinical trait.
 #' Significant features are plotted as boxplots and saved to the "Results/" folder.
 #'
 #' @param scores A list, NMF output from \code{compute.latent_factors()}, or a score matrix.
-#'   When a list, the first element must be a samples × features score matrix.
+#'   When a list, the first element must be a samples x features score matrix.
 #' @param coldata A data frame containing sample annotations and clinical traits.
 #' @param trait Character. Name of the column in `coldata` used as the binary grouping variable.
 #' @param pval Numeric. P-value threshold for significance (default = 0.05).
@@ -3058,7 +3085,7 @@ scores.wilcox.test <- function(scores, coldata, trait, pval = 0.05) {
           ggplot2::scale_fill_brewer(palette = "Set2") +
           ggplot2::labs(
             title    = colnames(scores[[1]])[j],
-            subtitle = paste0("Wilcoxon rank-sum test  ·  ", trait),
+            subtitle = paste0("Wilcoxon rank-sum test | ", trait),
             x        = NULL,
             y        = "Score"
           ) +
@@ -3097,7 +3124,7 @@ scores.wilcox.test <- function(scores, coldata, trait, pval = 0.05) {
 #' Tukey post-hoc tests are used to identify pairwise differences and significance is visualized as annotated boxplots.
 #'
 #' @param scores A list, NMF output from \code{compute.latent_factors()}, or a score matrix.
-#'   When a list, the first element must be a samples × features score matrix.
+#'   When a list, the first element must be a samples x features score matrix.
 #' @param coldata A data frame containing sample annotations including the grouping variable.
 #' @param trait Character. Name of the column in `coldata` used for the grouping variable.
 #' @param pval Numeric. P-value threshold for significance (default = 0.05).
@@ -3139,7 +3166,7 @@ scores.anova.test = function(scores, coldata, trait, pval = 0.05){
           ggplot2::scale_fill_brewer(palette = "Set2") +
           ggplot2::labs(
             title    = colnames(scores[[1]])[j],
-            subtitle = paste0("One-way ANOVA  ·  Tukey HSD  ·  ", trait),
+            subtitle = paste0("One-way ANOVA | Tukey HSD | ", trait),
             caption  = rstatix::get_pwc_label(pwc),
             x        = NULL,
             y        = "Score"
@@ -3177,7 +3204,7 @@ scores.anova.test = function(scores, coldata, trait, pval = 0.05){
 #' Fisher's exact test for score-trait association
 #'
 #' @param scores A list, NMF output from \code{compute.latent_factors()}, or a score matrix.
-#'   When a list, the first element must be a samples × features score matrix.
+#'   When a list, the first element must be a samples x features score matrix.
 #'   Continuous scores are binarised at the median into High/Low groups.
 #' @param coldata A data frame containing the clinical or experimental traits.
 #' @param trait Character. Name of the column in `coldata` to test with Fisher's exact test.
@@ -3208,7 +3235,7 @@ scores.fisher.test = function(scores, coldata, trait, pval = 0.05){
       print(
         ggstatsplot::ggbarstats(df, score_level, Trait, results.subtitle = FALSE,
                                 title        = colnames(scores[[1]])[j],
-                                subtitle     = paste0("Fisher's exact test  ·  p ", p_label, "  ·  ", trait),
+                                subtitle     = paste0("Fisher's exact test | p ", p_label, " | ", trait),
                                 xlab         = trait,
                                 legend.title = "Score level") +
           ggplot2::theme(
@@ -3239,64 +3266,64 @@ scores.fisher.test = function(scores, coldata, trait, pval = 0.05){
 
 }
 
-#’ Perform statistical analysis on scores using a specified test
-#’
-#’ Unified interface for testing associations between any score matrix and a
-#’ clinical/experimental trait. Accepts cell group scores, NMF latent factors
-#’ (output of \code{compute.latent_factors()}), or any samples × features matrix.
-#’
-#’ @param scores A list, NMF output from \code{compute.latent_factors()}, or a
-#’   score matrix (samples × features). When a list, the first element must be
-#’   the score matrix; optional second and third elements are passed through to
-#’   the returned result unchanged.
-#’ @param coldata A data frame containing clinical or experimental metadata for samples.
-#’   Must include the column specified in `trait`.
-#’ @param trait Character. The name of the column in `coldata` representing the clinical
-#’   or experimental trait to test against (e.g., response, subtype, etc.).
-#’ @param method Character. Statistical test to perform. One of:
-#’   \itemize{
-#’     \item `"fisher"` — Fisher’s exact test (scores binarised at median)
-#’     \item `"wilcox"` — Wilcoxon rank-sum test (non-parametric, binary traits)
-#’     \item `"anova"` — One-way ANOVA (parametric, >2 groups)
-#’     \item `"kruskal"` — Kruskal–Wallis test (non-parametric, >2 groups)
-#’     \item `"ttest"` — Student’s t-test (parametric, binary traits)
-#’   }
-#’   Defaults to all available options, but only one can be used per call.
-#’ @param pval Numeric. P-value threshold for significance (default: 0.05).
-#’
-#’ @details
-#’ The function automatically calls the corresponding statistical test function
-#’ based on the `method` argument:
-#’ \itemize{
-#’   \item \code{scores.fisher.test()}
-#’   \item \code{scores.wilcox.test()}
-#’   \item \code{scores.anova.test()}
-#’   \item \code{scores.kruskal.test()}
-#’   \item \code{scores.ttest()}
-#’ }
-#’
-#’ Each test produces both a statistical result and visual outputs (PDF plots)
-#’ stored in the `"Results/"` folder. These visualizations include the relevant
-#’ test results (p-values) annotated on the plots.
-#’
-#’ @return A list of significant features, where the first element contains the
-#’   subset of the original score matrix for significant features. Optional
-#’   second and third elements (from the input list) are subsetted accordingly.
-#’   Returns `NULL` if no significant features are found.
-#’
-#’ @examples
-#’ \dontrun{
-#’ # Cell group scores
-#’ sig <- scores.stat.analysis(cell.groups, coldata, trait = "response",
-#’                             method = "kruskal", pval = 0.05)
-#’
-#’ # NMF latent factors
-#’ nmf <- compute.latent.factors(cell.groups)
-#’ sig <- scores.stat.analysis(nmf, coldata, trait = "response", method = "anova")
-#’ }
-#’
-#’ @export
-#’
+#' Perform statistical analysis on scores using a specified test
+#'
+#' Unified interface for testing associations between any score matrix and a
+#' clinical/experimental trait. Accepts cell group scores, NMF latent factors
+#' (output of \code{compute.latent_factors()}), or any samples x features matrix.
+#'
+#' @param scores A list, NMF output from \code{compute.latent_factors()}, or a
+#'   score matrix (samples x features). When a list, the first element must be
+#'   the score matrix; optional second and third elements are passed through to
+#'   the returned result unchanged.
+#' @param coldata A data frame containing clinical or experimental metadata for samples.
+#'   Must include the column specified in `trait`.
+#' @param trait Character. The name of the column in `coldata` representing the clinical
+#'   or experimental trait to test against (e.g., response, subtype, etc.).
+#' @param method Character. Statistical test to perform. One of:
+#'   \itemize{
+#'     \item `"fisher"` - Fisher's exact test (scores binarised at median)
+#'     \item `"wilcox"` - Wilcoxon rank-sum test (non-parametric, binary traits)
+#'     \item `"anova"` - One-way ANOVA (parametric, >2 groups)
+#'     \item `"kruskal"` - Kruskal-Wallis test (non-parametric, >2 groups)
+#'     \item `"ttest"` - Student's t-test (parametric, binary traits)
+#'   }
+#'   Defaults to all available options, but only one can be used per call.
+#' @param pval Numeric. P-value threshold for significance (default: 0.05).
+#'
+#' @details
+#' The function automatically calls the corresponding statistical test function
+#' based on the `method` argument:
+#' \itemize{
+#'   \item \code{scores.fisher.test()}
+#'   \item \code{scores.wilcox.test()}
+#'   \item \code{scores.anova.test()}
+#'   \item \code{scores.kruskal.test()}
+#'   \item \code{scores.ttest()}
+#' }
+#'
+#' Each test produces both a statistical result and visual outputs (PDF plots)
+#' stored in the `"Results/"` folder. These visualizations include the relevant
+#' test results (p-values) annotated on the plots.
+#'
+#' @return A list of significant features, where the first element contains the
+#'   subset of the original score matrix for significant features. Optional
+#'   second and third elements (from the input list) are subsetted accordingly.
+#'   Returns `NULL` if no significant features are found.
+#'
+#' @examples
+#' \dontrun{
+#' # Cell group scores
+#' sig <- scores.stat.analysis(cell.groups, coldata, trait = "response",
+#'                             method = "kruskal", pval = 0.05)
+#'
+#' # NMF latent factors
+#' nmf <- compute.latent.factors(cell.groups)
+#' sig <- scores.stat.analysis(nmf, coldata, trait = "response", method = "anova")
+#' }
+#'
+#' @export
+#'
 scores.stat.analysis <- function(scores, coldata, trait,
                                  method = c("fisher", "wilcox", "anova", "kruskal", "ttest"),
                                  pval = 0.05) {
@@ -3319,7 +3346,7 @@ scores.stat.analysis <- function(scores, coldata, trait,
                    ttest    = scores.ttest(scores, coldata, trait, pval))
 
   if (is.null(result)) {
-    message("No significant features found using ", method, " test (p < ", pval, ").")
+    message("None feature was found significant after ", method, " test (p < ", pval, ").")
   } else {
     message("Significant features found: ", ncol(result[[1]]))
   }
@@ -3338,22 +3365,24 @@ scores.stat.analysis <- function(scores, coldata, trait,
 #'   via elbow on reconstruction MSE across ranks 2:8.
 #' @param seed Random seed. Default 123.
 #'
-#' @return A list with:
-#' \itemize{
-#'   \item \code{Z}: Sample-level NMF factor scores (samples x rank). Non-negative.
-#'   \item \code{W}: Feature weights per factor (2*n_CGs x rank). Non-negative.
-#'   \item \code{nmf_input}: The positive-negative split matrix fed to NMF (samples x 2*n_CGs).
-#'   \item \code{rank}: The rank used.
+#' @param file_name Optional character. If provided, saves results to this file path.
+#' @param return Logical. If TRUE (default), returns the result as an R object.
+#'
+#' @return A named list with:
+#' \describe{
+#'   \item{Z}{Sample-level NMF factor scores (samples x rank). Non-negative.}
+#'   \item{W}{Feature weights per factor (2 x n_CGs x rank). Non-negative.}
+#'   \item{nmf_input}{The positive-negative split matrix fed to NMF (samples x 2 x n_CGs).}
+#'   \item{rank}{The rank used.}
 #' }
 #'
 #' @details
 #' Signed CCA scores are decomposed as:
-#'   score_pos = max(score, 0)  -- patient aligned with TF program
-#'   score_neg = max(-score, 0) -- patient anti-aligned with TF program
+#' score_pos = max(score, 0) -- patient aligned with TF program
+#' score_neg = max(-score, 0) -- patient anti-aligned with TF program
 #' Both are concatenated column-wise before NMF. Column names are suffixed
 #' with "_pos" and "_neg" to track direction.
 #'
-#' @export
 compute.latent_factors <- function(X, rank = NULL, seed = 123, file_name = NULL, return = TRUE) {
 
   if (!requireNamespace("RcppML", quietly = TRUE))
@@ -3362,7 +3391,7 @@ compute.latent_factors <- function(X, rank = NULL, seed = 123, file_name = NULL,
   set.seed(seed)
   X <- as.matrix(X)
 
-  # ── Positive-negative split ───────────────────────────────────────────────
+  # -- Positive-negative split -----------------------------------------------
   X_pos <- pmax(X, 0)
   X_neg <- pmax(-X, 0)
   colnames(X_pos) <- paste0(colnames(X), "_pos")
@@ -3371,7 +3400,7 @@ compute.latent_factors <- function(X, rank = NULL, seed = 123, file_name = NULL,
 
   A <- t(nmf_input)   # features x samples (RcppML convention)
 
-  # ── Rank estimation ───────────────────────────────────────────────────────
+  # -- Rank estimation -------------------------------------------------------
   if (is.null(rank)) {
     message("Estimating optimal rank via elbow on reconstruction MSE (ranks 2:8)...")
     .mse <- function(A, fit) {
@@ -3389,7 +3418,7 @@ compute.latent_factors <- function(X, rank = NULL, seed = 123, file_name = NULL,
     message("Selected rank (elbow): ", rank)
   }
 
-  # ── NMF fit ───────────────────────────────────────────────────────────────
+  # -- NMF fit ---------------------------------------------------------------
   message("Running RcppML NMF with rank = ", rank, "...")
   nmf_res <- RcppML::nmf(A, k = rank, seed = seed, verbose = FALSE)
   W <- as.matrix(nmf_res$w)    # features x rank
@@ -3400,7 +3429,7 @@ compute.latent_factors <- function(X, rank = NULL, seed = 123, file_name = NULL,
   colnames(W) <- paste0("Factor", seq_len(rank))
   rownames(W) <- colnames(nmf_input)
 
-  # ── Patient mixture plot ───────────────────────────────────────────────────
+  # -- Patient mixture plot ---------------------------------------------------
 
   # normalise Z rows to sum to 1
   Z_norm <- sweep(Z, 1, rowSums(Z), "/")
@@ -3432,7 +3461,7 @@ compute.latent_factors <- function(X, rank = NULL, seed = 123, file_name = NULL,
     ggplot2::scale_y_continuous(labels = scales::percent) +
     ggplot2::labs(
       title    = "Patient TME composition - NMF factor mixture",
-      subtitle = "Each bar = one patient  ·  Height = fraction of each factor",
+      subtitle = "Each bar = one patient | Height = fraction of each factor",
       x        = "Patients",
       y        = "Factor proportion"
     ) +
@@ -3546,15 +3575,15 @@ compute_cells_niches <- function(latent_factors, dt, cell.groups,
 
   if (!dir.exists("Results")) dir.create("Results", recursive = TRUE)
 
-  # ── extract top contributing cell groups per factor ───────────────────────
-  # returns named list: factor → named numeric vector
+  # -- extract top contributing cell groups per factor -----------------------
+  # returns named list: factor -> named numeric vector
   # names = cell group names (suffix stripped), values = NMF weights (all > 0)
   top_features_list <- extract_contributing_features(
     latent_factors,
     quantile_cutoff = quantile_cutoff
   )
 
-  # ── binary composition matrix ─────────────────────────────────────────────
+  # -- binary composition matrix ---------------------------------------------
   # rows = cell groups, columns = cell types
   comp_matrix     <- compute.composition.matrix(dt, cell.groups,
                                                  cells_extra = cells_extra)
@@ -3573,30 +3602,30 @@ compute_cells_niches <- function(latent_factors, dt, cell.groups,
     ]
     if (nrow(comp_sub) == 0) next
 
-    # ── edge weights: factor → cell types ────────────────────────────────
+    # -- edge weights: factor -> cell types --------------------------------
     # for each cell type: sum of NMF weights of cell groups containing it
-    # all weights are positive — no direction distinction
+    # all weights are positive - no direction distinction
 
     # Interpretation of edge
     #   Magnitude = cumulative strength of CGs containing it
     #   Sign = direction of association with factor
-    #   Large positive → enriched in positive CGs
-    #   Large negative → enriched in negative CGs
+    #   Large positive -> enriched in positive CGs
+    #   Large negative -> enriched in negative CGs
 
     edge_weights <- colSums(
       comp_sub * top_features[rownames(comp_sub)]
     )
     edge_weights <- edge_weights[edge_weights > 0]
 
-    # If a cell type appears mostly in positive CGs → positive edge
-    # If appears mostly in negative CGs → negative edge
-    # If balanced → near zero
+    # If a cell type appears mostly in positive CGs -> positive edge
+    # If appears mostly in negative CGs -> negative edge
+    # If balanced -> near zero
 
     if (length(edge_weights) == 0) next
 
-    # ── enrichment relative to background ────────────────────────────────
+    # -- enrichment relative to background --------------------------------
     # is this cell type more common in the top cell groups than globally?
-    # enrichment >= enrich_thresh → cell type enriched across cell groups relative to baseline (“Is this cell type more common in my selected subset than expected based on its overall frequency?”)
+    # enrichment >= enrich_thresh -> cell type enriched across cell groups relative to baseline ("Is this cell type more common in my selected subset than expected based on its overall frequency?")
 
     fg_freq <- colMeans(comp_sub)
     enrich  <- fg_freq / background_freq
@@ -3605,7 +3634,7 @@ compute_cells_niches <- function(latent_factors, dt, cell.groups,
     # Interpretation
     # Suppose CD4.cells_immunosuppressive appears in 70% of the selected top features (fg_freq = 0.7)
     # - Its background frequency = 0.34408602
-    # - Enrichment = 0.7 / 0.344 ≈ 2.03 → more than 2× enriched relative to baseline
+    # - Enrichment = 0.7 / 0.344 ~= 2.03 -> more than 2x enriched relative to baseline
 
     keep         <- names(which(enrich >= enrich_thresh))
     edge_weights <- edge_weights[names(edge_weights) %in% keep]
@@ -3614,7 +3643,7 @@ compute_cells_niches <- function(latent_factors, dt, cell.groups,
 
     factor_celltype_weights[[factor_name]] <- edge_weights
 
-    # ── network plot ──────────────────────────────────────────────────────
+    # -- network plot ------------------------------------------------------
     edges <- data.frame(
       from = factor_name,
       to   = names(edge_weights),
@@ -3625,7 +3654,7 @@ compute_cells_niches <- function(latent_factors, dt, cell.groups,
 
     igraph::V(g)$type <- ifelse(igraph::V(g)$name == factor_name, "factor", "celltype")
 
-    # node size — factor fixed, cell types scaled by edge weight
+    # node size - factor fixed, cell types scaled by edge weight
     ct_names  <- igraph::V(g)$name[igraph::V(g)$type == "celltype"]
     ct_sizes  <- scales::rescale(edge_weights[ct_names], to = c(6, 14))
 
@@ -3635,7 +3664,7 @@ compute_cells_niches <- function(latent_factors, dt, cell.groups,
       ct_sizes[igraph::V(g)$name]
     )
 
-    # node color — factor gold, cell types by edge weight magnitude
+    # node color - factor gold, cell types by edge weight magnitude
     max_ew <- max(edge_weights)
     igraph::V(g)$color <- sapply(igraph::V(g)$name, function(v) {
       if (v == factor_name) return("#E69F00")
@@ -3682,7 +3711,7 @@ compute_cells_niches <- function(latent_factors, dt, cell.groups,
     }
   }
 
-  # ── build TME states output ───────────────────────────────────────────────
+  # -- build TME states output -----------------------------------------------
   CG_states <- list()
 
   for (factor_name in names(factor_celltype_weights)) {
@@ -3691,7 +3720,7 @@ compute_cells_niches <- function(latent_factors, dt, cell.groups,
 
     if (length(edge_weights) == 0) next
 
-    # single list of cell types per factor — no positive/negative split
+    # single list of cell types per factor - no positive/negative split
     # ordered by weight descending
     CG_states[[factor_name]] <- sort(edge_weights, decreasing = TRUE)
   }
@@ -3726,22 +3755,22 @@ project_factors <- function(latent_spaces, scores_test) {
 
   scores_test <- as.matrix(scores_test)
 
-  # ── Step 1: apply same pos-neg split as training ───────────────────────────
+  # -- Step 1: apply same pos-neg split as training ---------------------------
   test_pos <- pmax(scores_test, 0)
   test_neg <- pmax(-scores_test, 0)
   colnames(test_pos) <- paste0(colnames(scores_test), "_pos")
   colnames(test_neg) <- paste0(colnames(scores_test), "_neg")
   nmf_input_test <- cbind(test_pos, test_neg)   # samples x (2 * n_CGs)
 
-  # ── Step 2: extract W and absorb d scaling ─────────────────────────────────
-  # RcppML stores: A ≈ W %*% diag(d) %*% H
+  # -- Step 2: extract W and absorb d scaling ---------------------------------
+  # RcppML stores: A ~= W %*% diag(d) %*% H
   # Must absorb d into W before pseudoinverse: W_scaled = W %*% diag(d)
   W <- latent_spaces$W                          # features x rank
   d <- latent_spaces$nmf_model$d                # length = rank
 
   W_scaled <- W %*% diag(d, nrow = length(d))  # features x rank, d absorbed
 
-  # ── Step 3: restrict to features shared between training and test ──────────
+  # -- Step 3: restrict to features shared between training and test ----------
   common_features <- intersect(rownames(W_scaled), colnames(nmf_input_test))
 
   if (length(common_features) == 0)
@@ -3750,14 +3779,14 @@ project_factors <- function(latent_spaces, scores_test) {
 
   if (length(common_features) < nrow(W_scaled))
     warning(nrow(W_scaled) - length(common_features),
-            " training features missing in test cohort — projection may be degraded.")
+            " training features missing in test cohort - projection may be degraded.")
 
   W_sub <- W_scaled[common_features, , drop = FALSE]   # common x rank
   Y_sub <- t(nmf_input_test[, common_features,
                               drop = FALSE])            # common x samples
 
-  # ── Step 4: project via pseudoinverse ─────────────────────────────────────
-  # H_test = pinv(W_sub) %*% Y_sub  →  Z_test = t(H_test)
+  # -- Step 4: project via pseudoinverse -------------------------------------
+  # H_test = pinv(W_sub) %*% Y_sub  ->  Z_test = t(H_test)
   Z_test <- t(MASS::ginv(W_sub) %*% Y_sub)             # samples x rank
 
   # Clamp small negatives from numerical noise in pseudoinverse
@@ -3801,7 +3830,7 @@ project_test_factors <- function(train_processed, test_deconv) {
   project_factors(train_processed$Latent_spaces, cell_groups_scores)
 }
 
-#' Save a grid of scatter plots for significant module–feature pairs
+#' Save a grid of scatter plots for significant module-feature pairs
 #'
 #' For each pair of columns from \code{matA} and \code{matB} whose p-value in
 #' \code{p_mat} is below \code{pval}, draws a scatter plot with a regression
@@ -3914,7 +3943,7 @@ plot.module.scatter.grid <- function(matA, matB, cor_mat, p_mat,
 }
 
 
-#' Summarize TF module–trait associations as ANOVA boxplot grids
+#' Summarize TF module-trait associations as ANOVA boxplot grids
 #'
 #' For each categorical trait in \code{coldata}, runs a one-way ANOVA for each
 #' TF module, performs Tukey HSD post-hoc tests for significant modules, and
@@ -3942,7 +3971,7 @@ compute.metadata.association.boxplot_summary <- function(
 ){
 
   coldata_cat <- coldata %>%
-    dplyr::select(where(is.character) | where(is.factor))
+    dplyr::select(dplyr::where(is.character) | dplyr::where(is.factor))
 
   if (ncol(coldata_cat) == 0) {
     message("No categorical traits found.")
@@ -3969,7 +3998,7 @@ compute.metadata.association.boxplot_summary <- function(
       dplyr::group_by(module) %>%
       dplyr::do({
         res <- rstatix::anova_test(data = ., dv = value, between = group)
-        tibble(F = res$F, p = res$p)
+        tibble::tibble(F = res$F, p = res$p)
       }) %>%
       dplyr::ungroup()
 
@@ -3993,7 +4022,7 @@ compute.metadata.association.boxplot_summary <- function(
     # ---- Tukey ----
     tukey_df <- df_long %>%
       dplyr::group_by(module) %>%
-      dplyr::filter(n_distinct(group) > 1) %>%
+      dplyr::filter(dplyr::n_distinct(group) > 1) %>%
       dplyr::group_modify(~ {
         tuk <- tukey_hsd(.x, value ~ group)
         if(nrow(tuk) == 0) return(NULL)
@@ -4089,9 +4118,8 @@ compute.metadata.association.boxplot_summary <- function(
 #'
 #' @import limma
 #' @import msigdbr
-#' @import clusterProfiler
-#' @import dplyr
-#' @import enrichplot
+#' @importFrom ReactomePA enrichPathway
+#' @importFrom enrichplot dotplot
 #'
 #' @examples
 #' \dontrun{
@@ -4263,22 +4291,12 @@ run_deg_analysis <- function(counts, coldata, group_col, ref_level = NULL) {
 #' subtype (IE, IE/F, F, D) when \code{Z}, \code{annot}, and
 #' \code{cancer_name} are all supplied.
 #'
-#' @param nes_mat A numeric matrix of NES values (Hallmarks x factors) as
-#'   returned by \code{build_nes_matrix()}.
+#' @param gsea_results A list of GSEA result data frames (one per NMF factor),
+#'   as returned by \code{compute_factor_gsea()}.
 #' @param k Integer. Number of meta-programs (clusters) to extract. If
 #'   \code{NULL} (default), estimated automatically from the dendrogram.
-#' @param nes_thresh Numeric. Minimum absolute NES for a Hallmark to be
-#'   considered active in a factor. Default 1.0.
+#' @param file_name Optional character. File path prefix for saving output plots.
 #' @param plot Logical. If \code{TRUE} (default), saves a clustering heatmap.
-#' @param Z Optional samples x factors numeric matrix of NMF factor scores.
-#'   Required for Bagaev MFP annotation.
-#' @param annot Optional data frame loaded from \code{annotation.tsv}. If
-#'   \code{NULL} (default), loaded automatically from
-#'   \code{inst/extdata/annotation.tsv} when \code{Z} and \code{cancer_name}
-#'   are provided.
-#' @param cancer_name Optional character string matching the
-#'   \code{TCGA_project} field (case-insensitive, e.g. \code{"skcm"}).
-#'   Required for Bagaev MFP annotation.
 #'
 #' @return A list with:
 #' \itemize{
@@ -4303,12 +4321,12 @@ derive_meta_programs <- function(gsea_results,
   ### Build NES matrix from GSEA results
   nes_mat <- build_nes_matrix(gsea_results)
 
-  # ── cluster Hallmarks by NES profile across factors ───────────────────────
+  # -- cluster Hallmarks by NES profile across factors -----------------------
   # distance between Hallmarks = dissimilarity of their NES profiles
   d  <- dist(nes_mat, method = "euclidean")
   hc <- hclust(d, method = "ward.D2")
 
-  # ── determine k ───────────────────────────────────────────────────────────
+  # -- determine k -----------------------------------------------------------
   if (is.null(k)) {
     # use elbow on within-cluster sum of squares
     max_k <- min(10, nrow(nes_mat) - 1)
@@ -4328,16 +4346,16 @@ derive_meta_programs <- function(gsea_results,
 
   cluster_assignments <- cutree(hc, k = k)
 
-  # ── build meta-program list ───────────────────────────────────────────────
+  # -- build meta-program list -----------------------------------------------
   meta_programs <- lapply(seq_len(k), function(cl) {
     names(cluster_assignments)[cluster_assignments == cl]
   })
 
-  # ── name each meta-program by its dominant Hallmarks ─────────────────────
+  # -- name each meta-program by its dominant Hallmarks ---------------------
   meta_names <- paste0("MP", seq_len(k))
   names(meta_programs) <- meta_names
 
-  # ── heatmap ───────────────────────────────────────────────────────────────
+  # -- heatmap ---------------------------------------------------------------
   p <- NULL
   if (plot) {
 
@@ -4394,7 +4412,7 @@ derive_meta_programs <- function(gsea_results,
 #'   one per factor).
 #'
 #' @return A numeric matrix of NES values with Hallmarks as rows and NMF factors
-#'   as columns. Missing Hallmark–factor combinations are set to 0.
+#'   as columns. Missing Hallmark-factor combinations are set to 0.
 #'
 #' @export
 build_nes_matrix <- function(gsea_results) {
@@ -4419,7 +4437,7 @@ build_nes_matrix <- function(gsea_results) {
       return(setNames(rep(0, length(all_hallmarks)), all_hallmarks))
     }
 
-    # NES per hallmark — fill missing with 0
+    # NES per hallmark - fill missing with 0
     nes <- setNames(res$NES, res$pathway)
     scores <- setNames(rep(0, length(all_hallmarks)), all_hallmarks)
     scores[names(nes)] <- nes
@@ -4443,8 +4461,10 @@ build_nes_matrix <- function(gsea_results) {
 #' @param cancer_type Character. TCGA cancer type abbreviation (e.g., \code{"blca"}, \code{"brca"},
 #'   \code{"cesc"}, \code{"chol"}, \code{"coad"}, \code{"skcm"}) identifying which pre-built
 #'   TCGA meta-program file to load from \code{inst/extdata/}.
-#' @param nes_thresh Minimum absolute NES to report a Hallmark as active.
-#'                   Default 1.0.
+#' @param mp_file Optional character. Path to a custom meta-program RData file. If NULL,
+#'   the pre-built file for \code{cancer_type} is loaded from \code{inst/extdata/}.
+#' @param plot Logical. If TRUE (default), saves a heatmap of factor-to-meta-program scores.
+#' @param file_name Optional character. File path prefix for saving output plots.
 #'
 #' @return Data frame with one row per study factor:
 #'   factor, best_MP, best_score, all_scores, active_hallmarks
@@ -4458,7 +4478,7 @@ map_factors_to_metaprograms <- function(gsea_study,
   if(is.null(mp_file)){
     cancer_type <- tolower(cancer_type)
 
-    # Local path for development — uncomment system.file block below for package release
+    # Local path for development - uncomment system.file block below for package release
     mp_file <- file.path("~/Documents/CellTFusion/inst/extdata",
                          paste0("TCGA_meta_programs_", cancer_type, ".RData"))
     if (!file.exists(mp_file)) {
@@ -4477,7 +4497,7 @@ map_factors_to_metaprograms <- function(gsea_study,
     load(mp_file)
   }
 
-  # ── build study NES matrix: all 50 Hallmarks x study factors ──────────────
+  # -- build study NES matrix: all 50 Hallmarks x study factors --------------
   all_hallmarks <- msigdbr::msigdbr(species = "Homo sapiens", collection = "H") %>%
     dplyr::pull(gs_name) %>% unique() %>% sort()
 
@@ -4492,7 +4512,7 @@ map_factors_to_metaprograms <- function(gsea_study,
   })
   # nes_study: 50 hallmarks x study factors
 
-  # ── score each study factor against each meta-program ─────────────────────
+  # -- score each study factor against each meta-program ---------------------
   # score = mean NES of the meta-program Hallmarks in this study factor
   results <- lapply(colnames(nes_study), function(fac) {
     message("Processing: ", fac)
@@ -4532,7 +4552,7 @@ map_factors_to_metaprograms <- function(gsea_study,
                        all.x = TRUE, sort = FALSE)
   }
 
-  # ── plot: mapping confidence — all MP scores per factor ───────────────────
+  # -- plot: mapping confidence - all MP scores per factor -------------------
   if (plot) {
 
     if (!dir.exists("Results")) dir.create("Results")
@@ -4683,9 +4703,9 @@ annotate_metaprograms_TME <- function(meta_programs_df, factor_tme_df,
 
 }
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # Bagaev MFP annotation helpers
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 
 #' Annotate NMF factors with Bagaev et al. (2021) MFP subtypes
 #'
@@ -4697,15 +4717,12 @@ annotate_metaprograms_TME <- function(meta_programs_df, factor_tme_df,
 #' \code{"uncharacterized"}.
 #'
 #' @param cancer_name Character. Cancer type abbreviation matching the
-#'   \code{TCGA_project} column of \code{annot} (case-insensitive,
+#'   \code{TCGA_project} column of the internal annotation (case-insensitive,
 #'   e.g. \code{"skcm"}).
 #' @param Z Numeric matrix. Samples x factors NMF score matrix (row names =
 #'   TCGA barcodes).
-#' @param meta_programs Output list from \code{derive_meta_programs()} — used
-#'   only for its structure; the annotation is factor-level, not Hallmark-level.
-#' @param annot Optional data frame with row names set to TCGA barcodes and
-#'   columns \code{TCGA_project} and \code{MFP}. If \code{NULL} (default),
-#'   loaded automatically from \code{inst/extdata/annotation.tsv}.
+#' @param plot Logical. If TRUE (default), saves a boxplot of factor scores by MFP group.
+#' @param file_name Optional character. File path prefix for saving output plots.
 #'
 #' @return A data frame with columns \code{factor}, \code{best_MFP},
 #'   \code{kw_pval}, \code{median_IE}, \code{median_IEF}, \code{median_F},
@@ -4721,7 +4738,7 @@ map_factors_to_TME <- function(cancer_name, Z, plot = TRUE, file_name = NULL) {
   annot <- read.delim(annot_file, row.names = 1, check.names = FALSE,
                       stringsAsFactors = FALSE)
   
-  # ── subset annotation to this cancer type ────────────────────────────────
+  # -- subset annotation to this cancer type --------------------------------
   annot_ct <- annot[toupper(annot$TCGA_project) == toupper(cancer_name), ,
                     drop = FALSE]
   if (nrow(annot_ct) == 0) {
@@ -4729,7 +4746,7 @@ map_factors_to_TME <- function(cancer_name, Z, plot = TRUE, file_name = NULL) {
     return(NULL)
   }
 
-  # ── harmonize barcodes: keep only first 3 TCGA parts (TCGA-XX-XXXX) ─────
+  # -- harmonize barcodes: keep only first 3 TCGA parts (TCGA-XX-XXXX) -----
   trunc_barcode <- function(x, sep = "-") {
     parts <- strsplit(x, sep, fixed = TRUE)
     vapply(parts, function(p) paste(p[seq_len(min(3L, length(p)))], collapse = "-"),
@@ -4742,7 +4759,7 @@ map_factors_to_TME <- function(cancer_name, Z, plot = TRUE, file_name = NULL) {
   rownames(Z) = trunc_barcode(rownames(Z), sep = z_sep)
   rownames(annot_ct) = trunc_barcode(rownames(annot_ct), sep = "-")
 
-  # remove duplicates introduced by truncation — keep first occurrence
+  # remove duplicates introduced by truncation - keep first occurrence
   Z        <- Z[!duplicated(rownames(Z)), , drop = FALSE]
   annot_ct <- annot_ct[!duplicated(rownames(annot_ct)), , drop = FALSE]
 
@@ -4750,7 +4767,7 @@ map_factors_to_TME <- function(cancer_name, Z, plot = TRUE, file_name = NULL) {
 
   if (length(common_short) < 10) {
     warning("Only ", length(common_short), " matched patients for '",
-            cancer_name, "' — skipping Bagaev annotation.")
+            cancer_name, "' - skipping Bagaev annotation.")
     return(NULL)
   }
 
@@ -4764,14 +4781,14 @@ map_factors_to_TME <- function(cancer_name, Z, plot = TRUE, file_name = NULL) {
     stop("NMF matrix and TME annotation are not aligned")
   } 
 
-  # ── drop rows with NA/empty MFP ──────────────────────────────────────────
+  # -- drop rows with NA/empty MFP ------------------------------------------
   mfp_vals  <- annot_matched$MFP
   Z_matched <- Z_matched[!is.na(mfp_vals), , drop = FALSE]
   mfp_vals  <- factor(mfp_vals[!is.na(mfp_vals)], levels = c("IE", "IE/F", "F", "D"))
 
   n_samples <- nrow(Z_matched)
 
-  # ── Kruskal-Wallis + median-based labeling ────────────────────────────────
+  # -- Kruskal-Wallis + median-based labeling --------------------------------
   result_rows <- lapply(colnames(Z_matched), function(fac) {
     fac_scores <- Z_matched[, fac]
 
@@ -4779,7 +4796,7 @@ map_factors_to_TME <- function(cancer_name, Z, plot = TRUE, file_name = NULL) {
     kw       <- kruskal.test(fac_scores ~ mfp_vals)
     kw_pval  <- kw$p.value
 
-    # median factor score per group — label = group with highest median
+    # median factor score per group - label = group with highest median
     group_medians <- tapply(fac_scores, mfp_vals, median, na.rm = TRUE)
 
     best_mfp <- if (kw_pval < 0.05) {
@@ -4804,7 +4821,7 @@ map_factors_to_TME <- function(cancer_name, Z, plot = TRUE, file_name = NULL) {
 
   result_df = do.call(rbind, result_rows)
 
-  # ── plot: factor scores by MFP group ─────────────────────────────────────
+  # -- plot: factor scores by MFP group -------------------------------------
   if (plot) {
 
     if (!dir.exists("Results")) dir.create("Results")

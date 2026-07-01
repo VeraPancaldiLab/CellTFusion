@@ -3,7 +3,6 @@
 
 ## usethis namespace: start
 #' @importFrom ADImpute NormalizeTPM
-#' @importFrom AnnotationDbi select
 #' @importFrom broom tidy
 #' @importFrom cluster silhouette
 #' @importFrom decoupleR get_collectri
@@ -22,7 +21,6 @@
 #' @importFrom dplyr select
 #' @importFrom dplyr slice
 #' @importFrom dplyr summarise
-#' @importFrom enrichplot dotplot
 #' @importFrom factoextra fviz_nbclust
 #' @importFrom factoextra hcut
 #' @importFrom ggplot2 aes

@@ -30,6 +30,14 @@ obtained from \code{compute.WTCNA()}. It should contain at least one element wit
 
 \item{return}{Logical; if TRUE (default), writes CSV files with cell group compositions and scores
 to the "Results/" folder.}
+
+\item{pval}{Numeric. P-value threshold for statistical tests. Default is 0.05.}
+
+\item{n_perm}{Integer. Number of permutations for significance testing. Default is 999.}
+
+\item{dendrogram_file}{Optional character. File path to save dendrogram plot.}
+
+\item{return_dendrogram}{Logical. If TRUE, includes the dendrogram in the returned list. Default FALSE.}
 }
 \value{
 A list of three elements:

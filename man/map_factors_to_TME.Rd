@@ -8,18 +8,15 @@ map_factors_to_TME(cancer_name, Z, plot = TRUE, file_name = NULL)
 }
 \arguments{
 \item{cancer_name}{Character. Cancer type abbreviation matching the
-\code{TCGA_project} column of \code{annot} (case-insensitive,
+\code{TCGA_project} column of the internal annotation (case-insensitive,
 e.g. \code{"skcm"}).}
 
 \item{Z}{Numeric matrix. Samples x factors NMF score matrix (row names =
 TCGA barcodes).}
 
-\item{meta_programs}{Output list from \code{derive_meta_programs()} — used
-only for its structure; the annotation is factor-level, not Hallmark-level.}
+\item{plot}{Logical. If TRUE (default), saves a boxplot of factor scores by MFP group.}
 
-\item{annot}{Optional data frame with row names set to TCGA barcodes and
-columns \code{TCGA_project} and \code{MFP}. If \code{NULL} (default),
-loaded automatically from \code{inst/extdata/annotation.tsv}.}
+\item{file_name}{Optional character. File path prefix for saving output plots.}
 }
 \value{
 A data frame with columns \code{factor}, \code{best_MFP},

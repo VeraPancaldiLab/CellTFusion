@@ -8,3 +8,9 @@
 ^docs$
 ^pkgdown$
 ^\.github$
+^\.claude$
+^\.vscode$
+^CLAUDE\.md$
+^README\.html$
+^Results$
+^omnipathr-log$

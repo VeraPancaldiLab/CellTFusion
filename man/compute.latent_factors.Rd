@@ -13,14 +13,18 @@
 via elbow on reconstruction MSE across ranks 2:8.}
 
 \item{seed}{Random seed. Default 123.}
+
+\item{file_name}{Optional character. If provided, saves results to this file path.}
+
+\item{return}{Logical. If TRUE (default), returns the result as an R object.}
 }
 \value{
-A list with:
-\itemize{
-\item \code{Z}: Sample-level NMF factor scores (samples x rank). Non-negative.
-\item \code{W}: Feature weights per factor (2\emph{n_CGs x rank). Non-negative.
-\item \code{nmf_input}: The positive-negative split matrix fed to NMF (samples x 2}n_CGs).
-\item \code{rank}: The rank used.
+A named list with:
+\describe{
+\item{Z}{Sample-level NMF factor scores (samples x rank). Non-negative.}
+\item{W}{Feature weights per factor (2 x n_CGs x rank). Non-negative.}
+\item{nmf_input}{The positive-negative split matrix fed to NMF (samples x 2 x n_CGs).}
+\item{rank}{The rank used.}
 }
 }
 \description{
@@ -30,7 +34,7 @@ then applying Non-negative Matrix Factorization via RcppML (fast C++ backend).
 }
 \details{
 Signed CCA scores are decomposed as:
-score_pos = max(score, 0)  -- patient aligned with TF program
+score_pos = max(score, 0) -- patient aligned with TF program
 score_neg = max(-score, 0) -- patient anti-aligned with TF program
 Both are concatenated column-wise before NMF. Column names are suffixed
 with "_pos" and "_neg" to track direction.

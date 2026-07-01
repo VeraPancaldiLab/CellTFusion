@@ -36,37 +36,32 @@ Imports:
     multideconv,
     rstatix,
     stats,
-    ggtree,
     stringr,
     tibble,
-    NMF,
     MASS,
     ggstatsplot,
-    rms (>= 6.4-1),
     scales,
     tidyr,
     utils,
     msigdbr,
     limma,
-    viper,
     WGCNA,
-    fastcluster,
     pheatmap,
     purrr,
     cluster,
-    clusterProfiler,
     foreach,
     igraph,
-    OmnipathR (>= 3.10.1),
-    doParallel,
     edgeR,
-    MOFA2
+    RColorBrewer,
+    colorspace,
+    fgsea,
+    ppcor
 Remotes: 
     VeraPancaldiLab/multideconv,
     VeraPancaldiLab/pipeML,
     saezlab/OmnipathR,
     YuLab-SMU/ggtree
-Suggests: 
+Suggests:
     knitr,
     rmarkdown,
     testthat (>= 3.0.0),
@@ -80,8 +75,18 @@ Suggests:
     survival,
     survminer,
     pipeML,
-    RcppML
+    RcppML,
+    MOFA2,
+    NMF,
+    clusterProfiler,
+    ggtree,
+    fastcluster,
+    viper,
+    OmnipathR,
+    doParallel,
+    rms
 Config/testthat/edition: 3
 LazyData: true
+LazyDataCompression: xz
 VignetteBuilder: knitr
 URL: https://verapancaldilab.github.io/CellTFusion/

@@ -22,7 +22,7 @@ construct_cell_groups(
 
 \item{batch}{Optional vector indicating batch assignment for samples.}
 
-\item{pval}{Numeric. P-value threshold applied both to filter TF module–deconvolution
+\item{pval}{Numeric. P-value threshold applied both to filter TF module-deconvolution
 feature correlations and as the significance cutoff for the CCA permutation test.
 Default: 0.05.}
 
@@ -30,6 +30,10 @@ Default: 0.05.}
 
 \item{n_perm}{Integer. Number of permutations for the CCA significance test per cell group.
 Higher values give more precise p-values but increase runtime. Default: 999.}
+
+\item{dendrogram_file}{Optional character. File path to save dendrogram plot output.}
+
+\item{return_dendrogram}{Logical. If TRUE, includes the dendrogram in the returned list. Default FALSE.}
 }
 \value{
 A list of 3 elements:

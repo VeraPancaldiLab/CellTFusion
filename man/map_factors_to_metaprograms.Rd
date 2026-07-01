@@ -19,8 +19,12 @@ map_factors_to_metaprograms(
 \code{"cesc"}, \code{"chol"}, \code{"coad"}, \code{"skcm"}) identifying which pre-built
 TCGA meta-program file to load from \code{inst/extdata/}.}
 
-\item{nes_thresh}{Minimum absolute NES to report a Hallmark as active.
-Default 1.0.}
+\item{mp_file}{Optional character. Path to a custom meta-program RData file. If NULL,
+the pre-built file for \code{cancer_type} is loaded from \code{inst/extdata/}.}
+
+\item{plot}{Logical. If TRUE (default), saves a heatmap of factor-to-meta-program scores.}
+
+\item{file_name}{Optional character. File path prefix for saving output plots.}
 }
 \value{
 Data frame with one row per study factor:

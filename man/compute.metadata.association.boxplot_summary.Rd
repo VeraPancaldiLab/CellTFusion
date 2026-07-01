@@ -2,7 +2,7 @@
 % Please edit documentation in R/CellTFusion.R
 \name{compute.metadata.association.boxplot_summary}
 \alias{compute.metadata.association.boxplot_summary}
-\title{Summarize TF module–trait associations as ANOVA boxplot grids}
+\title{Summarize TF module-trait associations as ANOVA boxplot grids}
 \usage{
 \method{compute}{metadata.association.boxplot_summary}(
   tfs.modules,

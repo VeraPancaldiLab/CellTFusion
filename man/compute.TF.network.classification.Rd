@@ -21,12 +21,13 @@ Classifies transcription factor (TF) modules into clusters based on their correl
 Uses hierarchical clustering and silhouette width to determine the optimal number of clusters.
 }
 \examples{
-
+\dontrun{
 data("network.tuto")
 data("counts.norm.tuto")
 pathways <- compute.pathway.activity(counts.norm.tuto)
 tfs.modules.clusters <- compute.TF.network.classification(tf.network = network.tuto,
                                                           pathways.features = pathways,
                                                           return = FALSE)
+}
 
 }

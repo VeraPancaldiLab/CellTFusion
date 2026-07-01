@@ -31,7 +31,7 @@ CellTFusion(
   pval = 0.05,
   enrich_thresh = 1.5,
   quantile_cutoff = 0.7,
-  cancer_type,
+  cancer_type = NULL,
   return = T,
   verbose = T
 )
@@ -64,7 +64,7 @@ CellTFusion(
 
 \item{ref_level}{Optional character indicating the reference level for supervised DEG analysis.}
 
-\item{TF.collection}{Character. The source of the TF–target network. Options are \code{"CollecTRI"} (default), \code{"Dorothea"}, or \code{"ARACNE"}.
+\item{TF.collection}{Character. The source of the TF-target network. Options are \code{"CollecTRI"} (default), \code{"Dorothea"}, or \code{"ARACNE"}.
 \itemize{
 \item \code{"CollecTRI"} and \code{"Dorothea"} use prebuilt collections from OmnipathR.
 \item \code{"ARACNE"} allows user input of a custom network file in a 3-column format: \code{regulator}, \code{target}, and \verb{mutual information}.
@@ -72,7 +72,7 @@ CellTFusion(
 
 \item{min_targets_size}{Integer. Minimum number of target genes per regulon required for TF activity inference. Default is 5.}
 
-\item{universe}{Optional. A user-specified data frame of TF–target interactions. If not provided, the function will fetch the relevant network based on the \code{TF.collection} argument.}
+\item{universe}{Optional. A user-specified data frame of TF-target interactions. If not provided, the function will fetch the relevant network based on the \code{TF.collection} argument.}
 
 \item{paths}{Optional. A user-specified data frame of pathways gene sets. If not provided, the function will fetch the relevant pathways based on \code{PROGENy}.}
 
@@ -97,9 +97,11 @@ required to include a cell type in a latent factor's niche. Default is 1.5.}
 \item{quantile_cutoff}{Numeric between 0 and 1. Quantile threshold for selecting top-contributing
 cell groups per NMF factor. Default is 0.7.}
 
-\item{cancer_type}{Character. TCGA cancer type abbreviation (e.g., \code{"blca"}, \code{"brca"},
-\code{"cesc"}, \code{"chol"}, \code{"coad"}, \code{"skcm"}) used to load the corresponding
-TCGA meta-programs for TME state mapping. Must match an available meta-program file.}
+\item{cancer_type}{Character. TCGA cancer type abbreviation (e.g., \code{"blca"}, \code{"skcm"}).
+Used for two purposes: (1) loading TCGA meta-programs for TME state mapping, and (2) when
+\code{TF.collection = "ARACNE"}, locating the ARACNe network at
+\code{input/ARACNE/<cancer_type>/network/network.txt}. If \code{NULL} and only one ARACNe
+network exists under \code{input/ARACNE/}, it is auto-detected.}
 
 \item{return}{Logical; if TRUE, returns intermediate results from internal functions. Default is TRUE.}
 

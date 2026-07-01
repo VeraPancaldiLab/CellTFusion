@@ -37,40 +37,38 @@ reference:
   desc: >
     Cell groups analysis
   contents:
-  - cell.groups.fisher.test
-  - cell.groups.anova.test
-  - cell.groups.wilcox.test
-  - cell.groups.kruskal.test
-  - cell.groups.ttest
-  - cell.groups.stat.analysis
-  - identify.cell.groups
+  - scores.fisher.test
+  - scores.anova.test
+  - scores.wilcox.test
+  - scores.kruskal.test
+  - scores.ttest
+  - scores.stat.analysis
   - compute.latent_factors
-  - identify.cell.signatures
-- title: Machine learning
+  - identify.cell.groups
+- title: Meta-programs and TME
+  desc: >
+    Meta-program derivation and TME mapping
   contents:
-  - prepare_CellTFusion_folds
+  - derive_meta_programs
+  - map_factors_to_metaprograms
+  - map_factors_to_TME
+  - annotate_metaprograms_TME
+  - build_nes_matrix
+  - project_factors
+  - project_test_factors
 - title: Utils
   desc: >
     Internal use (not exported functions)
   contents:
-  - calculate_dendrogram_cuts
   - cell.groups.computation
   - classify.deconvolution
   - compute.TF.network.classification
   - compute.composition.matrix
-  - compute_cell_groups_signatures
   - compute_composite_score
-  - correlation
   - create_tfs_modules
   - extract_cells
   - extract_colors
   - extract_wilcox_significant
-  - find.maximum.iteration
-  - mergeModules
-  - module_enrich
-  - remove.cell.groups.corr
-  - remove_equal
-  - remove_single_groups
 - title: Package Data
   desc: >
     Example data

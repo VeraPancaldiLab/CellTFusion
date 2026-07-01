@@ -13,7 +13,7 @@ one per factor).}
 }
 \value{
 A numeric matrix of NES values with Hallmarks as rows and NMF factors
-as columns. Missing Hallmark–factor combinations are set to 0.
+as columns. Missing Hallmark-factor combinations are set to 0.
 }
 \description{
 Combines the per-factor GSEA outputs from \code{compute_factor_gsea()} into

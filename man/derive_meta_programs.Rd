@@ -7,28 +7,15 @@
 derive_meta_programs(gsea_results, k = NULL, file_name = NULL, plot = TRUE)
 }
 \arguments{
+\item{gsea_results}{A list of GSEA result data frames (one per NMF factor),
+as returned by \code{compute_factor_gsea()}.}
+
 \item{k}{Integer. Number of meta-programs (clusters) to extract. If
 \code{NULL} (default), estimated automatically from the dendrogram.}
 
+\item{file_name}{Optional character. File path prefix for saving output plots.}
+
 \item{plot}{Logical. If \code{TRUE} (default), saves a clustering heatmap.}
-
-\item{nes_mat}{A numeric matrix of NES values (Hallmarks x factors) as
-returned by \code{build_nes_matrix()}.}
-
-\item{nes_thresh}{Numeric. Minimum absolute NES for a Hallmark to be
-considered active in a factor. Default 1.0.}
-
-\item{Z}{Optional samples x factors numeric matrix of NMF factor scores.
-Required for Bagaev MFP annotation.}
-
-\item{annot}{Optional data frame loaded from \code{annotation.tsv}. If
-\code{NULL} (default), loaded automatically from
-\code{inst/extdata/annotation.tsv} when \code{Z} and \code{cancer_name}
-are provided.}
-
-\item{cancer_name}{Optional character string matching the
-\code{TCGA_project} field (case-insensitive, e.g. \code{"skcm"}).
-Required for Bagaev MFP annotation.}
 }
 \value{
 A list with:
