@@ -7,22 +7,18 @@ and save results. For more information about the methods we invite to
 read the main paper of the tool.
 
 ``` r
+
 library(CellTFusion)
 #> 
-#> Warning: replacing previous import 'dplyr::select' by 'AnnotationDbi::select'
-#> when loading 'CellTFusion'
-#> Warning: replacing previous import 'AnnotationDbi::select' by 'dplyr::select'
-#> when loading 'CellTFusion'
 #> 
-#> Warning: replacing previous import 'dendextend::cutree' by 'stats::cutree' when
-#> loading 'CellTFusion'
 ```
 
 Load the pre-packaged example data included in CellTFusion:
 
 ``` r
+
 raw.counts = CellTFusion::raw.counts.tuto ## Corresponds to bulk RNAseq counts
-traitdata = CellTFusion::traitdata.tuto ## Corresponds to the clinical data per sample
+traitdata = CellTFusion::traitdata.tuto ## Corresponds to the clinical data per samples
 ```
 
 CellTFusion requires two primary inputs: cell-type deconvolution
@@ -39,6 +35,7 @@ data. For more details, visit the [multideconv GitHub
 repository](https://github.com/VeraPancaldiLab/multideconv).
 
 ``` r
+
 deconv = multideconv::compute.deconvolution(raw.counts, methods = c("Quantiseq", "Epidish"), normalized = T, return = F)
 #> Performing TPM normalization ................................................................................
 #> Converting input to matrix.
@@ -65,14 +62,11 @@ deconv = multideconv::compute.deconvolution(raw.counts, methods = c("Quantiseq",
 #> * Epidish
 #> 
 #> Signatures
-#> * BPRNACan
-#> * BPRNACan3DProMet
-#> * BPRNACanProMet
 #> * CBSX-HNSCC-scRNAseq
 #> * CBSX-Melanoma-scRNAseq
 #> * CBSX-NSCLC-PBMCs-scRNAseq
-#> * CBSX-NSCLC-scRNAseq
-#> * CCLE-TIL10
+#> * CBSX-Vanderbilt-scRNAseq
+#> * CBSX-Zilionis-scRNAseq
 #> * LM22
 #> * TIL10
 #> 
@@ -96,21 +90,12 @@ deconv = multideconv::compute.deconvolution(raw.counts, methods = c("Quantiseq",
 #> 
 #> Running Epidish...............................................................
 #> 
-#> 
-#> Running Epidish...............................................................
-#> 
-#> 
-#> Running Epidish...............................................................
-#> 
-#> 
-#> Running Epidish...............................................................
-#> 
+#> Deconvolution cache files removed.
 #> Preprocessing deconvolution features...............................................................
 #> 
 #> Checking consistency in deconvolution cell fractions across patients...............................................................
 #> 
 #> No extra cell types provided. Only the following cell types will be considered:
-#> 
 #>  B.cells
 #> B.naive.cells
 #> B.memory.cells
@@ -150,42 +135,26 @@ deconv = multideconv::compute.deconvolution(raw.counts, methods = c("Quantiseq",
 #> 
 #> If you want to consider other cell types (e.g. from a custom signature) which are not included in the package by default (see README), please provide them in the cells_extra argument.
 #> 
-#> Total sum across samples of combination Epidish_BPRNACan is 1
-#> Total sum across samples of combination Epidish_BPRNACan3DProMet is 1
-#> Total sum across samples of combination Epidish_BPRNACanProMet is 1
+#> Total sum across samples of combination Quantiseq_TIL10 is 1
 #> Total sum across samples of combination Epidish_CBSX.HNSCC.scRNAseq is 1
 #> Total sum across samples of combination Epidish_CBSX.Melanoma.scRNAseq is 1
 #> Total sum across samples of combination Epidish_CBSX.NSCLC.PBMCs.scRNAseq is 1
-#> Total sum across samples of combination Epidish_CBSX.NSCLC.scRNAseq is 1
-#> Total sum across samples of combination Epidish_CCLE.TIL10 is 1
+#> Total sum across samples of combination Epidish_CBSX.Vanderbilt.scRNAseq is 1
 #> Total sum across samples of combination Epidish_TIL10 is 1
+#> Total sum across samples of combination Epidish_CBSX.Zilionis.scRNAseq is 1
 #> Total sum across samples of combination Epidish_LM22 is 1
-#> Total sum across samples of combination Quantiseq_TIL10 is 1
 ```
 
 ``` r
+
 head(deconv[,1:5])
-#>                 Epidish_BPRNACan_B.cells Epidish_BPRNACan3DProMet_B.cells
-#> SAM7f0d9cc7f001             3.563950e-02                      0.051634688
-#> SAM4305ab968b90             1.073465e-04                      0.007359397
-#> SAMcf018fee2acd             1.708482e-02                      0.024649003
-#> SAMcc4675f394a1             9.074189e-05                      0.000000000
-#> SAM49f9b2e57aa5             1.900745e-02                      0.025668504
-#> SAM2e7aa8fa0ab3             4.130289e-03                      0.008716558
-#>                 Epidish_BPRNACanProMet_B.cells
-#> SAM7f0d9cc7f001                    0.061927146
-#> SAM4305ab968b90                    0.013455460
-#> SAMcf018fee2acd                    0.029724100
-#> SAMcc4675f394a1                    0.002167176
-#> SAM49f9b2e57aa5                    0.032688442
-#> SAM2e7aa8fa0ab3                    0.011090919
-#>                 Epidish_CBSX.HNSCC.scRNAseq_B.cells
-#> SAM7f0d9cc7f001                         0.025626151
-#> SAM4305ab968b90                         0.000000000
-#> SAMcf018fee2acd                         0.080914523
-#> SAMcc4675f394a1                         0.001434758
-#> SAM49f9b2e57aa5                         0.137032856
-#> SAM2e7aa8fa0ab3                         0.282602048
+#>                 Quantiseq_TIL10_B.cells Epidish_CBSX.HNSCC.scRNAseq_B.cells
+#> SAM7f0d9cc7f001             0.050210988                         0.025626151
+#> SAM4305ab968b90             0.008603929                         0.000000000
+#> SAMcf018fee2acd             0.042857608                         0.080914523
+#> SAMcc4675f394a1             0.025216439                         0.001434758
+#> SAM49f9b2e57aa5             0.022668958                         0.137032856
+#> SAM2e7aa8fa0ab3             0.012022510                         0.282602048
 #>                 Epidish_CBSX.Melanoma.scRNAseq_B.cells
 #> SAM7f0d9cc7f001                            0.066233918
 #> SAM4305ab968b90                            0.008756584
@@ -193,6 +162,20 @@ head(deconv[,1:5])
 #> SAMcc4675f394a1                            0.000000000
 #> SAM49f9b2e57aa5                            0.036205984
 #> SAM2e7aa8fa0ab3                            0.005377105
+#>                 Epidish_CBSX.NSCLC.PBMCs.scRNAseq_B.cells
+#> SAM7f0d9cc7f001                                 0.9270601
+#> SAM4305ab968b90                                 0.7335563
+#> SAMcf018fee2acd                                 0.8704203
+#> SAMcc4675f394a1                                 0.7806137
+#> SAM49f9b2e57aa5                                 0.7666496
+#> SAM2e7aa8fa0ab3                                 0.9091358
+#>                 Epidish_CBSX.Vanderbilt.scRNAseq_B.cells
+#> SAM7f0d9cc7f001                                        0
+#> SAM4305ab968b90                                        0
+#> SAMcf018fee2acd                                        0
+#> SAMcc4675f394a1                                        0
+#> SAM49f9b2e57aa5                                        0
+#> SAM2e7aa8fa0ab3                                        0
 ```
 
 ### **TF activity inference**
@@ -204,6 +187,7 @@ To infer transcription factor activity, we will use the `viper` package
 based on the expression levels of their downstream target genes.
 
 ``` r
+
 #We first normalize by log2(TPM + 1)
 counts.norm = data.frame(ADImpute::NormalizeTPM(raw.counts, log = T))
 universe = decoupleR::get_collectri(organism = "human", split_complexes = F)
@@ -211,6 +195,7 @@ tfs = compute.TFs.activity(counts.norm, universe = universe)
 ```
 
 ``` r
+
 head(tfs[,1:5])
 ```
 
@@ -225,6 +210,7 @@ Correlation Network Analysis (WGCNA) approach (Langfelder and Horvath
 we refer to as Weighted TF Correlation Network Analysis (WTCNA).
 
 ``` r
+
 network = compute.WTCNA(tfs, corr_mod = 0.8, clustering.method = "ward.D2", return = T) 
 ```
 
@@ -233,6 +219,7 @@ can run the following analysis. This function will generate and save the
 corresponding plots in the `Results/` directory:
 
 ``` r
+
 compute.metadata.association(network[[1]], traitdata, pval = 0.05, file.name = "Tutorial", width = 10) 
 ```
 
@@ -245,6 +232,7 @@ however, users can supply a custom gene set, in which case Gene Set
 Variation Analysis (GSVA) will be applied instead.
 
 ``` r
+
 pathways = compute.pathway.activity(counts.norm)
 ```
 
@@ -254,6 +242,7 @@ following function. This will generate and save a labeled heatmap in the
 sets along with significance annotations.
 
 ``` r
+
 compute.modules.relationship(network[[1]], pathways, "Pathways_Progeny-TFs_Modules", width = 15)
 ```
 
@@ -267,6 +256,7 @@ TFs. Resulting dot plots are automatically saved in the `Results/`
 directory.
 
 ``` r
+
 hub_tfs = identify_hub_TFs(t(tfs), network, MM_thresh = 0.8, degree_thresh = 0.9)
 compute.modules.enrichment(counts.norm, hub_tfs)
 ```
@@ -280,6 +270,7 @@ groups of cell types with similar abundance patterns across samples and
 returns a reduced feature matrix.
 
 ``` r
+
 dt = multideconv::compute.deconvolution.analysis(deconv, corr = 0.7, seed = 123) 
 dt = multideconv::deconvolution_dictionary(dt, pathways) ## Apply dictionary of deconvolution (To be added in compute.deconvolution.analysis() soon)
 #Association of TFs modules with deconvolution 
@@ -300,6 +291,7 @@ identification of cell groups associated with specific phenotypes (e.g.,
 treatment response).
 
 ``` r
+
 cell_groups = construct_cell_groups(counts.norm, tfs, deconv, network, dt, traitdata, pval = 0.05, 
                                     trait = "Best.Confirmed.Overall.Response", positive = "CR")
 ```
@@ -310,29 +302,38 @@ Alternatively, we can identify cell groups solely based on molecular
 features without using clinical annotations.
 
 ``` r
+
 cell_groups = construct_cell_groups(counts.norm, tfs, deconv, network, dt, pval = 0.05)
 ```
 
 ### **Analize results**
 
-To evaluate the association between cell group scores and a clinical
-trait, you can perform statistical tests such as Fisher’s exact test,
-ANOVA, or any other supported method (Wilcoxon, Kruskal–Wallis, t-test)
-using the unified function
-[`cell.groups.stat.analysis()`](https://verapancaldilab.github.io/CellTFusion/reference/cell.groups.stat.analysis.md).
+To evaluate the association between scores and a clinical trait, you can
+perform statistical tests such as Fisher’s exact test, ANOVA, or any
+other supported method (Wilcoxon, Kruskal–Wallis, t-test) using the
+unified function
+[`scores.stat.analysis()`](https://verapancaldilab.github.io/CellTFusion/reference/scores.stat.analysis.md).
+It accepts cell group scores, NMF latent factors
+(`compute.latent.factors()` output), or any samples × features matrix.
 
 ``` r
-res_fisher <- cell.groups.stat.analysis(cell.groups = cell_groups, coldata = traitdata, 
-                                        trait = "Best.Confirmed.Overall.Response", method = "fisher", pval = 0.05)
 
-res_anova <- cell.groups.stat.analysis(cell.groups = cell_groups, coldata = traitdata,
-                                       trait = "Best.Confirmed.Overall.Response", method = "anova", pval = 0.05)
+res_fisher <- scores.stat.analysis(scores = cell_groups, coldata = traitdata,
+                                   trait = "Best.Confirmed.Overall.Response", method = "fisher", pval = 0.05)
 
-res_wilcox <- cell.groups.stat.analysis(cell.groups = cell_groups, coldata = traitdata, 
-                                        trait = "Best.Confirmed.Overall.Response", method = "wilcox", pval = 0.05)
+res_anova <- scores.stat.analysis(scores = cell_groups, coldata = traitdata,
+                                  trait = "Best.Confirmed.Overall.Response", method = "anova", pval = 0.05)
 
-res_krustal <- cell.groups.stat.analysis(cell.groups = cell_groups, coldata = traitdata,
-                                         trait = "Best.Confirmed.Overall.Response", method = "krustal", pval = 0.05)
+res_wilcox <- scores.stat.analysis(scores = cell_groups, coldata = traitdata,
+                                   trait = "Best.Confirmed.Overall.Response", method = "wilcox", pval = 0.05)
+
+res_kruskal <- scores.stat.analysis(scores = cell_groups, coldata = traitdata,
+                                    trait = "Best.Confirmed.Overall.Response", method = "kruskal", pval = 0.05)
+
+# Also works directly with NMF latent factors:
+nmf <- compute.latent.factors(cell_groups)
+res_nmf <- scores.stat.analysis(scores = nmf, coldata = traitdata,
+                                trait = "Best.Confirmed.Overall.Response", method = "anova", pval = 0.05)
 ```
 
 ### **One-step CellTFusion**
@@ -343,6 +344,9 @@ intermediate analyses, and ultimately returning the cell group scores.
 To run this streamlined pipeline, simply execute:
 
 ``` r
+
+source("R/CellTFusion.R") ## To be added in the package soon
+library(dplyr)
 res <- CellTFusion(
   raw.counts = raw.counts,
   normalized = TRUE,
@@ -372,6 +376,7 @@ To start, we split our dataset into training and testing sets as
 follows:
 
 ``` r
+
 index = caret::createDataPartition(traitdata[,"Best.Confirmed.Overall.Response"], times = 1, p = 0.8, list = FALSE) 
 
 # Train cohort
@@ -386,6 +391,7 @@ raw.counts_test = raw.counts[,-index]
 We performed CellTFusion in the training set
 
 ``` r
+
 res_training <- CellTFusion(
   raw.counts = raw.counts_train,
   normalized = TRUE,
@@ -404,6 +410,7 @@ res_training <- CellTFusion(
 Next, we train the machine learning model using the cell group scores:
 
 ``` r
+
 library(caret)
 library(pipeML)
 res = pipeML::compute_features.training.ML(features_train = res_training$Cell_groups[[1]], 
@@ -420,6 +427,7 @@ res = pipeML::compute_features.training.ML(features_train = res_training$Cell_gr
 We replicate the trained cell groups into an independent dataset
 
 ``` r
+
 ## Compute deconvolution in the independent set
 deconv_test = multideconv::compute.deconvolution(raw.counts_test, methods = c("Quantiseq", "Epidish"), normalized = T, return = F)
 
@@ -430,6 +438,7 @@ testing_set = compute.test.set(res_training$Processed_deconvolution, res_trainin
 Predicting clinical trait on the test set
 
 ``` r
+
 pred = pipeML::compute_prediction(res, testing_set, traitData_test$Best.Confirmed.Overall.Response, "PD", stack = F)
 head(pred$Metrics[,1:5])
 pred$AUC$AUROC
@@ -451,14 +460,11 @@ every fold while ensuring that test samples are never included in the
 feature learning process.
 
 For this purpose, `CellTFusion` provides the function
-[`prepare_CellTFusion_folds()`](https://verapancaldilab.github.io/CellTFusion/reference/prepare_CellTFusion_folds.md),
-which is fully compatible with the `pipeML` package for machine learning
-model training and evaluation.
+`prepare_CellTFusion_folds()`, which is fully compatible with the
+`pipeML` package for machine learning model training and evaluation.
 
-The
-[`prepare_CellTFusion_folds()`](https://verapancaldilab.github.io/CellTFusion/reference/prepare_CellTFusion_folds.md)
-function handles cross-validation by recomputing `CellTFusion` features
-inside each fold. This ensures that:
+The `prepare_CellTFusion_folds()` function handles cross-validation by
+recomputing `CellTFusion` features inside each fold. This ensures that:
 
 - Test samples are never included in the feature learning process.
 
@@ -477,6 +483,7 @@ Here is an example of how to integrate it into the machine learning
 workflow:
 
 ``` r
+
 universe <- decoupleR::get_collectri(organism = 'human', split_complexes = FALSE)
 paths <- decoupleR::get_progeny(organism = 'human', top = 500)
 
@@ -522,31 +529,27 @@ tutorial.
 
 ## References
 
-Alvarez, Mariano J., Yao Shen, Federico M. Giorgi, Alexander Lachmann,
-B. Belinda Ding, B. Hilda Ye, and Andrea Califano. 2016. “Functional
-Characterization of Somatic Mutations in Cancer Using Network-Based
-Inference of Protein Activity.” *Nature Genetics* 48 (8): 838–47.
-<https://doi.org/10.1038/ng.3593>.
+Alvarez, Mariano J., Yao Shen, Federico M. Giorgi, et al. 2016.
+“Functional Characterization of Somatic Mutations in Cancer Using
+Network-Based Inference of Protein Activity.” *Nature Genetics* 48 (8):
+838–47. <https://doi.org/10.1038/ng.3593>.
 
-Badia-i-Mompel, Pau, Jesús Vélez Santiago, Jana Braunger, Celina Geiss,
-Daniel Dimitrov, Sophia Müller-Dott, Petr Taus, et al. 2022. “decoupleR:
-Ensemble of Computational Methods to Infer Biological Activities from
-Omics Data.” *Bioinformatics Advances* 2 (1): vbac016.
+Badia-i-Mompel, Pau, Jesús Vélez Santiago, Jana Braunger, et al. 2022.
+“decoupleR: Ensemble of Computational Methods to Infer Biological
+Activities from Omics Data.” *Bioinformatics Advances* 2 (1): vbac016.
 <https://doi.org/10.1093/bioadv/vbac016>.
 
 Langfelder, Peter, and Steve Horvath. 2008. “WGCNA: An r Package for
 Weighted Correlation Network Analysis.” *BMC Bioinformatics* 9 (1): 559.
 <https://doi.org/10.1186/1471-2105-9-559>.
 
-Müller-Dott, Sophia, Eirini Tsirvouli, Miguel Vazquez, Ricardo O Ramirez
-Flores, Pau Badia-i-Mompel, Robin Fallegger, Dénes Türei, Astrid
-Lægreid, and Julio Saez-Rodriguez. 2023. “Expanding the Coverage of
-Regulons from High-Confidence Prior Knowledge for Accurate Estimation of
-Transcription Factor Activities.” *Nucleic Acids Research* 51 (20):
-10934–49. <https://doi.org/10.1093/nar/gkad841>.
+Müller-Dott, Sophia, Eirini Tsirvouli, Miguel Vazquez, et al. 2023.
+“Expanding the Coverage of Regulons from High-Confidence Prior Knowledge
+for Accurate Estimation of Transcription Factor Activities.” *Nucleic
+Acids Research* 51 (20): 10934–49.
+<https://doi.org/10.1093/nar/gkad841>.
 
-Schubert, Michael, Bertram Klinger, Martina Klünemann, Anja Sieber,
-Florian Uhlitz, Sascha Sauer, Mathew J. Garnett, Nils Blüthgen, and
-Julio Saez-Rodriguez. 2018. “Perturbation-Response Genes Reveal
-Signaling Footprints in Cancer Gene Expression.” *Nature Communications*
-9 (1): 20. <https://doi.org/10.1038/s41467-017-02391-6>.
+Schubert, Michael, Bertram Klinger, Martina Klünemann, et al. 2018.
+“Perturbation-Response Genes Reveal Signaling Footprints in Cancer Gene
+Expression.” *Nature Communications* 9 (1): 20.
+<https://doi.org/10.1038/s41467-017-02391-6>.

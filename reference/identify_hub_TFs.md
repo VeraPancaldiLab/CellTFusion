@@ -46,6 +46,7 @@ A list with two elements:
 ## Examples
 
 ``` r
+
 data("tfs.tuto")
 data("network.tuto")
 

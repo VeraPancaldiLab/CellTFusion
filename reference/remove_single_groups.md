@@ -1,6 +1,7 @@
-# Remove cell groups with only one feature
+# Remove cell groups composed of a single cell type
 
-Remove cell groups with only one feature
+Filters out cell groups whose composition contains only one cell type,
+as these groups lack multi-cellular context.
 
 ## Usage
 
@@ -12,20 +13,17 @@ remove_single_groups(cell.values, cell.composition, cell.loadings)
 
 - cell.values:
 
-  Cell groups scores
+  A list of numeric vectors of cell group scores.
 
 - cell.composition:
 
-  Cell groups composition
+  A list of character vectors describing cell-type membership per group.
 
 - cell.loadings:
 
-  Cell groups loadings
+  A list of loading vectors corresponding to each cell group.
 
 ## Value
 
-A list containing
-
-- Cell groups scores after removal of single cell groups
-
-- Cell groups composition after removal of single cell groups
+A list of three elements (scores, compositions, loadings) with singleton
+groups removed, or `NULL` if all groups are removed.

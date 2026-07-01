@@ -15,6 +15,7 @@ RNAseq data.
 This is a standard R package using the devtools workflow:
 
 ``` r
+
 devtools::load_all()      # Load package in development
 devtools::document()      # Regenerate NAMESPACE and Rd files from roxygen2
 devtools::check()         # Full package check (CRAN-style)
@@ -26,12 +27,14 @@ devtools::build()         # Build source tarball
 Run a single test file:
 
 ``` r
+
 testthat::test_file("tests/testthat/test-<name>.R")
 ```
 
 Launch the Shiny app:
 
 ``` r
+
 CellTFusion::launch_app()
 ```
 
@@ -68,19 +71,19 @@ The package implements a multi-step pipeline:
 
 ### Main Exported Functions
 
-| Function                                                                                                                    | Purpose                                       |
-|-----------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------|
-| [`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md)                                   | Full pipeline wrapper                         |
-| [`compute.TFs.activity()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.TFs.activity.md)                 | TF activity scoring via viper                 |
-| [`compute.WTCNA()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.WTCNA.md)                               | WGCNA module construction                     |
-| [`compute.pathway.activity()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.pathway.activity.md)         | PROGENy pathway scoring                       |
-| [`construct_cell_groups()`](https://verapancaldilab.github.io/CellTFusion/reference/construct_cell_groups.md)               | Unsupervised/supervised cell group clustering |
-| [`compute.test.set()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.test.set.md)                         | Apply trained model to new dataset            |
-| [`identify_hub_TFs()`](https://verapancaldilab.github.io/CellTFusion/reference/identify_hub_TFs.md)                         | Identify driver TFs from modules              |
-| [`compute_factor_gsea()`](https://verapancaldilab.github.io/CellTFusion/reference/compute_factor_gsea.md)                   | GSEA on latent factors                        |
-| [`compute.metadata.association()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.metadata.association.md) | Clinical trait association + visualization    |
-| [`compute.modules.relationship()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.modules.relationship.md) | Correlate TF modules with pathways            |
-| [`compute.modules.enrichment()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.modules.enrichment.md)     | Pathway enrichment of TF modules              |
+| Function | Purpose |
+|----|----|
+| [`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md) | Full pipeline wrapper |
+| [`compute.TFs.activity()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.TFs.activity.md) | TF activity scoring via viper |
+| [`compute.WTCNA()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.WTCNA.md) | WGCNA module construction |
+| [`compute.pathway.activity()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.pathway.activity.md) | PROGENy pathway scoring |
+| [`construct_cell_groups()`](https://verapancaldilab.github.io/CellTFusion/reference/construct_cell_groups.md) | Unsupervised/supervised cell group clustering |
+| [`compute.test.set()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.test.set.md) | Apply trained model to new dataset |
+| [`identify_hub_TFs()`](https://verapancaldilab.github.io/CellTFusion/reference/identify_hub_TFs.md) | Identify driver TFs from modules |
+| [`compute_factor_gsea()`](https://verapancaldilab.github.io/CellTFusion/reference/compute_factor_gsea.md) | GSEA on latent factors |
+| [`compute.metadata.association()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.metadata.association.md) | Clinical trait association + visualization |
+| [`compute.modules.relationship()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.modules.relationship.md) | Correlate TF modules with pathways |
+| [`compute.modules.enrichment()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.modules.enrichment.md) | Pathway enrichment of TF modules |
 
 ### Tutorial Data (in `data/`)
 

@@ -60,10 +60,10 @@ provided, a list with two elements:
 
 ## References
 
-Schubert M, Klinger B, Klünemann M, Sieber A, Uhlitz F, Sauer S, Garnett
-MJ, Blüthgen N, Saez-Rodriguez J. Perturbation-response genes reveal
-signaling footprints in cancer gene expression. Nature Communications.
-2018.
+Schubert M, Klinger B, Kluenemann M, Sieber A, Uhlitz F, Sauer S,
+Garnett MJ, Bluethgen N, Saez-Rodriguez J. Perturbation-response genes
+reveal signaling footprints in cancer gene expression. Nature
+Communications. 2018.
 [doi:10.1038/s41467-017-02391-6](https://doi.org/10.1038/s41467-017-02391-6)
 
 ## Examples
@@ -72,16 +72,5 @@ signaling footprints in cancer gene expression. Nature Communications.
 # Compute only PROGENy activities
 data("counts.norm.tuto")
 pathways <- compute.pathway.activity(counts.norm.tuto)
-#> Warning: 'OmnipathR::get_annotation_resources' is deprecated.
-#> Use 'annotation_resources' instead.
-#> See help("Deprecated")
-#> Warning: URL 'https://ftp.expasy.org/databases/uniprot/current_release/knowledgebase/complete/docs/speclist.txt': Timeout of 60 seconds was reached
-#> Warning: URL 'https://ftp.expasy.org/databases/uniprot/current_release/knowledgebase/complete/docs/speclist.txt': Timeout of 60 seconds was reached
-#> Warning: URL 'https://ftp.expasy.org/databases/uniprot/current_release/knowledgebase/complete/docs/speclist.txt': Timeout of 60 seconds was reached
-#> Warning: 'OmnipathR::import_omnipath_annotations' is deprecated.
-#> Use 'annotations' instead.
-#> See help("Deprecated")
-#> Warning: URL 'https://ftp.expasy.org/databases/uniprot/current_release/knowledgebase/complete/docs/speclist.txt': Timeout of 60 seconds was reached
-#> Warning: URL 'https://ftp.expasy.org/databases/uniprot/current_release/knowledgebase/complete/docs/speclist.txt': Timeout of 60 seconds was reached
-#> Warning: URL 'https://ftp.expasy.org/databases/uniprot/current_release/knowledgebase/complete/docs/speclist.txt': Timeout of 60 seconds was reached
+#> Using cached PROGENy pathways collection from  Results/Pathways_collection_PROGENy.csv 
 ```

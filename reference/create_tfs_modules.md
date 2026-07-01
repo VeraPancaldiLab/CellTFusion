@@ -13,7 +13,8 @@ create_tfs_modules(TF.matrix, network_tfs)
 
 - TF.matrix:
 
-  TFs activity matrix with samples as rows and TFs as columns.
+  TFs activity matrix with samples as rows and TFs as columns (should be
+  the output of compute.TF.activity()).
 
 - network_tfs:
 

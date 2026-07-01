@@ -1,6 +1,8 @@
-# Remove cell groups with equal composition
+# Remove cell groups with duplicate composition
 
-Remove cell groups with equal composition
+Identifies cell groups whose cell-type composition is identical to
+another group and removes the duplicates, keeping only the first
+occurrence.
 
 ## Usage
 
@@ -12,20 +14,22 @@ remove_equal(cell.values, cell.composition, cell.loadings)
 
 - cell.values:
 
-  Cell groups scores
+  A list of numeric vectors of cell group scores.
 
 - cell.composition:
 
-  Cell groups composition
+  A list of character vectors describing cell-type membership per group.
 
 - cell.loadings:
 
-  Cell groups loadings
+  A list of loading vectors corresponding to each cell group.
 
 ## Value
 
-A list containing
+A list of three elements:
 
-- Cell groups scores after removal of equal cell groups
+- `[[1]]`: Deduplicated cell group scores.
 
-- Cell groups composition after removal of equal cell groups
+- `[[2]]`: Deduplicated cell group compositions.
+
+- `[[3]]`: Deduplicated cell group loadings.

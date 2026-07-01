@@ -13,8 +13,10 @@ construct_cell_groups(
   dt,
   batch = NULL,
   pval = 0.05,
-  high_corr_groups = 0.8,
-  clustering.method = "ward.D2"
+  clustering.method = "ward.D2",
+  n_perm = 999,
+  dendrogram_file = NULL,
+  return_dendrogram = FALSE
 )
 ```
 
@@ -34,16 +36,28 @@ construct_cell_groups(
 
 - pval:
 
-  P-value threshold used to filter module relationships. Default: 0.05.
-
-- high_corr_groups:
-
-  Correlation threshold to merge or remove redundant cell groups.
-  Default: 0.9.
+  Numeric. P-value threshold applied both to filter TF
+  module-deconvolution feature correlations and as the significance
+  cutoff for the CCA permutation test. Default: 0.05.
 
 - clustering.method:
 
   Clustering method for hierarchical clustering. Default: "ward.D2".
+
+- n_perm:
+
+  Integer. Number of permutations for the CCA significance test per cell
+  group. Higher values give more precise p-values but increase runtime.
+  Default: 999.
+
+- dendrogram_file:
+
+  Optional character. File path to save dendrogram plot output.
+
+- return_dendrogram:
+
+  Logical. If TRUE, includes the dendrogram in the returned list.
+  Default FALSE.
 
 ## Value
 

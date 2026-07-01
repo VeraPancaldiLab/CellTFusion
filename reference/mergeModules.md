@@ -1,6 +1,7 @@
-# Merge TFs modules
+# Merge highly correlated TF modules
 
-Identify high correlated TFs modules and merge.
+Identifies pairs of TF modules whose eigengene correlation exceeds
+`corr` and merges them by averaging their columns.
 
 ## Usage
 
@@ -12,20 +13,24 @@ mergeModules(data, colors, corr)
 
 - data:
 
-  TFs modules matrix
+  A numeric matrix or data frame of TF module eigengenes (samples x
+  modules).
 
 - colors:
 
-  TFs modules colors
+  A character vector of module color labels aligned with the columns of
+  `data`.
 
 - corr:
 
-  Correlation value above which two modules are merge.
+  Numeric. Spearman correlation threshold above which two modules are
+  merged. Default 0.9.
 
 ## Value
 
-A list containing
+A list of two elements:
 
-- Merge modules
+- `[[1]]`: Data frame of merged module eigengenes (samples x modules).
 
-- TFs module colors
+- `[[2]]`: Updated character vector of module color labels after
+  merging.

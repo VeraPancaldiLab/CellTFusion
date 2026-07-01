@@ -18,6 +18,7 @@ setting up GitHub authentication by creating and storing a Personal
 Access Token (PAT). You can do this with the following steps:
 
 ``` r
+
 # install.packages(c("usethis", "gitcreds"))
 usethis::create_github_token() #Create a Personal Access Token (if you don't have)
 gitcreds::gitcreds_set() #Add the token
@@ -27,6 +28,7 @@ You can install the development version of `CellTFusion` from
 [GitHub](https://github.com/) with:
 
 ``` r
+
 # install.packages("pak")
 pak::pkg_install("VeraPancaldiLab/CellTFusion")
 ```
@@ -38,6 +40,7 @@ You can run the CellTFusion Shiny interface in two ways.
 From an installed package:
 
 ``` r
+
 library(CellTFusion)
 shiny::runApp(system.file("shiny", package = "CellTFusion"))
 ```
@@ -45,6 +48,7 @@ shiny::runApp(system.file("shiny", package = "CellTFusion"))
 From this source repository:
 
 ``` r
+
 shiny::runApp("inst/shiny")
 ```
 
@@ -63,6 +67,7 @@ The `Results/` folder, where outputs will be saved, will be created in
 this directory.
 
 ``` r
+
 setwd('~/path/to/directory')
 library(CellTFusion)
 ```
@@ -74,6 +79,7 @@ and pathway scoring — use the
 wrapper function.
 
 ``` r
+
 res <- CellTFusion(
   raw.counts = raw.counts,
   normalized = TRUE,
@@ -109,6 +115,7 @@ function to derive cell-type groupings based on transcription factor
 unsupervised and supervised analysis based on clinical traits.
 
 ``` r
+
 # Run unsupervised cell group construction
 cell_groups_unsupervised <- construct_cell_groups(
   counts = counts_matrix,       # gene expression (genes x samples)
@@ -143,6 +150,7 @@ Use this function to apply the trained cell groups to an external test
 set and calculate group-specific composite scores.
 
 ``` r
+
 test_scores <- compute.test.set(
   deconv_res = deconv_res_test,
   cell_groups = cell_groups,

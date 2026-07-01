@@ -12,7 +12,11 @@ cell.groups.computation(
   cell.dendrograms,
   tfs.module.network,
   batch = NULL,
-  return = T
+  return = T,
+  pval = 0.05,
+  n_perm = 999,
+  dendrogram_file = NULL,
+  return_dendrogram = FALSE
 )
 ```
 
@@ -47,6 +51,24 @@ cell.groups.computation(
 
   Logical; if TRUE (default), writes CSV files with cell group
   compositions and scores to the "Results/" folder.
+
+- pval:
+
+  Numeric. P-value threshold for statistical tests. Default is 0.05.
+
+- n_perm:
+
+  Integer. Number of permutations for significance testing. Default is
+  999.
+
+- dendrogram_file:
+
+  Optional character. File path to save dendrogram plot.
+
+- return_dendrogram:
+
+  Logical. If TRUE, includes the dendrogram in the returned list.
+  Default FALSE.
 
 ## Value
 

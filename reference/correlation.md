@@ -1,6 +1,6 @@
-# Perform pairwise correlation across all features
+# Perform pairwise Spearman correlation across all features
 
-Perform pairwise correlation across all features
+Perform pairwise Spearman correlation across all features
 
 ## Usage
 
@@ -12,8 +12,10 @@ correlation(data)
 
 - data:
 
-  Matrix with features to correlate
+  A numeric matrix or data frame where columns are features.
 
 ## Value
 
-Dataframe containing all significant correlations (pvalue \< 0.05)
+A data frame of pairwise significant correlations (p \< 0.05), with
+columns `measure1`, `measure2`, `r`, `p`, `sig_p`, `p_if_sig`,
+`r_if_sig`, and `AbsR`, ordered by descending `r`.

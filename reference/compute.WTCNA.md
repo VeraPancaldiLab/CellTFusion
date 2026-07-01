@@ -50,7 +50,7 @@ compute(
 
 - corr_mod:
 
-  Correlation threshold (0–1) for merging similar modules. Default is
+  Correlation threshold (0-1) for merging similar modules. Default is
   0.9.
 
 - cor_type:
@@ -97,6 +97,7 @@ https://doi.org/10.1186/1471-2105-9-559
 ## Examples
 
 ``` r
+
 data("tfs.tuto")
 network <- compute.WTCNA(tfs.tuto, corr_mod = 0.9, clustering.method = "ward.D2", return = FALSE)
 #> Warning: executing %dopar% sequentially: no parallel backend registered

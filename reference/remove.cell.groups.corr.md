@@ -1,6 +1,8 @@
 # Remove highly correlated cell groups
 
-Remove highly correlated cell groups
+Computes pairwise Spearman correlations among cell group score vectors
+and removes one member of each pair whose absolute correlation exceeds
+`threshold`.
 
 ## Usage
 
@@ -12,32 +14,27 @@ remove.cell.groups.corr(data, threshold = 0.95)
 
 - data:
 
-  A named list with three elements:
+  A list of three elements:
 
   scores
 
-  :   A data frame or matrix of cell group scores.
+  :   A numeric data frame or matrix of cell group scores (samples x
+      groups).
 
   compositions
 
-  :   A named list of cell group compositions.
+  :   A named list of cell-type vectors describing group membership.
 
   loadings
 
-  :   A named list of loadings corresponding to the cell groups.
+  :   A named list of loading vectors corresponding to each cell group.
 
 - threshold:
 
-  Numeric value for correlation threshold above which features are
-  considered highly correlated (default 0.95)
+  Numeric. Correlation threshold above which one of a correlated pair is
+  removed. Default is 0.95.
 
 ## Value
 
-A list containing:
-
-- Cell group scores after removal/combination of highly correlated
-  features
-
-- Cell group compositions updated accordingly
-
-- Loadings updated accordingly
+A list of three elements (scores, compositions, loadings) with redundant
+cell groups removed.

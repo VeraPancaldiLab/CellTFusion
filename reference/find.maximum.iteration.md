@@ -1,6 +1,7 @@
-# Find maximum iteration from subgroups
+# Find maximum iteration from cell subgroups
 
-Find maximum iteration from subgroups
+Scans a nested list of cell subgroups and returns the highest iteration
+number found across all elements.
 
 ## Usage
 
@@ -12,8 +13,9 @@ find.maximum.iteration(cells.groups)
 
 - cells.groups:
 
-  Cell groups corresponding to a specific cell type.
+  A nested list of cell subgroups. Names of inner elements must follow
+  the pattern `*.Iteration.<n>` where `<n>` is an integer.
 
 ## Value
 
-Maximum subgroupping iteration
+An integer giving the maximum iteration number across all subgroups.

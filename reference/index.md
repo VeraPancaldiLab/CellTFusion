@@ -37,39 +37,46 @@ Visualization
 
 Cell groups analysis
 
-- [`cell.groups.fisher.test()`](https://verapancaldilab.github.io/CellTFusion/reference/cell.groups.fisher.test.md)
-  : Fisher test using cell groups scores
-- [`cell.groups.anova.test()`](https://verapancaldilab.github.io/CellTFusion/reference/cell.groups.anova.test.md)
+- [`scores.fisher.test()`](https://verapancaldilab.github.io/CellTFusion/reference/scores.fisher.test.md)
+  : Fisher's exact test for score-trait association
+- [`scores.anova.test()`](https://verapancaldilab.github.io/CellTFusion/reference/scores.anova.test.md)
   : One-way ANOVA test for multi-group comparisons
-- [`cell.groups.wilcox.test()`](https://verapancaldilab.github.io/CellTFusion/reference/cell.groups.wilcox.test.md)
+- [`scores.wilcox.test()`](https://verapancaldilab.github.io/CellTFusion/reference/scores.wilcox.test.md)
   : Wilcoxon rank-sum test for binary traits
-- [`cell.groups.kruskal.test()`](https://verapancaldilab.github.io/CellTFusion/reference/cell.groups.kruskal.test.md)
-  : Kruskal–Wallis test for multi-group comparisons
-- [`cell.groups.ttest()`](https://verapancaldilab.github.io/CellTFusion/reference/cell.groups.ttest.md)
+- [`scores.kruskal.test()`](https://verapancaldilab.github.io/CellTFusion/reference/scores.kruskal.test.md)
+  : Kruskal-Wallis test for multi-group comparisons
+- [`scores.ttest()`](https://verapancaldilab.github.io/CellTFusion/reference/scores.ttest.md)
   : Student's t-test for cell group comparisons
-- [`cell.groups.stat.analysis()`](https://verapancaldilab.github.io/CellTFusion/reference/cell.groups.stat.analysis.md)
-  : Perform statistical analysis on cell group scores using a specified
-  test
+- [`scores.stat.analysis()`](https://verapancaldilab.github.io/CellTFusion/reference/scores.stat.analysis.md)
+  : Perform statistical analysis on scores using a specified test
+- [`compute(`*`<latent_factors>`*`)`](https://verapancaldilab.github.io/CellTFusion/reference/compute.latent_factors.md)
+  : Compute latent factors from cell group scores using NMF
 - [`identify(`*`<cell.groups>`*`)`](https://verapancaldilab.github.io/CellTFusion/reference/identify.cell.groups.md)
   : Identify cell groups
-- [`compute(`*`<latent_factors>`*`)`](https://verapancaldilab.github.io/CellTFusion/reference/compute.latent_factors.md)
-  : Compute latent factors from cell-group features
-- [`identify(`*`<cell.signatures>`*`)`](https://verapancaldilab.github.io/CellTFusion/reference/identify.cell.signatures.md)
-  : Identify cell presence scores across important features from the
-  trained machine learning models.
 
-## Machine learning
+## Meta-programs and TME
 
-- [`prepare_CellTFusion_folds()`](https://verapancaldilab.github.io/CellTFusion/reference/prepare_CellTFusion_folds.md)
-  : Prepare CellTFusion folds for cross-validation with training and
-  test data
+Meta-program derivation and TME mapping
+
+- [`derive_meta_programs()`](https://verapancaldilab.github.io/CellTFusion/reference/derive_meta_programs.md)
+  : Derive TME meta-programs by clustering Hallmarks across NMF factors
+- [`map_factors_to_metaprograms()`](https://verapancaldilab.github.io/CellTFusion/reference/map_factors_to_metaprograms.md)
+  : Map study factors to TCGA meta-programs
+- [`map_factors_to_TME()`](https://verapancaldilab.github.io/CellTFusion/reference/map_factors_to_TME.md)
+  : Annotate NMF factors with Bagaev et al. (2021) MFP subtypes
+- [`annotate_metaprograms_TME()`](https://verapancaldilab.github.io/CellTFusion/reference/annotate_metaprograms_TME.md)
+  : Annotate meta-programs with Bagaev TME subtypes
+- [`build_nes_matrix()`](https://verapancaldilab.github.io/CellTFusion/reference/build_nes_matrix.md)
+  : Build a Hallmarks x factors NES matrix from GSEA results
+- [`project_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/project_factors.md)
+  : Project cell group scores onto trained NMF latent factors
+- [`project_test_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/project_test_factors.md)
+  : Project test-set samples onto training NMF factors
 
 ## Utils
 
 Internal use (not exported functions)
 
-- [`calculate_dendrogram_cuts()`](https://verapancaldilab.github.io/CellTFusion/reference/calculate_dendrogram_cuts.md)
-  : Calculate dendrogram cuts
 - [`cell.groups.computation()`](https://verapancaldilab.github.io/CellTFusion/reference/cell.groups.computation.md)
   : Compute cell group scores from deconvolution and TF module network
 - [`classify.deconvolution()`](https://verapancaldilab.github.io/CellTFusion/reference/classify.deconvolution.md)
@@ -79,12 +86,8 @@ Internal use (not exported functions)
   : Compute TF Network Classification
 - [`compute(`*`<composition.matrix>`*`)`](https://verapancaldilab.github.io/CellTFusion/reference/compute.composition.matrix.md)
   : Compute a cell-type composition matrix from deconvolution subgroups
-- [`compute_cell_groups_signatures()`](https://verapancaldilab.github.io/CellTFusion/reference/compute_cell_groups_signatures.md)
-  : Compute projected cell group scores on an independent cohort
 - [`compute_composite_score()`](https://verapancaldilab.github.io/CellTFusion/reference/compute_composite_score.md)
   : Compute composite score for cell groups
-- [`correlation()`](https://verapancaldilab.github.io/CellTFusion/reference/correlation.md)
-  : Perform pairwise correlation across all features
 - [`create_tfs_modules()`](https://verapancaldilab.github.io/CellTFusion/reference/create_tfs_modules.md)
   : Create TFs modules
 - [`extract_cells()`](https://verapancaldilab.github.io/CellTFusion/reference/extract_cells.md)
@@ -93,18 +96,6 @@ Internal use (not exported functions)
   : Extract colors
 - [`extract_wilcox_significant()`](https://verapancaldilab.github.io/CellTFusion/reference/extract_wilcox_significant.md)
   : Extract significant features using Wilcoxon test
-- [`find.maximum.iteration()`](https://verapancaldilab.github.io/CellTFusion/reference/find.maximum.iteration.md)
-  : Find maximum iteration from subgroups
-- [`mergeModules()`](https://verapancaldilab.github.io/CellTFusion/reference/mergeModules.md)
-  : Merge TFs modules
-- [`module_enrich()`](https://verapancaldilab.github.io/CellTFusion/reference/module_enrich.md)
-  : Module enrichment
-- [`remove.cell.groups.corr()`](https://verapancaldilab.github.io/CellTFusion/reference/remove.cell.groups.corr.md)
-  : Remove highly correlated cell groups
-- [`remove_equal()`](https://verapancaldilab.github.io/CellTFusion/reference/remove_equal.md)
-  : Remove cell groups with equal composition
-- [`remove_single_groups()`](https://verapancaldilab.github.io/CellTFusion/reference/remove_single_groups.md)
-  : Remove cell groups with only one feature
 
 ## Package Data
 

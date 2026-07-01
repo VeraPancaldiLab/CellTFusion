@@ -23,13 +23,16 @@ CellTFusion(
   min_targets_size = 3,
   universe = NULL,
   paths = NULL,
+  gene_sets = NULL,
   minMod = 3,
   corr_mod = 0.9,
   corr = 0.7,
   corr_type = "spearman",
   cells_extra = NULL,
   pval = 0.05,
-  high_corr_groups = 0.8,
+  enrich_thresh = 1.5,
+  quantile_cutoff = 0.7,
+  cancer_type = NULL,
   return = T,
   verbose = T
 )
@@ -104,7 +107,7 @@ CellTFusion(
 
 - TF.collection:
 
-  Character. The source of the TF–target network. Options are
+  Character. The source of the TF-target network. Options are
   `"CollecTRI"` (default), `"Dorothea"`, or `"ARACNE"`.
 
   - `"CollecTRI"` and `"Dorothea"` use prebuilt collections from
@@ -120,7 +123,7 @@ CellTFusion(
 
 - universe:
 
-  Optional. A user-specified data frame of TF–target interactions. If
+  Optional. A user-specified data frame of TF-target interactions. If
   not provided, the function will fetch the relevant network based on
   the `TF.collection` argument.
 
@@ -129,6 +132,13 @@ CellTFusion(
   Optional. A user-specified data frame of pathways gene sets. If not
   provided, the function will fetch the relevant pathways based on
   `PROGENy`.
+
+- gene_sets:
+
+  Optional. A data frame of custom gene sets passed to
+  [`compute.pathway.activity()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.pathway.activity.md)'s
+  `gene_sets` argument for GSVA-based scoring. If `NULL`, only PROGENy
+  is used.
 
 - minMod:
 
@@ -157,9 +167,25 @@ CellTFusion(
   Numeric; p-value threshold for statistical tests (e.g., metadata and
   relationship associations).
 
-- high_corr_groups:
+- enrich_thresh:
 
-  Numeric; correlation threshold to identify highly similar cell groups.
+  Numeric. Minimum enrichment ratio (foreground/background cell-type
+  frequency) required to include a cell type in a latent factor's niche.
+  Default is 1.5.
+
+- quantile_cutoff:
+
+  Numeric between 0 and 1. Quantile threshold for selecting
+  top-contributing cell groups per NMF factor. Default is 0.7.
+
+- cancer_type:
+
+  Character. TCGA cancer type abbreviation (e.g., `"blca"`, `"skcm"`).
+  Used for two purposes: (1) loading TCGA meta-programs for TME state
+  mapping, and (2) when `TF.collection = "ARACNE"`, locating the ARACNe
+  network at `input/ARACNE/<cancer_type>/network/network.txt`. If `NULL`
+  and only one ARACNe network exists under `input/ARACNE/`, it is
+  auto-detected.
 
 - return:
 
@@ -202,6 +228,7 @@ A list containing:
 ## Examples
 
 ``` r
+
 if (FALSE) { # \dontrun{
 data("raw.counts.tuto")
 data("traitdata.tuto")
@@ -216,8 +243,7 @@ res <- CellTFusion(
   minMod = 20,
   corr_mod = 0.25,
   corr = 0.7,
-  pval = 0.05,
-  high_corr_groups = 0.85
+  pval = 0.05
 )
 } # }
 ```

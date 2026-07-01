@@ -11,7 +11,9 @@ compute_composite_score(
   module_group,
   tfs.module.network,
   batch = NULL,
-  discard = T
+  discard = T,
+  pval = 0.05,
+  n_perm = 999
 )
 ```
 
@@ -38,8 +40,18 @@ compute_composite_score(
 
 - discard:
 
-  Logical; whether to discard cell groups whose canonical correlation is
-  below 0.6 (default TRUE).
+  Logical; whether to discard cell groups that do not pass the
+  permutation test for the first canonical correlation (default TRUE).
+
+- pval:
+
+  Numeric. Significance threshold for the permutation test (default
+  0.05).
+
+- n_perm:
+
+  Integer. Number of permutations used to build the null distribution
+  (default 999).
 
 ## Value
 

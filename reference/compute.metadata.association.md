@@ -107,6 +107,7 @@ The function does not return an object to the R environment.
 ## Examples
 
 ``` r
+
 data("network.tuto")
 data("traitdata.tuto")
 

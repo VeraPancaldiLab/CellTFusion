@@ -145,20 +145,14 @@ pathways <- compute.pathway.activity(counts.norm.tuto)
 #> Warning: 'OmnipathR::get_annotation_resources' is deprecated.
 #> Use 'annotation_resources' instead.
 #> See help("Deprecated")
-#> Warning: URL 'https://ftp.expasy.org/databases/uniprot/current_release/knowledgebase/complete/docs/speclist.txt': Timeout of 60 seconds was reached
-#> Warning: URL 'https://ftp.expasy.org/databases/uniprot/current_release/knowledgebase/complete/docs/speclist.txt': Timeout of 60 seconds was reached
-#> Warning: URL 'https://ftp.expasy.org/databases/uniprot/current_release/knowledgebase/complete/docs/speclist.txt': Timeout of 60 seconds was reached
 #> Warning: 'OmnipathR::import_omnipath_annotations' is deprecated.
 #> Use 'annotations' instead.
 #> See help("Deprecated")
-#> Warning: URL 'https://ftp.expasy.org/databases/uniprot/current_release/knowledgebase/complete/docs/speclist.txt': Timeout of 60 seconds was reached
-#> Warning: URL 'https://ftp.expasy.org/databases/uniprot/current_release/knowledgebase/complete/docs/speclist.txt': Timeout of 60 seconds was reached
-#> Warning: URL 'https://ftp.expasy.org/databases/uniprot/current_release/knowledgebase/complete/docs/speclist.txt': Timeout of 60 seconds was reached
 compute.modules.relationship(network.tuto[[1]],
                              pathways,
                              "Pathways_Progeny-TFs_Modules",
                              width = 15)
-#> agg_record_8dd868afa442 
+#> agg_record_61d83f73675d 
 #>                       2 
 
 data("deconv_subgroups.tuto")
