@@ -56,9 +56,8 @@ Imports:
     colorspace,
     fgsea,
     ppcor
-Remotes: 
+Remotes:
     VeraPancaldiLab/multideconv,
-    VeraPancaldiLab/pipeML,
     saezlab/OmnipathR,
     YuLab-SMU/ggtree
 Suggests:
