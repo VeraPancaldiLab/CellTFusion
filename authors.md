@@ -12,13 +12,13 @@
 Hurtado M, Pancaldi V (2026). *CellTFusion: Integration of immune-cell
 type deconvolution features and prior-knowledge networks of TFs-gene
 interactions to characterize potential cell states of the tumor
-microenvironment using bulk RNAseq data*. R package version 0.0.0.9000,
+microenvironment using bulk RNAseq data*. R package version 0.0.1,
 <https://verapancaldilab.github.io/CellTFusion/>.
 
     @Manual{,
       title = {CellTFusion: Integration of immune-cell type deconvolution features and prior-knowledge networks of TFs-gene interactions to characterize potential cell states of the tumor microenvironment using bulk RNAseq data},
       author = {Marcelo Hurtado and Vera Pancaldi},
       year = {2026},
-      note = {R package version 0.0.0.9000},
+      note = {R package version 0.0.1},
       url = {https://verapancaldilab.github.io/CellTFusion/},
     }

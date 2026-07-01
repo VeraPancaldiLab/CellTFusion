@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>CellTFusion • CellTFusion</title>
+<title>Getting Started with CellTFusion • CellTFusion</title>
 <!-- favicons --><link rel="icon" type="image/png" sizes="96x96" href="../favicon-96x96.png">
 <link rel="icon" type="”image/svg+xml”" href="../favicon.svg">
 <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
@@ -15,7 +15,7 @@
 <link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="CellTFusion">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Getting Started with CellTFusion">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -25,7 +25,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">CellTFusion</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -36,6 +36,18 @@
       <ul class="navbar-nav me-auto">
 <li class="active nav-item"><a class="nav-link" href="../articles/CellTFusion.html">Get started</a></li>
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
+<li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Tutorials</h6></li>
+    <li><a class="dropdown-item" href="../articles/01-feature-computation.html">Feature Computation</a></li>
+    <li><a class="dropdown-item" href="../articles/02-cell-groups.html">Cell Group Construction</a></li>
+    <li><a class="dropdown-item" href="../articles/03-analysis.html">Statistical Analysis</a></li>
+    <li><a class="dropdown-item" href="../articles/04-one-step-pipeline.html">One-step Pipeline</a></li>
+    <li><a class="dropdown-item" href="../articles/05-machine-learning.html">Machine Learning</a></li>
+  </ul>
+</li>
       </ul>
 <ul class="navbar-nav">
 <li class="nav-item"><form class="form-inline" role="search">
@@ -53,7 +65,7 @@
 
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
-      <img src="../logo.png" class="logo" alt=""><h1>CellTFusion</h1>
+      <img src="../logo.png" class="logo" alt=""><h1>Getting Started with CellTFusion</h1>
             
       
 
@@ -62,492 +74,121 @@
 
     
     
-<p>This tutorial demonstrates how to use the <code>CellTFusion</code>
-package and explains the main functions of the pipeline. We walk through
-each step of the pipeline, explain key parameters, and illustrate how to
-interpret and save results. For more information about the methods we
-invite to read the main paper of the tool.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://verapancaldilab.github.io/CellTFusion/">CellTFusion</a></span><span class="op">)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; </span></span></code></pre></div>
-<p>Load the pre-packaged example data included in CellTFusion:</p>
+<div class="section level3">
+<h3 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
+</h3>
+<p><code>CellTFusion</code> integrates immune cell-type deconvolution
+with transcription factor (TF)–gene regulatory networks to characterize
+immune cell states in the tumor microenvironment from bulk RNA-seq
+data.</p>
+<p>The pipeline takes raw counts and optional clinical metadata as
+input, and produces <strong>cell group scores</strong> — biologically
+coherent clusters of samples defined by shared TF activity and cell-type
+composition patterns.</p>
+</div>
+<div class="section level3">
+<h3 id="pipeline-steps">Pipeline steps<a class="anchor" aria-label="anchor" href="#pipeline-steps"></a>
+</h3>
+<table class="table">
+<colgroup>
+<col width="15%">
+<col width="32%">
+<col width="51%">
+</colgroup>
+<thead><tr class="header">
+<th>Step</th>
+<th>Function</th>
+<th>Article</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>Cell-type deconvolution</td>
+<td><code><a href="https://rdrr.io/pkg/multideconv/man/compute.deconvolution.html" class="external-link">multideconv::compute.deconvolution()</a></code></td>
+<td><a href="articles/01-feature-computation.html">Feature
+Computation</a></td>
+</tr>
+<tr class="even">
+<td>TF activity inference</td>
+<td><code><a href="../reference/compute.TFs.activity.html">compute.TFs.activity()</a></code></td>
+<td><a href="articles/01-feature-computation.html">Feature
+Computation</a></td>
+</tr>
+<tr class="odd">
+<td>TF module construction</td>
+<td><code><a href="../reference/compute.WTCNA.html">compute.WTCNA()</a></code></td>
+<td><a href="articles/01-feature-computation.html">Feature
+Computation</a></td>
+</tr>
+<tr class="even">
+<td>Pathway activity scoring</td>
+<td><code><a href="../reference/compute.pathway.activity.html">compute.pathway.activity()</a></code></td>
+<td><a href="articles/01-feature-computation.html">Feature
+Computation</a></td>
+</tr>
+<tr class="odd">
+<td>Cell group construction</td>
+<td><code><a href="../reference/construct_cell_groups.html">construct_cell_groups()</a></code></td>
+<td><a href="articles/02-cell-groups.html">Cell Group
+Construction</a></td>
+</tr>
+<tr class="even">
+<td>Statistical association</td>
+<td><code><a href="../reference/scores.stat.analysis.html">scores.stat.analysis()</a></code></td>
+<td><a href="articles/03-analysis.html">Statistical Analysis</a></td>
+</tr>
+<tr class="odd">
+<td>Full pipeline (one call)</td>
+<td><code><a href="../reference/CellTFusion.html">CellTFusion()</a></code></td>
+<td><a href="articles/04-one-step-pipeline.html">One-step
+Pipeline</a></td>
+</tr>
+<tr class="even">
+<td>ML model training</td>
+<td><code>pipeML::compute_features.training.ML()</code></td>
+<td><a href="articles/05-machine-learning.html">Machine
+Learning</a></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section level3">
+<h3 id="quick-start">Quick start<a class="anchor" aria-label="anchor" href="#quick-start"></a>
+</h3>
+<p>Load the pre-packaged example data and run the full pipeline in one
+call:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">raw.counts</span> <span class="op">=</span> <span class="fu">CellTFusion</span><span class="fu">::</span><span class="va"><a href="../reference/raw.counts.tuto.html">raw.counts.tuto</a></span> <span class="co">## Corresponds to bulk RNAseq counts</span></span>
-<span><span class="va">traitdata</span> <span class="op">=</span> <span class="fu">CellTFusion</span><span class="fu">::</span><span class="va"><a href="../reference/traitdata.tuto.html">traitdata.tuto</a></span> <span class="co">## Corresponds to the clinical data per samples</span></span></code></pre></div>
-<p>CellTFusion requires two primary inputs: cell-type deconvolution
-proportions and transcription factor (TF) activity scores. To obtain
-these features, we will leverage publicly available tools designed for
-this purpose.</p>
-<div class="section level3">
-<h3 id="cell-type-deconvolution">
-<strong>Cell-type deconvolution</strong><a class="anchor" aria-label="anchor" href="#cell-type-deconvolution"></a>
-</h3>
-<p>To compute cell-type proportions, we will use the
-<code>multideconv</code> R package. This tool integrates multiple
-deconvolution algorithms and signature matrices to estimate cell-type
-abundances from bulk RNA-seq data. For more details, visit the <a href="https://github.com/VeraPancaldiLab/multideconv" class="external-link">multideconv GitHub
-repository</a>.</p>
+<code class="sourceCode R"><span><span class="va">raw.counts</span> <span class="op">&lt;-</span> <span class="fu">CellTFusion</span><span class="fu">::</span><span class="va"><a href="../reference/raw.counts.tuto.html">raw.counts.tuto</a></span></span>
+<span><span class="va">traitdata</span>  <span class="op">&lt;-</span> <span class="fu">CellTFusion</span><span class="fu">::</span><span class="va"><a href="../reference/traitdata.tuto.html">traitdata.tuto</a></span></span></code></pre></div>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">deconv</span> <span class="op">=</span> <span class="fu">multideconv</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/multideconv/man/compute.deconvolution.html" class="external-link">compute.deconvolution</a></span><span class="op">(</span><span class="va">raw.counts</span>, methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Quantiseq"</span>, <span class="st">"Epidish"</span><span class="op">)</span>, normalized <span class="op">=</span> <span class="cn">T</span>, return <span class="op">=</span> <span class="cn">F</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Performing TPM normalization ................................................................................</span></span>
-<span><span class="co">#&gt; Converting input to matrix.</span></span>
-<span><span class="co">#&gt; Running deconvolution using the following methods...............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; * Quantiseq</span></span>
-<span><span class="co">#&gt; * Epidish</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Running Quantiseq...............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; &gt;&gt;&gt; Running quantiseq</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Running quanTIseq deconvolution module</span></span>
-<span><span class="co">#&gt; Gene expression normalization and re-annotation (arrays: FALSE)</span></span>
-<span><span class="co">#&gt; Removing 17 noisy genes</span></span>
-<span><span class="co">#&gt; Removing 15 genes with high expression in tumors</span></span>
-<span><span class="co">#&gt; Signature genes found in data set: 128/138 (92.75%)</span></span>
-<span><span class="co">#&gt; Mixture deconvolution (method: lsei)</span></span>
-<span><span class="co">#&gt; Deconvolution successful!</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; The following method-signature combinations are going to be calculated...............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Methods</span></span>
-<span><span class="co">#&gt; * Epidish</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Signatures</span></span>
-<span><span class="co">#&gt; * CBSX-HNSCC-scRNAseq</span></span>
-<span><span class="co">#&gt; * CBSX-Melanoma-scRNAseq</span></span>
-<span><span class="co">#&gt; * CBSX-NSCLC-PBMCs-scRNAseq</span></span>
-<span><span class="co">#&gt; * CBSX-Vanderbilt-scRNAseq</span></span>
-<span><span class="co">#&gt; * CBSX-Zilionis-scRNAseq</span></span>
-<span><span class="co">#&gt; * LM22</span></span>
-<span><span class="co">#&gt; * TIL10</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Running Epidish...............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Running Epidish...............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Running Epidish...............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Running Epidish...............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Running Epidish...............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Running Epidish...............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Running Epidish...............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Deconvolution cache files removed.</span></span>
-<span><span class="co">#&gt; Preprocessing deconvolution features...............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Checking consistency in deconvolution cell fractions across patients...............................................................</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; No extra cell types provided. Only the following cell types will be considered:</span></span>
-<span><span class="co">#&gt;  B.cells</span></span>
-<span><span class="co">#&gt; B.naive.cells</span></span>
-<span><span class="co">#&gt; B.memory.cells</span></span>
-<span><span class="co">#&gt; Macrophages.cells</span></span>
-<span><span class="co">#&gt; Macrophages.M0</span></span>
-<span><span class="co">#&gt; Macrophages.M1</span></span>
-<span><span class="co">#&gt; Macrophages.M2</span></span>
-<span><span class="co">#&gt; Monocytes</span></span>
-<span><span class="co">#&gt; Neutrophils</span></span>
-<span><span class="co">#&gt; NK.cells</span></span>
-<span><span class="co">#&gt; NK.activated</span></span>
-<span><span class="co">#&gt; NK.resting</span></span>
-<span><span class="co">#&gt; NKT.cells</span></span>
-<span><span class="co">#&gt; CD4.cells</span></span>
-<span><span class="co">#&gt; CD4.memory.activated</span></span>
-<span><span class="co">#&gt; CD4.memory.resting</span></span>
-<span><span class="co">#&gt; CD4.naive</span></span>
-<span><span class="co">#&gt; CD8.cells</span></span>
-<span><span class="co">#&gt; CD4.regulatory</span></span>
-<span><span class="co">#&gt; CD4.non.regulatory</span></span>
-<span><span class="co">#&gt; T.cells.helper</span></span>
-<span><span class="co">#&gt; T.cells.gamma.delta</span></span>
-<span><span class="co">#&gt; Dendritic.cells</span></span>
-<span><span class="co">#&gt; Dendritic.activated.cells</span></span>
-<span><span class="co">#&gt; Dendritic.resting.cells</span></span>
-<span><span class="co">#&gt; Cancer</span></span>
-<span><span class="co">#&gt; Endothelial</span></span>
-<span><span class="co">#&gt; Eosinophils</span></span>
-<span><span class="co">#&gt; Plasma</span></span>
-<span><span class="co">#&gt; Myocytes</span></span>
-<span><span class="co">#&gt; Fibroblast</span></span>
-<span><span class="co">#&gt; Mast.cells</span></span>
-<span><span class="co">#&gt; Mast.activated.cells</span></span>
-<span><span class="co">#&gt; Mast.resting.cells</span></span>
-<span><span class="co">#&gt; CAF</span></span>
-<span><span class="co">#&gt; uncharacterized_cell </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; If you want to consider other cell types (e.g. from a custom signature) which are not included in the package by default (see README), please provide them in the cells_extra argument.</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Total sum across samples of combination Quantiseq_TIL10 is 1</span></span>
-<span><span class="co">#&gt; Total sum across samples of combination Epidish_CBSX.HNSCC.scRNAseq is 1</span></span>
-<span><span class="co">#&gt; Total sum across samples of combination Epidish_CBSX.Melanoma.scRNAseq is 1</span></span>
-<span><span class="co">#&gt; Total sum across samples of combination Epidish_CBSX.NSCLC.PBMCs.scRNAseq is 1</span></span>
-<span><span class="co">#&gt; Total sum across samples of combination Epidish_CBSX.Vanderbilt.scRNAseq is 1</span></span>
-<span><span class="co">#&gt; Total sum across samples of combination Epidish_TIL10 is 1</span></span>
-<span><span class="co">#&gt; Total sum across samples of combination Epidish_CBSX.Zilionis.scRNAseq is 1</span></span>
-<span><span class="co">#&gt; Total sum across samples of combination Epidish_LM22 is 1</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/CellTFusion.html">CellTFusion</a></span><span class="op">(</span></span>
+<span>  raw.counts     <span class="op">=</span> <span class="va">raw.counts</span>,</span>
+<span>  normalized     <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  coldata        <span class="op">=</span> <span class="va">traitdata</span>,</span>
+<span>  trait          <span class="op">=</span> <span class="st">"Best.Confirmed.Overall.Response"</span>,</span>
+<span>  trait.positive <span class="op">=</span> <span class="st">"CR"</span>,</span>
+<span>  deconv_methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Quantiseq"</span>, <span class="st">"Epidish"</span><span class="op">)</span>,</span>
+<span>  file_name      <span class="op">=</span> <span class="st">"TestRun"</span>,</span>
+<span>  corr           <span class="op">=</span> <span class="fl">0.7</span>,</span>
+<span>  pval           <span class="op">=</span> <span class="fl">0.05</span>,</span>
+<span>  return         <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p>For a step-by-step walkthrough of each stage, follow the articles
+listed in the table above.</p>
+</div>
+<div class="section level3">
+<h3 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
+</h3>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">deconv</span><span class="op">[</span>,<span class="fl">1</span><span class="op">:</span><span class="fl">5</span><span class="op">]</span><span class="op">)</span></span>
-<span><span class="co">#&gt;                 Quantiseq_TIL10_B.cells Epidish_CBSX.HNSCC.scRNAseq_B.cells</span></span>
-<span><span class="co">#&gt; SAM7f0d9cc7f001             0.050210988                         0.025626151</span></span>
-<span><span class="co">#&gt; SAM4305ab968b90             0.008603929                         0.000000000</span></span>
-<span><span class="co">#&gt; SAMcf018fee2acd             0.042857608                         0.080914523</span></span>
-<span><span class="co">#&gt; SAMcc4675f394a1             0.025216439                         0.001434758</span></span>
-<span><span class="co">#&gt; SAM49f9b2e57aa5             0.022668958                         0.137032856</span></span>
-<span><span class="co">#&gt; SAM2e7aa8fa0ab3             0.012022510                         0.282602048</span></span>
-<span><span class="co">#&gt;                 Epidish_CBSX.Melanoma.scRNAseq_B.cells</span></span>
-<span><span class="co">#&gt; SAM7f0d9cc7f001                            0.066233918</span></span>
-<span><span class="co">#&gt; SAM4305ab968b90                            0.008756584</span></span>
-<span><span class="co">#&gt; SAMcf018fee2acd                            0.009133098</span></span>
-<span><span class="co">#&gt; SAMcc4675f394a1                            0.000000000</span></span>
-<span><span class="co">#&gt; SAM49f9b2e57aa5                            0.036205984</span></span>
-<span><span class="co">#&gt; SAM2e7aa8fa0ab3                            0.005377105</span></span>
-<span><span class="co">#&gt;                 Epidish_CBSX.NSCLC.PBMCs.scRNAseq_B.cells</span></span>
-<span><span class="co">#&gt; SAM7f0d9cc7f001                                 0.9270601</span></span>
-<span><span class="co">#&gt; SAM4305ab968b90                                 0.7335563</span></span>
-<span><span class="co">#&gt; SAMcf018fee2acd                                 0.8704203</span></span>
-<span><span class="co">#&gt; SAMcc4675f394a1                                 0.7806137</span></span>
-<span><span class="co">#&gt; SAM49f9b2e57aa5                                 0.7666496</span></span>
-<span><span class="co">#&gt; SAM2e7aa8fa0ab3                                 0.9091358</span></span>
-<span><span class="co">#&gt;                 Epidish_CBSX.Vanderbilt.scRNAseq_B.cells</span></span>
-<span><span class="co">#&gt; SAM7f0d9cc7f001                                        0</span></span>
-<span><span class="co">#&gt; SAM4305ab968b90                                        0</span></span>
-<span><span class="co">#&gt; SAMcf018fee2acd                                        0</span></span>
-<span><span class="co">#&gt; SAMcc4675f394a1                                        0</span></span>
-<span><span class="co">#&gt; SAM49f9b2e57aa5                                        0</span></span>
-<span><span class="co">#&gt; SAM2e7aa8fa0ab3                                        0</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="tf-activity-inference">
-<strong>TF activity inference</strong><a class="anchor" aria-label="anchor" href="#tf-activity-inference"></a>
-</h3>
-<p>To infer transcription factor activity, we will use the
-<code>viper</code> package (<span class="citation">Alvarez et al. (<a href="#ref-Alvarez2016">2016</a>)</span>) in combination with the
-<code>CollecTRI</code> regulon database (<span class="citation">Müller-Dott et al. (<a href="#ref-10.1093/nar/gkad841">2023</a>)</span>). This approach
-estimates TF activity based on the expression levels of their downstream
-target genes.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">#We first normalize by log2(TPM + 1)</span></span>
-<span><span class="va">counts.norm</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="fu">ADImpute</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/ADImpute/man/NormalizeTPM.html" class="external-link">NormalizeTPM</a></span><span class="op">(</span><span class="va">raw.counts</span>, log <span class="op">=</span> <span class="cn">T</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">universe</span> <span class="op">=</span> <span class="fu">decoupleR</span><span class="fu">::</span><span class="fu"><a href="https://saezlab.github.io/decoupleR/reference/get_collectri.html" class="external-link">get_collectri</a></span><span class="op">(</span>organism <span class="op">=</span> <span class="st">"human"</span>, split_complexes <span class="op">=</span> <span class="cn">F</span><span class="op">)</span></span>
-<span><span class="va">tfs</span> <span class="op">=</span> <span class="fu"><a href="../reference/compute.TFs.activity.html">compute.TFs.activity</a></span><span class="op">(</span><span class="va">counts.norm</span>, universe <span class="op">=</span> <span class="va">universe</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">tfs</span><span class="op">[</span>,<span class="fl">1</span><span class="op">:</span><span class="fl">5</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
-<p>Once features have been calculated we can start analyzing our data
-using CellTFusion</p>
-<p>Before constructing the cell groups, we first reduce the TF activity
-matrix into modules of TFs that exhibit similar activity patterns across
-samples. For this, we apply a method inspired by the Weighted Gene
-Correlation Network Analysis (WGCNA) approach (<span class="citation">Langfelder and Horvath (<a href="#ref-langfelder2008wgcna">2008</a>)</span>), adapted here for TF
-activity, which we refer to as Weighted TF Correlation Network Analysis
-(WTCNA).</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">network</span> <span class="op">=</span> <span class="fu"><a href="../reference/compute.WTCNA.html">compute.WTCNA</a></span><span class="op">(</span><span class="va">tfs</span>, corr_mod <span class="op">=</span> <span class="fl">0.8</span>, clustering.method <span class="op">=</span> <span class="st">"ward.D2"</span>, return <span class="op">=</span> <span class="cn">T</span><span class="op">)</span> </span></code></pre></div>
-<p>To explore how clinical variables are associated with the TF modules,
-we can run the following analysis. This function will generate and save
-the corresponding plots in the <code>Results/</code> directory:</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/compute.metadata.association.html">compute.metadata.association</a></span><span class="op">(</span><span class="va">network</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>, <span class="va">traitdata</span>, pval <span class="op">=</span> <span class="fl">0.05</span>, file.name <span class="op">=</span> <span class="st">"Tutorial"</span>, width <span class="op">=</span> <span class="fl">10</span><span class="op">)</span> </span></code></pre></div>
-<p>To functionally characterize the TF modules, we provide a utility to
-estimate pathway activities using a multivariate linear model (MLM)
-implemented via the <code>decoupleR</code> package (<span class="citation">Badia-i-Mompel et al. (<a href="#ref-10.1093/bioadv/vbac016">2022</a>)</span>). By default, the
-<code>PROGENy</code> pathway database (<span class="citation">Schubert
-et al. (<a href="#ref-Schubert2018">2018</a>)</span>) is used; however,
-users can supply a custom gene set, in which case Gene Set Variation
-Analysis (GSVA) will be applied instead.</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">pathways</span> <span class="op">=</span> <span class="fu"><a href="../reference/compute.pathway.activity.html">compute.pathway.activity</a></span><span class="op">(</span><span class="va">counts.norm</span><span class="op">)</span></span></code></pre></div>
-<p>To explore the relationship between features, users can run the
-following function. This will generate and save a labeled heatmap in the
-<code>Results/</code> directory, displaying the correlation between the
-two feature sets along with significance annotations.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/compute.modules.relationship.html">compute.modules.relationship</a></span><span class="op">(</span><span class="va">network</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>, <span class="va">pathways</span>, <span class="st">"Pathways_Progeny-TFs_Modules"</span>, width <span class="op">=</span> <span class="fl">15</span><span class="op">)</span></span></code></pre></div>
-<p>If pathway analysis alone does not provide sufficient insight into
-the biological relevance of each module, users can perform
-Over-Representation Analysis (ORA) using the Reactome database. The
-function below first identifies hub transcription factors (TFs) for each
-module based on module membership (MM) and node degree thresholds. It
-then performs enrichment analysis using the target genes of these hub
-TFs. Resulting dot plots are automatically saved in the
-<code>Results/</code> directory.</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">hub_tfs</span> <span class="op">=</span> <span class="fu"><a href="../reference/identify_hub_TFs.html">identify_hub_TFs</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">tfs</span><span class="op">)</span>, <span class="va">network</span>, MM_thresh <span class="op">=</span> <span class="fl">0.8</span>, degree_thresh <span class="op">=</span> <span class="fl">0.9</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/compute.modules.enrichment.html">compute.modules.enrichment</a></span><span class="op">(</span><span class="va">counts.norm</span>, <span class="va">hub_tfs</span><span class="op">)</span></span></code></pre></div>
-<p>Once the TF modules are defined and functionally characterized, we
-further refine the cell-type deconvolution results to reduce
-dimensionality and enhance statistical power in downstream association
-analyses. To achieve this, we use the
-<code>compute.deconvolution.analysis()</code> function from the
-<code>multideconv</code> R package. This function identifies groups of
-cell types with similar abundance patterns across samples and returns a
-reduced feature matrix.</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">dt</span> <span class="op">=</span> <span class="fu">multideconv</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/multideconv/man/compute.deconvolution.analysis.html" class="external-link">compute.deconvolution.analysis</a></span><span class="op">(</span><span class="va">deconv</span>, corr <span class="op">=</span> <span class="fl">0.7</span>, seed <span class="op">=</span> <span class="fl">123</span><span class="op">)</span> </span>
-<span><span class="va">dt</span> <span class="op">=</span> <span class="fu">multideconv</span><span class="fu">::</span><span class="fu">deconvolution_dictionary</span><span class="op">(</span><span class="va">dt</span>, <span class="va">pathways</span><span class="op">)</span> <span class="co">## Apply dictionary of deconvolution (To be added in compute.deconvolution.analysis() soon)</span></span>
-<span><span class="co">#Association of TFs modules with deconvolution </span></span>
-<span><span class="fu"><a href="../reference/compute.modules.relationship.html">compute.modules.relationship</a></span><span class="op">(</span><span class="va">network</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>, <span class="va">dt</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>, <span class="st">"Deconvolution-TFs_Modules"</span>, vertical <span class="op">=</span> <span class="cn">T</span>, height <span class="op">=</span> <span class="fl">30</span>, width <span class="op">=</span> <span class="fl">10</span>, pval <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="construct-cell-groups">
-<strong>Construct cell groups</strong><a class="anchor" aria-label="anchor" href="#construct-cell-groups"></a>
-</h3>
-<p>Cell groups construction is the main part of CellTFusion. Using the
-previously calculated features, we identify clusters of cells that share
-similar biological activity patterns, reflected by the TF modules scores
-across samples.</p>
-<p>Supervised analysis</p>
-<p>In this approach, we incorporate clinical traits to guide the
-identification of cell groups associated with specific phenotypes (e.g.,
-treatment response).</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">cell_groups</span> <span class="op">=</span> <span class="fu"><a href="../reference/construct_cell_groups.html">construct_cell_groups</a></span><span class="op">(</span><span class="va">counts.norm</span>, <span class="va">tfs</span>, <span class="va">deconv</span>, <span class="va">network</span>, <span class="va">dt</span>, <span class="va">traitdata</span>, pval <span class="op">=</span> <span class="fl">0.05</span>, </span>
-<span>                                    trait <span class="op">=</span> <span class="st">"Best.Confirmed.Overall.Response"</span>, positive <span class="op">=</span> <span class="st">"CR"</span><span class="op">)</span></span></code></pre></div>
-<p>Unsupervised analysis</p>
-<p>Alternatively, we can identify cell groups solely based on molecular
-features without using clinical annotations.</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">cell_groups</span> <span class="op">=</span> <span class="fu"><a href="../reference/construct_cell_groups.html">construct_cell_groups</a></span><span class="op">(</span><span class="va">counts.norm</span>, <span class="va">tfs</span>, <span class="va">deconv</span>, <span class="va">network</span>, <span class="va">dt</span>, pval <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="analize-results">
-<strong>Analize results</strong><a class="anchor" aria-label="anchor" href="#analize-results"></a>
-</h3>
-<p>To evaluate the association between scores and a clinical trait, you
-can perform statistical tests such as Fisher’s exact test, ANOVA, or any
-other supported method (Wilcoxon, Kruskal–Wallis, t-test) using the
-unified function <code><a href="../reference/scores.stat.analysis.html">scores.stat.analysis()</a></code>. It accepts cell
-group scores, NMF latent factors (<code>compute.latent.factors()</code>
-output), or any samples × features matrix.</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">res_fisher</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/scores.stat.analysis.html">scores.stat.analysis</a></span><span class="op">(</span>scores <span class="op">=</span> <span class="va">cell_groups</span>, coldata <span class="op">=</span> <span class="va">traitdata</span>,</span>
-<span>                                   trait <span class="op">=</span> <span class="st">"Best.Confirmed.Overall.Response"</span>, method <span class="op">=</span> <span class="st">"fisher"</span>, pval <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">res_anova</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/scores.stat.analysis.html">scores.stat.analysis</a></span><span class="op">(</span>scores <span class="op">=</span> <span class="va">cell_groups</span>, coldata <span class="op">=</span> <span class="va">traitdata</span>,</span>
-<span>                                  trait <span class="op">=</span> <span class="st">"Best.Confirmed.Overall.Response"</span>, method <span class="op">=</span> <span class="st">"anova"</span>, pval <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">res_wilcox</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/scores.stat.analysis.html">scores.stat.analysis</a></span><span class="op">(</span>scores <span class="op">=</span> <span class="va">cell_groups</span>, coldata <span class="op">=</span> <span class="va">traitdata</span>,</span>
-<span>                                   trait <span class="op">=</span> <span class="st">"Best.Confirmed.Overall.Response"</span>, method <span class="op">=</span> <span class="st">"wilcox"</span>, pval <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">res_kruskal</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/scores.stat.analysis.html">scores.stat.analysis</a></span><span class="op">(</span>scores <span class="op">=</span> <span class="va">cell_groups</span>, coldata <span class="op">=</span> <span class="va">traitdata</span>,</span>
-<span>                                    trait <span class="op">=</span> <span class="st">"Best.Confirmed.Overall.Response"</span>, method <span class="op">=</span> <span class="st">"kruskal"</span>, pval <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Also works directly with NMF latent factors:</span></span>
-<span><span class="va">nmf</span> <span class="op">&lt;-</span> <span class="fu">compute.latent.factors</span><span class="op">(</span><span class="va">cell_groups</span><span class="op">)</span></span>
-<span><span class="va">res_nmf</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/scores.stat.analysis.html">scores.stat.analysis</a></span><span class="op">(</span>scores <span class="op">=</span> <span class="va">nmf</span>, coldata <span class="op">=</span> <span class="va">traitdata</span>,</span>
-<span>                                trait <span class="op">=</span> <span class="st">"Best.Confirmed.Overall.Response"</span>, method <span class="op">=</span> <span class="st">"anova"</span>, pval <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="one-step-celltfusion">
-<strong>One-step CellTFusion</strong><a class="anchor" aria-label="anchor" href="#one-step-celltfusion"></a>
-</h3>
-<p>For convenience, we offer an all-in-one function that automates the
-entire CellTFusion workflow—calculating features, performing
-intermediate analyses, and ultimately returning the cell group scores.
-To run this streamlined pipeline, simply execute:</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/source.html" class="external-link">source</a></span><span class="op">(</span><span class="st">"R/CellTFusion.R"</span><span class="op">)</span> <span class="co">## To be added in the package soon</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span>
-<span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/CellTFusion.html">CellTFusion</a></span><span class="op">(</span></span>
-<span>  raw.counts <span class="op">=</span> <span class="va">raw.counts</span>,</span>
-<span>  normalized <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  coldata <span class="op">=</span> <span class="va">traitdata</span>, <span class="co"># Optional metadata</span></span>
-<span>  trait <span class="op">=</span> <span class="st">"Best.Confirmed.Overall.Response"</span>,  <span class="co"># Optional for supervised analysis</span></span>
-<span>  trait.positive <span class="op">=</span> <span class="st">"CR"</span>,                      <span class="co"># Define positive class for trait</span></span>
-<span>  deconv_methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Quantiseq"</span>, <span class="st">"Epidish"</span><span class="op">)</span>, <span class="co"># Choose from Quantiseq, Epidish, DeconRNASeq, DWLS, CibersortX</span></span>
-<span>  file_name <span class="op">=</span> <span class="st">"TestRun"</span>,</span>
-<span>  corr <span class="op">=</span> <span class="fl">0.7</span>,</span>
-<span>  pval <span class="op">=</span> <span class="fl">0.05</span>,</span>
-<span>  high_corr_groups <span class="op">=</span> <span class="fl">0.85</span>,</span>
-<span>  return <span class="op">=</span> <span class="cn">FALSE</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="machine-learning-models">
-<strong>Machine Learning models</strong><a class="anchor" aria-label="anchor" href="#machine-learning-models"></a>
-</h3>
-<p>Below are examples demonstrating how the computed cell groups can be
-leveraged to train machine learning models for predicting specific
-clinical traits.</p>
-<p>We use the R package <code>pipeML</code> for model training and
-prediction. For more details, visit the <a href="https://github.com/VeraPancaldiLab/pipeML" class="external-link">pipeML GitHub
-repository</a>.</p>
-<p>To start, we split our dataset into training and testing sets as
-follows:</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">index</span> <span class="op">=</span> <span class="fu">caret</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/caret/man/createDataPartition.html" class="external-link">createDataPartition</a></span><span class="op">(</span><span class="va">traitdata</span><span class="op">[</span>,<span class="st">"Best.Confirmed.Overall.Response"</span><span class="op">]</span>, times <span class="op">=</span> <span class="fl">1</span>, p <span class="op">=</span> <span class="fl">0.8</span>, list <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span> </span>
-<span></span>
-<span><span class="co"># Train cohort</span></span>
-<span><span class="va">traitData_train</span> <span class="op">=</span> <span class="va">traitdata</span><span class="op">[</span><span class="va">index</span>, <span class="op">]</span></span>
-<span><span class="va">raw.counts_train</span> <span class="op">=</span> <span class="va">raw.counts</span><span class="op">[</span>,<span class="va">index</span><span class="op">]</span></span>
-<span></span>
-<span><span class="co"># Test cohort</span></span>
-<span><span class="va">traitData_test</span> <span class="op">=</span> <span class="va">traitdata</span><span class="op">[</span><span class="op">-</span><span class="va">index</span>, <span class="op">]</span></span>
-<span><span class="va">raw.counts_test</span> <span class="op">=</span> <span class="va">raw.counts</span><span class="op">[</span>,<span class="op">-</span><span class="va">index</span><span class="op">]</span></span></code></pre></div>
-<p>We performed CellTFusion in the training set</p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">res_training</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/CellTFusion.html">CellTFusion</a></span><span class="op">(</span></span>
-<span>  raw.counts <span class="op">=</span> <span class="va">raw.counts_train</span>,</span>
-<span>  normalized <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  coldata <span class="op">=</span> <span class="va">traitData_train</span>, <span class="co"># Optional metadata</span></span>
-<span>  trait <span class="op">=</span> <span class="st">"Best.Confirmed.Overall.Response"</span>,  <span class="co"># Optional supervised analysis</span></span>
-<span>  trait.positive <span class="op">=</span> <span class="st">"PD"</span>,                      <span class="co"># Define positive class for trait</span></span>
-<span>  deconv_methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Quantiseq"</span>, <span class="st">"Epidish"</span><span class="op">)</span>, <span class="co"># Choose from Quantiseq, Epidish, DeconRNASeq, DWLS, CibersortX</span></span>
-<span>  file_name <span class="op">=</span> <span class="st">"TestRun"</span>,</span>
-<span>  corr <span class="op">=</span> <span class="fl">0.7</span>,</span>
-<span>  pval <span class="op">=</span> <span class="fl">0.05</span>,</span>
-<span>  high_corr_groups <span class="op">=</span> <span class="fl">0.85</span>,</span>
-<span>  return <span class="op">=</span> <span class="cn">FALSE</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-<p>Next, we train the machine learning model using the cell group
-scores:</p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/topepo/caret/" class="external-link">caret</a></span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">pipeML</span><span class="op">)</span></span>
-<span><span class="va">res</span> <span class="op">=</span> <span class="fu">pipeML</span><span class="fu">::</span><span class="fu">compute_features.training.ML</span><span class="op">(</span>features_train <span class="op">=</span> <span class="va">res_training</span><span class="op">$</span><span class="va">Cell_groups</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>, </span>
-<span>                                           target_var <span class="op">=</span> <span class="va">traitData_train</span><span class="op">$</span><span class="va">Best.Confirmed.Overall.Response</span>, </span>
-<span>                                           trait.positive <span class="op">=</span> <span class="st">"PD"</span>, </span>
-<span>                                           metric <span class="op">=</span> <span class="st">"AUROC"</span>, </span>
-<span>                                           task_type <span class="op">=</span> <span class="st">"classification"</span>,</span>
-<span>                                           stack <span class="op">=</span> <span class="cn">F</span>, k_folds <span class="op">=</span> <span class="fl">2</span>, </span>
-<span>                                           n_rep <span class="op">=</span> <span class="fl">2</span>,  </span>
-<span>                                           ncores <span class="op">=</span> <span class="fl">2</span>,</span>
-<span>                                           return <span class="op">=</span> <span class="cn">F</span><span class="op">)</span></span></code></pre></div>
-<p>We replicate the trained cell groups into an independent dataset</p>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">## Compute deconvolution in the independent set</span></span>
-<span><span class="va">deconv_test</span> <span class="op">=</span> <span class="fu">multideconv</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/multideconv/man/compute.deconvolution.html" class="external-link">compute.deconvolution</a></span><span class="op">(</span><span class="va">raw.counts_test</span>, methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Quantiseq"</span>, <span class="st">"Epidish"</span><span class="op">)</span>, normalized <span class="op">=</span> <span class="cn">T</span>, return <span class="op">=</span> <span class="cn">F</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co">## Replicate cell groups into independent set</span></span>
-<span><span class="va">testing_set</span> <span class="op">=</span> <span class="fu"><a href="../reference/compute.test.set.html">compute.test.set</a></span><span class="op">(</span><span class="va">res_training</span><span class="op">$</span><span class="va">Processed_deconvolution</span>, <span class="va">res_training</span><span class="op">$</span><span class="va">Cell_groups</span>, <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">res_training</span><span class="op">$</span><span class="va">Cell_groups</span><span class="op">[[</span><span class="fl">2</span><span class="op">]</span><span class="op">]</span><span class="op">)</span>, <span class="va">deconv_test</span><span class="op">)</span></span></code></pre></div>
-<p>Predicting clinical trait on the test set</p>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">pred</span> <span class="op">=</span> <span class="fu">pipeML</span><span class="fu">::</span><span class="fu">compute_prediction</span><span class="op">(</span><span class="va">res</span>, <span class="va">testing_set</span>, <span class="va">traitData_test</span><span class="op">$</span><span class="va">Best.Confirmed.Overall.Response</span>, <span class="st">"PD"</span>, stack <span class="op">=</span> <span class="cn">F</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">pred</span><span class="op">$</span><span class="va">Metrics</span><span class="op">[</span>,<span class="fl">1</span><span class="op">:</span><span class="fl">5</span><span class="op">]</span><span class="op">)</span></span>
-<span><span class="va">pred</span><span class="op">$</span><span class="va">AUC</span><span class="op">$</span><span class="va">AUROC</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="custom-k-fold-cross-validation-with-celltfusion">
-<strong>Custom k-fold cross validation with
-CellTFusion</strong><a class="anchor" aria-label="anchor" href="#custom-k-fold-cross-validation-with-celltfusion"></a>
-</h3>
-<p>In certain use cases it is essential to carefully design how the
-training and test splits are created to prevent data leakage. This is
-especially important for feature construction methods that depend on
-sample-level correlations or deconvolution results. If such features are
-computed on the full dataset before splitting, information from the test
-set can inadvertently influence the training set, leading to inflated
-performance estimates.</p>
-<p>For this purpose, <code>pipeML</code> allows the user to define a
-custom fold construction function. This makes it possible to recompute
-features at every fold while ensuring that test samples are never
-included in the feature learning process.</p>
-<p>For this purpose, <code>CellTFusion</code> provides the function
-<code>prepare_CellTFusion_folds()</code>, which is fully compatible with
-the <code>pipeML</code> package for machine learning model training and
-evaluation.</p>
-<p>The <code>prepare_CellTFusion_folds()</code> function handles
-cross-validation by recomputing <code>CellTFusion</code> features inside
-each fold. This ensures that:</p>
-<ul>
-<li><p>Test samples are never included in the feature learning
-process.</p></li>
-<li><p>Hyperparameter tuning can be performed safely without introducing
-bias.</p></li>
-<li><p>Parallelization (via foreach and doParallel) allows multiple
-folds to be processed simultaneously, reducing runtime.</p></li>
-</ul>
-<p>When integrated with <code>pipeML</code>, the function can be passed
-as a custom fold construction function (e.g.,
-<code>fold_construction_fun</code> =
-<code>prepare_CellTFusion_folds</code>), ensuring that the
-cross-validation setup mimics real-world application to unseen data.</p>
-<p>Here is an example of how to integrate it into the machine learning
-workflow:</p>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">universe</span> <span class="op">&lt;-</span> <span class="fu">decoupleR</span><span class="fu">::</span><span class="fu"><a href="https://saezlab.github.io/decoupleR/reference/get_collectri.html" class="external-link">get_collectri</a></span><span class="op">(</span>organism <span class="op">=</span> <span class="st">'human'</span>, split_complexes <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
-<span><span class="va">paths</span> <span class="op">&lt;-</span> <span class="fu">decoupleR</span><span class="fu">::</span><span class="fu"><a href="https://saezlab.github.io/decoupleR/reference/get_progeny.html" class="external-link">get_progeny</a></span><span class="op">(</span>organism <span class="op">=</span> <span class="st">'human'</span>, top <span class="op">=</span> <span class="fl">500</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">res_groups</span> <span class="op">=</span> <span class="fu">compute_features.training.ML</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">raw.counts_train</span><span class="op">)</span>, </span>
-<span>                                          <span class="va">traitData_train</span><span class="op">$</span><span class="va">Best.Confirmed.Overall.Response</span>, </span>
-<span>                                          trait.positive <span class="op">=</span> <span class="st">"PD"</span>,</span>
-<span>                                          metric <span class="op">=</span> <span class="st">"AUROC"</span>, </span>
-<span>                                          stack <span class="op">=</span> <span class="cn">F</span>, </span>
-<span>                                          k_folds <span class="op">=</span> <span class="fl">3</span>, </span>
-<span>                                          n_rep <span class="op">=</span> <span class="fl">5</span>, </span>
-<span>                                          LODO <span class="op">=</span> <span class="cn">F</span>, </span>
-<span>                                          file_name <span class="op">=</span> <span class="st">"Test"</span>, </span>
-<span>                                          ncores <span class="op">=</span>  <span class="fl">2</span>,                                                                                        </span>
-<span>                                          return <span class="op">=</span> <span class="cn">T</span>,</span>
-<span>                                          fold_construction_fun <span class="op">=</span> <span class="va">prepare_CellTFusion_folds</span>, </span>
-<span>                                          fold_construction_args_fixed <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>deconv <span class="op">=</span> <span class="va">deconv</span>, </span>
-<span>                                                                              universe <span class="op">=</span> <span class="va">universe</span>, </span>
-<span>                                                                              paths <span class="op">=</span> <span class="va">paths</span>, </span>
-<span>                                                                              ncores <span class="op">=</span> <span class="fl">2</span>,</span>
-<span>                                                                              normalized <span class="op">=</span> <span class="cn">TRUE</span>, </span>
-<span>                                                                              coldata <span class="op">=</span> <span class="va">traitData_train</span>, </span>
-<span>                                                                              trait <span class="op">=</span> <span class="st">"Best.Confirmed.Overall.Response"</span>, </span>
-<span>                                                                              trait.positive <span class="op">=</span> <span class="st">"PD"</span><span class="op">)</span>,</span>
-<span>                                          fold_construction_args_tunable <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>min_targets_size <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">5</span>, <span class="fl">10</span>, <span class="fl">15</span>, <span class="fl">20</span><span class="op">)</span>, </span>
-<span>                                                                                minMod <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">5</span>, <span class="fl">10</span>, <span class="fl">15</span>, <span class="fl">20</span><span class="op">)</span>, </span>
-<span>                                                                                corr_mod <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.7</span>, <span class="fl">0.8</span>, <span class="fl">0.9</span><span class="op">)</span>, </span>
-<span>                                                                                corr <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.7</span>, <span class="fl">0.8</span>, <span class="fl">0.9</span><span class="op">)</span>, </span>
-<span>                                                                                high_corr_groups <span class="op">=</span> <span class="fl">0.9</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p>In this setup:</p>
-<ul>
-<li><p>fold_construction_args_fixed defines parameters that are kept
-constant during the fold construction.</p></li>
-<li><p>fold_construction_args_tunable defines the hyperparameters that
-will be tuned within the cross-validation process.</p></li>
-</ul>
-<p>👉 For more details on what these arguments mean and how to set them
-up, please refer to the <a href="https://verapancaldilab.github.io/pipeML/articles/pipeML.html" class="external-link">pipeML</a>
-tutorial.</p>
+<code class="sourceCode R"><span><span class="co"># Install from GitHub</span></span>
+<span><span class="fu">remotes</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"VeraPancaldiLab/CellTFusion"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 class="unnumbered" id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
+<h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
 </h2>
-<div id="refs" class="references csl-bib-body hanging-indent">
-<div id="ref-Alvarez2016" class="csl-entry">
-Alvarez, Mariano J., Yao Shen, Federico M. Giorgi, et al. 2016.
-<span>“Functional Characterization of Somatic Mutations in Cancer Using
-Network-Based Inference of Protein Activity.”</span> <em>Nature
-Genetics</em> 48 (8): 838–47. <a href="https://doi.org/10.1038/ng.3593" class="external-link">https://doi.org/10.1038/ng.3593</a>.
-</div>
-<div id="ref-10.1093/bioadv/vbac016" class="csl-entry">
-Badia-i-Mompel, Pau, Jesús Vélez Santiago, Jana Braunger, et al. 2022.
-<span>“decoupleR: Ensemble of Computational Methods to Infer Biological
-Activities from Omics Data.”</span> <em>Bioinformatics Advances</em> 2
-(1): vbac016. <a href="https://doi.org/10.1093/bioadv/vbac016" class="external-link">https://doi.org/10.1093/bioadv/vbac016</a>.
-</div>
-<div id="ref-langfelder2008wgcna" class="csl-entry">
-Langfelder, Peter, and Steve Horvath. 2008. <span>“WGCNA: An r Package
-for Weighted Correlation Network Analysis.”</span> <em>BMC
-Bioinformatics</em> 9 (1): 559. <a href="https://doi.org/10.1186/1471-2105-9-559" class="external-link">https://doi.org/10.1186/1471-2105-9-559</a>.
-</div>
-<div id="ref-10.1093/nar/gkad841" class="csl-entry">
-Müller-Dott, Sophia, Eirini Tsirvouli, Miguel Vazquez, et al. 2023.
-<span>“Expanding the Coverage of Regulons from High-Confidence Prior
-Knowledge for Accurate Estimation of Transcription Factor
-Activities.”</span> <em>Nucleic Acids Research</em> 51 (20): 10934–49.
-<a href="https://doi.org/10.1093/nar/gkad841" class="external-link">https://doi.org/10.1093/nar/gkad841</a>.
-</div>
-<div id="ref-Schubert2018" class="csl-entry">
-Schubert, Michael, Bertram Klinger, Martina Klünemann, et al. 2018.
-<span>“Perturbation-Response Genes Reveal Signaling Footprints in Cancer
-Gene Expression.”</span> <em>Nature Communications</em> 9 (1): 20. <a href="https://doi.org/10.1038/s41467-017-02391-6" class="external-link">https://doi.org/10.1038/s41467-017-02391-6</a>.
-</div>
-</div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>
