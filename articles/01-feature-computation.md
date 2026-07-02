@@ -9,23 +9,24 @@ library(CellTFusion)
 
 CellTFusion requires two primary inputs: **cell-type deconvolution
 proportions** and **transcription factor (TF) activity scores**. This
-article walks through how to compute both, followed by TF module
-construction and pathway activity scoring.
+article walks through each step manually. If you prefer to run
+everything in one call, see the [One-step
+Pipeline](https://verapancaldilab.github.io/CellTFusion/articles/05-one-step-pipeline.md)
+article.
 
 Load the pre-packaged example data:
 
 ``` r
 
-raw.counts  <- CellTFusion::raw.counts.tuto
-traitdata   <- CellTFusion::traitdata.tuto
+raw.counts <- CellTFusion::raw.counts.tuto
+traitdata  <- CellTFusion::traitdata.tuto
 ```
 
-### Cell-type deconvolution
+## Cell-type deconvolution
 
-To compute cell-type proportions, we use the `multideconv` R package,
-which integrates multiple deconvolution algorithms and signature
-matrices to estimate cell-type abundances from bulk RNA-seq data. For
-more details, visit the [multideconv GitHub
+Cell-type proportions are estimated with the `multideconv` R package,
+which integrates multiple algorithms (Quantiseq, Epidish, DeconRNASeq,
+DWLS, CIBERSORTx). For more details visit the [multideconv GitHub
 repository](https://github.com/VeraPancaldiLab/multideconv).
 
 ``` r
@@ -173,97 +174,125 @@ head(deconv[, 1:5])
 #> SAM2e7aa8fa0ab3                                        0
 ```
 
-### TF activity inference
+## TF activity inference
 
-To infer transcription factor activity, we use the `viper` package
-([Alvarez et al. 2016](#ref-Alvarez2016)) combined with the `CollecTRI`
-regulon database ([Müller-Dott et al. 2023](#ref-10.1093/nar/gkad841)).
-This approach estimates TF activity from the expression levels of
-downstream target genes.
+TF activity is inferred using the `viper` package ([Alvarez et al.
+2016](#ref-Alvarez2016)) combined with the `CollecTRI` regulon database
+([Müller-Dott et al. 2023](#ref-10.1093/nar/gkad841)). The expression
+matrix must be log-normalized (log2 TPM+1) before this step.
 
 ``` r
 
 # Normalize by log2(TPM + 1)
 counts.norm <- data.frame(ADImpute::NormalizeTPM(raw.counts, log = TRUE))
 
-universe <- decoupleR::get_collectri(organism = "human", split_complexes = FALSE)
-tfs <- compute.TFs.activity(counts.norm, universe = universe)
+# Using the default CollecTRI regulon
+tfs <- compute.TFs.activity(
+  RNA.counts       = counts.norm,
+  TF.collection    = "CollecTRI",   # or "Dorothea", "ARACNE"
+  min_targets_size = 5,
+  cores            = 3,
+  return           = TRUE
+)
 head(tfs[, 1:5])
 ```
 
-### TF module construction (WTCNA)
+You can also supply a pre-built regulon via the `universe` argument:
 
-Before constructing cell groups, we reduce the TF activity matrix into
-modules of TFs that exhibit similar activity patterns across samples.
-This is done using a Weighted TF Correlation Network Analysis (WTCNA),
-adapted from WGCNA ([Langfelder and Horvath
+``` r
+
+universe <- decoupleR::get_collectri(organism = "human", split_complexes = FALSE)
+tfs <- compute.TFs.activity(counts.norm, universe = universe)
+```
+
+## TF module construction (WTCNA)
+
+Before identifying cell groups, TF activity scores are reduced into
+modules of co-active TFs using Weighted TF Correlation Network Analysis
+(WTCNA), adapted from WGCNA ([Langfelder and Horvath
 2008](#ref-langfelder2008wgcna)).
 
 ``` r
 
-network <- compute.WTCNA(tfs, corr_mod = 0.8, clustering.method = "ward.D2", return = TRUE)
+network <- compute.WTCNA(
+  TFs.matrix       = tfs,
+  batch            = FALSE,
+  network.type     = "signed",
+  clustering.method = "ward.D2",
+  minMod           = 15,
+  corr_mod         = 0.9,
+  return           = TRUE
+)
 ```
 
-To explore how clinical variables associate with TF modules, use
-[`compute.metadata.association()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.metadata.association.md).
-Plots are saved in the `Results/` directory:
+For multi-cohort (batch) data, pass `batch = TRUE` and provide a list of
+per-cohort TF matrices. Consensus WTCNA is then applied automatically.
+
+To visualize associations between TF modules and clinical traits:
 
 ``` r
 
-compute.metadata.association(network[[1]], traitdata, pval = 0.05, file.name = "Tutorial", width = 10)
+compute.metadata.association(
+  tfs.modules = network[[1]],
+  coldata     = traitdata,
+  pval        = 0.05,
+  file.name   = "Tutorial",
+  width       = 10
+)
 ```
 
-### Pathway activity scoring
+## Pathway activity scoring
 
-To functionally characterize TF modules, we estimate pathway activities
-using a multivariate linear model (MLM) via `decoupleR` ([Badia-i-Mompel
-et al. 2022](#ref-10.1093/bioadv/vbac016)) with the `PROGENy` database
-([Schubert et al. 2018](#ref-Schubert2018)) by default. A custom gene
-set can also be supplied, in which case GSVA is applied instead.
+Pathway activities are estimated using a multivariate linear model (MLM)
+via `decoupleR` ([Badia-i-Mompel et al.
+2022](#ref-10.1093/bioadv/vbac016)) with PROGENy ([Schubert et al.
+2018](#ref-Schubert2018)) as the default database. A custom gene set can
+be provided, in which case GSVA is applied instead.
 
 ``` r
 
-pathways <- compute.pathway.activity(counts.norm)
+pathways <- compute.pathway.activity(
+  RNA.tpm   = counts.norm,
+  return    = TRUE
+)
 ```
 
-To visualize the relationship between TF modules and pathways, use
-[`compute.modules.relationship()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.modules.relationship.md).
-This saves a labeled correlation heatmap to `Results/`:
+To correlate TF modules with pathway activities:
 
 ``` r
 
-compute.modules.relationship(network[[1]], pathways, "Pathways_Progeny-TFs_Modules", width = 15)
+compute.modules.relationship(
+  network[[1]], pathways,
+  "Pathways_Progeny-TFs_Modules",
+  width = 15
+)
 ```
 
-### Hub TF enrichment analysis
+## Deconvolution dimensionality reduction
 
-If pathway scoring alone is insufficient, you can perform
-Over-Representation Analysis (ORA) on the Reactome database using hub
-TFs. The function identifies hub TFs per module (based on module
-membership and node degree) and runs enrichment on their target genes:
+Cell types with correlated abundance profiles are grouped to reduce the
+feature space and improve statistical power:
+
+``` r
+
+dt <- multideconv::compute.deconvolution.analysis(
+  deconvolution = deconv,
+  corr          = 0.7,
+  seed          = 123,
+  return        = FALSE
+)
+```
+
+## Hub TF enrichment (optional)
+
+Hub TFs per module can be identified based on module membership and
+network degree, and used for Over-Representation Analysis against the
+Reactome database:
 
 ``` r
 
 hub_tfs <- identify_hub_TFs(t(tfs), network, MM_thresh = 0.8, degree_thresh = 0.9)
 compute.modules.enrichment(counts.norm, hub_tfs)
-```
-
-### Deconvolution dimensionality reduction
-
-To reduce dimensionality in the deconvolution output and improve
-statistical power downstream, we group cell types with similar abundance
-patterns using `multideconv`:
-
-``` r
-
-dt <- multideconv::compute.deconvolution.analysis(deconv, corr = 0.7, seed = 123)
-dt <- multideconv::deconvolution_dictionary(dt, pathways)
-
-# Correlate deconvolution groups with TF modules
-compute.modules.relationship(
-  network[[1]], dt[[1]], "Deconvolution-TFs_Modules",
-  vertical = TRUE, height = 30, width = 10, pval = 0.05
-)
 ```
 
 ## References

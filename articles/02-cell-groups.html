@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Cell Group Construction • CellTFusion</title>
+<title>Cell Group Construction and Latent Factors • CellTFusion</title>
 <!-- favicons --><link rel="icon" type="image/png" sizes="96x96" href="../favicon-96x96.png">
 <link rel="icon" type="”image/svg+xml”" href="../favicon.svg">
 <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
@@ -15,7 +15,7 @@
 <link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Cell Group Construction">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Cell Group Construction and Latent Factors">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -42,10 +42,11 @@
 <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Tutorials</h6></li>
     <li><a class="dropdown-item" href="../articles/01-feature-computation.html">Feature Computation</a></li>
-    <li><a class="dropdown-item" href="../articles/02-cell-groups.html">Cell Group Construction</a></li>
-    <li><a class="dropdown-item" href="../articles/03-analysis.html">Statistical Analysis</a></li>
-    <li><a class="dropdown-item" href="../articles/04-one-step-pipeline.html">One-step Pipeline</a></li>
-    <li><a class="dropdown-item" href="../articles/05-machine-learning.html">Machine Learning</a></li>
+    <li><a class="dropdown-item" href="../articles/02-cell-groups.html">Cell Group Construction and Latent Factors</a></li>
+    <li><a class="dropdown-item" href="../articles/03-tme-states.html">TME State Characterisation</a></li>
+    <li><a class="dropdown-item" href="../articles/04-analysis.html">Statistical Analysis</a></li>
+    <li><a class="dropdown-item" href="../articles/05-one-step-pipeline.html">One-step Pipeline</a></li>
+    <li><a class="dropdown-item" href="../articles/06-machine-learning.html">Machine Learning</a></li>
   </ul>
 </li>
       </ul>
@@ -65,7 +66,7 @@
 
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
-      <img src="../logo.png" class="logo" alt=""><h1>Cell Group Construction</h1>
+      <img src="../logo.png" class="logo" alt=""><h1>Cell Group Construction and Latent Factors</h1>
             
       
 
@@ -78,57 +79,52 @@
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://verapancaldilab.github.io/CellTFusion/">CellTFusion</a></span><span class="op">)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; </span></span></code></pre></div>
-<p>Cell group construction is the core step of the CellTFusion pipeline.
-Using previously computed features (TF modules, deconvolution groups,
-and pathway activities), we identify clusters of samples that share
-similar biological activity patterns as reflected by TF module
-scores.</p>
-<p>This step requires the outputs from the <a href="01-feature-computation.html">Feature Computation</a> article:</p>
+<p>This article covers the core analytical steps of CellTFusion:
+identifying cell groups from TF modules and deconvolution data,
+extracting latent factors, and deriving cell niches. These steps require
+outputs from the <a href="01-feature-computation.html">Feature
+Computation</a> article:</p>
 <ul>
 <li>
-<code>counts.norm</code> — log-normalized expression matrix</li>
+<code>network</code> — WTCNA TF modules from
+<code><a href="../reference/compute.WTCNA.html">compute.WTCNA()</a></code>
+</li>
 <li>
-<code>tfs</code> — TF activity matrix</li>
+<code>dt</code> — reduced deconvolution groups from
+<code><a href="https://rdrr.io/pkg/multideconv/man/compute.deconvolution.analysis.html" class="external-link">multideconv::compute.deconvolution.analysis()</a></code>
+</li>
 <li>
-<code>deconv</code> — cell-type deconvolution proportions</li>
-<li>
-<code>network</code> — WTCNA TF modules</li>
-<li>
-<code>dt</code> — reduced deconvolution groups</li>
-<li>
-<code>traitdata</code> — clinical metadata</li>
+<code>latent_spaces</code> — NMF latent factors from
+<code><a href="../reference/compute.latent_factors.html">compute.latent_factors()</a></code>
+</li>
 </ul>
 <div class="section level2">
-<h2 id="supervised-cell-group-construction">Supervised cell group construction<a class="anchor" aria-label="anchor" href="#supervised-cell-group-construction"></a>
+<h2 id="construct-cell-groups">Construct cell groups<a class="anchor" aria-label="anchor" href="#construct-cell-groups"></a>
 </h2>
-<p>In the supervised mode, clinical traits guide the identification of
-cell groups associated with specific phenotypes (e.g., treatment
-response). A trait column and its positive class must be provided:</p>
+<p>Cell groups are identified by correlating TF module eigengenes with
+deconvolution subgroups and cutting the resulting dendrogram. The
+function takes only two primary inputs — <code>network</code> and
+<code>dt</code> — both produced in the feature computation step.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">cell_groups</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/construct_cell_groups.html">construct_cell_groups</a></span><span class="op">(</span></span>
-<span>  <span class="va">counts.norm</span>, <span class="va">tfs</span>, <span class="va">deconv</span>, <span class="va">network</span>, <span class="va">dt</span>,</span>
-<span>  <span class="va">traitdata</span>,</span>
-<span>  pval     <span class="op">=</span> <span class="fl">0.05</span>,</span>
-<span>  trait    <span class="op">=</span> <span class="st">"Best.Confirmed.Overall.Response"</span>,</span>
-<span>  positive <span class="op">=</span> <span class="st">"CR"</span></span>
+<span>  network           <span class="op">=</span> <span class="va">network</span>,</span>
+<span>  dt                <span class="op">=</span> <span class="va">dt</span>,</span>
+<span>  batch             <span class="op">=</span> <span class="cn">NULL</span>,          <span class="co"># pass batch vector if multi-cohort</span></span>
+<span>  pval              <span class="op">=</span> <span class="fl">0.05</span>,</span>
+<span>  clustering.method <span class="op">=</span> <span class="st">"ward.D2"</span>,</span>
+<span>  n_perm            <span class="op">=</span> <span class="fl">999</span>,</span>
+<span>  return_dendrogram <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level2">
-<h2 id="unsupervised-cell-group-construction">Unsupervised cell group construction<a class="anchor" aria-label="anchor" href="#unsupervised-cell-group-construction"></a>
-</h2>
-<p>Alternatively, cell groups can be identified purely from molecular
-features, without using clinical annotations:</p>
+<p>For multi-cohort data, pass the batch vector used in
+<code><a href="../reference/compute.WTCNA.html">compute.WTCNA()</a></code>:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">cell_groups</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/construct_cell_groups.html">construct_cell_groups</a></span><span class="op">(</span></span>
-<span>  <span class="va">counts.norm</span>, <span class="va">tfs</span>, <span class="va">deconv</span>, <span class="va">network</span>, <span class="va">dt</span>,</span>
-<span>  pval <span class="op">=</span> <span class="fl">0.05</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level2">
-<h2 id="output-structure">Output structure<a class="anchor" aria-label="anchor" href="#output-structure"></a>
-</h2>
-<p><code><a href="../reference/construct_cell_groups.html">construct_cell_groups()</a></code> returns a list with three
-elements:</p>
+<code class="sourceCode R"><span><span class="va">batch_vec</span>   <span class="op">&lt;-</span> <span class="va">traitdata</span><span class="op">[</span>, <span class="st">"Cohort"</span><span class="op">]</span></span>
+<span><span class="va">cell_groups</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/construct_cell_groups.html">construct_cell_groups</a></span><span class="op">(</span><span class="va">network</span>, <span class="va">dt</span>, batch <span class="op">=</span> <span class="va">batch_vec</span>, pval <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span></span></code></pre></div>
+<div class="section level3">
+<h3 id="output-structure">Output structure<a class="anchor" aria-label="anchor" href="#output-structure"></a>
+</h3>
+<p><code><a href="../reference/construct_cell_groups.html">construct_cell_groups()</a></code> returns a three-element
+list:</p>
 <table class="table">
 <thead><tr class="header">
 <th>Element</th>
@@ -137,7 +133,7 @@ elements:</p>
 <tbody>
 <tr class="odd">
 <td><code>[[1]]</code></td>
-<td>Data frame of cell group scores (samples × groups)</td>
+<td>Data frame of composite scores (samples × cell groups)</td>
 </tr>
 <tr class="even">
 <td><code>[[2]]</code></td>
@@ -145,13 +141,72 @@ elements:</p>
 </tr>
 <tr class="odd">
 <td><code>[[3]]</code></td>
-<td>Named list of loading vectors per group</td>
+<td>Named list of TF loading vectors per group</td>
 </tr>
 </tbody>
 </table>
 <p>Results are also written to
 <code>Results/Cell.groups.composition.csv</code> and
 <code>Results/Cell.groups.scores.csv</code>.</p>
+</div>
+</div>
+<div class="section level2">
+<h2 id="extract-latent-factors">Extract latent factors<a class="anchor" aria-label="anchor" href="#extract-latent-factors"></a>
+</h2>
+<p>Cell group scores are decomposed into NMF latent factors to obtain a
+compact, non-negative representation of the TME landscape. The
+<code>rank</code> argument controls the number of factors; if
+<code>NULL</code>, it is selected automatically.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">latent_spaces</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute.latent_factors.html">compute.latent_factors</a></span><span class="op">(</span></span>
+<span>  X         <span class="op">=</span> <span class="va">cell_groups</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>,</span>
+<span>  rank      <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  seed      <span class="op">=</span> <span class="fl">123</span>,</span>
+<span>  file_name <span class="op">=</span> <span class="st">"Tutorial"</span>,</span>
+<span>  return    <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p>The result is a list whose <code>$Z</code> element is a samples ×
+factors matrix — the primary input for downstream statistical tests and
+machine learning.</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Access the factor scores matrix (samples x factors)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">latent_spaces</span><span class="op">$</span><span class="va">Z</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="extract-cell-niches">Extract cell niches<a class="anchor" aria-label="anchor" href="#extract-cell-niches"></a>
+</h2>
+<p>Cell niches are derived from latent factors by enriching each factor
+for specific cell-type signals from the deconvolution output. This step
+characterises each latent factor with a biological cell-type
+context.</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">cells_niches</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute_cells_niches.html">compute_cells_niches</a></span><span class="op">(</span></span>
+<span>  latent_spaces   <span class="op">=</span> <span class="va">latent_spaces</span>,</span>
+<span>  dt              <span class="op">=</span> <span class="va">dt</span>,</span>
+<span>  cell.groups     <span class="op">=</span> <span class="va">cell_groups</span>,</span>
+<span>  enrich_thresh   <span class="op">=</span> <span class="fl">1.5</span>,</span>
+<span>  quantile_cutoff <span class="op">=</span> <span class="fl">0.7</span>,</span>
+<span>  return          <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  file_name       <span class="op">=</span> <span class="st">"Tutorial"</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="next-steps">Next steps<a class="anchor" aria-label="anchor" href="#next-steps"></a>
+</h2>
+<p>With <code>latent_spaces</code> in hand, you can:</p>
+<ul>
+<li>
+<strong>Characterise TME states</strong> via GSEA and meta-program
+mapping → <a href="03-tme-states.html">TME States</a>
+</li>
+<li>
+<strong>Test clinical associations</strong> of latent factors → <a href="04-analysis.html">Statistical Analysis</a>
+</li>
+<li>
+<strong>Train ML models</strong> on <code>latent_spaces$Z</code> →
+<a href="06-machine-learning.html">Machine Learning</a>
+</li>
+</ul>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

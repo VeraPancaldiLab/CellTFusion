@@ -42,10 +42,11 @@
 <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Tutorials</h6></li>
     <li><a class="dropdown-item" href="../articles/01-feature-computation.html">Feature Computation</a></li>
-    <li><a class="dropdown-item" href="../articles/02-cell-groups.html">Cell Group Construction</a></li>
-    <li><a class="dropdown-item" href="../articles/03-analysis.html">Statistical Analysis</a></li>
-    <li><a class="dropdown-item" href="../articles/04-one-step-pipeline.html">One-step Pipeline</a></li>
-    <li><a class="dropdown-item" href="../articles/05-machine-learning.html">Machine Learning</a></li>
+    <li><a class="dropdown-item" href="../articles/02-cell-groups.html">Cell Group Construction and Latent Factors</a></li>
+    <li><a class="dropdown-item" href="../articles/03-tme-states.html">TME State Characterisation</a></li>
+    <li><a class="dropdown-item" href="../articles/04-analysis.html">Statistical Analysis</a></li>
+    <li><a class="dropdown-item" href="../articles/05-one-step-pipeline.html">One-step Pipeline</a></li>
+    <li><a class="dropdown-item" href="../articles/06-machine-learning.html">Machine Learning</a></li>
   </ul>
 </li>
       </ul>
@@ -80,20 +81,18 @@
 <span><span class="co">#&gt; </span></span></code></pre></div>
 <p>CellTFusion requires two primary inputs: <strong>cell-type
 deconvolution proportions</strong> and <strong>transcription factor (TF)
-activity scores</strong>. This article walks through how to compute
-both, followed by TF module construction and pathway activity
-scoring.</p>
+activity scores</strong>. This article walks through each step manually.
+If you prefer to run everything in one call, see the <a href="05-one-step-pipeline.html">One-step Pipeline</a> article.</p>
 <p>Load the pre-packaged example data:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">raw.counts</span>  <span class="op">&lt;-</span> <span class="fu">CellTFusion</span><span class="fu">::</span><span class="va"><a href="../reference/raw.counts.tuto.html">raw.counts.tuto</a></span></span>
-<span><span class="va">traitdata</span>   <span class="op">&lt;-</span> <span class="fu">CellTFusion</span><span class="fu">::</span><span class="va"><a href="../reference/traitdata.tuto.html">traitdata.tuto</a></span></span></code></pre></div>
-<div class="section level3">
-<h3 id="cell-type-deconvolution">Cell-type deconvolution<a class="anchor" aria-label="anchor" href="#cell-type-deconvolution"></a>
-</h3>
-<p>To compute cell-type proportions, we use the <code>multideconv</code>
-R package, which integrates multiple deconvolution algorithms and
-signature matrices to estimate cell-type abundances from bulk RNA-seq
-data. For more details, visit the <a href="https://github.com/VeraPancaldiLab/multideconv" class="external-link">multideconv GitHub
+<code class="sourceCode R"><span><span class="va">raw.counts</span> <span class="op">&lt;-</span> <span class="fu">CellTFusion</span><span class="fu">::</span><span class="va"><a href="../reference/raw.counts.tuto.html">raw.counts.tuto</a></span></span>
+<span><span class="va">traitdata</span>  <span class="op">&lt;-</span> <span class="fu">CellTFusion</span><span class="fu">::</span><span class="va"><a href="../reference/traitdata.tuto.html">traitdata.tuto</a></span></span></code></pre></div>
+<div class="section level2">
+<h2 id="cell-type-deconvolution">Cell-type deconvolution<a class="anchor" aria-label="anchor" href="#cell-type-deconvolution"></a>
+</h2>
+<p>Cell-type proportions are estimated with the <code>multideconv</code>
+R package, which integrates multiple algorithms (Quantiseq, Epidish,
+DeconRNASeq, DWLS, CIBERSORTx). For more details visit the <a href="https://github.com/VeraPancaldiLab/multideconv" class="external-link">multideconv GitHub
 repository</a>.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">deconv</span> <span class="op">&lt;-</span> <span class="fu">multideconv</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/multideconv/man/compute.deconvolution.html" class="external-link">compute.deconvolution</a></span><span class="op">(</span></span>
@@ -238,85 +237,108 @@ repository</a>.</p>
 <span><span class="co">#&gt; SAM49f9b2e57aa5                                        0</span></span>
 <span><span class="co">#&gt; SAM2e7aa8fa0ab3                                        0</span></span></code></pre></div>
 </div>
-<div class="section level3">
-<h3 id="tf-activity-inference">TF activity inference<a class="anchor" aria-label="anchor" href="#tf-activity-inference"></a>
-</h3>
-<p>To infer transcription factor activity, we use the <code>viper</code>
-package <span class="citation">(<a href="#ref-Alvarez2016">Alvarez et
-al. 2016</a>)</span> combined with the <code>CollecTRI</code> regulon
-database <span class="citation">(<a href="#ref-10.1093/nar/gkad841">Müller-Dott et al. 2023</a>)</span>.
-This approach estimates TF activity from the expression levels of
-downstream target genes.</p>
+<div class="section level2">
+<h2 id="tf-activity-inference">TF activity inference<a class="anchor" aria-label="anchor" href="#tf-activity-inference"></a>
+</h2>
+<p>TF activity is inferred using the <code>viper</code> package <span class="citation">(<a href="#ref-Alvarez2016">Alvarez et al.
+2016</a>)</span> combined with the <code>CollecTRI</code> regulon
+database <span class="citation">(<a href="#ref-10.1093/nar/gkad841">Müller-Dott et al. 2023</a>)</span>. The
+expression matrix must be log-normalized (log2 TPM+1) before this
+step.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Normalize by log2(TPM + 1)</span></span>
 <span><span class="va">counts.norm</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="fu">ADImpute</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/ADImpute/man/NormalizeTPM.html" class="external-link">NormalizeTPM</a></span><span class="op">(</span><span class="va">raw.counts</span>, log <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">universe</span> <span class="op">&lt;-</span> <span class="fu">decoupleR</span><span class="fu">::</span><span class="fu"><a href="https://saezlab.github.io/decoupleR/reference/get_collectri.html" class="external-link">get_collectri</a></span><span class="op">(</span>organism <span class="op">=</span> <span class="st">"human"</span>, split_complexes <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
-<span><span class="va">tfs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute.TFs.activity.html">compute.TFs.activity</a></span><span class="op">(</span><span class="va">counts.norm</span>, universe <span class="op">=</span> <span class="va">universe</span><span class="op">)</span></span>
+<span><span class="co"># Using the default CollecTRI regulon</span></span>
+<span><span class="va">tfs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute.TFs.activity.html">compute.TFs.activity</a></span><span class="op">(</span></span>
+<span>  RNA.counts       <span class="op">=</span> <span class="va">counts.norm</span>,</span>
+<span>  TF.collection    <span class="op">=</span> <span class="st">"CollecTRI"</span>,   <span class="co"># or "Dorothea", "ARACNE"</span></span>
+<span>  min_targets_size <span class="op">=</span> <span class="fl">5</span>,</span>
+<span>  cores            <span class="op">=</span> <span class="fl">3</span>,</span>
+<span>  return           <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">tfs</span><span class="op">[</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">5</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
+<p>You can also supply a pre-built regulon via the <code>universe</code>
+argument:</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">universe</span> <span class="op">&lt;-</span> <span class="fu">decoupleR</span><span class="fu">::</span><span class="fu"><a href="https://saezlab.github.io/decoupleR/reference/get_collectri.html" class="external-link">get_collectri</a></span><span class="op">(</span>organism <span class="op">=</span> <span class="st">"human"</span>, split_complexes <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="va">tfs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute.TFs.activity.html">compute.TFs.activity</a></span><span class="op">(</span><span class="va">counts.norm</span>, universe <span class="op">=</span> <span class="va">universe</span><span class="op">)</span></span></code></pre></div>
 </div>
-<div class="section level3">
-<h3 id="tf-module-construction-wtcna">TF module construction (WTCNA)<a class="anchor" aria-label="anchor" href="#tf-module-construction-wtcna"></a>
-</h3>
-<p>Before constructing cell groups, we reduce the TF activity matrix
-into modules of TFs that exhibit similar activity patterns across
-samples. This is done using a Weighted TF Correlation Network Analysis
+<div class="section level2">
+<h2 id="tf-module-construction-wtcna">TF module construction (WTCNA)<a class="anchor" aria-label="anchor" href="#tf-module-construction-wtcna"></a>
+</h2>
+<p>Before identifying cell groups, TF activity scores are reduced into
+modules of co-active TFs using Weighted TF Correlation Network Analysis
 (WTCNA), adapted from WGCNA <span class="citation">(<a href="#ref-langfelder2008wgcna">Langfelder and Horvath
 2008</a>)</span>.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">network</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute.WTCNA.html">compute.WTCNA</a></span><span class="op">(</span><span class="va">tfs</span>, corr_mod <span class="op">=</span> <span class="fl">0.8</span>, clustering.method <span class="op">=</span> <span class="st">"ward.D2"</span>, return <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<p>To explore how clinical variables associate with TF modules, use
-<code><a href="../reference/compute.metadata.association.html">compute.metadata.association()</a></code>. Plots are saved in the
-<code>Results/</code> directory:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/compute.metadata.association.html">compute.metadata.association</a></span><span class="op">(</span><span class="va">network</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>, <span class="va">traitdata</span>, pval <span class="op">=</span> <span class="fl">0.05</span>, file.name <span class="op">=</span> <span class="st">"Tutorial"</span>, width <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="pathway-activity-scoring">Pathway activity scoring<a class="anchor" aria-label="anchor" href="#pathway-activity-scoring"></a>
-</h3>
-<p>To functionally characterize TF modules, we estimate pathway
-activities using a multivariate linear model (MLM) via
-<code>decoupleR</code> <span class="citation">(<a href="#ref-10.1093/bioadv/vbac016">Badia-i-Mompel et al.
-2022</a>)</span> with the <code>PROGENy</code> database <span class="citation">(<a href="#ref-Schubert2018">Schubert et al.
-2018</a>)</span> by default. A custom gene set can also be supplied, in
-which case GSVA is applied instead.</p>
+<code class="sourceCode R"><span><span class="va">network</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute.WTCNA.html">compute.WTCNA</a></span><span class="op">(</span></span>
+<span>  TFs.matrix       <span class="op">=</span> <span class="va">tfs</span>,</span>
+<span>  batch            <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  network.type     <span class="op">=</span> <span class="st">"signed"</span>,</span>
+<span>  clustering.method <span class="op">=</span> <span class="st">"ward.D2"</span>,</span>
+<span>  minMod           <span class="op">=</span> <span class="fl">15</span>,</span>
+<span>  corr_mod         <span class="op">=</span> <span class="fl">0.9</span>,</span>
+<span>  return           <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p>For multi-cohort (batch) data, pass <code>batch = TRUE</code> and
+provide a list of per-cohort TF matrices. Consensus WTCNA is then
+applied automatically.</p>
+<p>To visualize associations between TF modules and clinical traits:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">pathways</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute.pathway.activity.html">compute.pathway.activity</a></span><span class="op">(</span><span class="va">counts.norm</span><span class="op">)</span></span></code></pre></div>
-<p>To visualize the relationship between TF modules and pathways, use
-<code><a href="../reference/compute.modules.relationship.html">compute.modules.relationship()</a></code>. This saves a labeled
-correlation heatmap to <code>Results/</code>:</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/compute.modules.relationship.html">compute.modules.relationship</a></span><span class="op">(</span><span class="va">network</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>, <span class="va">pathways</span>, <span class="st">"Pathways_Progeny-TFs_Modules"</span>, width <span class="op">=</span> <span class="fl">15</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="hub-tf-enrichment-analysis">Hub TF enrichment analysis<a class="anchor" aria-label="anchor" href="#hub-tf-enrichment-analysis"></a>
-</h3>
-<p>If pathway scoring alone is insufficient, you can perform
-Over-Representation Analysis (ORA) on the Reactome database using hub
-TFs. The function identifies hub TFs per module (based on module
-membership and node degree) and runs enrichment on their target
-genes:</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">hub_tfs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/identify_hub_TFs.html">identify_hub_TFs</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">tfs</span><span class="op">)</span>, <span class="va">network</span>, MM_thresh <span class="op">=</span> <span class="fl">0.8</span>, degree_thresh <span class="op">=</span> <span class="fl">0.9</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/compute.modules.enrichment.html">compute.modules.enrichment</a></span><span class="op">(</span><span class="va">counts.norm</span>, <span class="va">hub_tfs</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="deconvolution-dimensionality-reduction">Deconvolution dimensionality reduction<a class="anchor" aria-label="anchor" href="#deconvolution-dimensionality-reduction"></a>
-</h3>
-<p>To reduce dimensionality in the deconvolution output and improve
-statistical power downstream, we group cell types with similar abundance
-patterns using <code>multideconv</code>:</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">dt</span> <span class="op">&lt;-</span> <span class="fu">multideconv</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/multideconv/man/compute.deconvolution.analysis.html" class="external-link">compute.deconvolution.analysis</a></span><span class="op">(</span><span class="va">deconv</span>, corr <span class="op">=</span> <span class="fl">0.7</span>, seed <span class="op">=</span> <span class="fl">123</span><span class="op">)</span></span>
-<span><span class="va">dt</span> <span class="op">&lt;-</span> <span class="fu">multideconv</span><span class="fu">::</span><span class="fu">deconvolution_dictionary</span><span class="op">(</span><span class="va">dt</span>, <span class="va">pathways</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Correlate deconvolution groups with TF modules</span></span>
-<span><span class="fu"><a href="../reference/compute.modules.relationship.html">compute.modules.relationship</a></span><span class="op">(</span></span>
-<span>  <span class="va">network</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>, <span class="va">dt</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>, <span class="st">"Deconvolution-TFs_Modules"</span>,</span>
-<span>  vertical <span class="op">=</span> <span class="cn">TRUE</span>, height <span class="op">=</span> <span class="fl">30</span>, width <span class="op">=</span> <span class="fl">10</span>, pval <span class="op">=</span> <span class="fl">0.05</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/compute.metadata.association.html">compute.metadata.association</a></span><span class="op">(</span></span>
+<span>  tfs.modules <span class="op">=</span> <span class="va">network</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>,</span>
+<span>  coldata     <span class="op">=</span> <span class="va">traitdata</span>,</span>
+<span>  pval        <span class="op">=</span> <span class="fl">0.05</span>,</span>
+<span>  file.name   <span class="op">=</span> <span class="st">"Tutorial"</span>,</span>
+<span>  width       <span class="op">=</span> <span class="fl">10</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
+<h2 id="pathway-activity-scoring">Pathway activity scoring<a class="anchor" aria-label="anchor" href="#pathway-activity-scoring"></a>
+</h2>
+<p>Pathway activities are estimated using a multivariate linear model
+(MLM) via <code>decoupleR</code> <span class="citation">(<a href="#ref-10.1093/bioadv/vbac016">Badia-i-Mompel et al.
+2022</a>)</span> with PROGENy <span class="citation">(<a href="#ref-Schubert2018">Schubert et al. 2018</a>)</span> as the default
+database. A custom gene set can be provided, in which case GSVA is
+applied instead.</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">pathways</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute.pathway.activity.html">compute.pathway.activity</a></span><span class="op">(</span></span>
+<span>  RNA.tpm   <span class="op">=</span> <span class="va">counts.norm</span>,</span>
+<span>  return    <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p>To correlate TF modules with pathway activities:</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/compute.modules.relationship.html">compute.modules.relationship</a></span><span class="op">(</span></span>
+<span>  <span class="va">network</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>, <span class="va">pathways</span>,</span>
+<span>  <span class="st">"Pathways_Progeny-TFs_Modules"</span>,</span>
+<span>  width <span class="op">=</span> <span class="fl">15</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="deconvolution-dimensionality-reduction">Deconvolution dimensionality reduction<a class="anchor" aria-label="anchor" href="#deconvolution-dimensionality-reduction"></a>
+</h2>
+<p>Cell types with correlated abundance profiles are grouped to reduce
+the feature space and improve statistical power:</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">dt</span> <span class="op">&lt;-</span> <span class="fu">multideconv</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/multideconv/man/compute.deconvolution.analysis.html" class="external-link">compute.deconvolution.analysis</a></span><span class="op">(</span></span>
+<span>  deconvolution <span class="op">=</span> <span class="va">deconv</span>,</span>
+<span>  corr          <span class="op">=</span> <span class="fl">0.7</span>,</span>
+<span>  seed          <span class="op">=</span> <span class="fl">123</span>,</span>
+<span>  return        <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="hub-tf-enrichment-optional">Hub TF enrichment (optional)<a class="anchor" aria-label="anchor" href="#hub-tf-enrichment-optional"></a>
+</h2>
+<p>Hub TFs per module can be identified based on module membership and
+network degree, and used for Over-Representation Analysis against the
+Reactome database:</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">hub_tfs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/identify_hub_TFs.html">identify_hub_TFs</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">tfs</span><span class="op">)</span>, <span class="va">network</span>, MM_thresh <span class="op">=</span> <span class="fl">0.8</span>, degree_thresh <span class="op">=</span> <span class="fl">0.9</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/compute.modules.enrichment.html">compute.modules.enrichment</a></span><span class="op">(</span><span class="va">counts.norm</span>, <span class="va">hub_tfs</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level2 unnumbered">
 <h2 class="unnumbered" id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
 </h2>
 <div id="refs" class="references csl-bib-body hanging-indent">

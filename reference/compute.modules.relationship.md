@@ -152,7 +152,7 @@ compute.modules.relationship(network.tuto[[1]],
                              pathways,
                              "Pathways_Progeny-TFs_Modules",
                              width = 15)
-#> agg_record_215d4a885b06 
+#> agg_record_2006205e1c9a 
 #>                       2 
 
 data("deconv_subgroups.tuto")

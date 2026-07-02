@@ -42,10 +42,11 @@
 <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Tutorials</h6></li>
     <li><a class="dropdown-item" href="../articles/01-feature-computation.html">Feature Computation</a></li>
-    <li><a class="dropdown-item" href="../articles/02-cell-groups.html">Cell Group Construction</a></li>
-    <li><a class="dropdown-item" href="../articles/03-analysis.html">Statistical Analysis</a></li>
-    <li><a class="dropdown-item" href="../articles/04-one-step-pipeline.html">One-step Pipeline</a></li>
-    <li><a class="dropdown-item" href="../articles/05-machine-learning.html">Machine Learning</a></li>
+    <li><a class="dropdown-item" href="../articles/02-cell-groups.html">Cell Group Construction and Latent Factors</a></li>
+    <li><a class="dropdown-item" href="../articles/03-tme-states.html">TME State Characterisation</a></li>
+    <li><a class="dropdown-item" href="../articles/04-analysis.html">Statistical Analysis</a></li>
+    <li><a class="dropdown-item" href="../articles/05-one-step-pipeline.html">One-step Pipeline</a></li>
+    <li><a class="dropdown-item" href="../articles/06-machine-learning.html">Machine Learning</a></li>
   </ul>
 </li>
       </ul>
@@ -78,26 +79,26 @@
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://verapancaldilab.github.io/CellTFusion/">CellTFusion</a></span><span class="op">)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; </span></span></code></pre></div>
-<div class="section level3">
-<h3 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
-</h3>
+<div class="section level2">
+<h2 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
+</h2>
 <p><code>CellTFusion</code> integrates immune cell-type deconvolution
 with transcription factor (TF)–gene regulatory networks to characterize
 immune cell states in the tumor microenvironment from bulk RNA-seq
 data.</p>
-<p>The pipeline takes raw counts and optional clinical metadata as
-input, and produces <strong>cell group scores</strong> — biologically
-coherent clusters of samples defined by shared TF activity and cell-type
-composition patterns.</p>
+<p>Starting from a raw count matrix, the pipeline produces
+<strong>latent factors</strong> — compact representations of the TME
+landscape that can be tested for clinical associations, mapped to known
+cancer meta-programs, and used as features for machine learning.</p>
 </div>
-<div class="section level3">
-<h3 id="pipeline-steps">Pipeline steps<a class="anchor" aria-label="anchor" href="#pipeline-steps"></a>
-</h3>
+<div class="section level2">
+<h2 id="pipeline-steps">Pipeline steps<a class="anchor" aria-label="anchor" href="#pipeline-steps"></a>
+</h2>
 <table class="table">
 <colgroup>
-<col width="15%">
-<col width="32%">
-<col width="51%">
+<col width="33%">
+<col width="33%">
+<col width="33%">
 </colgroup>
 <thead><tr class="header">
 <th>Step</th>
@@ -132,32 +133,68 @@ Computation</a></td>
 <tr class="odd">
 <td>Cell group construction</td>
 <td><code><a href="../reference/construct_cell_groups.html">construct_cell_groups()</a></code></td>
-<td><a href="articles/02-cell-groups.html">Cell Group
-Construction</a></td>
+<td><a href="articles/02-cell-groups.html">Cell Groups &amp; Latent
+Factors</a></td>
 </tr>
 <tr class="even">
-<td>Statistical association</td>
-<td><code><a href="../reference/scores.stat.analysis.html">scores.stat.analysis()</a></code></td>
-<td><a href="articles/03-analysis.html">Statistical Analysis</a></td>
+<td>Latent factor extraction</td>
+<td><code><a href="../reference/compute.latent_factors.html">compute.latent_factors()</a></code></td>
+<td><a href="articles/02-cell-groups.html">Cell Groups &amp; Latent
+Factors</a></td>
 </tr>
 <tr class="odd">
+<td>Cell niche derivation</td>
+<td><code><a href="../reference/compute_cells_niches.html">compute_cells_niches()</a></code></td>
+<td><a href="articles/02-cell-groups.html">Cell Groups &amp; Latent
+Factors</a></td>
+</tr>
+<tr class="even">
+<td>Hallmark GSEA per factor</td>
+<td><code><a href="../reference/compute_factor_gsea.html">compute_factor_gsea()</a></code></td>
+<td><a href="articles/03-tme-states.html">TME State
+Characterisation</a></td>
+</tr>
+<tr class="odd">
+<td>Meta-program mapping</td>
+<td><code><a href="../reference/map_factors_to_metaprograms.html">map_factors_to_metaprograms()</a></code></td>
+<td><a href="articles/03-tme-states.html">TME State
+Characterisation</a></td>
+</tr>
+<tr class="even">
+<td>TME subtype annotation</td>
+<td><code><a href="../reference/map_factors_to_TME.html">map_factors_to_TME()</a></code></td>
+<td><a href="articles/03-tme-states.html">TME State
+Characterisation</a></td>
+</tr>
+<tr class="odd">
+<td>Clinical association testing</td>
+<td><code><a href="../reference/scores.stat.analysis.html">scores.stat.analysis()</a></code></td>
+<td><a href="articles/04-analysis.html">Statistical Analysis</a></td>
+</tr>
+<tr class="even">
 <td>Full pipeline (one call)</td>
 <td><code><a href="../reference/CellTFusion.html">CellTFusion()</a></code></td>
-<td><a href="articles/04-one-step-pipeline.html">One-step
+<td><a href="articles/05-one-step-pipeline.html">One-step
 Pipeline</a></td>
+</tr>
+<tr class="odd">
+<td>Test-set projection</td>
+<td><code><a href="../reference/project_test_factors.html">project_test_factors()</a></code></td>
+<td><a href="articles/06-machine-learning.html">Machine
+Learning</a></td>
 </tr>
 <tr class="even">
 <td>ML model training</td>
 <td><code>pipeML::compute_features.training.ML()</code></td>
-<td><a href="articles/05-machine-learning.html">Machine
+<td><a href="articles/06-machine-learning.html">Machine
 Learning</a></td>
 </tr>
 </tbody>
 </table>
 </div>
-<div class="section level3">
-<h3 id="quick-start">Quick start<a class="anchor" aria-label="anchor" href="#quick-start"></a>
-</h3>
+<div class="section level2">
+<h2 id="quick-start">Quick start<a class="anchor" aria-label="anchor" href="#quick-start"></a>
+</h2>
 <p>Load the pre-packaged example data and run the full pipeline in one
 call:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
@@ -165,26 +202,31 @@ call:</p>
 <span><span class="va">traitdata</span>  <span class="op">&lt;-</span> <span class="fu">CellTFusion</span><span class="fu">::</span><span class="va"><a href="../reference/traitdata.tuto.html">traitdata.tuto</a></span></span></code></pre></div>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/CellTFusion.html">CellTFusion</a></span><span class="op">(</span></span>
-<span>  raw.counts     <span class="op">=</span> <span class="va">raw.counts</span>,</span>
-<span>  normalized     <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  coldata        <span class="op">=</span> <span class="va">traitdata</span>,</span>
-<span>  trait          <span class="op">=</span> <span class="st">"Best.Confirmed.Overall.Response"</span>,</span>
-<span>  trait.positive <span class="op">=</span> <span class="st">"CR"</span>,</span>
+<span>  raw.counts    <span class="op">=</span> <span class="va">raw.counts</span>,</span>
+<span>  normalized    <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  coldata       <span class="op">=</span> <span class="va">traitdata</span>,</span>
+<span>  task          <span class="op">=</span> <span class="st">"unsupervised"</span>,</span>
 <span>  deconv_methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Quantiseq"</span>, <span class="st">"Epidish"</span><span class="op">)</span>,</span>
-<span>  file_name      <span class="op">=</span> <span class="st">"TestRun"</span>,</span>
-<span>  corr           <span class="op">=</span> <span class="fl">0.7</span>,</span>
-<span>  pval           <span class="op">=</span> <span class="fl">0.05</span>,</span>
-<span>  return         <span class="op">=</span> <span class="cn">FALSE</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-<p>For a step-by-step walkthrough of each stage, follow the articles
-listed in the table above.</p>
+<span>  cancer_type   <span class="op">=</span> <span class="st">"skcm"</span>,</span>
+<span>  corr          <span class="op">=</span> <span class="fl">0.7</span>,</span>
+<span>  pval          <span class="op">=</span> <span class="fl">0.05</span>,</span>
+<span>  file_name     <span class="op">=</span> <span class="st">"Tutorial"</span>,</span>
+<span>  return        <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Latent factor scores — use for stat tests and ML</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">Latent_spaces</span><span class="op">$</span><span class="va">Z</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># TME state annotations</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">TME_states</span><span class="op">)</span></span></code></pre></div>
+<p>Follow the articles linked in the table above for a step-by-step
+explanation of each stage.</p>
 </div>
-<div class="section level3">
-<h3 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
-</h3>
+<div class="section level2">
+<h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
+</h2>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Install from GitHub</span></span>
-<span><span class="fu">remotes</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"VeraPancaldiLab/CellTFusion"</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu">remotes</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"VeraPancaldiLab/CellTFusion"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
