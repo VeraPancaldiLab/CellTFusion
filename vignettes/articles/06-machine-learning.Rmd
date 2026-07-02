@@ -1,0 +1,163 @@
+---
+title: "Machine Learning"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Machine Learning}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+link-citations: yes
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+```{r setup}
+library(CellTFusion)
+```
+
+CellTFusion latent factors (`res$Latent_spaces$Z`) serve as features for machine learning models. This article shows how to train a classifier on a training cohort and project it onto an independent test cohort using `project_test_factors()`.
+
+> **Installation:** this article uses the [`pipeML`](https://github.com/VeraPancaldiLab/pipeML) package for model training. Install it from GitHub before running these examples:
+> ```r
+> remotes::install_github("VeraPancaldiLab/pipeML")
+> ```
+
+---
+
+## Train/test split
+
+```{r}
+raw.counts <- CellTFusion::raw.counts.tuto
+traitdata  <- CellTFusion::traitdata.tuto
+
+index <- caret::createDataPartition(
+  traitdata[, "Best.Confirmed.Overall.Response"],
+  times = 1, p = 0.8, list = FALSE
+)
+
+traitData_train  <- traitdata[index, ]
+raw.counts_train <- raw.counts[, index]
+
+traitData_test   <- traitdata[-index, ]
+raw.counts_test  <- raw.counts[, -index]
+```
+
+## Run CellTFusion on the training set
+
+```{r, eval = FALSE}
+res_train <- CellTFusion(
+  raw.counts    = raw.counts_train,
+  normalized    = TRUE,
+  coldata       = traitData_train,
+  task          = "unsupervised",
+  deconv_methods = c("Quantiseq", "Epidish"),
+  cancer_type   = "skcm",
+  corr          = 0.7,
+  pval          = 0.05,
+  file_name     = "Train",
+  return        = TRUE
+)
+
+# Latent factor scores are in res_train$Latent_spaces$Z
+head(res_train$Latent_spaces$Z)
+```
+
+## Train a machine learning model
+
+The latent factor scores (`$Z`) are used as features. `pipeML::compute_features.training.ML()` trains and cross-validates classifiers (random forest, elastic net, etc.) and returns AUROC results.
+
+```{r, eval = FALSE}
+library(pipeML)
+
+ml_res <- pipeML::compute_features.training.ML(
+  features_train = res_train$Latent_spaces$Z,
+  target_var     = traitData_train$Best.Confirmed.Overall.Response,
+  trait.positive = "PD",
+  metric         = "AUROC",
+  task_type      = "classification",
+  stack          = FALSE,
+  k_folds        = 5,
+  n_rep          = 10,
+  ncores         = 2,
+  return         = TRUE
+)
+```
+
+## Project to an independent test set
+
+`project_test_factors()` takes the full training result object (`res_train`) and the deconvolution of the test cohort, and projects the test samples into the training latent space. This ensures no data leakage from the test set into the feature construction.
+
+```{r, eval = FALSE}
+# Compute deconvolution on the test cohort
+deconv_test <- multideconv::compute.deconvolution(
+  raw.counts_test,
+  methods    = c("Quantiseq", "Epidish"),
+  normalized = TRUE,
+  return     = FALSE
+)
+
+# Project test samples into training latent space
+features_test <- data.frame(project_test_factors(res_train, deconv_test))
+head(features_test)
+```
+
+## Predict on the test set
+
+```{r, eval = FALSE}
+pred <- pipeML::compute_prediction(
+  ml_res,
+  features_test,
+  traitData_test$Best.Confirmed.Overall.Response,
+  trait.positive = "PD",
+  stack          = FALSE
+)
+
+head(pred$Metrics[, 1:5])
+pred$AUC$AUROC
+```
+
+---
+
+## Custom k-fold cross-validation
+
+For rigorous evaluation, CellTFusion features should be recomputed inside each fold to prevent data leakage. The helper `compute_features_modular()` pattern from the paper scripts wraps `CellTFusion()` + `project_test_factors()` for use inside `pipeML`'s custom fold interface:
+
+```{r, eval = FALSE}
+compute_features_modular <- function(data, structure = NULL, deconv = NULL,
+                                     coldata = NULL, universe = NULL, paths = NULL,
+                                     normalized = TRUE, task = "unsupervised",
+                                     cancer_type = "skcm", TF.collection = "CollecTRI",
+                                     file_name = NULL, final_training = FALSE,
+                                     min_targets_size = 5, minMod = 10,
+                                     corr_mod = 0.7, corr = 0.7) {
+  if (is.null(structure)) {
+    # Training mode: run full CellTFusion
+    structure <- CellTFusion(
+      raw.counts       = t(data),
+      deconv           = deconv,
+      normalized       = normalized,
+      coldata          = coldata,
+      universe         = universe,
+      paths            = paths,
+      task             = task,
+      cancer_type      = cancer_type,
+      TF.collection    = TF.collection,
+      min_targets_size = min_targets_size,
+      minMod           = minMod,
+      corr_mod         = corr_mod,
+      corr             = corr,
+      file_name        = file_name,
+      return           = final_training,
+      verbose          = FALSE
+    )
+    features <- data.frame(structure$Latent_spaces$Z)
+  } else {
+    # Projection mode: map test samples into training latent space
+    features <- data.frame(project_test_factors(structure, deconv))
+  }
+  list(features = features, structure = structure)
+}
+```
+
+This pattern ensures the TF module structure is learned only from training samples and consistently applied to test samples at each fold.

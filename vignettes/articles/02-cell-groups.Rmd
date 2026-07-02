@@ -1,68 +1,103 @@
 ---
-title: "Cell Group Construction"
+title: "Cell Group Construction and Latent Factors"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Cell Group Construction}
+  %\VignetteIndexEntry{Cell Group Construction and Latent Factors}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 link-citations: yes
 ---
 
 ```{r, include = FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>"
-)
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
 
 ```{r setup}
 library(CellTFusion)
 ```
 
-Cell group construction is the core step of the CellTFusion pipeline. Using previously computed features (TF modules, deconvolution groups, and pathway activities), we identify clusters of samples that share similar biological activity patterns as reflected by TF module scores.
+This article covers the core analytical steps of CellTFusion: identifying cell groups from TF modules and deconvolution data, extracting latent factors, and deriving cell niches. These steps require outputs from the [Feature Computation](01-feature-computation.html) article:
 
-This step requires the outputs from the [Feature Computation](01-feature-computation.html) article:
+- `network` — WTCNA TF modules from `compute.WTCNA()`
+- `dt` — reduced deconvolution groups from `multideconv::compute.deconvolution.analysis()`
+- `latent_spaces` — NMF latent factors from `compute.latent_factors()`
 
-- `counts.norm` — log-normalized expression matrix
-- `tfs` — TF activity matrix
-- `deconv` — cell-type deconvolution proportions
-- `network` — WTCNA TF modules
-- `dt` — reduced deconvolution groups
-- `traitdata` — clinical metadata
+## Construct cell groups
 
-## Supervised cell group construction
-
-In the supervised mode, clinical traits guide the identification of cell groups associated with specific phenotypes (e.g., treatment response). A trait column and its positive class must be provided:
+Cell groups are identified by correlating TF module eigengenes with deconvolution subgroups and cutting the resulting dendrogram. The function takes only two primary inputs — `network` and `dt` — both produced in the feature computation step.
 
 ```{r, eval = FALSE}
 cell_groups <- construct_cell_groups(
-  counts.norm, tfs, deconv, network, dt,
-  traitdata,
-  pval     = 0.05,
-  trait    = "Best.Confirmed.Overall.Response",
-  positive = "CR"
+  network           = network,
+  dt                = dt,
+  batch             = NULL,          # pass batch vector if multi-cohort
+  pval              = 0.05,
+  clustering.method = "ward.D2",
+  n_perm            = 999,
+  return_dendrogram = FALSE
 )
 ```
 
-## Unsupervised cell group construction
-
-Alternatively, cell groups can be identified purely from molecular features, without using clinical annotations:
+For multi-cohort data, pass the batch vector used in `compute.WTCNA()`:
 
 ```{r, eval = FALSE}
-cell_groups <- construct_cell_groups(
-  counts.norm, tfs, deconv, network, dt,
-  pval = 0.05
-)
+batch_vec   <- traitdata[, "Cohort"]
+cell_groups <- construct_cell_groups(network, dt, batch = batch_vec, pval = 0.05)
 ```
 
-## Output structure
+### Output structure
 
-`construct_cell_groups()` returns a list with three elements:
+`construct_cell_groups()` returns a three-element list:
 
 | Element | Description |
-|---|---|
-| `[[1]]` | Data frame of cell group scores (samples × groups) |
+| ------- | ----------- |
+| `[[1]]` | Data frame of composite scores (samples × cell groups) |
 | `[[2]]` | Named list of cell-type compositions per group |
-| `[[3]]` | Named list of loading vectors per group |
+| `[[3]]` | Named list of TF loading vectors per group |
 
 Results are also written to `Results/Cell.groups.composition.csv` and `Results/Cell.groups.scores.csv`.
+
+## Extract latent factors
+
+Cell group scores are decomposed into NMF latent factors to obtain a compact, non-negative representation of the TME landscape. The `rank` argument controls the number of factors; if `NULL`, it is selected automatically.
+
+```{r, eval = FALSE}
+latent_spaces <- compute.latent_factors(
+  X         = cell_groups[[1]],
+  rank      = NULL,
+  seed      = 123,
+  file_name = "Tutorial",
+  return    = TRUE
+)
+```
+
+The result is a list whose `$Z` element is a samples × factors matrix — the primary input for downstream statistical tests and machine learning.
+
+```{r, eval = FALSE}
+# Access the factor scores matrix (samples x factors)
+head(latent_spaces$Z)
+```
+
+## Extract cell niches
+
+Cell niches are derived from latent factors by enriching each factor for specific cell-type signals from the deconvolution output. This step characterises each latent factor with a biological cell-type context.
+
+```{r, eval = FALSE}
+cells_niches <- compute_cells_niches(
+  latent_spaces   = latent_spaces,
+  dt              = dt,
+  cell.groups     = cell_groups,
+  enrich_thresh   = 1.5,
+  quantile_cutoff = 0.7,
+  return          = TRUE,
+  file_name       = "Tutorial"
+)
+```
+
+## Next steps
+
+With `latent_spaces` in hand, you can:
+
+- **Characterise TME states** via GSEA and meta-program mapping → [TME States](03-tme-states.html)
+- **Test clinical associations** of latent factors → [Statistical Analysis](04-analysis.html)
+- **Train ML models** on `latent_spaces$Z` → [Machine Learning](06-machine-learning.html)
