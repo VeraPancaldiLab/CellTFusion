@@ -1845,33 +1845,8 @@ compute.test.set = function(deconv_res, cell_groups, features, deconvolution_tes
   deconv_subgroups = deconv_res[["Deconvolution subgroups composition"]]
   iterations = find.maximum.iteration(deconv_subgroups)
 
-  ## Extract the deconv feature without the cluster type
-  features_with_clusters <- colnames(deconv_res[["Deconvolution matrix"]])
-  has_clusters <- grepl("_.*(mixed|immunosuppressive|immunoactive)$", features_with_clusters)
-
-  if(any(has_clusters)){
-
-    # Base name = everything before final cluster label
-    base_names <- sub("_(mixed|immunosuppressive|immunoactive)$",
-                      "",
-                      features_with_clusters)
-
-    # Cluster suffix = cluster type
-    cluster_suffixes <- sub(".*_(mixed|immunosuppressive|immunoactive)$",
-                            "\\1",
-                            features_with_clusters)
-
-    map <- data.frame(base = base_names,
-                      suffix = cluster_suffixes,
-                      stringsAsFactors = FALSE)
-  }
-
   if(is.infinite(iterations) && iterations < 0){
     warning("No subgroups to replicate")
-    if(any(has_clusters)){
-      ## Paste the corresponding clusters to the deconvolution features
-      colnames(deconvolution_test) <- paste0(colnames(deconvolution_test), map$suffix[match(colnames(deconvolution_test), map$base)])
-    }
 
     deconvolution_test = deconvolution_test[,colnames(deconvolution_test) %in% colnames(deconv_res[["Deconvolution matrix"]])]
   }else{
@@ -1903,11 +1878,6 @@ compute.test.set = function(deconv_res, cell_groups, features, deconvolution_tes
       colnames(deconv_subgroups_values) = names(base_groups)
       deconvolution_test = cbind(deconv_subgroups_values, deconvolution_test) # Join cell subgroups and deconv features
 
-    }
-
-    if(any(has_clusters)){
-      ## Paste the corresponding clusters to the deconvolution features
-      colnames(deconvolution_test) <- paste0(colnames(deconvolution_test), "_", map$suffix[match(colnames(deconvolution_test), map$base)])
     }
 
     deconvolution_test = deconvolution_test[,colnames(deconvolution_test)%in%colnames(deconv_res[[1]])]
@@ -1958,13 +1928,12 @@ extract_cells = function(groups, cells_extra = NULL){
   }
 
   # Create regex to capture base cell type + cluster
-  # Matches known cell type, optionally followed by .Iteration.x or .Subgroup.x, then _mixed/_immunosuppressive/_immunoactive
+  # Matches known cell type, optionally followed by _Subgroup.x.Iteration.x
   regex_pattern <- paste0(
     "(",
     paste(names_cells, collapse = "|"),
     ")",
-    "((?:[._](?:Subgroup|Iteration)\\.[0-9]+)*)",
-    "_(mixed|immunosuppressive|immunoactive)"
+    "((?:[._](?:Subgroup|Iteration)\\.[0-9]+)*)"
   )
 
 
@@ -3582,7 +3551,7 @@ compute_cells_niches <- function(latent_factors, dt, cell.groups,
   # -- binary composition matrix ---------------------------------------------
   # rows = cell groups, columns = cell types
   comp_matrix     <- compute.composition.matrix(dt, cell.groups,
-                                                 cells_extra = cells_extra)
+                                                cells_extra = cells_extra)
   background_freq <- colMeans(comp_matrix)
 
   factor_celltype_weights <- list()
@@ -3628,7 +3597,7 @@ compute_cells_niches <- function(latent_factors, dt, cell.groups,
     enrich[!is.finite(enrich)] <- NA
 
     # Interpretation
-    # Suppose CD4.cells_immunosuppressive appears in 70% of the selected top features (fg_freq = 0.7)
+    # Suppose CD4.cells appears in 70% of the selected top features (fg_freq = 0.7)
     # - Its background frequency = 0.34408602
     # - Enrichment = 0.7 / 0.344 ~= 2.03 -> more than 2x enriched relative to baseline
 
