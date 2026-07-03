@@ -73,6 +73,7 @@ Suggests:
     dorothea,
     survival,
     survminer,
+    gridExtra,
     RcppML,
     MOFA2,
     NMF,

@@ -21,8 +21,8 @@ articles:
   - articles/02-cell-groups
   - articles/03-tme-states
   - articles/04-analysis
-  - articles/05-one-step-pipeline
   - articles/06-machine-learning
+  - articles/07-batch-analysis
 
 reference:
 - title: Main
@@ -56,6 +56,7 @@ reference:
   - scores.stat.analysis
   - compute.latent_factors
   - identify.cell.groups
+  - compute.survival.analysis
 - title: Meta-programs and TME
   desc: >
     Meta-program derivation and TME mapping

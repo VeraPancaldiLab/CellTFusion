@@ -17,7 +17,7 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 library(CellTFusion)
 ```
 
-CellTFusion requires two primary inputs: **cell-type deconvolution proportions** and **transcription factor (TF) activity scores**. This article walks through each step manually. If you prefer to run everything in one call, see the [One-step Pipeline](05-one-step-pipeline.html) article.
+CellTFusion combines two families of features computed from bulk RNAseq data: **cell-type deconvolution proportions** and **transcription factor (TF) activity scores**, further summarized into TF co-activity modules and pathway activities. This article walks through each function individually — what it does, its key arguments, and the plots/objects it produces. All of these steps are run automatically, in the right order, by the `CellTFusion()` wrapper (see the package [README](../index.html)); read this article if you want to run, inspect, or customize each stage on its own.
 
 Load the pre-packaged example data:
 
@@ -26,9 +26,25 @@ raw.counts <- CellTFusion::raw.counts.tuto
 traitdata  <- CellTFusion::traitdata.tuto
 ```
 
-## Cell-type deconvolution
+## 1. Normalization
 
-Cell-type proportions are estimated with the `multideconv` R package, which integrates multiple algorithms (Quantiseq, Epidish, DeconRNASeq, DWLS, CIBERSORTx). For more details visit the [multideconv GitHub repository](https://github.com/VeraPancaldiLab/multideconv).
+Before TF activity or pathway scoring, raw counts are normalized to log2(TPM + 1). Deconvolution methods use TPM without the log transform, and this step is handled internally by `compute.deconvolution()`.
+
+```{r, eval = FALSE}
+counts.norm <- data.frame(ADImpute::NormalizeTPM(raw.counts, log = TRUE))
+```
+
+## 2. `compute.deconvolution()`
+
+Cell-type proportions are estimated with the companion [`multideconv`](https://github.com/VeraPancaldiLab/multideconv) package, which wraps multiple deconvolution algorithms (Quantiseq, Epidish, DeconRNASeq, DWLS, CIBERSORTx) and averages/combines their outputs into a single feature matrix (samples x cell-type/method combinations).
+
+Key arguments:
+
+- `raw.counts` — raw counts matrix (genes x samples).
+- `methods` — deconvolution algorithms to run.
+- `normalized` — set to `TRUE` if `raw.counts` is already normalized (the function otherwise normalizes internally to TPM).
+- `credentials.mail` / `credentials.token` — required only if `"CBSX"` (CIBERSORTx) is included in `methods`.
+- `return` — if `TRUE`, saves the resulting matrix to `Results/`.
 
 ```{r}
 deconv <- multideconv::compute.deconvolution(
@@ -40,18 +56,25 @@ deconv <- multideconv::compute.deconvolution(
 head(deconv[, 1:5])
 ```
 
-## TF activity inference
+## 3. `compute.TFs.activity()`
 
-TF activity is inferred using the `viper` package [@Alvarez2016] combined with the `CollecTRI` regulon database [@10.1093/nar/gkad841]. The expression matrix must be log-normalized (log2 TPM+1) before this step.
+TF activity per sample is inferred from normalized expression using a VIPER/consensus-scoring approach (via `decoupleR`) [@Alvarez2016], combined with a regulon (TF-target network).
+
+Key arguments:
+
+- `RNA.counts` — normalized expression matrix (genes x samples), typically log2(TPM+1).
+- `TF.collection` — source of the TF-target regulon:
+  - `"CollecTRI"` (default) [@10.1093/nar/gkad841] and `"Dorothea"` are curated, literature-derived regulons fetched automatically from OmnipathR.
+  - `"ARACNE"` uses a **data-driven, cohort-specific** regulatory network reverse-engineered from expression data with the [ARACNe](https://califano.c2b2.columbia.edu/aracne) algorithm, instead of a generic literature-derived network. This is useful when you have a large cohort of samples from the same cancer type/context and want TF-target relationships inferred directly from its co-expression structure rather than relying on curated interactions that may not hold in that tissue. It requires a pre-computed 3-column network file (`regulator`, `target`, `mutual information`) located at `input/ARACNE/<cancer.type>/network/network.txt`; pass the corresponding label via `cancer.type`.
+- `min_targets_size` — minimum number of target genes required per regulon (TFs with fewer targets are dropped). Default is 5; increasing it keeps only better-supported TFs.
+- `universe` — optional user-supplied regulon (data frame of TF-target interactions), bypassing the automatic OmnipathR/ARACNE fetch.
+- `cores` — number of cores used for the activity inference.
+- `scale` — if `TRUE` (default), z-scores TF activity across samples.
 
 ```{r, eval = FALSE}
-# Normalize by log2(TPM + 1)
-counts.norm <- data.frame(ADImpute::NormalizeTPM(raw.counts, log = TRUE))
-
-# Using the default CollecTRI regulon
 tfs <- compute.TFs.activity(
   RNA.counts       = counts.norm,
-  TF.collection    = "CollecTRI",   # or "Dorothea", "ARACNE"
+  TF.collection    = "CollecTRI",
   min_targets_size = 5,
   cores            = 3,
   return           = TRUE
@@ -59,67 +82,82 @@ tfs <- compute.TFs.activity(
 head(tfs[, 1:5])
 ```
 
-You can also supply a pre-built regulon via the `universe` argument:
+You can also supply a pre-built regulon directly via `universe`:
 
 ```{r, eval = FALSE}
 universe <- decoupleR::get_collectri(organism = "human", split_complexes = FALSE)
 tfs <- compute.TFs.activity(counts.norm, universe = universe)
 ```
 
-## TF module construction (WTCNA)
+Or use a cohort-specific ARACNe network:
 
-Before identifying cell groups, TF activity scores are reduced into modules of co-active TFs using Weighted TF Correlation Network Analysis (WTCNA), adapted from WGCNA [@langfelder2008wgcna].
+```{r, eval = FALSE}
+tfs_aracne <- compute.TFs.activity(
+  RNA.counts    = counts.norm,
+  TF.collection = "ARACNE",
+  cancer.type   = "skcm"   # matches input/ARACNE/skcm/network/network.txt
+)
+```
+
+## 4. `compute.WTCNA()`
+
+TF activity scores (potentially hundreds of TFs) are reduced into a small number of co-activity **modules** using Weighted TF Co-activity Network Analysis (WTCNA), an adaptation of WGCNA [@langfelder2008wgcna] applied to TFs instead of genes. Each module gets one sample-level score (its eigengene).
+
+Key arguments:
+
+- `TFs.matrix` — TF activity matrix (or, if `batch = TRUE`, a **list** of per-cohort matrices) from `compute.TFs.activity()`.
+- `batch` — if `TRUE`, runs consensus WGCNA across cohorts instead of a single-matrix analysis (see the [Batch/Multi-cohort Analysis](07-batch-analysis.html) article for details).
+- `network.type` — `"signed"` (default), `"unsigned"`, `"signed hybrid"`, or `"distance"`.
+- `minMod` — minimum number of TFs required to form a module.
+- `corr_mod` — correlation threshold for merging similar modules.
+- `cor_type` — `"p"` (Pearson) or `"s"` (Spearman).
 
 ```{r, eval = FALSE}
 network <- compute.WTCNA(
-  TFs.matrix       = tfs,
-  batch            = FALSE,
-  network.type     = "signed",
+  TFs.matrix        = tfs,
+  batch             = FALSE,
+  network.type      = "signed",
   clustering.method = "ward.D2",
-  minMod           = 15,
-  corr_mod         = 0.9,
-  return           = TRUE
+  minMod            = 15,
+  corr_mod          = 0.9,
+  return            = TRUE
 )
 ```
 
-For multi-cohort (batch) data, pass `batch = TRUE` and provide a list of per-cohort TF matrices. Consensus WTCNA is then applied automatically.
+When `return = TRUE`, this saves diagnostic plots to `Results/`:
 
-To visualize associations between TF modules and clinical traits:
+- `Soft_Threshold.pdf` — scale-free topology fit, used to pick the WGCNA soft-thresholding power.
+- `Gene_dendrogram_and_module_colors.pdf` / `..._after_merging.pdf` — TF clustering dendrogram, colored by module before and after merging correlated modules.
 
-```{r, eval = FALSE}
-compute.metadata.association(
-  tfs.modules = network[[1]],
-  coldata     = traitdata,
-  pval        = 0.05,
-  file.name   = "Tutorial",
-  width       = 10
-)
-```
+`network[[1]]` (`"TFs module matrix"`) holds the module eigengene scores (samples x modules) used downstream by `construct_cell_groups()`.
 
-## Pathway activity scoring
+## 5. `compute.pathway.activity()`
 
-Pathway activities are estimated using a multivariate linear model (MLM) via `decoupleR` [@10.1093/bioadv/vbac016] with PROGENy [@Schubert2018] as the default database. A custom gene set can be provided, in which case GSVA is applied instead.
+Pathway activities are estimated with a multivariate linear model (MLM) via `decoupleR` [@10.1093/bioadv/vbac016], using PROGENy [@Schubert2018] as the default pathway database. If a custom `gene_sets` list is supplied, GSVA scoring is computed in addition to PROGENy.
+
+Key arguments:
+
+- `RNA.tpm` — normalized expression matrix (genes x samples).
+- `gene_sets` — optional list of custom gene sets; if provided, GSVA scores are also returned.
+- `paths` — optional custom PROGENy-style pathway-gene weight table; if `NULL`, the default human PROGENy model is used.
 
 ```{r, eval = FALSE}
 pathways <- compute.pathway.activity(
-  RNA.tpm   = counts.norm,
-  return    = TRUE
+  RNA.tpm = counts.norm,
+  return  = TRUE
 )
 ```
 
-To correlate TF modules with pathway activities:
+## 6. `compute.deconvolution.analysis()`
 
-```{r, eval = FALSE}
-compute.modules.relationship(
-  network[[1]], pathways,
-  "Pathways_Progeny-TFs_Modules",
-  width = 15
-)
-```
+Deconvolution features from different methods/signatures are often highly correlated. This `multideconv` function groups correlated cell-type/method columns into **subgroups**, reducing redundancy and improving statistical power in later steps.
 
-## Deconvolution dimensionality reduction
+Key arguments:
 
-Cell types with correlated abundance profiles are grouped to reduce the feature space and improve statistical power:
+- `deconvolution` — output of `compute.deconvolution()`.
+- `corr` — minimum correlation to group features into the same subgroup.
+- `corr_type` — `"spearman"` (default) or `"pearson"`.
+- `batch` — optional batch/cohort vector; if provided, correlations are computed as partial correlations controlling for batch (see [Batch/Multi-cohort Analysis](07-batch-analysis.html)).
 
 ```{r, eval = FALSE}
 dt <- multideconv::compute.deconvolution.analysis(
@@ -130,13 +168,51 @@ dt <- multideconv::compute.deconvolution.analysis(
 )
 ```
 
-## Hub TF enrichment (optional)
+## 7. `construct_cell_groups()`
 
-Hub TFs per module can be identified based on module membership and network degree, and used for Over-Representation Analysis against the Reactome database:
+Combines the TF module network (`network`) and reduced deconvolution structure (`dt`) into composite **cell groups**: clusters of cell-type features whose abundance correlates with specific TF module activity. See the [Cell Group Construction](02-cell-groups.html) article for full details, including the difference between unsupervised and supervised construction.
 
 ```{r, eval = FALSE}
-hub_tfs <- identify_hub_TFs(t(tfs), network, MM_thresh = 0.8, degree_thresh = 0.9)
-compute.modules.enrichment(counts.norm, hub_tfs)
+cell_groups <- construct_cell_groups(
+  network = network,
+  dt      = dt,
+  pval    = 0.05
+)
 ```
+
+## 8. `compute.latent_factors()`
+
+Cell group scores are further compressed into a small set of non-negative matrix factorization (NMF) **latent factors**, a compact representation of the TME landscape used for downstream statistics and machine learning. See the [Cell Group Construction](02-cell-groups.html) article.
+
+## 9. `compute_cells_niches()`
+
+Characterizes each latent factor by identifying which cell types are enriched among the cell groups that contribute most to it. See the [Cell Group Construction](02-cell-groups.html) article.
+
+## 10. `compute_factor_gsea()` and `map_factors_to_metaprograms()`
+
+Latent factors are functionally annotated via Hallmark GSEA and mapped onto reference cancer meta-programs derived from TCGA. See the [TME State Characterisation](03-tme-states.html) article for a detailed walkthrough, including the biological rationale and references behind meta-program mapping.
+
+## Putting it together
+
+Every function above is called, in this order, by `CellTFusion()`. Once you are comfortable with the individual building blocks, you normally do not need to run them manually — simply call:
+
+```{r, eval = FALSE}
+res <- CellTFusion(
+  raw.counts     = raw.counts,
+  normalized     = TRUE,
+  coldata        = traitdata,
+  task           = "unsupervised",
+  deconv_methods = c("Quantiseq", "Epidish"),
+  TF.collection  = "CollecTRI",
+  cancer_type    = "skcm",
+  corr           = 0.7,
+  corr_mod       = 0.9,
+  pval           = 0.05,
+  file_name      = "Tutorial",
+  return         = TRUE
+)
+```
+
+`res` then contains every intermediate object described above (`$Deconvolution`, `$TFs_matrix`, `$TF_network`, `$Pathways_scores`, `$Processed_deconvolution`, `$Cell_groups`, `$Latent_spaces`, `$Cells_niches`, `$TME_states`, `$Metaprograms_reference`) — see the [README](../index.html) for the full output structure.
 
 ## References

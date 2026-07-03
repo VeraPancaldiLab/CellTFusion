@@ -40,9 +40,12 @@ Starting from a raw count matrix, the pipeline produces **latent factors** — c
 | Meta-program mapping | `map_factors_to_metaprograms()` | [TME State Characterisation](articles/03-tme-states.html) |
 | TME subtype annotation | `map_factors_to_TME()` | [TME State Characterisation](articles/03-tme-states.html) |
 | Clinical association testing | `scores.stat.analysis()` | [Statistical Analysis](articles/04-analysis.html) |
-| Full pipeline (one call) | `CellTFusion()` | [One-step Pipeline](articles/05-one-step-pipeline.html) |
+| Survival analysis | `compute.survival.analysis()` | [Statistical Analysis](articles/04-analysis.html) |
 | Test-set projection | `project_test_factors()` | [Machine Learning](articles/06-machine-learning.html) |
 | ML model training | `pipeML::compute_features.training.ML()` | [Machine Learning](articles/06-machine-learning.html) |
+| Multi-cohort (batch) analysis | `batch = TRUE` in `CellTFusion()` | [Batch/Multi-cohort Analysis](articles/07-batch-analysis.html) |
+
+The full pipeline — every step above run in the right order in a single call — is available through the `CellTFusion()` wrapper function; see the package [README](https://VeraPancaldiLab.github.io/CellTFusion/) for usage examples, including unsupervised, supervised, and multi-cohort modes.
 
 ## Quick start
 
