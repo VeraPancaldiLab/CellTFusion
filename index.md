@@ -82,18 +82,39 @@ res <- CellTFusion(
   raw.counts = raw.counts,
   normalized = TRUE,
   coldata = traitdata, # Optional metadata
-  deconv_methods = c("Quantiseq", "DeconRNASeq"), # Choose from Quantiseq, Epidish, DeconRNASeq, DWLS, CibersortX
-  cbsx.mail = "your_email",       # Required if using CIBERSORTx
-  cbsx.token = "your_token",      # Required if using CIBERSORTx
+  task = "unsupervised",                          # or "supervised"
+  deconv_methods = c("Quantiseq", "DeconRNASeq"), # Choose from Quantiseq, Epidish, DeconRNASeq, DWLS, CBSX
+  cbsx.mail = "your_email",       # Required if using CBSX (CIBERSORTx)
+  cbsx.token = "your_token",      # Required if using CBSX (CIBERSORTx)
+  TF.collection = "CollecTRI",    # "CollecTRI", "Dorothea", or "ARACNE"
+  cancer_type = "skcm",           # TCGA cancer type, used for meta-program mapping
   file_name = "TestRun",
   min_targets_size = 15,
   minMod = 20,
   corr_mod = 0.25,
   corr = 0.7,
   pval = 0.05,
-  high_corr_groups = 0.85,
-  trait = "Best.Confirmed.Overall.Response",  # Optional supervised analysis
-  trait.positive = "CR",                      # Define positive class for trait
+  return = TRUE
+)
+```
+
+For supervised analysis (comparing two clinical groups), set
+`task = "supervised"` and provide `contrast` (the column in `coldata`
+defining the comparison) and `ref_level` (the reference/baseline level).
+This requires non-normalized (raw) counts, since it runs differential
+expression analysis internally:
+
+``` r
+
+res <- CellTFusion(
+  raw.counts = raw.counts,
+  normalized = FALSE,
+  coldata = traitdata,
+  task = "supervised",
+  contrast = "Best.Confirmed.Overall.Response",
+  ref_level = "PD",
+  deconv_methods = c("Quantiseq", "DeconRNASeq"),
+  file_name = "TestRun_supervised",
   return = TRUE
 )
 ```
@@ -104,43 +125,28 @@ it’s not an open-source program. To run it, please ask for a token in
 obtained, provided your username and password on the parameters
 `credentials.mail` and `credentials.token`.
 
-## Cell groups
+## Output structure
 
-You can use the
+[`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md)
+returns a named list with the outputs of each pipeline stage — cell-type
+deconvolution, TF activity, TF module network, pathway scores, cell
+groups, latent factors, cell niches, and TME state mapping. Cell groups
+are derived internally via
 [`construct_cell_groups()`](https://verapancaldilab.github.io/CellTFusion/reference/construct_cell_groups.md)
-function to derive cell-type groupings based on transcription factor
-(TF) regulatory networks and deconvolution outputs. This supports both
-unsupervised and supervised analysis based on clinical traits.
+and are available at `res$Cell_groups`:
 
 ``` r
 
-# Run unsupervised cell group construction
-cell_groups_unsupervised <- construct_cell_groups(
-  counts = counts_matrix,       # gene expression (genes x samples)
-  tfs = tf_list,                # list or matrix of transcription factors
-  deconv = deconv_matrix,       # deconvolution results (samples x cell types)
-  network = tf_network_list,    # TF networks for cell types
-  dt = deconv_subgroups,        # deconvolution subgroup structures
-  clinical = clinical_data      # clinical metadata
-)
-
-# Run supervised cell group construction based on a binary trait
-cell_groups_supervised <- construct_cell_groups(
-  counts = counts_matrix,
-  tfs = tf_list,
-  deconv = deconv_matrix,
-  network = tf_network_list,
-  dt = deconv_subgroups,
-  clinical = clinical_data,
-  trait = "response",           # binary trait column in clinical data
-  positive = "Responder"        # class considered positive
-)
-
-# Output: both return a list with projected scores, composition, and loadings
-# cell_groups$score: matrix of cell group scores (samples x groups)
-# cell_groups$composition: cell types included in each group
-# cell_groups$loadings: contribution of features per group
+res$Cell_groups$Cell_groups  # data frame of cell group scores (samples x groups)
+res$Cell_groups$Composition  # cell types included in each group
+res$Cell_groups$Weights      # feature loadings per group
 ```
+
+For a step-by-step walkthrough of every pipeline stage, see the [Get
+started](https://VeraPancaldiLab.github.io/CellTFusion/articles/CellTFusion.html)
+vignette and the
+[articles](https://VeraPancaldiLab.github.io/CellTFusion/articles/)
+section.
 
 ## Replicate cell groups on an independent dataset
 

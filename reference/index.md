@@ -53,6 +53,9 @@ Cell groups analysis
   : Compute latent factors from cell group scores using NMF
 - [`identify(`*`<cell.groups>`*`)`](https://verapancaldilab.github.io/CellTFusion/reference/identify.cell.groups.md)
   : Identify cell groups
+- [`compute(`*`<survival.analysis>`*`)`](https://verapancaldilab.github.io/CellTFusion/reference/compute.survival.analysis.md)
+  : Kaplan-Meier survival analysis on clinical groups or CellTFusion
+  features
 
 ## Meta-programs and TME
 

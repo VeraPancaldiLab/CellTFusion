@@ -45,8 +45,8 @@
     <li><a class="dropdown-item" href="../articles/02-cell-groups.html">Cell Group Construction and Latent Factors</a></li>
     <li><a class="dropdown-item" href="../articles/03-tme-states.html">TME State Characterisation</a></li>
     <li><a class="dropdown-item" href="../articles/04-analysis.html">Statistical Analysis</a></li>
-    <li><a class="dropdown-item" href="../articles/05-one-step-pipeline.html">One-step Pipeline</a></li>
     <li><a class="dropdown-item" href="../articles/06-machine-learning.html">Machine Learning</a></li>
+    <li><a class="dropdown-item" href="../articles/07-batch-analysis.html">Batch/Multi-cohort Analysis</a></li>
   </ul>
 </li>
       </ul>
@@ -107,10 +107,17 @@ the samples × factors matrix</li>
 <div class="section level2">
 <h2 id="hallmark-gsea-per-latent-factor">Hallmark GSEA per latent factor<a class="anchor" aria-label="anchor" href="#hallmark-gsea-per-latent-factor"></a>
 </h2>
-<p><code><a href="../reference/compute_factor_gsea.html">compute_factor_gsea()</a></code> fits a multivariate limma model
-using the latent factor scores as covariates, ranks genes by moderated
-t-statistic per factor, and runs Hallmark GSEA via <code>fgsea</code>. A
-dot plot of the top enriched pathways is saved per factor.</p>
+<p><code><a href="../reference/compute_factor_gsea.html">compute_factor_gsea()</a></code> fits a multivariate
+<code>limma</code> model using the latent factor scores as covariates,
+ranks genes by moderated t-statistic per factor, and runs a pre-ranked
+Hallmark gene set enrichment analysis via <code>fgsea</code> <span class="citation">(<a href="#ref-Korotkevich2021">Korotkevich et al.
+2021</a>)</span> against the MSigDB Hallmark collection <span class="citation">(<a href="#ref-Liberzon2015">Liberzon et al.
+2015</a>)</span>. The Hallmark collection summarizes ~50 curated gene
+sets representing well-defined, non-redundant biological processes
+(e.g. EMT, interferon response, hypoxia, inflammatory response), making
+it a natural, interpretable reference to functionally annotate a
+data-driven latent factor. A dot plot of the top enriched pathways is
+saved per factor.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">gsea_results</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute_factor_gsea.html">compute_factor_gsea</a></span><span class="op">(</span></span>
 <span>  RNA.tpm     <span class="op">=</span> <span class="va">counts.norm</span>,        <span class="co"># genes × samples expression matrix</span></span>
@@ -147,13 +154,58 @@ dot plot of the top enriched pathways is saved per factor.</p>
 <div class="section level2">
 <h2 id="map-factors-to-cancer-type-meta-programs">Map factors to cancer-type meta-programs<a class="anchor" aria-label="anchor" href="#map-factors-to-cancer-type-meta-programs"></a>
 </h2>
-<p><code><a href="../reference/map_factors_to_metaprograms.html">map_factors_to_metaprograms()</a></code> compares each factor’s
-Hallmark NES profile against a reference set of meta-programs derived
-from TCGA bulk RNA-seq data. The reference covers multiple cancer types
-and allows cross-study interpretation of the identified TME states.</p>
-<p>Supported <code>cancer_type</code> values: <code>"skcm"</code>
-(melanoma), <code>"blca"</code> (bladder cancer), <code>"luad"</code>
-(lung adenocarcinoma).</p>
+<div class="section level3">
+<h3 id="background-what-are-meta-programs">Background: what are meta-programs?<a class="anchor" aria-label="anchor" href="#background-what-are-meta-programs"></a>
+</h3>
+<p>A <strong>meta-program (MP)</strong> is a recurrent module of
+co-expressed genes reflecting a specific transcriptional cell state
+(e.g. cell cycle, hypoxia, epithelial-mesenchymal transition, interferon
+response, stress) that recurs <em>across</em> tumors, patients, and even
+cancer types, rather than being specific to one dataset. This concept
+was systematically characterized by Gavish et al. <span class="citation">(<a href="#ref-Gavish2023"><span class="nocase">Gavish
+et al.</span> 2023</a>)</span> (“Hallmarks of transcriptional
+intratumour heterogeneity across a thousand tumours”, <em>Nature</em>,
+2023), who derived a curated, pan-cancer set of intratumour
+heterogeneity meta-programs from single-cell RNA-seq data spanning many
+cancer types. CellTFusion builds cancer-type-specific reference
+meta-programs from bulk TCGA RNA-seq data using the same underlying
+logic — recurrent, biologically interpretable transcriptional programs —
+so that latent factors identified in an independent study can be related
+back to a well-established vocabulary of TME states instead of being
+described only in dataset-specific terms.</p>
+</div>
+<div class="section level3">
+<h3 id="how-map_factors_to_metaprograms-works">How <code>map_factors_to_metaprograms()</code> works<a class="anchor" aria-label="anchor" href="#how-map_factors_to_metaprograms-works"></a>
+</h3>
+<ol style="list-style-type: decimal">
+<li>
+<strong>Reference construction (offline, per cancer type):</strong>
+for a given TCGA cohort (e.g. <code>"skcm"</code> for melanoma,
+<code>"blca"</code> for bladder cancer), a Hallmark GSEA is run per
+meta-program to build a reference Hallmarks x meta-programs normalized
+enrichment score (NES) matrix. This reference is shipped with the
+package as pre-built <code>.RData</code> objects, one per supported
+cancer type.</li>
+<li>
+<strong>Study-side profile:</strong> the Hallmark NES profile of
+each <em>study</em> latent factor, computed in the previous step by
+<code><a href="../reference/compute_factor_gsea.html">compute_factor_gsea()</a></code>, is assembled into a Hallmarks x
+factors matrix (<code><a href="../reference/build_nes_matrix.html">build_nes_matrix()</a></code>).</li>
+<li>
+<strong>Matching:</strong> for each study factor, the function
+computes, for every reference meta-program, the mean NES of the Hallmark
+gene sets that define that meta-program. The meta-program with the
+highest mean NES (and NES &gt; 0) is assigned as the factor’s
+<code>best_MP</code>.</li>
+</ol>
+<p>This effectively asks: <em>“among all known recurrent TME/tumour
+transcriptional programs for this cancer type, which one does this
+latent factor’s Hallmark signature resemble most?”</em> — turning an
+abstract NMF factor into a biologically named TME state (e.g. “hypoxia”,
+“interferon response”, “stromal/CAF-like”).</p>
+<p>Supported <code>cancer_type</code> values (bundled TCGA reference):
+<code>"skcm"</code> (melanoma), <code>"blca"</code> (bladder cancer),
+<code>"luad"</code> (lung adenocarcinoma).</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">mp_mapping</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/map_factors_to_metaprograms.html">map_factors_to_metaprograms</a></span><span class="op">(</span></span>
 <span>  gsea_study  <span class="op">=</span> <span class="va">gsea_results</span>,</span>
@@ -174,16 +226,22 @@ and allows cross-study interpretation of the identified TME states.</p>
 <tbody>
 <tr class="odd">
 <td><code>$factor_mapping</code></td>
-<td>Data frame mapping each study factor to the closest reference
-meta-program</td>
+<td>Data frame with, per study factor: <code>factor</code>,
+<code>best_MP</code> (closest reference meta-program),
+<code>best_score</code> (its mean NES), <code>all_scores</code> (mean
+NES against every reference meta-program)</td>
 </tr>
 <tr class="even">
 <td><code>$reference</code></td>
-<td>The reference meta-program NES matrix used for comparison</td>
+<td>The reference Hallmarks x meta-programs NES matrix used for
+comparison</td>
 </tr>
 </tbody>
 </table>
+<p>A heatmap of factor-to-meta-program scores is saved to
+<code>Results/</code> when <code>plot = TRUE</code>.</p>
 <hr>
+</div>
 </div>
 <div class="section level2">
 <h2 id="annotate-factors-with-tme-immune-subtypes">Annotate factors with TME immune subtypes<a class="anchor" aria-label="anchor" href="#annotate-factors-with-tme-immune-subtypes"></a>
@@ -233,6 +291,29 @@ directly from the result object:</p>
 <span></span>
 <span><span class="co"># Access latent factors used as input to GSEA</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">Latent_spaces</span><span class="op">$</span><span class="va">Z</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level2 unnumbered">
+<h2 class="unnumbered" id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
+</h2>
+<div id="refs" class="references csl-bib-body hanging-indent">
+<div id="ref-Gavish2023" class="csl-entry">
+<span class="nocase">Gavish, Avishai, Michael Tyler, Alissa C.
+Greenwald, et al.</span> 2023. <span>“Hallmarks of Transcriptional
+Intratumour Heterogeneity Across a Thousand Tumours.”</span>
+<em>Nature</em> 618 (7965): 598–606. <a href="https://doi.org/10.1038/s41586-023-06130-4" class="external-link">https://doi.org/10.1038/s41586-023-06130-4</a>.
+</div>
+<div id="ref-Korotkevich2021" class="csl-entry">
+Korotkevich, Gennady, Vladimir Sukhov, Nikolay Budin, Boris Shpak, Maxim
+N. Artyomov, and Alexey Sergushichev. 2021. <span>“Fast Gene Set
+Enrichment Analysis.”</span> <em>bioRxiv</em>, ahead of print. <a href="https://doi.org/10.1101/060012" class="external-link">https://doi.org/10.1101/060012</a>.
+</div>
+<div id="ref-Liberzon2015" class="csl-entry">
+Liberzon, Arthur, Chet Birger, Helga Thorvaldsdóttir, Mahmoud Ghandi,
+Jill P. Mesirov, and Pablo Tamayo. 2015. <span>“The Molecular Signatures
+Database (MSigDB) Hallmark Gene Set Collection.”</span> <em>Cell
+Systems</em> 1 (6): 417–25. <a href="https://doi.org/10.1016/j.cels.2015.12.004" class="external-link">https://doi.org/10.1016/j.cels.2015.12.004</a>.
+</div>
+</div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

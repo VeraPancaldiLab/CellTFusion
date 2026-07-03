@@ -6,8 +6,8 @@
 <url><loc>https://verapancaldilab.github.io/CellTFusion/articles/02-cell-groups.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/articles/03-tme-states.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/articles/04-analysis.html</loc></url>
-<url><loc>https://verapancaldilab.github.io/CellTFusion/articles/05-one-step-pipeline.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/articles/06-machine-learning.html</loc></url>
+<url><loc>https://verapancaldilab.github.io/CellTFusion/articles/07-batch-analysis.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/articles/CellTFusion.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/articles/index.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/authors.html</loc></url>
@@ -29,6 +29,7 @@
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/compute.modules.enrichment.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/compute.modules.relationship.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/compute.pathway.activity.html</loc></url>
+<url><loc>https://verapancaldilab.github.io/CellTFusion/reference/compute.survival.analysis.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/compute.test.score.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/compute.test.set.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/compute_cells_niches.html</loc></url>

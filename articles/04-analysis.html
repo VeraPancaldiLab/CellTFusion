@@ -45,8 +45,8 @@
     <li><a class="dropdown-item" href="../articles/02-cell-groups.html">Cell Group Construction and Latent Factors</a></li>
     <li><a class="dropdown-item" href="../articles/03-tme-states.html">TME State Characterisation</a></li>
     <li><a class="dropdown-item" href="../articles/04-analysis.html">Statistical Analysis</a></li>
-    <li><a class="dropdown-item" href="../articles/05-one-step-pipeline.html">One-step Pipeline</a></li>
     <li><a class="dropdown-item" href="../articles/06-machine-learning.html">Machine Learning</a></li>
+    <li><a class="dropdown-item" href="../articles/07-batch-analysis.html">Batch/Multi-cohort Analysis</a></li>
   </ul>
 </li>
       </ul>
@@ -176,6 +176,60 @@ activities:</p>
 <span>  file_name <span class="op">=</span> <span class="st">"Pathways_vs_TF_modules"</span>,</span>
 <span>  width     <span class="op">=</span> <span class="fl">15</span></span>
 <span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="survival-analysis">Survival analysis<a class="anchor" aria-label="anchor" href="#survival-analysis"></a>
+</h2>
+<p><code><a href="../reference/compute.survival.analysis.html">compute.survival.analysis()</a></code> tests whether Kaplan-Meier
+survival curves differ significantly between groups, using the
+<code>survival</code> and <code>survminer</code> packages. It supports
+two modes:</p>
+<ol style="list-style-type: decimal">
+<li>
+<strong>Predefined groups</strong> (<code>group_column</code>) —
+e.g. a clinical risk group, treatment arm, or a cluster/cell-group
+assignment already present in <code>coldata</code>.</li>
+<li>
+<strong>Automatic feature screening</strong> (<code>features</code>)
+— e.g. <code>res$Latent_spaces$Z</code>, TF module scores, or cell group
+scores. Each feature/column is split into High/Low groups by a quantile
+cutoff (<code>thres</code>), and only features whose log-rank test is
+significant (<code>p.value</code>) are returned.</li>
+</ol>
+<p>Both modes require <code>traitdata</code> to include a time-to-event
+column (<code>PFS</code>) and an event indicator column
+(<code>PFS_event</code>, 1 = event, 0 = censored).</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Mode 1: compare survival between predefined clinical groups</span></span>
+<span><span class="va">surv_group</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute.survival.analysis.html">compute.survival.analysis</a></span><span class="op">(</span></span>
+<span>  survival.data <span class="op">=</span> <span class="va">traitdata</span>,</span>
+<span>  PFS           <span class="op">=</span> <span class="st">"PFS"</span>,</span>
+<span>  PFS_event     <span class="op">=</span> <span class="st">"PFS_event"</span>,</span>
+<span>  group_column  <span class="op">=</span> <span class="st">"Best.Confirmed.Overall.Response"</span>,</span>
+<span>  file_name     <span class="op">=</span> <span class="st">"Tutorial"</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">surv_group</span><span class="op">$</span><span class="va">p_value</span>        <span class="co"># log-rank test p-value</span></span>
+<span><span class="va">surv_group</span><span class="op">$</span><span class="va">median_PFS</span>      <span class="co"># median survival per group</span></span>
+<span><span class="va">surv_group</span><span class="op">$</span><span class="va">km_plot</span>          <span class="co"># survminer::ggsurvplot object</span></span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Mode 2: screen latent factors for significant survival splits</span></span>
+<span><span class="va">surv_factors</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute.survival.analysis.html">compute.survival.analysis</a></span><span class="op">(</span></span>
+<span>  survival.data <span class="op">=</span> <span class="va">traitdata</span>,</span>
+<span>  PFS           <span class="op">=</span> <span class="st">"PFS"</span>,</span>
+<span>  PFS_event     <span class="op">=</span> <span class="st">"PFS_event"</span>,</span>
+<span>  features      <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">Latent_spaces</span><span class="op">$</span><span class="va">Z</span><span class="op">)</span>,</span>
+<span>  p.value       <span class="op">=</span> <span class="fl">0.05</span>,</span>
+<span>  thres         <span class="op">=</span> <span class="fl">0.5</span>,        <span class="co"># median split; use e.g. 0.75 for a top-quartile-vs-rest split</span></span>
+<span>  file_name     <span class="op">=</span> <span class="st">"Tutorial"</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p>For every significant result, a Kaplan-Meier plot with a risk table
+is saved to
+<code>Results/SurvPlot_&lt;group-or-feature&gt;_&lt;file_name&gt;.svg</code>.</p>
+<p>This is the same function used for survival analysis in the
+CellTFusion companion study (<code>CellTFusion_paper</code>), e.g. to
+test whether NMF latent factor scores stratify patients by
+overall/progression-free survival.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

@@ -33,9 +33,17 @@ and used as features for machine learning.
 | Meta-program mapping | [`map_factors_to_metaprograms()`](https://verapancaldilab.github.io/CellTFusion/reference/map_factors_to_metaprograms.md) | [TME State Characterisation](https://verapancaldilab.github.io/CellTFusion/articles/articles/03-tme-states.md) |
 | TME subtype annotation | [`map_factors_to_TME()`](https://verapancaldilab.github.io/CellTFusion/reference/map_factors_to_TME.md) | [TME State Characterisation](https://verapancaldilab.github.io/CellTFusion/articles/articles/03-tme-states.md) |
 | Clinical association testing | [`scores.stat.analysis()`](https://verapancaldilab.github.io/CellTFusion/reference/scores.stat.analysis.md) | [Statistical Analysis](https://verapancaldilab.github.io/CellTFusion/articles/articles/04-analysis.md) |
-| Full pipeline (one call) | [`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md) | [One-step Pipeline](https://verapancaldilab.github.io/CellTFusion/articles/articles/05-one-step-pipeline.md) |
+| Survival analysis | [`compute.survival.analysis()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.survival.analysis.md) | [Statistical Analysis](https://verapancaldilab.github.io/CellTFusion/articles/articles/04-analysis.md) |
 | Test-set projection | [`project_test_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/project_test_factors.md) | [Machine Learning](https://verapancaldilab.github.io/CellTFusion/articles/articles/06-machine-learning.md) |
 | ML model training | `pipeML::compute_features.training.ML()` | [Machine Learning](https://verapancaldilab.github.io/CellTFusion/articles/articles/06-machine-learning.md) |
+| Multi-cohort (batch) analysis | `batch = TRUE` in [`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md) | [Batch/Multi-cohort Analysis](https://verapancaldilab.github.io/CellTFusion/articles/articles/07-batch-analysis.md) |
+
+The full pipeline — every step above run in the right order in a single
+call — is available through the
+[`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md)
+wrapper function; see the package
+[README](https://VeraPancaldiLab.github.io/CellTFusion/) for usage
+examples, including unsupervised, supervised, and multi-cohort modes.
 
 ## Quick start
 

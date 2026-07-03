@@ -48,8 +48,8 @@
     <li><a class="dropdown-item" href="articles/02-cell-groups.html">Cell Group Construction and Latent Factors</a></li>
     <li><a class="dropdown-item" href="articles/03-tme-states.html">TME State Characterisation</a></li>
     <li><a class="dropdown-item" href="articles/04-analysis.html">Statistical Analysis</a></li>
-    <li><a class="dropdown-item" href="articles/05-one-step-pipeline.html">One-step Pipeline</a></li>
     <li><a class="dropdown-item" href="articles/06-machine-learning.html">Machine Learning</a></li>
+    <li><a class="dropdown-item" href="articles/07-batch-analysis.html">Batch/Multi-cohort Analysis</a></li>
   </ul>
 </li>
       </ul>
@@ -118,59 +118,50 @@
 <span>  raw.counts <span class="op">=</span> <span class="va">raw.counts</span>,</span>
 <span>  normalized <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  coldata <span class="op">=</span> <span class="va">traitdata</span>, <span class="co"># Optional metadata</span></span>
-<span>  deconv_methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Quantiseq"</span>, <span class="st">"DeconRNASeq"</span><span class="op">)</span>, <span class="co"># Choose from Quantiseq, Epidish, DeconRNASeq, DWLS, CibersortX</span></span>
-<span>  cbsx.mail <span class="op">=</span> <span class="st">"your_email"</span>,       <span class="co"># Required if using CIBERSORTx</span></span>
-<span>  cbsx.token <span class="op">=</span> <span class="st">"your_token"</span>,      <span class="co"># Required if using CIBERSORTx</span></span>
+<span>  task <span class="op">=</span> <span class="st">"unsupervised"</span>,                          <span class="co"># or "supervised"</span></span>
+<span>  deconv_methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Quantiseq"</span>, <span class="st">"DeconRNASeq"</span><span class="op">)</span>, <span class="co"># Choose from Quantiseq, Epidish, DeconRNASeq, DWLS, CBSX</span></span>
+<span>  cbsx.mail <span class="op">=</span> <span class="st">"your_email"</span>,       <span class="co"># Required if using CBSX (CIBERSORTx)</span></span>
+<span>  cbsx.token <span class="op">=</span> <span class="st">"your_token"</span>,      <span class="co"># Required if using CBSX (CIBERSORTx)</span></span>
+<span>  TF.collection <span class="op">=</span> <span class="st">"CollecTRI"</span>,    <span class="co"># "CollecTRI", "Dorothea", or "ARACNE"</span></span>
+<span>  cancer_type <span class="op">=</span> <span class="st">"skcm"</span>,           <span class="co"># TCGA cancer type, used for meta-program mapping</span></span>
 <span>  file_name <span class="op">=</span> <span class="st">"TestRun"</span>,</span>
 <span>  min_targets_size <span class="op">=</span> <span class="fl">15</span>,</span>
 <span>  minMod <span class="op">=</span> <span class="fl">20</span>,</span>
 <span>  corr_mod <span class="op">=</span> <span class="fl">0.25</span>,</span>
 <span>  corr <span class="op">=</span> <span class="fl">0.7</span>,</span>
 <span>  pval <span class="op">=</span> <span class="fl">0.05</span>,</span>
-<span>  high_corr_groups <span class="op">=</span> <span class="fl">0.85</span>,</span>
-<span>  trait <span class="op">=</span> <span class="st">"Best.Confirmed.Overall.Response"</span>,  <span class="co"># Optional supervised analysis</span></span>
-<span>  trait.positive <span class="op">=</span> <span class="st">"CR"</span>,                      <span class="co"># Define positive class for trait</span></span>
+<span>  return <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p>For supervised analysis (comparing two clinical groups), set <code>task = "supervised"</code> and provide <code>contrast</code> (the column in <code>coldata</code> defining the comparison) and <code>ref_level</code> (the reference/baseline level). This requires non-normalized (raw) counts, since it runs differential expression analysis internally:</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/CellTFusion.html">CellTFusion</a></span><span class="op">(</span></span>
+<span>  raw.counts <span class="op">=</span> <span class="va">raw.counts</span>,</span>
+<span>  normalized <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  coldata <span class="op">=</span> <span class="va">traitdata</span>,</span>
+<span>  task <span class="op">=</span> <span class="st">"supervised"</span>,</span>
+<span>  contrast <span class="op">=</span> <span class="st">"Best.Confirmed.Overall.Response"</span>,</span>
+<span>  ref_level <span class="op">=</span> <span class="st">"PD"</span>,</span>
+<span>  deconv_methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Quantiseq"</span>, <span class="st">"DeconRNASeq"</span><span class="op">)</span>,</span>
+<span>  file_name <span class="op">=</span> <span class="st">"TestRun_supervised"</span>,</span>
 <span>  return <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p><strong>NOTE</strong>: <code>CIBERSORTx</code> is included in the deconvolution methods, but it’s not an open-source program. To run it, please ask for a token in <a href="https://cibersortx.stanford.edu/register.php" class="external-link">CIBERSORTx</a> and once obtained, provided your username and password on the parameters <code>credentials.mail</code> and <code>credentials.token</code>.</p>
 </div>
 <div class="section level2">
-<h2 id="cell-groups">Cell groups<a class="anchor" aria-label="anchor" href="#cell-groups"></a>
+<h2 id="output-structure">Output structure<a class="anchor" aria-label="anchor" href="#output-structure"></a>
 </h2>
-<p>You can use the <code><a href="reference/construct_cell_groups.html">construct_cell_groups()</a></code> function to derive cell-type groupings based on transcription factor (TF) regulatory networks and deconvolution outputs. This supports both unsupervised and supervised analysis based on clinical traits.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Run unsupervised cell group construction</span></span>
-<span><span class="va">cell_groups_unsupervised</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/construct_cell_groups.html">construct_cell_groups</a></span><span class="op">(</span></span>
-<span>  counts <span class="op">=</span> <span class="va">counts_matrix</span>,       <span class="co"># gene expression (genes x samples)</span></span>
-<span>  tfs <span class="op">=</span> <span class="va">tf_list</span>,                <span class="co"># list or matrix of transcription factors</span></span>
-<span>  deconv <span class="op">=</span> <span class="va">deconv_matrix</span>,       <span class="co"># deconvolution results (samples x cell types)</span></span>
-<span>  network <span class="op">=</span> <span class="va">tf_network_list</span>,    <span class="co"># TF networks for cell types</span></span>
-<span>  dt <span class="op">=</span> <span class="va">deconv_subgroups</span>,        <span class="co"># deconvolution subgroup structures</span></span>
-<span>  clinical <span class="op">=</span> <span class="va">clinical_data</span>      <span class="co"># clinical metadata</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Run supervised cell group construction based on a binary trait</span></span>
-<span><span class="va">cell_groups_supervised</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/construct_cell_groups.html">construct_cell_groups</a></span><span class="op">(</span></span>
-<span>  counts <span class="op">=</span> <span class="va">counts_matrix</span>,</span>
-<span>  tfs <span class="op">=</span> <span class="va">tf_list</span>,</span>
-<span>  deconv <span class="op">=</span> <span class="va">deconv_matrix</span>,</span>
-<span>  network <span class="op">=</span> <span class="va">tf_network_list</span>,</span>
-<span>  dt <span class="op">=</span> <span class="va">deconv_subgroups</span>,</span>
-<span>  clinical <span class="op">=</span> <span class="va">clinical_data</span>,</span>
-<span>  trait <span class="op">=</span> <span class="st">"response"</span>,           <span class="co"># binary trait column in clinical data</span></span>
-<span>  positive <span class="op">=</span> <span class="st">"Responder"</span>        <span class="co"># class considered positive</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Output: both return a list with projected scores, composition, and loadings</span></span>
-<span><span class="co"># cell_groups$score: matrix of cell group scores (samples x groups)</span></span>
-<span><span class="co"># cell_groups$composition: cell types included in each group</span></span>
-<span><span class="co"># cell_groups$loadings: contribution of features per group</span></span></code></pre></div>
+<p><code><a href="reference/CellTFusion.html">CellTFusion()</a></code> returns a named list with the outputs of each pipeline stage — cell-type deconvolution, TF activity, TF module network, pathway scores, cell groups, latent factors, cell niches, and TME state mapping. Cell groups are derived internally via <code><a href="reference/construct_cell_groups.html">construct_cell_groups()</a></code> and are available at <code>res$Cell_groups</code>:</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">res</span><span class="op">$</span><span class="va">Cell_groups</span><span class="op">$</span><span class="va">Cell_groups</span>  <span class="co"># data frame of cell group scores (samples x groups)</span></span>
+<span><span class="va">res</span><span class="op">$</span><span class="va">Cell_groups</span><span class="op">$</span><span class="va">Composition</span>  <span class="co"># cell types included in each group</span></span>
+<span><span class="va">res</span><span class="op">$</span><span class="va">Cell_groups</span><span class="op">$</span><span class="va">Weights</span>      <span class="co"># feature loadings per group</span></span></code></pre></div>
+<p>For a step-by-step walkthrough of every pipeline stage, see the <a href="https://VeraPancaldiLab.github.io/CellTFusion/articles/CellTFusion.html" class="external-link">Get started</a> vignette and the <a href="https://VeraPancaldiLab.github.io/CellTFusion/articles/" class="external-link">articles</a> section.</p>
 </div>
 <div class="section level2">
 <h2 id="replicate-cell-groups-on-an-independent-dataset">Replicate cell groups on an independent dataset<a class="anchor" aria-label="anchor" href="#replicate-cell-groups-on-an-independent-dataset"></a>
 </h2>
 <p>Use this function to apply the trained cell groups to an external test set and calculate group-specific composite scores.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">test_scores</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/compute.test.set.html">compute.test.set</a></span><span class="op">(</span></span>
 <span>  deconv_res <span class="op">=</span> <span class="va">deconv_res_test</span>,</span>
 <span>  cell_groups <span class="op">=</span> <span class="va">cell_groups</span>,</span>

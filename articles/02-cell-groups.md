@@ -37,17 +37,79 @@ cell_groups <- construct_cell_groups(
   pval              = 0.05,
   clustering.method = "ward.D2",
   n_perm            = 999,
+  dendrogram_file   = NULL,
   return_dendrogram = FALSE
 )
 ```
 
-For multi-cohort data, pass the batch vector used in
-[`compute.WTCNA()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.WTCNA.md):
+For multi-cohort data, pass the same batch vector used in
+[`compute.WTCNA()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.WTCNA.md)
+and `compute.deconvolution.analysis()` — see the [Batch/Multi-cohort
+Analysis](https://verapancaldilab.github.io/CellTFusion/articles/07-batch-analysis.md)
+article:
 
 ``` r
 
 batch_vec   <- traitdata[, "Cohort"]
 cell_groups <- construct_cell_groups(network, dt, batch = batch_vec, pval = 0.05)
+```
+
+### Unsupervised vs. supervised cell groups
+
+[`construct_cell_groups()`](https://verapancaldilab.github.io/CellTFusion/reference/construct_cell_groups.md)
+itself has no notion of a clinical trait — its arguments are the same in
+both modes. The unsupervised/supervised distinction happens **upstream,
+at the TF activity level**, inside
+[`compute.TFs.activity()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.TFs.activity.md)
+/ `CellTFusion(task = ...)`:
+
+- **Unsupervised** (`task = "unsupervised"`):
+  [`compute.TFs.activity()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.TFs.activity.md)
+  is run on the full normalized expression matrix. TF modules (and
+  therefore cell groups) reflect TF co-activity patterns across *all*
+  genes, without reference to any clinical outcome.
+- **Supervised** (`task = "supervised"`): a differential expression
+  analysis
+  ([`run_deg_analysis()`](https://verapancaldilab.github.io/CellTFusion/reference/run_deg_analysis.md))
+  is first run between two groups defined by `contrast` and `ref_level`.
+  TF activity is then computed twice — once on the DEGs (`tfs_deg`) and
+  once on the full matrix (`tfs_mat`) — and the full TF activity matrix
+  is subset to only the TFs found relevant to the DEGs
+  (`tfs <- tfs_mat[, colnames(tfs_mat) %in% colnames(tfs_deg)]`). This
+  restricts the downstream TF network — and hence the resulting cell
+  groups — to TFs whose activity differs between the two clinical groups
+  of interest.
+
+In other words:
+**[`construct_cell_groups()`](https://verapancaldilab.github.io/CellTFusion/reference/construct_cell_groups.md)
+always runs the same unsupervised correlation/clustering procedure; what
+changes between “unsupervised” and “supervised” runs of
+[`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md)
+is which TFs feed into
+[`compute.WTCNA()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.WTCNA.md)
+in the first place.**
+
+``` r
+
+# Unsupervised: TF activity computed on all genes
+res_unsupervised <- CellTFusion(
+  raw.counts = raw.counts,
+  normalized = TRUE,
+  coldata    = traitdata,
+  task       = "unsupervised",
+  return     = TRUE
+)
+
+# Supervised: TF activity restricted to TFs relevant to the DEGs of the contrast
+res_supervised <- CellTFusion(
+  raw.counts = raw.counts,
+  normalized = FALSE,               # raw counts required for DEG analysis
+  coldata    = traitdata,
+  task       = "supervised",
+  contrast   = "Best.Confirmed.Overall.Response",
+  ref_level  = "PD",
+  return     = TRUE
+)
 ```
 
 ### Output structure

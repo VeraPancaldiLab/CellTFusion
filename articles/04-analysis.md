@@ -120,3 +120,59 @@ compute.modules.relationship(
   width     = 15
 )
 ```
+
+## Survival analysis
+
+[`compute.survival.analysis()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.survival.analysis.md)
+tests whether Kaplan-Meier survival curves differ significantly between
+groups, using the `survival` and `survminer` packages. It supports two
+modes:
+
+1.  **Predefined groups** (`group_column`) — e.g. a clinical risk group,
+    treatment arm, or a cluster/cell-group assignment already present in
+    `coldata`.
+2.  **Automatic feature screening** (`features`) —
+    e.g. `res$Latent_spaces$Z`, TF module scores, or cell group scores.
+    Each feature/column is split into High/Low groups by a quantile
+    cutoff (`thres`), and only features whose log-rank test is
+    significant (`p.value`) are returned.
+
+Both modes require `traitdata` to include a time-to-event column (`PFS`)
+and an event indicator column (`PFS_event`, 1 = event, 0 = censored).
+
+``` r
+
+# Mode 1: compare survival between predefined clinical groups
+surv_group <- compute.survival.analysis(
+  survival.data = traitdata,
+  PFS           = "PFS",
+  PFS_event     = "PFS_event",
+  group_column  = "Best.Confirmed.Overall.Response",
+  file_name     = "Tutorial"
+)
+
+surv_group$p_value        # log-rank test p-value
+surv_group$median_PFS      # median survival per group
+surv_group$km_plot          # survminer::ggsurvplot object
+```
+
+``` r
+
+# Mode 2: screen latent factors for significant survival splits
+surv_factors <- compute.survival.analysis(
+  survival.data = traitdata,
+  PFS           = "PFS",
+  PFS_event     = "PFS_event",
+  features      = data.frame(res$Latent_spaces$Z),
+  p.value       = 0.05,
+  thres         = 0.5,        # median split; use e.g. 0.75 for a top-quartile-vs-rest split
+  file_name     = "Tutorial"
+)
+```
+
+For every significant result, a Kaplan-Meier plot with a risk table is
+saved to `Results/SurvPlot_<group-or-feature>_<file_name>.svg`.
+
+This is the same function used for survival analysis in the CellTFusion
+companion study (`CellTFusion_paper`), e.g. to test whether NMF latent
+factor scores stratify patients by overall/progression-free survival.

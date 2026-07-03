@@ -45,8 +45,8 @@
     <li><a class="dropdown-item" href="../articles/02-cell-groups.html">Cell Group Construction and Latent Factors</a></li>
     <li><a class="dropdown-item" href="../articles/03-tme-states.html">TME State Characterisation</a></li>
     <li><a class="dropdown-item" href="../articles/04-analysis.html">Statistical Analysis</a></li>
-    <li><a class="dropdown-item" href="../articles/05-one-step-pipeline.html">One-step Pipeline</a></li>
     <li><a class="dropdown-item" href="../articles/06-machine-learning.html">Machine Learning</a></li>
+    <li><a class="dropdown-item" href="../articles/07-batch-analysis.html">Batch/Multi-cohort Analysis</a></li>
   </ul>
 </li>
       </ul>
@@ -113,13 +113,70 @@ function takes only two primary inputs — <code>network</code> and
 <span>  pval              <span class="op">=</span> <span class="fl">0.05</span>,</span>
 <span>  clustering.method <span class="op">=</span> <span class="st">"ward.D2"</span>,</span>
 <span>  n_perm            <span class="op">=</span> <span class="fl">999</span>,</span>
+<span>  dendrogram_file   <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  return_dendrogram <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p>For multi-cohort data, pass the batch vector used in
-<code><a href="../reference/compute.WTCNA.html">compute.WTCNA()</a></code>:</p>
+<p>For multi-cohort data, pass the same batch vector used in
+<code><a href="../reference/compute.WTCNA.html">compute.WTCNA()</a></code> and
+<code>compute.deconvolution.analysis()</code> — see the <a href="07-batch-analysis.html">Batch/Multi-cohort Analysis</a>
+article:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">batch_vec</span>   <span class="op">&lt;-</span> <span class="va">traitdata</span><span class="op">[</span>, <span class="st">"Cohort"</span><span class="op">]</span></span>
 <span><span class="va">cell_groups</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/construct_cell_groups.html">construct_cell_groups</a></span><span class="op">(</span><span class="va">network</span>, <span class="va">dt</span>, batch <span class="op">=</span> <span class="va">batch_vec</span>, pval <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span></span></code></pre></div>
+<div class="section level3">
+<h3 id="unsupervised-vs--supervised-cell-groups">Unsupervised vs. supervised cell groups<a class="anchor" aria-label="anchor" href="#unsupervised-vs--supervised-cell-groups"></a>
+</h3>
+<p><code><a href="../reference/construct_cell_groups.html">construct_cell_groups()</a></code> itself has no notion of a
+clinical trait — its arguments are the same in both modes. The
+unsupervised/supervised distinction happens <strong>upstream, at the TF
+activity level</strong>, inside <code><a href="../reference/compute.TFs.activity.html">compute.TFs.activity()</a></code> /
+<code>CellTFusion(task = ...)</code>:</p>
+<ul>
+<li>
+<strong>Unsupervised</strong> (<code>task = "unsupervised"</code>):
+<code><a href="../reference/compute.TFs.activity.html">compute.TFs.activity()</a></code> is run on the full normalized
+expression matrix. TF modules (and therefore cell groups) reflect TF
+co-activity patterns across <em>all</em> genes, without reference to any
+clinical outcome.</li>
+<li>
+<strong>Supervised</strong> (<code>task = "supervised"</code>): a
+differential expression analysis (<code><a href="../reference/run_deg_analysis.html">run_deg_analysis()</a></code>) is
+first run between two groups defined by <code>contrast</code> and
+<code>ref_level</code>. TF activity is then computed twice — once on the
+DEGs (<code>tfs_deg</code>) and once on the full matrix
+(<code>tfs_mat</code>) — and the full TF activity matrix is subset to
+only the TFs found relevant to the DEGs
+(<code>tfs &lt;- tfs_mat[, colnames(tfs_mat) %in% colnames(tfs_deg)]</code>).
+This restricts the downstream TF network — and hence the resulting cell
+groups — to TFs whose activity differs between the two clinical groups
+of interest.</li>
+</ul>
+<p>In other words: <strong><code><a href="../reference/construct_cell_groups.html">construct_cell_groups()</a></code> always
+runs the same unsupervised correlation/clustering procedure; what
+changes between “unsupervised” and “supervised” runs of
+<code><a href="../reference/CellTFusion.html">CellTFusion()</a></code> is which TFs feed into
+<code><a href="../reference/compute.WTCNA.html">compute.WTCNA()</a></code> in the first place.</strong></p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Unsupervised: TF activity computed on all genes</span></span>
+<span><span class="va">res_unsupervised</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/CellTFusion.html">CellTFusion</a></span><span class="op">(</span></span>
+<span>  raw.counts <span class="op">=</span> <span class="va">raw.counts</span>,</span>
+<span>  normalized <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  coldata    <span class="op">=</span> <span class="va">traitdata</span>,</span>
+<span>  task       <span class="op">=</span> <span class="st">"unsupervised"</span>,</span>
+<span>  return     <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Supervised: TF activity restricted to TFs relevant to the DEGs of the contrast</span></span>
+<span><span class="va">res_supervised</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/CellTFusion.html">CellTFusion</a></span><span class="op">(</span></span>
+<span>  raw.counts <span class="op">=</span> <span class="va">raw.counts</span>,</span>
+<span>  normalized <span class="op">=</span> <span class="cn">FALSE</span>,               <span class="co"># raw counts required for DEG analysis</span></span>
+<span>  coldata    <span class="op">=</span> <span class="va">traitdata</span>,</span>
+<span>  task       <span class="op">=</span> <span class="st">"supervised"</span>,</span>
+<span>  contrast   <span class="op">=</span> <span class="st">"Best.Confirmed.Overall.Response"</span>,</span>
+<span>  ref_level  <span class="op">=</span> <span class="st">"PD"</span>,</span>
+<span>  return     <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+</div>
 <div class="section level3">
 <h3 id="output-structure">Output structure<a class="anchor" aria-label="anchor" href="#output-structure"></a>
 </h3>
@@ -157,7 +214,7 @@ list:</p>
 compact, non-negative representation of the TME landscape. The
 <code>rank</code> argument controls the number of factors; if
 <code>NULL</code>, it is selected automatically.</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">latent_spaces</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute.latent_factors.html">compute.latent_factors</a></span><span class="op">(</span></span>
 <span>  X         <span class="op">=</span> <span class="va">cell_groups</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>,</span>
 <span>  rank      <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -168,7 +225,7 @@ compact, non-negative representation of the TME landscape. The
 <p>The result is a list whose <code>$Z</code> element is a samples ×
 factors matrix — the primary input for downstream statistical tests and
 machine learning.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Access the factor scores matrix (samples x factors)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">latent_spaces</span><span class="op">$</span><span class="va">Z</span><span class="op">)</span></span></code></pre></div>
 </div>
@@ -179,7 +236,7 @@ machine learning.</p>
 for specific cell-type signals from the deconvolution output. This step
 characterises each latent factor with a biological cell-type
 context.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">cells_niches</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute_cells_niches.html">compute_cells_niches</a></span><span class="op">(</span></span>
 <span>  latent_spaces   <span class="op">=</span> <span class="va">latent_spaces</span>,</span>
 <span>  dt              <span class="op">=</span> <span class="va">dt</span>,</span>

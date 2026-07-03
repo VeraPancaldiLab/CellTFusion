@@ -45,8 +45,8 @@
     <li><a class="dropdown-item" href="../articles/02-cell-groups.html">Cell Group Construction and Latent Factors</a></li>
     <li><a class="dropdown-item" href="../articles/03-tme-states.html">TME State Characterisation</a></li>
     <li><a class="dropdown-item" href="../articles/04-analysis.html">Statistical Analysis</a></li>
-    <li><a class="dropdown-item" href="../articles/05-one-step-pipeline.html">One-step Pipeline</a></li>
     <li><a class="dropdown-item" href="../articles/06-machine-learning.html">Machine Learning</a></li>
+    <li><a class="dropdown-item" href="../articles/07-batch-analysis.html">Batch/Multi-cohort Analysis</a></li>
   </ul>
 </li>
       </ul>
@@ -172,10 +172,9 @@ Characterisation</a></td>
 <td><a href="articles/04-analysis.html">Statistical Analysis</a></td>
 </tr>
 <tr class="even">
-<td>Full pipeline (one call)</td>
-<td><code><a href="../reference/CellTFusion.html">CellTFusion()</a></code></td>
-<td><a href="articles/05-one-step-pipeline.html">One-step
-Pipeline</a></td>
+<td>Survival analysis</td>
+<td><code><a href="../reference/compute.survival.analysis.html">compute.survival.analysis()</a></code></td>
+<td><a href="articles/04-analysis.html">Statistical Analysis</a></td>
 </tr>
 <tr class="odd">
 <td>Test-set projection</td>
@@ -189,8 +188,21 @@ Learning</a></td>
 <td><a href="articles/06-machine-learning.html">Machine
 Learning</a></td>
 </tr>
+<tr class="odd">
+<td>Multi-cohort (batch) analysis</td>
+<td>
+<code>batch = TRUE</code> in <code><a href="../reference/CellTFusion.html">CellTFusion()</a></code>
+</td>
+<td><a href="articles/07-batch-analysis.html">Batch/Multi-cohort
+Analysis</a></td>
+</tr>
 </tbody>
 </table>
+<p>The full pipeline — every step above run in the right order in a
+single call — is available through the <code><a href="../reference/CellTFusion.html">CellTFusion()</a></code>
+wrapper function; see the package <a href="https://VeraPancaldiLab.github.io/CellTFusion/" class="external-link">README</a> for
+usage examples, including unsupervised, supervised, and multi-cohort
+modes.</p>
 </div>
 <div class="section level2">
 <h2 id="quick-start">Quick start<a class="anchor" aria-label="anchor" href="#quick-start"></a>
