@@ -204,7 +204,11 @@ list:</p>
 </table>
 <p>Results are also written to
 <code>Results/Cell.groups.composition.csv</code> and
-<code>Results/Cell.groups.scores.csv</code>.</p>
+<code>Results/Cell.groups.scores.csv</code>. Passing
+<code>dendrogram_file</code> (and <code>return_dendrogram = TRUE</code>)
+additionally saves, per TF module, the dendrogram of correlated
+cell-type features that gets cut into cell groups:</p>
+<p><img src="figures/cell_groups_dendrogram_02.png" class="r-plt" alt="Dendrogram of cell-type features clustered into cell groups for one TF module" width="70%"></p>
 </div>
 </div>
 <div class="section level2">
@@ -228,6 +232,10 @@ machine learning.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Access the factor scores matrix (samples x factors)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">latent_spaces</span><span class="op">$</span><span class="va">Z</span><span class="op">)</span></span></code></pre></div>
+<p>When <code>return = TRUE</code>, a stacked bar plot summarizing each
+patient’s mixture of latent factors is saved to
+<code>Results/</code>:</p>
+<p><img src="figures/nmf_patient_mixture.png" class="r-plt" alt="Stacked bar plot of NMF latent factor proportions per patient" width="90%"></p>
 </div>
 <div class="section level2">
 <h2 id="extract-cell-niches">Extract cell niches<a class="anchor" aria-label="anchor" href="#extract-cell-niches"></a>
@@ -246,6 +254,10 @@ context.</p>
 <span>  return          <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  file_name       <span class="op">=</span> <span class="st">"Tutorial"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
+<p>For each enriched latent factor, a star-network plot is saved showing
+which cell types define its niche (edge width reflects enrichment
+strength):</p>
+<p><img src="figures/niche_network_factor1.png" class="r-plt" alt="Star network showing cell types enriched in the niche of latent Factor1" width="70%"></p>
 </div>
 <div class="section level2">
 <h2 id="next-steps">Next steps<a class="anchor" aria-label="anchor" href="#next-steps"></a>

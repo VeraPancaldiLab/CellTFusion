@@ -124,7 +124,13 @@ returns a three-element list:
 | `[[3]]` | Named list of TF loading vectors per group             |
 
 Results are also written to `Results/Cell.groups.composition.csv` and
-`Results/Cell.groups.scores.csv`.
+`Results/Cell.groups.scores.csv`. Passing `dendrogram_file` (and
+`return_dendrogram = TRUE`) additionally saves, per TF module, the
+dendrogram of correlated cell-type features that gets cut into cell
+groups:
+
+![Dendrogram of cell-type features clustered into cell groups for one TF
+module](figures/cell_groups_dendrogram_02.png)
 
 ## Extract latent factors
 
@@ -153,6 +159,12 @@ the primary input for downstream statistical tests and machine learning.
 head(latent_spaces$Z)
 ```
 
+When `return = TRUE`, a stacked bar plot summarizing each patient’s
+mixture of latent factors is saved to `Results/`:
+
+![Stacked bar plot of NMF latent factor proportions per
+patient](figures/nmf_patient_mixture.png)
+
 ## Extract cell niches
 
 Cell niches are derived from latent factors by enriching each factor for
@@ -171,6 +183,13 @@ cells_niches <- compute_cells_niches(
   file_name       = "Tutorial"
 )
 ```
+
+For each enriched latent factor, a star-network plot is saved showing
+which cell types define its niche (edge width reflects enrichment
+strength):
+
+![Star network showing cell types enriched in the niche of latent
+Factor1](figures/niche_network_factor1.png)
 
 ## Next steps
 

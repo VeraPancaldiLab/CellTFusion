@@ -149,6 +149,11 @@ saved per factor.</p>
 </tr>
 </tbody>
 </table>
+<p>When <code>plot_dot = TRUE</code>, one dot plot per factor is saved
+to <code>Results/</code>, showing its top enriched/depleted Hallmark
+gene sets (dot size = significance, color = normalized enrichment
+score):</p>
+<p><img src="figures/gsea_factor1.png" class="r-plt" alt="Dot plot of top Hallmark gene sets enriched for latent Factor1" width="80%"></p>
 <hr>
 </div>
 <div class="section level2">
@@ -238,8 +243,12 @@ comparison</td>
 </tr>
 </tbody>
 </table>
-<p>A heatmap of factor-to-meta-program scores is saved to
-<code>Results/</code> when <code>plot = TRUE</code>.</p>
+<p>A plot of factor-to-meta-program mapping confidence is saved to
+<code>Results/</code> when <code>plot = TRUE</code>: each panel is a
+study factor, grey bars show the mean NES against every reference
+meta-program, and the winning meta-program is highlighted and colored by
+its associated TME subtype (see below):</p>
+<p><img src="figures/mp_mapping.png" class="r-plt" alt="Bar plots of mean NES scores per reference meta-program for each study factor, with the best-matching meta-program highlighted" width="90%"></p>
 <hr>
 </div>
 </div>

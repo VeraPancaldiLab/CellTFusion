@@ -62,6 +62,13 @@ The result is a list with two elements:
 | `$DE_results`   | Named list of limma DEG tables, one per factor         |
 | `$GSEA_results` | Named list of fgsea result data frames, one per factor |
 
+When `plot_dot = TRUE`, one dot plot per factor is saved to `Results/`,
+showing its top enriched/depleted Hallmark gene sets (dot size =
+significance, color = normalized enrichment score):
+
+![Dot plot of top Hallmark gene sets enriched for latent
+Factor1](figures/gsea_factor1.png)
+
 ------------------------------------------------------------------------
 
 ## Map factors to cancer-type meta-programs
@@ -128,8 +135,15 @@ The result contains:
 | `$factor_mapping` | Data frame with, per study factor: `factor`, `best_MP` (closest reference meta-program), `best_score` (its mean NES), `all_scores` (mean NES against every reference meta-program) |
 | `$reference` | The reference Hallmarks x meta-programs NES matrix used for comparison |
 
-A heatmap of factor-to-meta-program scores is saved to `Results/` when
-`plot = TRUE`.
+A plot of factor-to-meta-program mapping confidence is saved to
+`Results/` when `plot = TRUE`: each panel is a study factor, grey bars
+show the mean NES against every reference meta-program, and the winning
+meta-program is highlighted and colored by its associated TME subtype
+(see below):
+
+![Bar plots of mean NES scores per reference meta-program for each study
+factor, with the best-matching meta-program
+highlighted](figures/mp_mapping.png)
 
 ------------------------------------------------------------------------
 
