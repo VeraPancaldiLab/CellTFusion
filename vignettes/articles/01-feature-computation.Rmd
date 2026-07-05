@@ -34,9 +34,9 @@ Before TF activity or pathway scoring, raw counts are normalized to log2(TPM + 1
 counts.norm <- data.frame(ADImpute::NormalizeTPM(raw.counts, log = TRUE))
 ```
 
-## 2. `compute.deconvolution()`
+## 2. Cell-type deconvolution
 
-Cell-type proportions are estimated with the companion [`multideconv`](https://github.com/VeraPancaldiLab/multideconv) package, which wraps multiple deconvolution algorithms (Quantiseq, Epidish, DeconRNASeq, DWLS, CIBERSORTx) and averages/combines their outputs into a single feature matrix (samples x cell-type/method combinations).
+Cell-type proportions are estimated with `compute.deconvolution()` from the companion [`multideconv`](https://github.com/VeraPancaldiLab/multideconv) package, which wraps multiple deconvolution algorithms (Quantiseq, Epidish, DeconRNASeq, DWLS, CIBERSORTx) and averages/combines their outputs into a single feature matrix (samples x cell-type/method combinations).
 
 Key arguments:
 
@@ -56,16 +56,16 @@ deconv <- multideconv::compute.deconvolution(
 head(deconv[, 1:5])
 ```
 
-## 3. `compute.TFs.activity()`
+## 3. TF activity inference
 
-TF activity per sample is inferred from normalized expression using a VIPER/consensus-scoring approach (via `decoupleR`) [@Alvarez2016], combined with a regulon (TF-target network).
+TF activity per sample is inferred with `compute.TFs.activity()` from normalized expression using a VIPER/consensus-scoring approach (via `decoupleR`) [@Alvarez2016], combined with a regulon (TF-target network).
 
 Key arguments:
 
 - `RNA.counts` — normalized expression matrix (genes x samples), typically log2(TPM+1).
 - `TF.collection` — source of the TF-target regulon:
   - `"CollecTRI"` (default) [@10.1093/nar/gkad841] and `"Dorothea"` are curated, literature-derived regulons fetched automatically from OmnipathR.
-  - `"ARACNE"` uses a **data-driven, cohort-specific** regulatory network reverse-engineered from expression data with the [ARACNe](https://califano.c2b2.columbia.edu/aracne) algorithm, instead of a generic literature-derived network. This is useful when you have a large cohort of samples from the same cancer type/context and want TF-target relationships inferred directly from its co-expression structure rather than relying on curated interactions that may not hold in that tissue. It requires a pre-computed 3-column network file (`regulator`, `target`, `mutual information`) located at `input/ARACNE/<cancer.type>/network/network.txt`; pass the corresponding label via `cancer.type`.
+  - `"ARACNE"` uses a **data-driven, cohort-specific** regulatory network reverse-engineered from expression data with the ARACNe algorithm [@Margolin2006] (Algorithm for the Reconstruction of Accurate Cellular Networks), instead of a generic literature-derived network. ARACNe infers TF-target edges from mutual information between gene expression profiles across the cohort, followed by removal of indirect interactions via the Data Processing Inequality. This is useful when you have a large cohort of samples from the same cancer type/context and want TF-target relationships inferred directly from its co-expression structure rather than relying on curated interactions that may not hold in that tissue — at the cost of requiring a sizeable, homogeneous cohort to estimate mutual information reliably. It requires a pre-computed 3-column network file (`regulator`, `target`, `mutual information`) located at `input/ARACNE/<cancer.type>/network/network.txt`; pass the corresponding label via `cancer.type`.
 - `min_targets_size` — minimum number of target genes required per regulon (TFs with fewer targets are dropped). Default is 5; increasing it keeps only better-supported TFs.
 - `universe` — optional user-supplied regulon (data frame of TF-target interactions), bypassing the automatic OmnipathR/ARACNE fetch.
 - `cores` — number of cores used for the activity inference.
@@ -99,9 +99,9 @@ tfs_aracne <- compute.TFs.activity(
 )
 ```
 
-## 4. `compute.WTCNA()`
+## 4. TF co-activity modules
 
-TF activity scores (potentially hundreds of TFs) are reduced into a small number of co-activity **modules** using Weighted TF Co-activity Network Analysis (WTCNA), an adaptation of WGCNA [@langfelder2008wgcna] applied to TFs instead of genes. Each module gets one sample-level score (its eigengene).
+TF activity scores (potentially hundreds of TFs) are reduced into a small number of co-activity **modules** using `compute.WTCNA()`, an implementation of Weighted TF Co-activity Network Analysis (WTCNA), an adaptation of WGCNA [@langfelder2008wgcna] applied to TFs instead of genes. Each module gets one sample-level score (its eigengene).
 
 Key arguments:
 
@@ -124,16 +124,26 @@ network <- compute.WTCNA(
 )
 ```
 
-When `return = TRUE`, this saves diagnostic plots to `Results/`:
+When `return = TRUE`, this saves diagnostic plots to `Results/`. First, the scale-free topology fit used to pick the WGCNA soft-thresholding power:
 
-- `Soft_Threshold.pdf` — scale-free topology fit, used to pick the WGCNA soft-thresholding power.
-- `Gene_dendrogram_and_module_colors.pdf` / `..._after_merging.pdf` — TF clustering dendrogram, colored by module before and after merging correlated modules.
+```{r, echo = FALSE, out.width = "70%", fig.alt = "Scale-free topology model fit (signed R^2) versus soft-thresholding power for the WGCNA network"}
+knitr::include_graphics("../../man/figures/vignettes-01/soft_threshold.png")
+```
+
+Then the TF clustering dendrogram, colored by module, before and after merging highly correlated modules:
+
+```{r, echo = FALSE, out.width = "48%", fig.show = "hold", fig.alt = c("TF clustering dendrogram with module colors before merging", "TF clustering dendrogram with module colors after merging")}
+knitr::include_graphics(c(
+  "../../man/figures/vignettes-01/gene_dendrogram_before_merging.png",
+  "../../man/figures/vignettes-01/gene_dendrogram_after_merging.png"
+))
+```
 
 `network[[1]]` (`"TFs module matrix"`) holds the module eigengene scores (samples x modules) used downstream by `construct_cell_groups()`.
 
-## 5. `compute.pathway.activity()`
+## 5. Pathway activity
 
-Pathway activities are estimated with a multivariate linear model (MLM) via `decoupleR` [@10.1093/bioadv/vbac016], using PROGENy [@Schubert2018] as the default pathway database. If a custom `gene_sets` list is supplied, GSVA scoring is computed in addition to PROGENy.
+Pathway activities are estimated with `compute.pathway.activity()`, using a multivariate linear model (MLM) via `decoupleR` [@10.1093/bioadv/vbac016], with PROGENy [@Schubert2018] as the default pathway database. If a custom `gene_sets` list is supplied, GSVA scoring is computed in addition to PROGENy.
 
 Key arguments:
 
@@ -148,9 +158,15 @@ pathways <- compute.pathway.activity(
 )
 ```
 
-## 6. `compute.deconvolution.analysis()`
+The result is a samples x pathways score matrix (14 PROGENy pathways by default). Clustering samples and pathways on this matrix gives a quick overview of which pathways co-vary across the cohort:
 
-Deconvolution features from different methods/signatures are often highly correlated. This `multideconv` function groups correlated cell-type/method columns into **subgroups**, reducing redundancy and improving statistical power in later steps.
+```{r, echo = FALSE, out.width = "80%", fig.alt = "Heatmap of PROGENy pathway activity scores clustered by sample and pathway"}
+knitr::include_graphics("../../man/figures/vignettes-01/pathway_heatmap.png")
+```
+
+## 6. Deconvolution feature reduction
+
+Deconvolution features from different methods/signatures are often highly correlated. `compute.deconvolution.analysis()` (from `multideconv`) groups correlated cell-type/method columns into **subgroups**, reducing redundancy and improving statistical power in later steps.
 
 Key arguments:
 
@@ -168,9 +184,9 @@ dt <- multideconv::compute.deconvolution.analysis(
 )
 ```
 
-## 7. `construct_cell_groups()`
+## 7. Cell group construction
 
-Combines the TF module network (`network`) and reduced deconvolution structure (`dt`) into composite **cell groups**: clusters of cell-type features whose abundance correlates with specific TF module activity. See the [Cell Group Construction](02-cell-groups.html) article for full details, including the difference between unsupervised and supervised construction.
+`construct_cell_groups()` combines the TF module network (`network`) and reduced deconvolution structure (`dt`) into composite **cell groups**: clusters of cell-type features whose abundance correlates with specific TF module activity. It correlates cell-type subgroups against TF modules, hierarchically clusters the significant pairs, and cuts the resulting dendrogram into cell groups.
 
 ```{r, eval = FALSE}
 cell_groups <- construct_cell_groups(
@@ -180,17 +196,25 @@ cell_groups <- construct_cell_groups(
 )
 ```
 
-## 8. `compute.latent_factors()`
+One dendrogram is produced per TF module, showing how its correlated cell-type features cluster into cell groups (colors indicate module membership of the underlying TF driving each branch):
 
-Cell group scores are further compressed into a small set of non-negative matrix factorization (NMF) **latent factors**, a compact representation of the TME landscape used for downstream statistics and machine learning. See the [Cell Group Construction](02-cell-groups.html) article.
+```{r, echo = FALSE, out.width = "70%", fig.alt = "Dendrogram of cell-type features clustered into cell groups per TF module"}
+knitr::include_graphics("../../man/figures/vignettes-01/cell_groups_dendrogram.png")
+```
 
-## 9. `compute_cells_niches()`
+See the [Cell Group Construction](02-cell-groups.html) article for full details, including the difference between unsupervised and supervised construction.
 
-Characterizes each latent factor by identifying which cell types are enriched among the cell groups that contribute most to it. See the [Cell Group Construction](02-cell-groups.html) article.
+## 8. Latent factor extraction
 
-## 10. `compute_factor_gsea()` and `map_factors_to_metaprograms()`
+Cell group scores are further compressed into a small set of non-negative matrix factorization (NMF) **latent factors**, a compact representation of the TME landscape used for downstream statistics and machine learning, via `compute.latent_factors()`. See the [Cell Group Construction](02-cell-groups.html) article for a full walkthrough.
 
-Latent factors are functionally annotated via Hallmark GSEA and mapped onto reference cancer meta-programs derived from TCGA. See the [TME State Characterisation](03-tme-states.html) article for a detailed walkthrough, including the biological rationale and references behind meta-program mapping.
+## 9. Cell niche characterization
+
+`compute_cells_niches()` characterizes each latent factor by identifying which cell types are enriched among the cell groups that contribute most to it. See the [Cell Group Construction](02-cell-groups.html) article for a full walkthrough.
+
+## 10. Functional and meta-program annotation
+
+`compute_factor_gsea()` and `map_factors_to_metaprograms()` functionally annotate latent factors via Hallmark GSEA and map them onto reference cancer meta-programs derived from TCGA. See the [TME State Characterisation](03-tme-states.html) article for a detailed walkthrough, including the biological rationale, references, and example plots behind meta-program mapping.
 
 ## Putting it together
 
