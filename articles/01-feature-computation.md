@@ -318,16 +318,15 @@ the scale-free topology fit used to pick the WGCNA soft-thresholding
 power:
 
 ![Scale-free topology model fit (signed R^2) versus soft-thresholding
-power for the WGCNA
-network](../../reference/figures/vignettes-01/soft_threshold.png)
+power for the WGCNA network](figures/soft_threshold.png)
 
 Then the TF clustering dendrogram, colored by module, before and after
 merging highly correlated modules:
 
 ![TF clustering dendrogram with module colors before
-merging](../../reference/figures/vignettes-01/gene_dendrogram_before_merging.png)![TF
-clustering dendrogram with module colors after
-merging](../../reference/figures/vignettes-01/gene_dendrogram_after_merging.png)
+merging](figures/gene_dendrogram_before_merging.png)![TF clustering
+dendrogram with module colors after
+merging](figures/gene_dendrogram_after_merging.png)
 
 `network[[1]]` (`"TFs module matrix"`) holds the module eigengene scores
 (samples x modules) used downstream by
@@ -364,7 +363,7 @@ default). Clustering samples and pathways on this matrix gives a quick
 overview of which pathways co-vary across the cohort:
 
 ![Heatmap of PROGENy pathway activity scores clustered by sample and
-pathway](../../reference/figures/vignettes-01/pathway_heatmap.png)
+pathway](figures/pathway_heatmap.png)
 
 ## 6. Deconvolution feature reduction
 
@@ -418,7 +417,7 @@ cell-type features cluster into cell groups (colors indicate module
 membership of the underlying TF driving each branch):
 
 ![Dendrogram of cell-type features clustered into cell groups per TF
-module](../../reference/figures/vignettes-01/cell_groups_dendrogram.png)
+module](figures/cell_groups_dendrogram.png)
 
 See the [Cell Group
 Construction](https://verapancaldilab.github.io/CellTFusion/articles/02-cell-groups.md)

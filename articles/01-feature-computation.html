@@ -395,10 +395,10 @@ modules.</li>
 <p>When <code>return = TRUE</code>, this saves diagnostic plots to
 <code>Results/</code>. First, the scale-free topology fit used to pick
 the WGCNA soft-thresholding power:</p>
-<p><img src="../../reference/figures/vignettes-01/soft_threshold.png" class="r-plt" alt="Scale-free topology model fit (signed R^2) versus soft-thresholding power for the WGCNA network" width="70%"></p>
+<p><img src="figures/soft_threshold.png" class="r-plt" alt="Scale-free topology model fit (signed R^2) versus soft-thresholding power for the WGCNA network" width="70%"></p>
 <p>Then the TF clustering dendrogram, colored by module, before and
 after merging highly correlated modules:</p>
-<p><img src="../../reference/figures/vignettes-01/gene_dendrogram_before_merging.png" class="r-plt" alt="TF clustering dendrogram with module colors before merging" width="48%"><img src="../../reference/figures/vignettes-01/gene_dendrogram_after_merging.png" class="r-plt" alt="TF clustering dendrogram with module colors after merging" width="48%"></p>
+<p><img src="figures/gene_dendrogram_before_merging.png" class="r-plt" alt="TF clustering dendrogram with module colors before merging" width="48%"><img src="figures/gene_dendrogram_after_merging.png" class="r-plt" alt="TF clustering dendrogram with module colors after merging" width="48%"></p>
 <p><code>network[[1]]</code> (<code>"TFs module matrix"</code>) holds
 the module eigengene scores (samples x modules) used downstream by
 <code><a href="../reference/construct_cell_groups.html">construct_cell_groups()</a></code>.</p>
@@ -433,7 +433,7 @@ used.</li>
 <p>The result is a samples x pathways score matrix (14 PROGENy pathways
 by default). Clustering samples and pathways on this matrix gives a
 quick overview of which pathways co-vary across the cohort:</p>
-<p><img src="../../reference/figures/vignettes-01/pathway_heatmap.png" class="r-plt" alt="Heatmap of PROGENy pathway activity scores clustered by sample and pathway" width="80%"></p>
+<p><img src="figures/pathway_heatmap.png" class="r-plt" alt="Heatmap of PROGENy pathway activity scores clustered by sample and pathway" width="80%"></p>
 </div>
 <div class="section level2">
 <h2 id="deconvolution-feature-reduction">6. Deconvolution feature reduction<a class="anchor" aria-label="anchor" href="#deconvolution-feature-reduction"></a>
@@ -487,7 +487,7 @@ dendrogram into cell groups.</p>
 <p>One dendrogram is produced per TF module, showing how its correlated
 cell-type features cluster into cell groups (colors indicate module
 membership of the underlying TF driving each branch):</p>
-<p><img src="../../reference/figures/vignettes-01/cell_groups_dendrogram.png" class="r-plt" alt="Dendrogram of cell-type features clustered into cell groups per TF module" width="70%"></p>
+<p><img src="figures/cell_groups_dendrogram.png" class="r-plt" alt="Dendrogram of cell-type features clustered into cell groups per TF module" width="70%"></p>
 <p>See the <a href="02-cell-groups.html">Cell Group Construction</a>
 article for full details, including the difference between unsupervised
 and supervised construction.</p>
