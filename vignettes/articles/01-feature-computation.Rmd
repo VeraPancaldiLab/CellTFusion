@@ -127,15 +127,15 @@ network <- compute.WTCNA(
 When `return = TRUE`, this saves diagnostic plots to `Results/`. First, the scale-free topology fit used to pick the WGCNA soft-thresholding power:
 
 ```{r, echo = FALSE, out.width = "70%", fig.alt = "Scale-free topology model fit (signed R^2) versus soft-thresholding power for the WGCNA network"}
-knitr::include_graphics("../../man/figures/vignettes-01/soft_threshold.png")
+knitr::include_graphics("figures/soft_threshold.png")
 ```
 
 Then the TF clustering dendrogram, colored by module, before and after merging highly correlated modules:
 
 ```{r, echo = FALSE, out.width = "48%", fig.show = "hold", fig.alt = c("TF clustering dendrogram with module colors before merging", "TF clustering dendrogram with module colors after merging")}
 knitr::include_graphics(c(
-  "../../man/figures/vignettes-01/gene_dendrogram_before_merging.png",
-  "../../man/figures/vignettes-01/gene_dendrogram_after_merging.png"
+  "figures/gene_dendrogram_before_merging.png",
+  "figures/gene_dendrogram_after_merging.png"
 ))
 ```
 
@@ -161,7 +161,7 @@ pathways <- compute.pathway.activity(
 The result is a samples x pathways score matrix (14 PROGENy pathways by default). Clustering samples and pathways on this matrix gives a quick overview of which pathways co-vary across the cohort:
 
 ```{r, echo = FALSE, out.width = "80%", fig.alt = "Heatmap of PROGENy pathway activity scores clustered by sample and pathway"}
-knitr::include_graphics("../../man/figures/vignettes-01/pathway_heatmap.png")
+knitr::include_graphics("figures/pathway_heatmap.png")
 ```
 
 ## 6. Deconvolution feature reduction
@@ -199,7 +199,7 @@ cell_groups <- construct_cell_groups(
 One dendrogram is produced per TF module, showing how its correlated cell-type features cluster into cell groups (colors indicate module membership of the underlying TF driving each branch):
 
 ```{r, echo = FALSE, out.width = "70%", fig.alt = "Dendrogram of cell-type features clustered into cell groups per TF module"}
-knitr::include_graphics("../../man/figures/vignettes-01/cell_groups_dendrogram.png")
+knitr::include_graphics("figures/cell_groups_dendrogram.png")
 ```
 
 See the [Cell Group Construction](02-cell-groups.html) article for full details, including the difference between unsupervised and supervised construction.
