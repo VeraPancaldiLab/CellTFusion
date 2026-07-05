@@ -87,7 +87,11 @@ res_supervised <- CellTFusion(
 | `[[2]]` | Named list of cell-type compositions per group |
 | `[[3]]` | Named list of TF loading vectors per group |
 
-Results are also written to `Results/Cell.groups.composition.csv` and `Results/Cell.groups.scores.csv`.
+Results are also written to `Results/Cell.groups.composition.csv` and `Results/Cell.groups.scores.csv`. Passing `dendrogram_file` (and `return_dendrogram = TRUE`) additionally saves, per TF module, the dendrogram of correlated cell-type features that gets cut into cell groups:
+
+```{r, echo = FALSE, out.width = "70%", fig.alt = "Dendrogram of cell-type features clustered into cell groups for one TF module"}
+knitr::include_graphics("figures/cell_groups_dendrogram_02.png")
+```
 
 ## Extract latent factors
 
@@ -110,6 +114,12 @@ The result is a list whose `$Z` element is a samples × factors matrix — the p
 head(latent_spaces$Z)
 ```
 
+When `return = TRUE`, a stacked bar plot summarizing each patient's mixture of latent factors is saved to `Results/`:
+
+```{r, echo = FALSE, out.width = "90%", fig.alt = "Stacked bar plot of NMF latent factor proportions per patient"}
+knitr::include_graphics("figures/nmf_patient_mixture.png")
+```
+
 ## Extract cell niches
 
 Cell niches are derived from latent factors by enriching each factor for specific cell-type signals from the deconvolution output. This step characterises each latent factor with a biological cell-type context.
@@ -124,6 +134,12 @@ cells_niches <- compute_cells_niches(
   return          = TRUE,
   file_name       = "Tutorial"
 )
+```
+
+For each enriched latent factor, a star-network plot is saved showing which cell types define its niche (edge width reflects enrichment strength):
+
+```{r, echo = FALSE, out.width = "70%", fig.alt = "Star network showing cell types enriched in the niche of latent Factor1"}
+knitr::include_graphics("figures/niche_network_factor1.png")
 ```
 
 ## Next steps
