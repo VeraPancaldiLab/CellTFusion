@@ -136,9 +136,27 @@ A heatmap of factor-to-meta-program scores is saved to `Results/` when
 ## Annotate factors with TME immune subtypes
 
 [`map_factors_to_TME()`](https://verapancaldilab.github.io/CellTFusion/reference/map_factors_to_TME.md)
-uses TCGA sample-level TME subtype annotations to score each latent
-factor for enrichment in specific immune environments (e.g.,
-immune-desert, immune-excluded, inflamed).
+uses TCGA sample-level annotations from Bagaev et al. ([Bagaev et al.
+2021](#ref-Bagaev2021)), who defined four conserved, pan-cancer
+**Molecular Functional Portrait (MFP)** subtypes of the tumor
+microenvironment from bulk transcriptomes:
+
+- **IE** (Immune Enriched, non-fibrotic) — high immune infiltration, low
+  stromal/fibrotic signal.
+- **IE/F** (Immune Enriched, Fibrotic) — high immune infiltration
+  co-occurring with a fibrotic/stromal signature.
+- **F** (Fibrotic) — stroma/fibrosis-dominated, low immune infiltration.
+- **D** (Depleted) — low immune infiltration and low fibrosis (“cold”
+  tumors).
+
+These subtypes were shown to be associated with differential response to
+immune checkpoint blockade, making them a clinically relevant vocabulary
+to annotate CellTFusion latent factors against. For each cancer type,
+[`map_factors_to_TME()`](https://verapancaldilab.github.io/CellTFusion/reference/map_factors_to_TME.md)
+matches TCGA patients to their MFP subtype, then computes, per latent
+factor, the Spearman correlation between factor scores and each subtype
+(`cor_IE`, `cor_IEF`, `cor_F`, `cor_D`); the subtype with the strongest
+positive correlation is assigned as the factor’s `best_MFP`.
 
 ``` r
 
@@ -193,6 +211,11 @@ head(res$Latent_spaces$Z)
 ```
 
 ## References
+
+Bagaev, Alexander, Nikita Kotlov, Krystle Nomie, et al. 2021. “Conserved
+Pan-Cancer Microenvironment Subtypes Predict Response to Immunotherapy.”
+*Cancer Cell* 39 (6): 845–865.e7.
+<https://doi.org/10.1016/j.ccell.2021.04.014>.
 
 Gavish, Avishai, Michael Tyler, Alissa C. Greenwald, et al. 2023.
 “Hallmarks of Transcriptional Intratumour Heterogeneity Across a

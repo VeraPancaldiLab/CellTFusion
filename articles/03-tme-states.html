@@ -246,10 +246,34 @@ comparison</td>
 <div class="section level2">
 <h2 id="annotate-factors-with-tme-immune-subtypes">Annotate factors with TME immune subtypes<a class="anchor" aria-label="anchor" href="#annotate-factors-with-tme-immune-subtypes"></a>
 </h2>
-<p><code><a href="../reference/map_factors_to_TME.html">map_factors_to_TME()</a></code> uses TCGA sample-level TME subtype
-annotations to score each latent factor for enrichment in specific
-immune environments (e.g., immune-desert, immune-excluded,
-inflamed).</p>
+<p><code><a href="../reference/map_factors_to_TME.html">map_factors_to_TME()</a></code> uses TCGA sample-level annotations
+from Bagaev et al. <span class="citation">(<a href="#ref-Bagaev2021">Bagaev et al. 2021</a>)</span>, who defined four
+conserved, pan-cancer <strong>Molecular Functional Portrait
+(MFP)</strong> subtypes of the tumor microenvironment from bulk
+transcriptomes:</p>
+<ul>
+<li>
+<strong>IE</strong> (Immune Enriched, non-fibrotic) — high immune
+infiltration, low stromal/fibrotic signal.</li>
+<li>
+<strong>IE/F</strong> (Immune Enriched, Fibrotic) — high immune
+infiltration co-occurring with a fibrotic/stromal signature.</li>
+<li>
+<strong>F</strong> (Fibrotic) — stroma/fibrosis-dominated, low
+immune infiltration.</li>
+<li>
+<strong>D</strong> (Depleted) — low immune infiltration and low
+fibrosis (“cold” tumors).</li>
+</ul>
+<p>These subtypes were shown to be associated with differential response
+to immune checkpoint blockade, making them a clinically relevant
+vocabulary to annotate CellTFusion latent factors against. For each
+cancer type, <code><a href="../reference/map_factors_to_TME.html">map_factors_to_TME()</a></code> matches TCGA patients to
+their MFP subtype, then computes, per latent factor, the Spearman
+correlation between factor scores and each subtype (<code>cor_IE</code>,
+<code>cor_IEF</code>, <code>cor_F</code>, <code>cor_D</code>); the
+subtype with the strongest positive correlation is assigned as the
+factor’s <code>best_MFP</code>.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">tme_annotation</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/map_factors_to_TME.html">map_factors_to_TME</a></span><span class="op">(</span></span>
 <span>  cancer_name <span class="op">=</span> <span class="st">"skcm"</span>,</span>
@@ -296,6 +320,11 @@ directly from the result object:</p>
 <h2 class="unnumbered" id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
 </h2>
 <div id="refs" class="references csl-bib-body hanging-indent">
+<div id="ref-Bagaev2021" class="csl-entry">
+Bagaev, Alexander, Nikita Kotlov, Krystle Nomie, et al. 2021.
+<span>“Conserved Pan-Cancer Microenvironment Subtypes Predict Response
+to Immunotherapy.”</span> <em>Cancer Cell</em> 39 (6): 845–865.e7. <a href="https://doi.org/10.1016/j.ccell.2021.04.014" class="external-link">https://doi.org/10.1016/j.ccell.2021.04.014</a>.
+</div>
 <div id="ref-Gavish2023" class="csl-entry">
 <span class="nocase">Gavish, Avishai, Michael Tyler, Alissa C.
 Greenwald, et al.</span> 2023. <span>“Hallmarks of Transcriptional
