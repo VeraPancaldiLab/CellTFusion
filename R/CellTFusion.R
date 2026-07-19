@@ -1917,15 +1917,9 @@ compute.test.set = function(deconv_res, cell_groups, features, deconvolution_tes
 #' @export
 #'
 extract_cells = function(groups, cells_extra = NULL){
-  names_cells = c("B.cells", "B.naive", "B.memory", "Macrophages.cells", "Macrophages.M0", "Macrophages.M1", "Macrophages.M2", "Monocytes", "Neutrophils", "NK.cells", "NK.activated",
-                  "NK.resting", "NKT.cells", "CD4.cells", "CD4.memory.activated", "CD4.memory.resting", "CD4.naive", "CD8.cells", "T.cells.regulatory", "T.cells.non.regulatory","T.cells.helper",
-                  "T.cells.gamma.delta", "Dendritic.cells", "Dendritic.activated", "Dendritic.resting", "Cancer", "Endothelial", "Eosinophils", "Plasma.cells", "Myocytes", "Fibroblasts",
-                  "Mast.cells", "Mast.activated", "Mast.resting", "CAF")
-
-
-  if(is.null(cells_extra) == F){
-    names_cells = c(names_cells, cells_extra)
-  }
+  # Cell type vocabulary is sourced from multideconv so it stays in sync with that
+  # package's deconvolution column naming (see multideconv::get_cell_type_nomenclature)
+  names_cells = get_cell_type_nomenclature(cells_extra = cells_extra)
 
   # Create regex to capture base cell type + cluster
   # Matches known cell type, optionally followed by _Subgroup.x.Iteration.x
