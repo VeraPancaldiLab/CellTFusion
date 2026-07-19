@@ -148,12 +148,13 @@ pathways <- compute.pathway.activity(counts.norm.tuto)
 #> Warning: 'OmnipathR::import_omnipath_annotations' is deprecated.
 #> Use 'annotations' instead.
 #> See help("Deprecated")
+#> Warning: cannot open file 'Results/Pathways_collection_PROGENy.csv': No such file or directory
+#> Error in file(file, ifelse(append, "a", "w")): cannot open the connection
 compute.modules.relationship(network.tuto[[1]],
                              pathways,
                              "Pathways_Progeny-TFs_Modules",
                              width = 15)
-#> agg_record_212030ff79a9 
-#>                       2 
+#> Error: object 'pathways' not found
 
 data("deconv_subgroups.tuto")
 corr = compute.modules.relationship(network.tuto[[1]],

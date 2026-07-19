@@ -24,18 +24,24 @@ devtools::install()       # Install package locally
 devtools::build()         # Build source tarball
 ```
 
-Run a single test file:
+There is currently no `tests/testthat/` directory in the repo (no unit
+tests exist yet), even though `testthat` (edition 3) is configured in
+`DESCRIPTION` and listed in `Suggests`. Once tests are added, run a
+single file with:
 
 ``` r
 
 testthat::test_file("tests/testthat/test-<name>.R")
 ```
 
-Launch the Shiny app:
+Launch the Shiny app (there is no exported `launch_app()` wrapper — run
+it directly):
 
 ``` r
 
-CellTFusion::launch_app()
+shiny::runApp(system.file("shiny", package = "CellTFusion"))
+# or, from a source checkout:
+shiny::runApp("inst/shiny")
 ```
 
 Documentation uses **roxygen2** with Markdown enabled
@@ -47,43 +53,91 @@ after modifying roxygen comments.
 
 ### Pipeline Flow
 
-The package implements a multi-step pipeline:
+The package implements a multi-step pipeline (see
+`vignettes/CellTFusion.Rmd` for the authoritative step/function/article
+mapping):
 
 1.  **Normalization** — log-TPM normalization of raw counts
-2.  **Cell-type deconvolution** — multiple algorithms via `multideconv`
+    ([`ADImpute::NormalizeTPM`](https://rdrr.io/pkg/ADImpute/man/NormalizeTPM.html))
+2.  **Cell-type deconvolution** — multiple algorithms via
+    [`multideconv::compute.deconvolution()`](https://rdrr.io/pkg/multideconv/man/compute.deconvolution.html)
     (Quantiseq, Epidish, DeconRNASeq, DWLS, CIBERSORTx)
-3.  **TF activity inference** — `viper` + CollecTRI/Dorothea regulons
-    via `decoupleR`
-4.  **TF module construction** — WGCNA-based weighted co-expression
-    networks
-5.  **Pathway scoring** — PROGENy-based pathway activities
-6.  **Cell group identification** — supervised and unsupervised
-    clustering
-7.  **Statistical analysis** — clinical trait associations, enrichment
-    analyses
+3.  **TF activity inference** —
+    [`compute.TFs.activity()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.TFs.activity.md):
+    CollecTRI/Dorothea/ARACNe regulons scored via `decoupleR` consensus
+    methods
+4.  **TF module construction** —
+    [`compute.WTCNA()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.WTCNA.md):
+    WGCNA-based weighted co-expression networks
+5.  **Pathway scoring** —
+    [`compute.pathway.activity()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.pathway.activity.md):
+    PROGENy-based pathway activities via
+    [`decoupleR::run_mlm()`](https://saezlab.github.io/decoupleR/reference/run_mlm.html)
+6.  **Cell group construction** —
+    [`construct_cell_groups()`](https://verapancaldilab.github.io/CellTFusion/reference/construct_cell_groups.md):
+    supervised and unsupervised clustering
+7.  **Latent factor extraction** —
+    [`compute.latent_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.latent_factors.md):
+    NMF-based latent factors;
+    [`compute_cells_niches()`](https://verapancaldilab.github.io/CellTFusion/reference/compute_cells_niches.md)
+    for cell niche derivation
+8.  **TME state characterisation** — Hallmark GSEA per factor
+    ([`compute_factor_gsea()`](https://verapancaldilab.github.io/CellTFusion/reference/compute_factor_gsea.md)),
+    meta-program derivation/mapping
+    ([`derive_meta_programs()`](https://verapancaldilab.github.io/CellTFusion/reference/derive_meta_programs.md),
+    [`map_factors_to_metaprograms()`](https://verapancaldilab.github.io/CellTFusion/reference/map_factors_to_metaprograms.md)),
+    and TME subtype annotation against Bagaev et al. (2021) MFP subtypes
+    ([`map_factors_to_TME()`](https://verapancaldilab.github.io/CellTFusion/reference/map_factors_to_TME.md),
+    [`annotate_metaprograms_TME()`](https://verapancaldilab.github.io/CellTFusion/reference/annotate_metaprograms_TME.md))
+9.  **Statistical analysis** — clinical trait association
+    ([`scores.stat.analysis()`](https://verapancaldilab.github.io/CellTFusion/reference/scores.stat.analysis.md)
+    and the `scores.*` family), survival analysis
+    ([`compute.survival.analysis()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.survival.analysis.md))
+10. **Test-set / batch projection** — apply a trained model to new data
+    ([`compute.test.set()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.test.set.md),
+    [`project_test_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/project_test_factors.md))
+    or run multi-cohort analysis via `batch = TRUE` in
+    [`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md)
 
 ### Key Source Files
 
-- `R/CellTFusion.R` — All core logic (~4,500 lines); single monolithic
+- `R/CellTFusion.R` — All core logic (~5,050 lines); single monolithic
   file containing every exported function
 - `inst/shiny/server.R` / `ui.R` — Shiny app backend and frontend
-- `vignettes/CellTFusion.Rmd` — Primary usage tutorial
+- `vignettes/CellTFusion.Rmd` — Getting-started overview with the full
+  pipeline step table
+- `vignettes/articles/` — In-depth tutorials: `01-feature-computation`,
+  `02-cell-groups`, `03-tme-states`, `04-analysis`,
+  `06-machine-learning`, `07-batch-analysis`
 
 ### Main Exported Functions
 
 | Function | Purpose |
 |----|----|
-| [`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md) | Full pipeline wrapper |
-| [`compute.TFs.activity()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.TFs.activity.md) | TF activity scoring via viper |
+| [`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md) | Full pipeline wrapper (unsupervised, supervised, and multi-cohort/batch modes) |
+| [`compute.TFs.activity()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.TFs.activity.md) | TF activity scoring via `decoupleR` |
 | [`compute.WTCNA()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.WTCNA.md) | WGCNA module construction |
 | [`compute.pathway.activity()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.pathway.activity.md) | PROGENy pathway scoring |
 | [`construct_cell_groups()`](https://verapancaldilab.github.io/CellTFusion/reference/construct_cell_groups.md) | Unsupervised/supervised cell group clustering |
-| [`compute.test.set()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.test.set.md) | Apply trained model to new dataset |
+| [`compute.latent_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.latent_factors.md) | NMF-based latent factor extraction from cell group scores |
+| [`compute.test.set()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.test.set.md) / [`project_test_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/project_test_factors.md) | Apply a trained model / project a test set onto trained NMF factors |
 | [`identify_hub_TFs()`](https://verapancaldilab.github.io/CellTFusion/reference/identify_hub_TFs.md) | Identify driver TFs from modules |
-| [`compute_factor_gsea()`](https://verapancaldilab.github.io/CellTFusion/reference/compute_factor_gsea.md) | GSEA on latent factors |
+| [`compute_factor_gsea()`](https://verapancaldilab.github.io/CellTFusion/reference/compute_factor_gsea.md) | Hallmark GSEA on latent factors |
+| [`derive_meta_programs()`](https://verapancaldilab.github.io/CellTFusion/reference/derive_meta_programs.md) / [`map_factors_to_metaprograms()`](https://verapancaldilab.github.io/CellTFusion/reference/map_factors_to_metaprograms.md) | Derive and map latent factors to TCGA meta-programs |
+| [`map_factors_to_TME()`](https://verapancaldilab.github.io/CellTFusion/reference/map_factors_to_TME.md) / [`annotate_metaprograms_TME()`](https://verapancaldilab.github.io/CellTFusion/reference/annotate_metaprograms_TME.md) | Annotate factors/meta-programs with Bagaev et al. (2021) TME (MFP) subtypes |
 | [`compute.metadata.association()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.metadata.association.md) | Clinical trait association + visualization |
+| [`compute.survival.analysis()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.survival.analysis.md) | Survival analysis (S3 method; requires `survival`, `survminer`, `gridExtra`) |
 | [`compute.modules.relationship()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.modules.relationship.md) | Correlate TF modules with pathways |
 | [`compute.modules.enrichment()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.modules.enrichment.md) | Pathway enrichment of TF modules |
+
+This is a curated subset — see `NAMESPACE` or the [pkgdown
+reference](https://verapancaldilab.github.io/CellTFusion/reference/index.html)
+for the full list, which also includes the `scores.*` statistical-test
+family and lower-level helpers
+([`cell.groups.computation()`](https://verapancaldilab.github.io/CellTFusion/reference/cell.groups.computation.md),
+[`classify.deconvolution()`](https://verapancaldilab.github.io/CellTFusion/reference/classify.deconvolution.md),
+[`create_tfs_modules()`](https://verapancaldilab.github.io/CellTFusion/reference/create_tfs_modules.md),
+etc.).
 
 ### Tutorial Data (in `data/`)
 
@@ -94,11 +148,12 @@ Pre-built `.rda` objects for examples and testing: `raw.counts.tuto`,
 ## Dependencies
 
 Heavy dependencies are in `Imports` (always loaded): `multideconv`,
-`decoupleR`, `viper`, `WGCNA`, `clusterProfiler`, `limma`, `ggplot2`,
-and many tidyverse packages.
+`decoupleR`, `WGCNA`, `limma`, `GSVA`, `ggplot2`, and several tidyverse
+packages (`dplyr`, `tidyr`, `tibble`, `stringr`, `purrr`).
 
-ML classifiers (`caret`, `C50`, `glmnet`, `randomForest`, `xgboost`) are
-in `Suggests` (optional, used in supervised analysis).
+`viper`, `clusterProfiler`, `dorothea`, `OmnipathR`, and ML classifiers
+(`caret`, `C50`, `glmnet`, `randomForest`, `xgboost`) are all in
+`Suggests` (optional, loaded only when the relevant code path is used).
 
 ## CI/CD
 

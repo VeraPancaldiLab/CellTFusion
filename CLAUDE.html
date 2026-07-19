@@ -58,71 +58,99 @@
 <span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://devtools.r-lib.org/reference/test.html" class="external-link">test</a></span><span class="op">(</span><span class="op">)</span>          <span class="co"># Run unit tests (testthat)</span></span>
 <span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://devtools.r-lib.org/reference/install.html" class="external-link">install</a></span><span class="op">(</span><span class="op">)</span>       <span class="co"># Install package locally</span></span>
 <span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://devtools.r-lib.org/reference/build.html" class="external-link">build</a></span><span class="op">(</span><span class="op">)</span>         <span class="co"># Build source tarball</span></span></code></pre></div>
-<p>Run a single test file:</p>
+<p>There is currently no <code>tests/testthat/</code> directory in the repo (no unit tests exist yet), even though <code>testthat</code> (edition 3) is configured in <code>DESCRIPTION</code> and listed in <code>Suggests</code>. Once tests are added, run a single file with:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">testthat</span><span class="fu">::</span><span class="fu"><a href="https://testthat.r-lib.org/reference/test_file.html" class="external-link">test_file</a></span><span class="op">(</span><span class="st">"tests/testthat/test-&lt;name&gt;.R"</span><span class="op">)</span></span></code></pre></div>
-<p>Launch the Shiny app:</p>
+<p>Launch the Shiny app (there is no exported <code>launch_app()</code> wrapper — run it directly):</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">CellTFusion</span><span class="fu">::</span><span class="fu">launch_app</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/runApp.html" class="external-link">runApp</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"shiny"</span>, package <span class="op">=</span> <span class="st">"CellTFusion"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co"># or, from a source checkout:</span></span>
+<span><span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/runApp.html" class="external-link">runApp</a></span><span class="op">(</span><span class="st">"inst/shiny"</span><span class="op">)</span></span></code></pre></div>
 <p>Documentation uses <strong>roxygen2</strong> with Markdown enabled (<code>Roxygen: list(markdown = TRUE)</code>). Always run <code><a href="https://devtools.r-lib.org/reference/document.html" class="external-link">devtools::document()</a></code> after modifying roxygen comments.</p>
 </div>
 <div class="section level2">
 <h2 id="architecture">Architecture<a class="anchor" aria-label="anchor" href="#architecture"></a></h2>
 <div class="section level3">
 <h3 id="pipeline-flow">Pipeline Flow<a class="anchor" aria-label="anchor" href="#pipeline-flow"></a></h3>
-<p>The package implements a multi-step pipeline:</p>
+<p>The package implements a multi-step pipeline (see <code>vignettes/CellTFusion.Rmd</code> for the authoritative step/function/article mapping):</p>
 <ol style="list-style-type: decimal"><li>
-<strong>Normalization</strong> — log-TPM normalization of raw counts</li>
+<strong>Normalization</strong> — log-TPM normalization of raw counts (<code><a href="https://rdrr.io/pkg/ADImpute/man/NormalizeTPM.html" class="external-link">ADImpute::NormalizeTPM</a></code>)</li>
 <li>
-<strong>Cell-type deconvolution</strong> — multiple algorithms via <code>multideconv</code> (Quantiseq, Epidish, DeconRNASeq, DWLS, CIBERSORTx)</li>
+<strong>Cell-type deconvolution</strong> — multiple algorithms via <code><a href="https://rdrr.io/pkg/multideconv/man/compute.deconvolution.html" class="external-link">multideconv::compute.deconvolution()</a></code> (Quantiseq, Epidish, DeconRNASeq, DWLS, CIBERSORTx)</li>
 <li>
-<strong>TF activity inference</strong> — <code>viper</code> + CollecTRI/Dorothea regulons via <code>decoupleR</code>
+<strong>TF activity inference</strong> — <code><a href="reference/compute.TFs.activity.html">compute.TFs.activity()</a></code>: CollecTRI/Dorothea/ARACNe regulons scored via <code>decoupleR</code> consensus methods</li>
+<li>
+<strong>TF module construction</strong> — <code><a href="reference/compute.WTCNA.html">compute.WTCNA()</a></code>: WGCNA-based weighted co-expression networks</li>
+<li>
+<strong>Pathway scoring</strong> — <code><a href="reference/compute.pathway.activity.html">compute.pathway.activity()</a></code>: PROGENy-based pathway activities via <code><a href="https://saezlab.github.io/decoupleR/reference/run_mlm.html" class="external-link">decoupleR::run_mlm()</a></code>
 </li>
 <li>
-<strong>TF module construction</strong> — WGCNA-based weighted co-expression networks</li>
+<strong>Cell group construction</strong> — <code><a href="reference/construct_cell_groups.html">construct_cell_groups()</a></code>: supervised and unsupervised clustering</li>
 <li>
-<strong>Pathway scoring</strong> — PROGENy-based pathway activities</li>
+<strong>Latent factor extraction</strong> — <code><a href="reference/compute.latent_factors.html">compute.latent_factors()</a></code>: NMF-based latent factors; <code><a href="reference/compute_cells_niches.html">compute_cells_niches()</a></code> for cell niche derivation</li>
 <li>
-<strong>Cell group identification</strong> — supervised and unsupervised clustering</li>
+<strong>TME state characterisation</strong> — Hallmark GSEA per factor (<code><a href="reference/compute_factor_gsea.html">compute_factor_gsea()</a></code>), meta-program derivation/mapping (<code><a href="reference/derive_meta_programs.html">derive_meta_programs()</a></code>, <code><a href="reference/map_factors_to_metaprograms.html">map_factors_to_metaprograms()</a></code>), and TME subtype annotation against Bagaev et al. (2021) MFP subtypes (<code><a href="reference/map_factors_to_TME.html">map_factors_to_TME()</a></code>, <code><a href="reference/annotate_metaprograms_TME.html">annotate_metaprograms_TME()</a></code>)</li>
 <li>
-<strong>Statistical analysis</strong> — clinical trait associations, enrichment analyses</li>
+<strong>Statistical analysis</strong> — clinical trait association (<code><a href="reference/scores.stat.analysis.html">scores.stat.analysis()</a></code> and the <code>scores.*</code> family), survival analysis (<code><a href="reference/compute.survival.analysis.html">compute.survival.analysis()</a></code>)</li>
+<li>
+<strong>Test-set / batch projection</strong> — apply a trained model to new data (<code><a href="reference/compute.test.set.html">compute.test.set()</a></code>, <code><a href="reference/project_test_factors.html">project_test_factors()</a></code>) or run multi-cohort analysis via <code>batch = TRUE</code> in <code><a href="reference/CellTFusion.html">CellTFusion()</a></code>
+</li>
 </ol></div>
 <div class="section level3">
 <h3 id="key-source-files">Key Source Files<a class="anchor" aria-label="anchor" href="#key-source-files"></a></h3>
 <ul><li>
-<code>R/CellTFusion.R</code> — All core logic (~4,500 lines); single monolithic file containing every exported function</li>
+<code>R/CellTFusion.R</code> — All core logic (~5,050 lines); single monolithic file containing every exported function</li>
 <li>
 <code>inst/shiny/server.R</code> / <code>ui.R</code> — Shiny app backend and frontend</li>
 <li>
-<code>vignettes/CellTFusion.Rmd</code> — Primary usage tutorial</li>
+<code>vignettes/CellTFusion.Rmd</code> — Getting-started overview with the full pipeline step table</li>
+<li>
+<code>vignettes/articles/</code> — In-depth tutorials: <code>01-feature-computation</code>, <code>02-cell-groups</code>, <code>03-tme-states</code>, <code>04-analysis</code>, <code>06-machine-learning</code>, <code>07-batch-analysis</code>
+</li>
 </ul></div>
 <div class="section level3">
 <h3 id="main-exported-functions">Main Exported Functions<a class="anchor" aria-label="anchor" href="#main-exported-functions"></a></h3>
 <table class="table"><colgroup><col width="50%"><col width="50%"></colgroup><thead><tr><th>Function</th>
 <th>Purpose</th>
 </tr></thead><tbody><tr><td><code><a href="reference/CellTFusion.html">CellTFusion()</a></code></td>
-<td>Full pipeline wrapper</td>
+<td>Full pipeline wrapper (unsupervised, supervised, and multi-cohort/batch modes)</td>
 </tr><tr><td><code><a href="reference/compute.TFs.activity.html">compute.TFs.activity()</a></code></td>
-<td>TF activity scoring via viper</td>
+<td>TF activity scoring via <code>decoupleR</code>
+</td>
 </tr><tr><td><code><a href="reference/compute.WTCNA.html">compute.WTCNA()</a></code></td>
 <td>WGCNA module construction</td>
 </tr><tr><td><code><a href="reference/compute.pathway.activity.html">compute.pathway.activity()</a></code></td>
 <td>PROGENy pathway scoring</td>
 </tr><tr><td><code><a href="reference/construct_cell_groups.html">construct_cell_groups()</a></code></td>
 <td>Unsupervised/supervised cell group clustering</td>
-</tr><tr><td><code><a href="reference/compute.test.set.html">compute.test.set()</a></code></td>
-<td>Apply trained model to new dataset</td>
+</tr><tr><td><code><a href="reference/compute.latent_factors.html">compute.latent_factors()</a></code></td>
+<td>NMF-based latent factor extraction from cell group scores</td>
+</tr><tr><td>
+<code><a href="reference/compute.test.set.html">compute.test.set()</a></code> / <code><a href="reference/project_test_factors.html">project_test_factors()</a></code>
+</td>
+<td>Apply a trained model / project a test set onto trained NMF factors</td>
 </tr><tr><td><code><a href="reference/identify_hub_TFs.html">identify_hub_TFs()</a></code></td>
 <td>Identify driver TFs from modules</td>
 </tr><tr><td><code><a href="reference/compute_factor_gsea.html">compute_factor_gsea()</a></code></td>
-<td>GSEA on latent factors</td>
+<td>Hallmark GSEA on latent factors</td>
+</tr><tr><td>
+<code><a href="reference/derive_meta_programs.html">derive_meta_programs()</a></code> / <code><a href="reference/map_factors_to_metaprograms.html">map_factors_to_metaprograms()</a></code>
+</td>
+<td>Derive and map latent factors to TCGA meta-programs</td>
+</tr><tr><td>
+<code><a href="reference/map_factors_to_TME.html">map_factors_to_TME()</a></code> / <code><a href="reference/annotate_metaprograms_TME.html">annotate_metaprograms_TME()</a></code>
+</td>
+<td>Annotate factors/meta-programs with Bagaev et al. (2021) TME (MFP) subtypes</td>
 </tr><tr><td><code><a href="reference/compute.metadata.association.html">compute.metadata.association()</a></code></td>
 <td>Clinical trait association + visualization</td>
+</tr><tr><td><code><a href="reference/compute.survival.analysis.html">compute.survival.analysis()</a></code></td>
+<td>Survival analysis (S3 method; requires <code>survival</code>, <code>survminer</code>, <code>gridExtra</code>)</td>
 </tr><tr><td><code><a href="reference/compute.modules.relationship.html">compute.modules.relationship()</a></code></td>
 <td>Correlate TF modules with pathways</td>
 </tr><tr><td><code><a href="reference/compute.modules.enrichment.html">compute.modules.enrichment()</a></code></td>
 <td>Pathway enrichment of TF modules</td>
-</tr></tbody></table></div>
+</tr></tbody></table><p>This is a curated subset — see <code>NAMESPACE</code> or the <a href="https://verapancaldilab.github.io/CellTFusion/reference/index.html">pkgdown reference</a> for the full list, which also includes the <code>scores.*</code> statistical-test family and lower-level helpers (<code><a href="reference/cell.groups.computation.html">cell.groups.computation()</a></code>, <code><a href="reference/classify.deconvolution.html">classify.deconvolution()</a></code>, <code><a href="reference/create_tfs_modules.html">create_tfs_modules()</a></code>, etc.).</p>
+</div>
 <div class="section level3">
 <h3 id="tutorial-data-in-data">Tutorial Data (in <code>data/</code>)<a class="anchor" aria-label="anchor" href="#tutorial-data-in-data"></a></h3>
 <p>Pre-built <code>.rda</code> objects for examples and testing: <code>raw.counts.tuto</code>, <code>counts.norm.tuto</code>, <code>traitdata.tuto</code>, <code>tfs.tuto</code>, <code>network.tuto</code>, <code>deconv.tuto</code>, <code>deconv_subgroups.tuto</code>.</p>
@@ -130,8 +158,8 @@
 </div>
 <div class="section level2">
 <h2 id="dependencies">Dependencies<a class="anchor" aria-label="anchor" href="#dependencies"></a></h2>
-<p>Heavy dependencies are in <code>Imports</code> (always loaded): <code>multideconv</code>, <code>decoupleR</code>, <code>viper</code>, <code>WGCNA</code>, <code>clusterProfiler</code>, <code>limma</code>, <code>ggplot2</code>, and many tidyverse packages.</p>
-<p>ML classifiers (<code>caret</code>, <code>C50</code>, <code>glmnet</code>, <code>randomForest</code>, <code>xgboost</code>) are in <code>Suggests</code> (optional, used in supervised analysis).</p>
+<p>Heavy dependencies are in <code>Imports</code> (always loaded): <code>multideconv</code>, <code>decoupleR</code>, <code>WGCNA</code>, <code>limma</code>, <code>GSVA</code>, <code>ggplot2</code>, and several tidyverse packages (<code>dplyr</code>, <code>tidyr</code>, <code>tibble</code>, <code>stringr</code>, <code>purrr</code>).</p>
+<p><code>viper</code>, <code>clusterProfiler</code>, <code>dorothea</code>, <code>OmnipathR</code>, and ML classifiers (<code>caret</code>, <code>C50</code>, <code>glmnet</code>, <code>randomForest</code>, <code>xgboost</code>) are all in <code>Suggests</code> (optional, loaded only when the relevant code path is used).</p>
 </div>
 <div class="section level2">
 <h2 id="cicd">CI/CD<a class="anchor" aria-label="anchor" href="#cicd"></a></h2>
@@ -148,7 +176,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>

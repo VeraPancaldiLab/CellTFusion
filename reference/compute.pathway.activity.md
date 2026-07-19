@@ -72,5 +72,12 @@ Communications. 2018.
 # Compute only PROGENy activities
 data("counts.norm.tuto")
 pathways <- compute.pathway.activity(counts.norm.tuto)
-#> Using cached PROGENy pathways collection from  Results/Pathways_collection_PROGENy.csv 
+#> Warning: 'OmnipathR::get_annotation_resources' is deprecated.
+#> Use 'annotation_resources' instead.
+#> See help("Deprecated")
+#> Warning: 'OmnipathR::import_omnipath_annotations' is deprecated.
+#> Use 'annotations' instead.
+#> See help("Deprecated")
+#> Warning: cannot open file 'Results/Pathways_collection_PROGENy.csv': No such file or directory
+#> Error in file(file, ifelse(append, "a", "w")): cannot open the connection
 ```

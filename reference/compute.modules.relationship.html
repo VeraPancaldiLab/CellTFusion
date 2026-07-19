@@ -169,12 +169,13 @@ across the same set of samples, visualizing only significant associations.</p>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'OmnipathR::import_omnipath_annotations' is deprecated.</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> Use 'annotations' instead.</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> See help("Deprecated")</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>cannot open file 'Results/Pathways_collection_PROGENy.csv': No such file or directory</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in file(file, ifelse(append, "a", "w")):</span> cannot open the connection</span>
 <span class="r-in"><span><span class="fu">compute.modules.relationship</span><span class="op">(</span><span class="va">network.tuto</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>,</span></span>
 <span class="r-in"><span>                             <span class="va">pathways</span>,</span></span>
 <span class="r-in"><span>                             <span class="st">"Pathways_Progeny-TFs_Modules"</span>,</span></span>
 <span class="r-in"><span>                             width <span class="op">=</span> <span class="fl">15</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> agg_record_212030ff79a9 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                       2 </span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'pathways' not found</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"deconv_subgroups.tuto"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">corr</span> <span class="op">=</span> <span class="fu">compute.modules.relationship</span><span class="op">(</span><span class="va">network.tuto</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>,</span></span>
@@ -195,7 +196,7 @@ across the same set of samples, visualizing only significant associations.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>
