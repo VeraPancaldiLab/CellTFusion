@@ -58,8 +58,9 @@ Imports:
     ppcor
 Remotes:
     VeraPancaldiLab/multideconv,
-    saezlab/OmnipathR,
-    YuLab-SMU/ggtree
+    saezlab/OmnipathR@devel,
+    YuLab-SMU/ggtree,
+    YuLab-SMU/treeio
 Suggests:
     knitr,
     rmarkdown,
@@ -79,6 +80,7 @@ Suggests:
     NMF,
     clusterProfiler,
     ggtree,
+    treeio,
     fastcluster,
     viper,
     OmnipathR,

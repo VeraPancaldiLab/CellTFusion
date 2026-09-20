@@ -194,9 +194,6 @@ server <- function(input, output, session) {
       cbsx.mail = parse_nullable(input$cbsx_mail),
       cbsx.token = parse_nullable(input$cbsx_token),
       file_name = file_name,
-      task = input$task,
-      contrast = parse_nullable(input$contrast),
-      ref_level = parse_nullable(input$ref_level),
       TF.collection = input$TF.collection,
       min_targets_size = input$min_targets_size,
       minMod = input$minMod,
@@ -212,11 +209,6 @@ server <- function(input, output, session) {
 
     if (isTRUE(input$batch) && (is.null(args$batch_id) || is.null(args$coldata))) {
       showNotification("Batch mode requires coldata and a valid batch column name.", type = "error")
-      return(NULL)
-    }
-
-    if (identical(input$task, "supervised") && (is.null(args$contrast) || is.null(args$ref_level) || is.null(args$coldata))) {
-      showNotification("Supervised mode requires coldata, contrast, and reference level.", type = "error")
       return(NULL)
     }
 

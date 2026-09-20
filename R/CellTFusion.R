@@ -26,15 +26,32 @@ utils::globalVariables(c("Trait", "Value" ,"level", ".", "Cells_level", "PC1", "
 #' @rawNamespace export(compute.modules.enrichment)
 #' @rawNamespace export(compute.composition.matrix)
 #' @rawNamespace export(compute.test.set)
+#' @rawNamespace export(compute.survival.analysis)
+#' @rawNamespace export(identify.cell.groups)
 NULL
 
 compute <- function(x, ...) UseMethod("compute")
 
 
 #' Compute one-step CellTFusion
-#' 
+#'
 #' @param raw.counts A matrix of raw gene expression counts (genes as rows, samples as columns).
+#'   Always required: even when \code{dt}, \code{tfs} and \code{pathways} are all supplied precomputed,
+#'   the (normalized) expression matrix is still needed for the downstream GSEA-based TME state
+#'   characterization step.
 #' @param deconv A data frame with deconvolution features (cell-type proportions as columns x samples as rows).
+#'   Ignored if \code{dt} is supplied.
+#' @param dt (Optional) A precomputed cell-subgroup object, typically the output of
+#'   \code{multideconv::compute.deconvolution.analysis()} (or the \code{Processed_deconvolution} element
+#'   returned by a previous \code{CellTFusion()} run). If supplied, cell-type deconvolution and the
+#'   deconvolution analysis step are both skipped and the pipeline proceeds straight to cell group
+#'   construction using this object.
+#' @param tfs (Optional) A precomputed TF activity matrix (samples as rows, TFs as columns), typically
+#'   the \code{TFs_matrix} element returned by a previous \code{CellTFusion()} run or by
+#'   \code{compute.TFs.activity()}. If supplied, TF activity inference is skipped.
+#' @param pathways (Optional) A precomputed pathway activity matrix, typically the \code{Pathways_scores}
+#'   element returned by a previous \code{CellTFusion()} run or by \code{compute.pathway.activity()}.
+#'   If supplied, pathway activity inference is skipped.
 #' @param normalized Logical; if TRUE, normalize raw counts to log-transformed TPM for TF computation. For deconvolution they are going to be normalize just as TPM. Default is TRUE.
 #' @param coldata (Optional) A data frame containing clinical metadata for association analysis with TF modules.
 #' @param batch Logical; whether batch correction should be applied where supported. Default is FALSE.
@@ -44,9 +61,6 @@ compute <- function(x, ...) UseMethod("compute")
 #' @param cbsx.mail (Optional) Email credential for CIBERSORTx. Required if "CibersortX" is among deconv_methods.
 #' @param cbsx.token (Optional) Token credential for CIBERSORTx. Required if "CibersortX" is among deconv_methods.
 #' @param file_name (Optional) Prefix for output files saved in the "Results/" directory.
-#' @param task Analysis mode. Choose between \code{"supervised"} and \code{"unsupervised"}.
-#' @param contrast Optional character indicating the condition column used for supervised DEG analysis.
-#' @param ref_level Optional character indicating the reference level for supervised DEG analysis.
 #' @param TF.collection Character. The source of the TF-target network. Options are `"CollecTRI"` (default), `"Dorothea"`, or `"ARACNE"`.
 #' - `"CollecTRI"` and `"Dorothea"` use prebuilt collections from OmnipathR.
 #' - `"ARACNE"` allows user input of a custom network file in a 3-column format: `regulator`, `target`, and `mutual information`.
@@ -103,10 +117,24 @@ compute <- function(x, ...) UseMethod("compute")
 #'   corr = 0.7,
 #'   pval = 0.05
 #' )
+#'
+#' # Re-run with previously computed features, skipping straight to cell group construction
+#' res2 <- CellTFusion(
+#'   raw.counts = raw.counts.tuto,
+#'   dt = res$Processed_deconvolution,
+#'   tfs = res$TFs_matrix,
+#'   pathways = res$Pathways_scores,
+#'   normalized = TRUE,
+#'   coldata = traitdata.tuto,
+#'   file_name = "TestRun_rerun",
+#'   minMod = 20,
+#'   corr_mod = 0.25,
+#'   pval = 0.05
+#' )
 #'}
 #'
-CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL, batch = F, batch_id = NULL, deconv_methods = c("Quantiseq", "CBSX", "Epidish", "DeconRNASeq", "DWLS"), cbsx.mail = NULL, cbsx.token = NULL, file_name = NULL, task = c("supervised", "unsupervised"),
-                       contrast = NULL, ref_level = NULL, TF.collection = "CollecTRI", min_targets_size = 3, universe = NULL, paths = NULL, gene_sets = NULL, minMod = 3, corr_mod = 0.9, corr = 0.7, corr_type = "spearman", cells_extra = NULL, pval = 0.05, enrich_thresh = 1.5, quantile_cutoff = 0.7, cancer_type = NULL, return = T, verbose = T){
+CellTFusion = function(raw.counts, deconv = NULL, dt = NULL, tfs = NULL, pathways = NULL, normalized = T, coldata = NULL, batch = F, batch_id = NULL, deconv_methods = c("Quantiseq", "CBSX", "Epidish", "DeconRNASeq", "DWLS"), cbsx.mail = NULL, cbsx.token = NULL, file_name = NULL,
+                       TF.collection = "CollecTRI", min_targets_size = 3, universe = NULL, paths = NULL, gene_sets = NULL, minMod = 3, corr_mod = 0.9, corr = 0.7, corr_type = "spearman", cells_extra = NULL, pval = 0.05, enrich_thresh = 1.5, quantile_cutoff = 0.7, cancer_type = NULL, return = T, verbose = T){
 
   set.seed(123)
 
@@ -124,54 +152,35 @@ CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL
     batch_vec = NULL
   }
 
-  #Deconvolution
-  if(is.null(deconv)){
-    if(verbose){
-      cat("Calculating cell type deconvolution............................................................\n")
-    }
-    if(("CBSX" %in% deconv_methods) == T){
-      if(is.null(cbsx.mail)==T || is.null(cbsx.token)==T){
-        stop("No CBSX credentials given!\n")
-      }else{
-        deconv = compute.deconvolution(raw.counts, normalized = normalized, methods = deconv_methods, credentials.mail = cbsx.mail, credentials.token = cbsx.token, doParallel = T, workers = 3, file_name = file_name, return = return)
+  #Deconvolution (skipped entirely if precomputed cell subgroups `dt` are supplied)
+  if(is.null(dt)){
+    if(is.null(deconv)){
+      if(verbose){
+        cat("Calculating cell type deconvolution............................................................\n")
       }
-    }else{
-      deconv = compute.deconvolution(raw.counts, normalized = normalized, methods = deconv_methods, file_name = file_name, return = return)
-    }
-  }
-
-  # Validate sample alignment between counts and deconv
-  if (!isTRUE(all.equal(colnames(counts.norm), rownames(deconv)))) {
-    stop("Sample mismatch between counts columns and deconvolution rows.")
-  }
-
-  #TF activity
-  if (verbose) {
-    cat("\nCalculating TF activity............................................................\n")
-  }
-
-  if(task == "supervised"){ ### missing to add batch variable option
-    if (verbose) {
-      cat("\nRunning supervised task............................................................\n")
-    }
-    if(!is.null(contrast) && !is.null(ref_level)){
-      if(normalized){
-        res_deg = run_deg_analysis(raw.counts, coldata, contrast, ref_level = ref_level) %>%
-          dplyr::select(t) # compute DEGs for the contrast of interest
+      if(("CBSX" %in% deconv_methods) == T){
+        if(is.null(cbsx.mail)==T || is.null(cbsx.token)==T){
+          stop("No CBSX credentials given!\n")
+        }else{ ## To be done, put the parameters for parallelization available to modify in the function CellTFusion()
+          deconv = compute.deconvolution(raw.counts, normalized = normalized, methods = deconv_methods, credentials.mail = cbsx.mail, credentials.token = cbsx.token, doParallel = F, workers = 1, file_name = file_name, return = return)
+        }
       }else{
-        stop("For differential expression analysis, raw counts must be provided")
+        deconv = compute.deconvolution(raw.counts, normalized = normalized, methods = deconv_methods, file_name = file_name, return = return)
       }
+    }
 
-      tfs_deg = compute.TFs.activity(res_deg, TF.collection, min_targets_size, universe, cancer.type = cancer_type,return = return, file.name = file_name) # compute TFs activity using DEGs as input
-      tfs_mat <- compute.TFs.activity(counts.norm, TF.collection, min_targets_size, universe, cancer.type = cancer_type,return = return, file.name = file_name) # compute TFs activity using all genes as input
-      tfs = tfs_mat[,colnames(tfs_mat) %in% colnames(tfs_deg)] # Subset the TFs matrix to keep only those TFs that are significant in the DEGs analysis
-    }else{
-      stop("For supervised analysis, contrast and ref_level must be provided")
+    # Validate sample alignment between counts and deconv
+    if (!isTRUE(all.equal(colnames(counts.norm), rownames(deconv)))) {
+      stop("Sample mismatch between counts columns and deconvolution rows.")
     }
-  }else{
+  }
+
+  #TF activity (skipped entirely if a precomputed `tfs` matrix is supplied)
+  if(is.null(tfs)){
     if (verbose) {
-      cat("\nRunning unsupervised task............................................................\n")
+      cat("\nCalculating TF activity............................................................\n")
     }
+
     if (!batch) {  ## No batch -> single matrix
       tfs <- compute.TFs.activity(counts.norm, TF.collection, min_targets_size, universe, cancer.type = cancer_type,return = return, file.name = file_name)
     }else {
@@ -203,20 +212,22 @@ CellTFusion = function(raw.counts, deconv = NULL, normalized = T, coldata = NULL
   }
   network = compute.WTCNA(TFs.matrix = tfs, batch = batch, network.type = "signed", clustering.method = "ward.D2", minMod, corr_mod, cor_type = "p", return = return, file.name = file_name)
 
-   # 2. Deconvolution analysis and cell groups construction
-
-  # 2. Pathways activity inference: only needed for dictionary
-  if(verbose){
-    cat("\nCalculating pathway activities............................................................\n")
-  }
-  pathways = compute.pathway.activity(counts.norm, gene_sets = gene_sets, paths = paths, return = return, file.name = file_name)
-  
-  # 3. Deconvolution analysis
-  if(verbose){
-    cat("\nPerforming deconvolution analysis............................................................\n")
+  # 2. Pathways activity inference (skipped if a precomputed `pathways` matrix is supplied): only needed for dictionary
+  if(is.null(pathways)){
+    if(verbose){
+      cat("\nCalculating pathway activities............................................................\n")
+    }
+    pathways = compute.pathway.activity(counts.norm, gene_sets = gene_sets, paths = paths, return = return, file.name = file_name)
   }
 
-  dt = compute.deconvolution.analysis(deconv, corr = corr, corr_type = corr_type, seed = 123, batch = batch_vec, cells_extra = cells_extra, file_name = file_name, return = return, verbose = FALSE)
+  # 3. Deconvolution analysis / cell subgroups (skipped if precomputed `dt` is supplied)
+  if(is.null(dt)){
+    if(verbose){
+      cat("\nPerforming deconvolution analysis............................................................\n")
+    }
+
+    dt = compute.deconvolution.analysis(deconv, corr = corr, corr_type = corr_type, seed = 123, batch = batch_vec, cells_extra = cells_extra, file_name = file_name, return = return, verbose = FALSE)
+  }
 
   # 4. Cell groups construction and scores
   if(verbose){
@@ -1249,7 +1260,7 @@ compute.TFs.activity <- function(RNA.counts, TF.collection = "CollecTRI", min_ta
   }
 
   sample_acts <- sample_acts[colnames(RNA.counts), , drop = FALSE]
-  sample_acts <- if (scale) base::scale(sample_acts) else sample_acts
+  sample_acts <- if (scale) base::scale(sample_acts) else sample_acts ## TO do: scale = TRUE for DEG with t statistic give NA
 
   if(return){
     utils::write.csv(sample_acts, paste0("Results/TF_matrix_", file.name, ".csv"))
@@ -1653,7 +1664,6 @@ identify_hub_TFs <- function(datExpr, TF.network, MM_thresh = 0.8, degree_thresh
 #' @param return Logical; whether to save dendrogram plots to the "Results/" folder.
 #'
 #' @return A named list of dendrograms for each TF module.
-#' @export
 #'
 identify.cell.groups = function(features, clustering.method = "ward.D2", width = 12, height = 18, return = T){
 
@@ -1779,7 +1789,6 @@ compute.composition.matrix = function(deconvolution.subgroupped, cell.groups, ce
 #' Construct cell groups based on TF networks and deconvolution
 #'
 #' Identifies and projects cell groups using module relationships derived from TF networks and deconvolution outputs.
-#' If a binary trait is specified, the function splits the data and constructs cell groups for both classes (supervised analysis).
 #'
 #' @param network A list containing TF networks for cell types.
 #' @param dt A list containing deconvolution subgroup structures.
@@ -2173,21 +2182,23 @@ remove_single_groups = function(cell.values, cell.composition, cell.loadings){
 
 }
 
-#' Calculate dendrogram cut heights
+#' Calculate dendrogram cluster assignments
 #'
-#' Computes a sequence of candidate cut heights for each cell-type dendrogram.
-#' Heights are distributed between a buffered minimum and maximum derived from
-#' the dendrogram's own height distribution, avoiding trivial cuts (single-element
-#' or all-in-one clusters).
+#' Cuts each cell-type dendrogram into clusters using dynamic tree cutting
+#' (\code{dynamicTreeCut::cutreeDynamic()}, \code{method = "tree"}).
 #'
-#' @param cell.group.dendrogram A list of \code{hclust} objects, one per TF module,
-#'   as returned by \code{identify.cell.groups()}.
-#' @param n_cuts Integer. Number of evenly spaced cut heights to generate per
-#'   dendrogram. If \code{NULL} (default), the number is set proportional to
-#'   the maximum dendrogram height.
+#' @param cell.group.dendrogram A list of \code{hclust}-convertible dendrogram objects,
+#'   one per TF module, as returned by \code{identify.cell.groups()}.
+#' @param deep_split Integer. Passed to \code{dynamicTreeCut::cutreeDynamic()}'s
+#'   \code{deepSplit} argument; controls the sensitivity of cluster splitting.
+#'   Default is 4.
+#' @param min_cluster_size Integer. Passed to \code{dynamicTreeCut::cutreeDynamic()}'s
+#'   \code{minClusterSize} argument; minimum number of elements per cluster.
+#'   Default is 3.
 #'
-#' @return A list of numeric vectors, one per dendrogram, containing the
-#'   candidate cut heights.
+#' @return A list of integer cluster label vectors, one per dendrogram, in the
+#'   same order as \code{cell.group.dendrogram} (label \code{0} marks unassigned
+#'   elements).
 #'
 #' @keywords internal
 calculate_dendrogram_cuts = function(cell.group.dendrogram, deep_split = 4, min_cluster_size = 3){
@@ -2865,7 +2876,8 @@ scores.ttest <- function(scores, coldata, trait, pval = 0.05) {
                                 color = "gray25", linewidth = 0.5) +
           ggplot2::geom_jitter(width = 0.07, size = 1.6, alpha = 0.45, color = "gray20") +
           ggpubr::stat_pvalue_manual(stat_test, label = "p = {p.format}",
-                                     tip.length = 0.02, size = 4.5, bracket.size = 0.5) +
+                                     tip.length = 0.02, size = 4.5, bracket.size = 0.5,
+                                     inherit.aes = FALSE) +
           ggplot2::scale_x_discrete(labels = label_map) +
           ggplot2::scale_fill_brewer(palette = "Set2") +
           ggplot2::labs(
@@ -2949,7 +2961,8 @@ scores.kruskal.test <- function(scores, coldata, trait, pval = 0.05) {
                                 color = "gray25", linewidth = 0.5) +
           ggplot2::geom_jitter(width = 0.07, size = 1.6, alpha = 0.45, color = "gray20") +
           ggpubr::stat_pvalue_manual(pwc, hide.ns = TRUE, label = "p.adj.signif",
-                                     tip.length = 0.02, size = 5, bracket.size = 0.5) +
+                                     tip.length = 0.02, size = 5, bracket.size = 0.5,
+                                     inherit.aes = FALSE) +
           ggplot2::scale_x_discrete(labels = label_map) +
           ggplot2::scale_fill_brewer(palette = "Set2") +
           ggplot2::labs(
@@ -3039,7 +3052,8 @@ scores.wilcox.test <- function(scores, coldata, trait, pval = 0.05) {
                                 color = "gray25", linewidth = 0.5) +
           ggplot2::geom_jitter(width = 0.07, size = 1.6, alpha = 0.45, color = "gray20") +
           ggpubr::stat_pvalue_manual(stat_test, label = "p = {p.format}",
-                                     tip.length = 0.02, size = 4.5, bracket.size = 0.5) +
+                                     tip.length = 0.02, size = 4.5, bracket.size = 0.5,
+                                     inherit.aes = FALSE) +
           ggplot2::scale_x_discrete(labels = label_map) +
           ggplot2::scale_fill_brewer(palette = "Set2") +
           ggplot2::labs(
@@ -3120,7 +3134,8 @@ scores.anova.test = function(scores, coldata, trait, pval = 0.05){
                                 color = "gray25", linewidth = 0.5) +
           ggplot2::geom_jitter(width = 0.07, size = 1.6, alpha = 0.45, color = "gray20") +
           ggpubr::stat_pvalue_manual(pwc, hide.ns = TRUE, label = "p.adj.signif",
-                                     tip.length = 0.02, size = 5, bracket.size = 0.5) +
+                                     tip.length = 0.02, size = 5, bracket.size = 0.5,
+                                     inherit.aes = FALSE) +
           ggplot2::scale_x_discrete(labels = label_map) +
           ggplot2::scale_fill_brewer(palette = "Set2") +
           ggplot2::labs(
@@ -4103,7 +4118,7 @@ compute_factor_gsea <- function(RNA.tpm,
   # -----------------------------------------
   # Retrieve Hallmark gene sets
   # -----------------------------------------
-  hallmark_df <- msigdbr::msigdbr(species = "Homo sapiens", collection = "H")
+  hallmark_df <- msigdbr::msigdbr(species = "Homo sapiens", category = "H")
   gene_sets <- split(hallmark_df$gene_symbol, hallmark_df$gs_name)
 
   # -----------------------------------------
@@ -4441,8 +4456,7 @@ map_factors_to_metaprograms <- function(gsea_study,
     mp_file <- file.path("~/Documents/CellTFusion/inst/extdata",
                          paste0("TCGA_meta_programs_", cancer_type, ".RData"))
     if (!file.exists(mp_file)) {
-      stop("No meta-program file found for cancer type '", cancer_type,
-           "'. Available types: blca, skcm.")
+      stop("No meta-program file found for cancer type '", cancer_type, "'")
     }
 
     # mp_file <- system.file("extdata",
@@ -4457,7 +4471,7 @@ map_factors_to_metaprograms <- function(gsea_study,
   }
 
   # -- build study NES matrix: all 50 Hallmarks x study factors --------------
-  all_hallmarks <- msigdbr::msigdbr(species = "Homo sapiens", collection = "H") %>%
+  all_hallmarks <- msigdbr::msigdbr(species = "Homo sapiens", category = "H") %>%
     dplyr::pull(gs_name) %>% unique() %>% sort()
 
   nes_study <- sapply(names(gsea_study$GSEA_results), function(fac) {
@@ -4892,8 +4906,6 @@ map_factors_to_TME <- function(cancer_name, Z, plot = TRUE, file_name = NULL) {
 #'
 #' @details
 #' Requires the \code{survival}, \code{survminer}, and \code{gridExtra} packages (see \code{Suggests}).
-#'
-#' @export
 #'
 #' @examples
 #' \dontrun{

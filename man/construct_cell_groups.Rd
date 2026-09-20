@@ -45,5 +45,4 @@ A list of 3 elements:
 }
 \description{
 Identifies and projects cell groups using module relationships derived from TF networks and deconvolution outputs.
-If a binary trait is specified, the function splits the data and constructs cell groups for both classes (supervised analysis).
 }

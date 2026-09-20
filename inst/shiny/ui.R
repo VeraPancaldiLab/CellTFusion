@@ -138,7 +138,6 @@ ui <- fluidPage(
       div(
         class = "control-card",
         div(class = "section-title", "Pipeline Settings"),
-        selectInput("task", "Task mode", choices = c("unsupervised", "supervised"), selected = "unsupervised"),
         checkboxGroupInput(
           "deconv_methods",
           "Deconvolution methods",
@@ -168,9 +167,7 @@ ui <- fluidPage(
         class = "control-card",
         div(class = "section-title", "Advanced"),
         checkboxInput("batch", "Use batch-aware analysis", value = FALSE),
-        textInput("batch_id", "Batch column in coldata", value = ""),
-        textInput("contrast", "Supervised contrast column", value = ""),
-        textInput("ref_level", "Supervised reference level", value = "")
+        textInput("batch_id", "Batch column in coldata", value = "")
       ),
 
       actionButton("run_all", "Run CellTFusion", class = "btn-run")

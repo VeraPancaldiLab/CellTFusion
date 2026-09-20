@@ -45,7 +45,7 @@ Starting from a raw count matrix, the pipeline produces **latent factors** — c
 | ML model training | `pipeML::compute_features.training.ML()` | [Machine Learning](articles/06-machine-learning.html) |
 | Multi-cohort (batch) analysis | `batch = TRUE` in `CellTFusion()` | [Batch/Multi-cohort Analysis](articles/07-batch-analysis.html) |
 
-The full pipeline — every step above run in the right order in a single call — is available through the `CellTFusion()` wrapper function; see the package [README](https://VeraPancaldiLab.github.io/CellTFusion/) for usage examples, including unsupervised, supervised, and multi-cohort modes.
+The full pipeline — every step above run in the right order in a single call — is available through the `CellTFusion()` wrapper function; see the package [README](https://VeraPancaldiLab.github.io/CellTFusion/) for usage examples, including multi-cohort mode and re-running with precomputed features (`dt`, `tfs`, `pathways`).
 
 ## Quick start
 
@@ -61,7 +61,6 @@ res <- CellTFusion(
   raw.counts    = raw.counts,
   normalized    = TRUE,
   coldata       = traitdata,
-  task          = "unsupervised",
   deconv_methods = c("Quantiseq", "Epidish"),
   cancer_type   = "skcm",
   corr          = 0.7,

@@ -202,7 +202,7 @@ One dendrogram is produced per TF module, showing how its correlated cell-type f
 knitr::include_graphics("figures/cell_groups_dendrogram.png")
 ```
 
-See the [Cell Group Construction](02-cell-groups.html) article for full details, including the difference between unsupervised and supervised construction.
+See the [Cell Group Construction](02-cell-groups.html) article for full details.
 
 ## 8. Latent factor extraction
 
@@ -225,7 +225,6 @@ res <- CellTFusion(
   raw.counts     = raw.counts,
   normalized     = TRUE,
   coldata        = traitdata,
-  task           = "unsupervised",
   deconv_methods = c("Quantiseq", "Epidish"),
   TF.collection  = "CollecTRI",
   cancer_type    = "skcm",

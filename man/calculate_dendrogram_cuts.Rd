@@ -2,7 +2,7 @@
 % Please edit documentation in R/CellTFusion.R
 \name{calculate_dendrogram_cuts}
 \alias{calculate_dendrogram_cuts}
-\title{Calculate dendrogram cut heights}
+\title{Calculate dendrogram cluster assignments}
 \usage{
 calculate_dendrogram_cuts(
   cell.group.dendrogram,
@@ -11,21 +11,24 @@ calculate_dendrogram_cuts(
 )
 }
 \arguments{
-\item{cell.group.dendrogram}{A list of \code{hclust} objects, one per TF module,
-as returned by \code{identify.cell.groups()}.}
+\item{cell.group.dendrogram}{A list of \code{hclust}-convertible dendrogram objects,
+one per TF module, as returned by \code{identify.cell.groups()}.}
 
-\item{n_cuts}{Integer. Number of evenly spaced cut heights to generate per
-dendrogram. If \code{NULL} (default), the number is set proportional to
-the maximum dendrogram height.}
+\item{deep_split}{Integer. Passed to \code{dynamicTreeCut::cutreeDynamic()}'s
+\code{deepSplit} argument; controls the sensitivity of cluster splitting.
+Default is 4.}
+
+\item{min_cluster_size}{Integer. Passed to \code{dynamicTreeCut::cutreeDynamic()}'s
+\code{minClusterSize} argument; minimum number of elements per cluster.
+Default is 3.}
 }
 \value{
-A list of numeric vectors, one per dendrogram, containing the
-candidate cut heights.
+A list of integer cluster label vectors, one per dendrogram, in the
+same order as \code{cell.group.dendrogram} (label \code{0} marks unassigned
+elements).
 }
 \description{
-Computes a sequence of candidate cut heights for each cell-type dendrogram.
-Heights are distributed between a buffered minimum and maximum derived from
-the dendrogram's own height distribution, avoiding trivial cuts (single-element
-or all-in-one clusters).
+Cuts each cell-type dendrogram into clusters using dynamic tree cutting
+(\code{dynamicTreeCut::cutreeDynamic()}, \code{method = "tree"}).
 }
 \keyword{internal}

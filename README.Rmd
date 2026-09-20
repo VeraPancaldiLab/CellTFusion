@@ -73,7 +73,6 @@ res <- CellTFusion(
   raw.counts = raw.counts,
   normalized = TRUE,
   coldata = traitdata, # Optional metadata
-  task = "unsupervised",                          # or "supervised"
   deconv_methods = c("Quantiseq", "DeconRNASeq"), # Choose from Quantiseq, Epidish, DeconRNASeq, DWLS, CBSX
   cbsx.mail = "your_email",       # Required if using CBSX (CIBERSORTx)
   cbsx.token = "your_token",      # Required if using CBSX (CIBERSORTx)
@@ -89,18 +88,20 @@ res <- CellTFusion(
 )
 ```
 
-For supervised analysis (comparing two clinical groups), set `task = "supervised"` and provide `contrast` (the column in `coldata` defining the comparison) and `ref_level` (the reference/baseline level). This requires non-normalized (raw) counts, since it runs differential expression analysis internally:
+If cell subgroups (`dt`), TF activity (`tfs`), and/or pathway activity (`pathways`) have already been computed — e.g. from a previous `CellTFusion()` run — you can pass them back in to skip recomputing those steps. Once all three are supplied, the pipeline proceeds straight to cell group construction:
 
 ``` r
-res <- CellTFusion(
+res2 <- CellTFusion(
   raw.counts = raw.counts,
-  normalized = FALSE,
+  normalized = TRUE,
   coldata = traitdata,
-  task = "supervised",
-  contrast = "Best.Confirmed.Overall.Response",
-  ref_level = "PD",
-  deconv_methods = c("Quantiseq", "DeconRNASeq"),
-  file_name = "TestRun_supervised",
+  dt = res$Processed_deconvolution,
+  tfs = res$TFs_matrix,
+  pathways = res$Pathways_scores,
+  file_name = "TestRun_rerun",
+  minMod = 20,
+  corr_mod = 0.25,
+  pval = 0.05,
   return = TRUE
 )
 ```
