@@ -155,7 +155,7 @@ deconv <- multideconv::compute.deconvolution(
 #> Eosinophils
 #> Plasma
 #> Myocytes
-#> Fibroblast
+#> Fibroblasts
 #> Mast.cells
 #> Mast.activated.cells
 #> Mast.resting.cells
@@ -421,8 +421,7 @@ module](figures/cell_groups_dendrogram.png)
 
 See the [Cell Group
 Construction](https://verapancaldilab.github.io/CellTFusion/articles/02-cell-groups.md)
-article for full details, including the difference between unsupervised
-and supervised construction.
+article for full details.
 
 ## 8. Latent factor extraction
 
@@ -468,7 +467,6 @@ res <- CellTFusion(
   raw.counts     = raw.counts,
   normalized     = TRUE,
   coldata        = traitdata,
-  task           = "unsupervised",
   deconv_methods = c("Quantiseq", "Epidish"),
   TF.collection  = "CollecTRI",
   cancer_type    = "skcm",

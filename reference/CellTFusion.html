@@ -51,6 +51,9 @@
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">CellTFusion</span><span class="op">(</span></span>
 <span>  <span class="va">raw.counts</span>,</span>
 <span>  deconv <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  dt <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  tfs <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  pathways <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  normalized <span class="op">=</span> <span class="cn">T</span>,</span>
 <span>  coldata <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  batch <span class="op">=</span> <span class="cn">F</span>,</span>
@@ -59,9 +62,6 @@
 <span>  cbsx.mail <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  cbsx.token <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  file_name <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  task <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"supervised"</span>, <span class="st">"unsupervised"</span><span class="op">)</span>,</span>
-<span>  contrast <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  ref_level <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  TF.collection <span class="op">=</span> <span class="st">"CollecTRI"</span>,</span>
 <span>  min_targets_size <span class="op">=</span> <span class="fl">3</span>,</span>
 <span>  universe <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -86,11 +86,35 @@
 
 
 <dl><dt id="arg-raw-counts">raw.counts<a class="anchor" aria-label="anchor" href="#arg-raw-counts"></a></dt>
-<dd><p>A matrix of raw gene expression counts (genes as rows, samples as columns).</p></dd>
+<dd><p>A matrix of raw gene expression counts (genes as rows, samples as columns).
+Always required: even when <code>dt</code>, <code>tfs</code> and <code>pathways</code> are all supplied precomputed,
+the (normalized) expression matrix is still needed for the downstream GSEA-based TME state
+characterization step.</p></dd>
 
 
 <dt id="arg-deconv">deconv<a class="anchor" aria-label="anchor" href="#arg-deconv"></a></dt>
-<dd><p>A data frame with deconvolution features (cell-type proportions as columns x samples as rows).</p></dd>
+<dd><p>A data frame with deconvolution features (cell-type proportions as columns x samples as rows).
+Ignored if <code>dt</code> is supplied.</p></dd>
+
+
+<dt id="arg-dt">dt<a class="anchor" aria-label="anchor" href="#arg-dt"></a></dt>
+<dd><p>(Optional) A precomputed cell-subgroup object, typically the output of
+<code><a href="https://rdrr.io/pkg/multideconv/man/compute.deconvolution.analysis.html" class="external-link">multideconv::compute.deconvolution.analysis()</a></code> (or the <code>Processed_deconvolution</code> element
+returned by a previous <code>CellTFusion()</code> run). If supplied, cell-type deconvolution and the
+deconvolution analysis step are both skipped and the pipeline proceeds straight to cell group
+construction using this object.</p></dd>
+
+
+<dt id="arg-tfs">tfs<a class="anchor" aria-label="anchor" href="#arg-tfs"></a></dt>
+<dd><p>(Optional) A precomputed TF activity matrix (samples as rows, TFs as columns), typically
+the <code>TFs_matrix</code> element returned by a previous <code>CellTFusion()</code> run or by
+<code><a href="compute.TFs.activity.html">compute.TFs.activity()</a></code>. If supplied, TF activity inference is skipped.</p></dd>
+
+
+<dt id="arg-pathways">pathways<a class="anchor" aria-label="anchor" href="#arg-pathways"></a></dt>
+<dd><p>(Optional) A precomputed pathway activity matrix, typically the <code>Pathways_scores</code>
+element returned by a previous <code>CellTFusion()</code> run or by <code><a href="compute.pathway.activity.html">compute.pathway.activity()</a></code>.
+If supplied, pathway activity inference is skipped.</p></dd>
 
 
 <dt id="arg-normalized">normalized<a class="anchor" aria-label="anchor" href="#arg-normalized"></a></dt>
@@ -124,18 +148,6 @@
 
 <dt id="arg-file-name">file_name<a class="anchor" aria-label="anchor" href="#arg-file-name"></a></dt>
 <dd><p>(Optional) Prefix for output files saved in the "Results/" directory.</p></dd>
-
-
-<dt id="arg-task">task<a class="anchor" aria-label="anchor" href="#arg-task"></a></dt>
-<dd><p>Analysis mode. Choose between <code>"supervised"</code> and <code>"unsupervised"</code>.</p></dd>
-
-
-<dt id="arg-contrast">contrast<a class="anchor" aria-label="anchor" href="#arg-contrast"></a></dt>
-<dd><p>Optional character indicating the condition column used for supervised DEG analysis.</p></dd>
-
-
-<dt id="arg-ref-level">ref_level<a class="anchor" aria-label="anchor" href="#arg-ref-level"></a></dt>
-<dd><p>Optional character indicating the reference level for supervised DEG analysis.</p></dd>
 
 
 <dt id="arg-tf-collection">TF.collection<a class="anchor" aria-label="anchor" href="#arg-tf-collection"></a></dt>
@@ -251,6 +263,20 @@ network exists under <code>input/ARACNE/</code>, it is auto-detected.</p></dd>
 <span class="r-in"><span>  minMod <span class="op">=</span> <span class="fl">20</span>,</span></span>
 <span class="r-in"><span>  corr_mod <span class="op">=</span> <span class="fl">0.25</span>,</span></span>
 <span class="r-in"><span>  corr <span class="op">=</span> <span class="fl">0.7</span>,</span></span>
+<span class="r-in"><span>  pval <span class="op">=</span> <span class="fl">0.05</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Re-run with previously computed features, skipping straight to cell group construction</span></span></span>
+<span class="r-in"><span><span class="va">res2</span> <span class="op">&lt;-</span> <span class="fu">CellTFusion</span><span class="op">(</span></span></span>
+<span class="r-in"><span>  raw.counts <span class="op">=</span> <span class="va">raw.counts.tuto</span>,</span></span>
+<span class="r-in"><span>  dt <span class="op">=</span> <span class="va">res</span><span class="op">$</span><span class="va">Processed_deconvolution</span>,</span></span>
+<span class="r-in"><span>  tfs <span class="op">=</span> <span class="va">res</span><span class="op">$</span><span class="va">TFs_matrix</span>,</span></span>
+<span class="r-in"><span>  pathways <span class="op">=</span> <span class="va">res</span><span class="op">$</span><span class="va">Pathways_scores</span>,</span></span>
+<span class="r-in"><span>  normalized <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
+<span class="r-in"><span>  coldata <span class="op">=</span> <span class="va">traitdata.tuto</span>,</span></span>
+<span class="r-in"><span>  file_name <span class="op">=</span> <span class="st">"TestRun_rerun"</span>,</span></span>
+<span class="r-in"><span>  minMod <span class="op">=</span> <span class="fl">20</span>,</span></span>
+<span class="r-in"><span>  corr_mod <span class="op">=</span> <span class="fl">0.25</span>,</span></span>
 <span class="r-in"><span>  pval <span class="op">=</span> <span class="fl">0.05</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>

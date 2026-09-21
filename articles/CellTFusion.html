@@ -201,8 +201,9 @@ Analysis</a></td>
 <p>The full pipeline — every step above run in the right order in a
 single call — is available through the <code><a href="../reference/CellTFusion.html">CellTFusion()</a></code>
 wrapper function; see the package <a href="https://VeraPancaldiLab.github.io/CellTFusion/" class="external-link">README</a> for
-usage examples, including unsupervised, supervised, and multi-cohort
-modes.</p>
+usage examples, including multi-cohort mode and re-running with
+precomputed features (<code>dt</code>, <code>tfs</code>,
+<code>pathways</code>).</p>
 </div>
 <div class="section level2">
 <h2 id="quick-start">Quick start<a class="anchor" aria-label="anchor" href="#quick-start"></a>
@@ -217,7 +218,6 @@ call:</p>
 <span>  raw.counts    <span class="op">=</span> <span class="va">raw.counts</span>,</span>
 <span>  normalized    <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  coldata       <span class="op">=</span> <span class="va">traitdata</span>,</span>
-<span>  task          <span class="op">=</span> <span class="st">"unsupervised"</span>,</span>
 <span>  deconv_methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Quantiseq"</span>, <span class="st">"Epidish"</span><span class="op">)</span>,</span>
 <span>  cancer_type   <span class="op">=</span> <span class="st">"skcm"</span>,</span>
 <span>  corr          <span class="op">=</span> <span class="fl">0.7</span>,</span>

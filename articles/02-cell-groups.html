@@ -124,56 +124,37 @@ article:</p>
 <code class="sourceCode R"><span><span class="va">batch_vec</span>   <span class="op">&lt;-</span> <span class="va">traitdata</span><span class="op">[</span>, <span class="st">"Cohort"</span><span class="op">]</span></span>
 <span><span class="va">cell_groups</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/construct_cell_groups.html">construct_cell_groups</a></span><span class="op">(</span><span class="va">network</span>, <span class="va">dt</span>, batch <span class="op">=</span> <span class="va">batch_vec</span>, pval <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span></span></code></pre></div>
 <div class="section level3">
-<h3 id="unsupervised-vs--supervised-cell-groups">Unsupervised vs. supervised cell groups<a class="anchor" aria-label="anchor" href="#unsupervised-vs--supervised-cell-groups"></a>
+<h3 id="re-running-with-precomputed-features">Re-running with precomputed features<a class="anchor" aria-label="anchor" href="#re-running-with-precomputed-features"></a>
 </h3>
-<p><code><a href="../reference/construct_cell_groups.html">construct_cell_groups()</a></code> itself has no notion of a
-clinical trait — its arguments are the same in both modes. The
-unsupervised/supervised distinction happens <strong>upstream, at the TF
-activity level</strong>, inside <code><a href="../reference/compute.TFs.activity.html">compute.TFs.activity()</a></code> /
-<code>CellTFusion(task = ...)</code>:</p>
-<ul>
-<li>
-<strong>Unsupervised</strong> (<code>task = "unsupervised"</code>):
-<code><a href="../reference/compute.TFs.activity.html">compute.TFs.activity()</a></code> is run on the full normalized
-expression matrix. TF modules (and therefore cell groups) reflect TF
-co-activity patterns across <em>all</em> genes, without reference to any
-clinical outcome.</li>
-<li>
-<strong>Supervised</strong> (<code>task = "supervised"</code>): a
-differential expression analysis (<code><a href="../reference/run_deg_analysis.html">run_deg_analysis()</a></code>) is
-first run between two groups defined by <code>contrast</code> and
-<code>ref_level</code>. TF activity is then computed twice — once on the
-DEGs (<code>tfs_deg</code>) and once on the full matrix
-(<code>tfs_mat</code>) — and the full TF activity matrix is subset to
-only the TFs found relevant to the DEGs
-(<code>tfs &lt;- tfs_mat[, colnames(tfs_mat) %in% colnames(tfs_deg)]</code>).
-This restricts the downstream TF network — and hence the resulting cell
-groups — to TFs whose activity differs between the two clinical groups
-of interest.</li>
-</ul>
-<p>In other words: <strong><code><a href="../reference/construct_cell_groups.html">construct_cell_groups()</a></code> always
-runs the same unsupervised correlation/clustering procedure; what
-changes between “unsupervised” and “supervised” runs of
-<code><a href="../reference/CellTFusion.html">CellTFusion()</a></code> is which TFs feed into
-<code><a href="../reference/compute.WTCNA.html">compute.WTCNA()</a></code> in the first place.</strong></p>
+<p><code><a href="../reference/CellTFusion.html">CellTFusion()</a></code> accepts precomputed <code>dt</code>,
+<code>tfs</code>, and <code>pathways</code> objects — e.g. those
+returned by a previous run (<code>res$Processed_deconvolution</code>,
+<code>res$TFs_matrix</code>, <code>res$Pathways_scores</code>). When all
+three are supplied, deconvolution, TF activity inference, and pathway
+scoring are all skipped and the pipeline proceeds straight to cell group
+construction. This is useful for quickly iterating on
+<code><a href="../reference/construct_cell_groups.html">construct_cell_groups()</a></code>-level parameters
+(<code>corr_mod</code>, <code>minMod</code>, <code>pval</code>, etc.)
+without recomputing upstream features:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Unsupervised: TF activity computed on all genes</span></span>
-<span><span class="va">res_unsupervised</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/CellTFusion.html">CellTFusion</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/CellTFusion.html">CellTFusion</a></span><span class="op">(</span></span>
 <span>  raw.counts <span class="op">=</span> <span class="va">raw.counts</span>,</span>
 <span>  normalized <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  coldata    <span class="op">=</span> <span class="va">traitdata</span>,</span>
-<span>  task       <span class="op">=</span> <span class="st">"unsupervised"</span>,</span>
 <span>  return     <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Supervised: TF activity restricted to TFs relevant to the DEGs of the contrast</span></span>
-<span><span class="va">res_supervised</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/CellTFusion.html">CellTFusion</a></span><span class="op">(</span></span>
+<span><span class="co"># Re-run with different cell-group parameters, reusing the precomputed features</span></span>
+<span><span class="va">res_rerun</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/CellTFusion.html">CellTFusion</a></span><span class="op">(</span></span>
 <span>  raw.counts <span class="op">=</span> <span class="va">raw.counts</span>,</span>
-<span>  normalized <span class="op">=</span> <span class="cn">FALSE</span>,               <span class="co"># raw counts required for DEG analysis</span></span>
+<span>  normalized <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  coldata    <span class="op">=</span> <span class="va">traitdata</span>,</span>
-<span>  task       <span class="op">=</span> <span class="st">"supervised"</span>,</span>
-<span>  contrast   <span class="op">=</span> <span class="st">"Best.Confirmed.Overall.Response"</span>,</span>
-<span>  ref_level  <span class="op">=</span> <span class="st">"PD"</span>,</span>
+<span>  dt         <span class="op">=</span> <span class="va">res</span><span class="op">$</span><span class="va">Processed_deconvolution</span>,</span>
+<span>  tfs        <span class="op">=</span> <span class="va">res</span><span class="op">$</span><span class="va">TFs_matrix</span>,</span>
+<span>  pathways   <span class="op">=</span> <span class="va">res</span><span class="op">$</span><span class="va">Pathways_scores</span>,</span>
+<span>  corr_mod   <span class="op">=</span> <span class="fl">0.25</span>,</span>
+<span>  minMod     <span class="op">=</span> <span class="fl">20</span>,</span>
+<span>  pval       <span class="op">=</span> <span class="fl">0.05</span>,</span>
 <span>  return     <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 </div>

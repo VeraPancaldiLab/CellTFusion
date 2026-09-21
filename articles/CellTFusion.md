@@ -43,7 +43,8 @@ call — is available through the
 [`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md)
 wrapper function; see the package
 [README](https://VeraPancaldiLab.github.io/CellTFusion/) for usage
-examples, including unsupervised, supervised, and multi-cohort modes.
+examples, including multi-cohort mode and re-running with precomputed
+features (`dt`, `tfs`, `pathways`).
 
 ## Quick start
 
@@ -62,7 +63,6 @@ res <- CellTFusion(
   raw.counts    = raw.counts,
   normalized    = TRUE,
   coldata       = traitdata,
-  task          = "unsupervised",
   deconv_methods = c("Quantiseq", "Epidish"),
   cancer_type   = "skcm",
   corr          = 0.7,

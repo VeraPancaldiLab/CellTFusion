@@ -118,7 +118,6 @@
 <span>  raw.counts <span class="op">=</span> <span class="va">raw.counts</span>,</span>
 <span>  normalized <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  coldata <span class="op">=</span> <span class="va">traitdata</span>, <span class="co"># Optional metadata</span></span>
-<span>  task <span class="op">=</span> <span class="st">"unsupervised"</span>,                          <span class="co"># or "supervised"</span></span>
 <span>  deconv_methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Quantiseq"</span>, <span class="st">"DeconRNASeq"</span><span class="op">)</span>, <span class="co"># Choose from Quantiseq, Epidish, DeconRNASeq, DWLS, CBSX</span></span>
 <span>  cbsx.mail <span class="op">=</span> <span class="st">"your_email"</span>,       <span class="co"># Required if using CBSX (CIBERSORTx)</span></span>
 <span>  cbsx.token <span class="op">=</span> <span class="st">"your_token"</span>,      <span class="co"># Required if using CBSX (CIBERSORTx)</span></span>
@@ -132,17 +131,19 @@
 <span>  pval <span class="op">=</span> <span class="fl">0.05</span>,</span>
 <span>  return <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p>For supervised analysis (comparing two clinical groups), set <code>task = "supervised"</code> and provide <code>contrast</code> (the column in <code>coldata</code> defining the comparison) and <code>ref_level</code> (the reference/baseline level). This requires non-normalized (raw) counts, since it runs differential expression analysis internally:</p>
+<p>If cell subgroups (<code>dt</code>), TF activity (<code>tfs</code>), and/or pathway activity (<code>pathways</code>) have already been computed — e.g. from a previous <code><a href="reference/CellTFusion.html">CellTFusion()</a></code> run — you can pass them back in to skip recomputing those steps. Once all three are supplied, the pipeline proceeds straight to cell group construction:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/CellTFusion.html">CellTFusion</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="va">res2</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/CellTFusion.html">CellTFusion</a></span><span class="op">(</span></span>
 <span>  raw.counts <span class="op">=</span> <span class="va">raw.counts</span>,</span>
-<span>  normalized <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  normalized <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  coldata <span class="op">=</span> <span class="va">traitdata</span>,</span>
-<span>  task <span class="op">=</span> <span class="st">"supervised"</span>,</span>
-<span>  contrast <span class="op">=</span> <span class="st">"Best.Confirmed.Overall.Response"</span>,</span>
-<span>  ref_level <span class="op">=</span> <span class="st">"PD"</span>,</span>
-<span>  deconv_methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Quantiseq"</span>, <span class="st">"DeconRNASeq"</span><span class="op">)</span>,</span>
-<span>  file_name <span class="op">=</span> <span class="st">"TestRun_supervised"</span>,</span>
+<span>  dt <span class="op">=</span> <span class="va">res</span><span class="op">$</span><span class="va">Processed_deconvolution</span>,</span>
+<span>  tfs <span class="op">=</span> <span class="va">res</span><span class="op">$</span><span class="va">TFs_matrix</span>,</span>
+<span>  pathways <span class="op">=</span> <span class="va">res</span><span class="op">$</span><span class="va">Pathways_scores</span>,</span>
+<span>  file_name <span class="op">=</span> <span class="st">"TestRun_rerun"</span>,</span>
+<span>  minMod <span class="op">=</span> <span class="fl">20</span>,</span>
+<span>  corr_mod <span class="op">=</span> <span class="fl">0.25</span>,</span>
+<span>  pval <span class="op">=</span> <span class="fl">0.05</span>,</span>
 <span>  return <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p><strong>NOTE</strong>: <code>CIBERSORTx</code> is included in the deconvolution methods, but it’s not an open-source program. To run it, please ask for a token in <a href="https://cibersortx.stanford.edu/register.php" class="external-link">CIBERSORTx</a> and once obtained, provided your username and password on the parameters <code>credentials.mail</code> and <code>credentials.token</code>.</p>

@@ -8,6 +8,9 @@ Compute one-step CellTFusion
 CellTFusion(
   raw.counts,
   deconv = NULL,
+  dt = NULL,
+  tfs = NULL,
+  pathways = NULL,
   normalized = T,
   coldata = NULL,
   batch = F,
@@ -16,9 +19,6 @@ CellTFusion(
   cbsx.mail = NULL,
   cbsx.token = NULL,
   file_name = NULL,
-  task = c("supervised", "unsupervised"),
-  contrast = NULL,
-  ref_level = NULL,
   TF.collection = "CollecTRI",
   min_targets_size = 3,
   universe = NULL,
@@ -43,12 +43,39 @@ CellTFusion(
 - raw.counts:
 
   A matrix of raw gene expression counts (genes as rows, samples as
-  columns).
+  columns). Always required: even when `dt`, `tfs` and `pathways` are
+  all supplied precomputed, the (normalized) expression matrix is still
+  needed for the downstream GSEA-based TME state characterization step.
 
 - deconv:
 
   A data frame with deconvolution features (cell-type proportions as
-  columns x samples as rows).
+  columns x samples as rows). Ignored if `dt` is supplied.
+
+- dt:
+
+  (Optional) A precomputed cell-subgroup object, typically the output of
+  [`multideconv::compute.deconvolution.analysis()`](https://rdrr.io/pkg/multideconv/man/compute.deconvolution.analysis.html)
+  (or the `Processed_deconvolution` element returned by a previous
+  `CellTFusion()` run). If supplied, cell-type deconvolution and the
+  deconvolution analysis step are both skipped and the pipeline proceeds
+  straight to cell group construction using this object.
+
+- tfs:
+
+  (Optional) A precomputed TF activity matrix (samples as rows, TFs as
+  columns), typically the `TFs_matrix` element returned by a previous
+  `CellTFusion()` run or by
+  [`compute.TFs.activity()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.TFs.activity.md).
+  If supplied, TF activity inference is skipped.
+
+- pathways:
+
+  (Optional) A precomputed pathway activity matrix, typically the
+  `Pathways_scores` element returned by a previous `CellTFusion()` run
+  or by
+  [`compute.pathway.activity()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.pathway.activity.md).
+  If supplied, pathway activity inference is skipped.
 
 - normalized:
 
@@ -90,20 +117,6 @@ CellTFusion(
 - file_name:
 
   (Optional) Prefix for output files saved in the "Results/" directory.
-
-- task:
-
-  Analysis mode. Choose between `"supervised"` and `"unsupervised"`.
-
-- contrast:
-
-  Optional character indicating the condition column used for supervised
-  DEG analysis.
-
-- ref_level:
-
-  Optional character indicating the reference level for supervised DEG
-  analysis.
 
 - TF.collection:
 
@@ -243,6 +256,20 @@ res <- CellTFusion(
   minMod = 20,
   corr_mod = 0.25,
   corr = 0.7,
+  pval = 0.05
+)
+
+# Re-run with previously computed features, skipping straight to cell group construction
+res2 <- CellTFusion(
+  raw.counts = raw.counts.tuto,
+  dt = res$Processed_deconvolution,
+  tfs = res$TFs_matrix,
+  pathways = res$Pathways_scores,
+  normalized = TRUE,
+  coldata = traitdata.tuto,
+  file_name = "TestRun_rerun",
+  minMod = 20,
+  corr_mod = 0.25,
   pval = 0.05
 )
 } # }

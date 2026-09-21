@@ -1,9 +1,8 @@
-# Calculate dendrogram cut heights
+# Calculate dendrogram cluster assignments
 
-Computes a sequence of candidate cut heights for each cell-type
-dendrogram. Heights are distributed between a buffered minimum and
-maximum derived from the dendrogram's own height distribution, avoiding
-trivial cuts (single-element or all-in-one clusters).
+Cuts each cell-type dendrogram into clusters using dynamic tree cutting
+([`dynamicTreeCut::cutreeDynamic()`](https://rdrr.io/pkg/dynamicTreeCut/man/cutreeDynamic.html),
+`method = "tree"`).
 
 ## Usage
 
@@ -19,16 +18,25 @@ calculate_dendrogram_cuts(
 
 - cell.group.dendrogram:
 
-  A list of `hclust` objects, one per TF module, as returned by
+  A list of `hclust`-convertible dendrogram objects, one per TF module,
+  as returned by
   [`identify.cell.groups()`](https://verapancaldilab.github.io/CellTFusion/reference/identify.cell.groups.md).
 
-- n_cuts:
+- deep_split:
 
-  Integer. Number of evenly spaced cut heights to generate per
-  dendrogram. If `NULL` (default), the number is set proportional to the
-  maximum dendrogram height.
+  Integer. Passed to
+  [`dynamicTreeCut::cutreeDynamic()`](https://rdrr.io/pkg/dynamicTreeCut/man/cutreeDynamic.html)'s
+  `deepSplit` argument; controls the sensitivity of cluster splitting.
+  Default is 4.
+
+- min_cluster_size:
+
+  Integer. Passed to
+  [`dynamicTreeCut::cutreeDynamic()`](https://rdrr.io/pkg/dynamicTreeCut/man/cutreeDynamic.html)'s
+  `minClusterSize` argument; minimum number of elements per cluster.
+  Default is 3.
 
 ## Value
 
-A list of numeric vectors, one per dendrogram, containing the candidate
-cut heights.
+A list of integer cluster label vectors, one per dendrogram, in the same
+order as `cell.group.dendrogram` (label `0` marks unassigned elements).

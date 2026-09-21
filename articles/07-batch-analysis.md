@@ -86,7 +86,6 @@ res <- CellTFusion(
   raw.counts     = raw.counts,
   normalized     = FALSE,
   coldata        = traitdata,
-  task           = "unsupervised",
   batch          = TRUE,
   batch_id       = "Cohort",
   deconv_methods = c("Quantiseq", "Epidish"),
