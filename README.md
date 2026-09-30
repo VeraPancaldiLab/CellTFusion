@@ -1,3 +1,6 @@
+CellTFusion
+================
+
 # CellTFusion <a href="https://verapancaldilab.github.io/CellTFusion/"><img src="man/figures/logo.png" align="right" height="139" alt="CellTFusion logo" /></a>
 
 Integration of immune-cell type deconvolution features and
@@ -8,7 +11,7 @@ data
 <!-- badges: start -->
 <!-- badges: end -->
 <p align="center">
-<img src="man/figures/CellTFusion_pipeline.png?raw=true"/>
+<img src="man/figures/CellTFusion_pipeline.png" alt="Overview of the CellTFusion pipeline"/>
 </p>
 <p align="center">
 <em>Figure 1. A schematic overview of the `CellTFusion` pipeline</em>
@@ -94,7 +97,11 @@ res <- CellTFusion(
 )
 ```
 
-If cell subgroups (`dt`), TF activity (`tfs`), and/or pathway activity (`pathways`) have already been computed — e.g. from a previous `CellTFusion()` run — you can pass them back in to skip recomputing those steps. Once all three are supplied, the pipeline proceeds straight to cell group construction:
+If cell subgroups (`dt`), TF activity (`tfs`), and/or pathway activity
+(`pathways`) have already been computed — e.g. from a previous
+`CellTFusion()` run — you can pass them back in to skip recomputing
+those steps. Once all three are supplied, the pipeline proceeds straight
+to cell group construction:
 
 ``` r
 res2 <- CellTFusion(
@@ -113,27 +120,39 @@ res2 <- CellTFusion(
 ```
 
 **NOTE**: `CIBERSORTx` is included in the deconvolution methods, but
-it’s not an open-source program. To run it, please ask for a token in
-[CIBERSORTx](https://cibersortx.stanford.edu/register.php) and once
-obtained, provided your username and password on the parameters
-`credentials.mail` and `credentials.token`.
+it’s not an open-source program. To run it, request a token at
+[CIBERSORTx](https://cibersortx.stanford.edu/register.php), add `"CBSX"`
+to `deconv_methods` and provide your email and token with the
+`cbsx.mail` and `cbsx.token` parameters.
 
 ## Output structure
 
-`CellTFusion()` returns a named list with the outputs of each pipeline stage — cell-type deconvolution, TF activity, TF module network, pathway scores, cell groups, latent factors, cell niches, and TME state mapping. Cell groups are derived internally via `construct_cell_groups()` and are available at `res$Cell_groups`:
+`CellTFusion()` returns a named list with the outputs of each pipeline
+stage — cell-type deconvolution, TF activity, TF module network, pathway
+scores, cell groups, latent factors, cell niches, and TME state mapping.
+Cell groups are derived internally via `construct_cell_groups()` and are
+available at `res$Cell_groups`:
 
 ``` r
 res$Cell_groups$Cell_groups  # data frame of cell group scores (samples x groups)
 res$Cell_groups$Composition  # cell types included in each group
-res$Cell_groups$Weights      # feature loadings per group
+res$Cell_groups$Weights      # CCA projection parameters per group (used to score new samples)
 ```
 
-For a step-by-step walkthrough of every pipeline stage, see the [Get started](https://VeraPancaldiLab.github.io/CellTFusion/articles/CellTFusion.html) vignette and the [articles](https://VeraPancaldiLab.github.io/CellTFusion/articles/) section.
+For a step-by-step walkthrough of every pipeline stage, see the [Get
+started](https://VeraPancaldiLab.github.io/CellTFusion/articles/CellTFusion.html)
+vignette and the
+[articles](https://VeraPancaldiLab.github.io/CellTFusion/articles/)
+section.
 
 ## Replicate cell groups on an independent dataset
 
 Use this function to apply the trained cell groups to an external test
-set and calculate group-specific composite scores.
+set and calculate group-specific composite scores. To directly obtain
+the latent factors of new samples, use
+`project_test_factors(res, deconv_test)` (see the [Machine learning
+workflows](https://VeraPancaldiLab.github.io/CellTFusion/articles/a5_machine_learning.html)
+article).
 
 ``` r
 test_scores <- compute.test.set(
@@ -161,5 +180,6 @@ is the primary maintainer of this package.
 
 ## Citing `CellTFusion`
 
-If you use `CellTFusion` in a scientific publication, we would
-appreciate citation to the :
+If you use `CellTFusion` in a scientific publication, please cite the
+GitHub repository (<https://github.com/VeraPancaldiLab/CellTFusion>).
+The reference to the associated publication will be added here.

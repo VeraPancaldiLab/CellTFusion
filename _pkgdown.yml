@@ -4,91 +4,106 @@ template:
   bslib:
     primary: "#1B2A4A"
 
-navbar:
-  structure:
-    left:  [intro, reference, articles, tutorials, news]
-    right: [search, github, lightswitch]
-
 home:
   title: CellTFusion
-  description: Integration of immune-cell type deconvolution and TF networks
+  description: Integration of immune cell type deconvolution and TF networks to characterize TME cell states from bulk RNA-seq
+
+navbar:
+  structure:
+    left:  [intro, articles, reference]
+    right: [search, github, lightswitch]
+  components:
+    articles:
+      text: Articles
+      menu:
+      - text: "Feature computation"
+        href: articles/a1_feature_computation.html
+      - text: "Cell groups and latent factors"
+        href: articles/a2_cell_groups.html
+      - text: "TME state characterization"
+        href: articles/a3_tme_states.html
+      - text: "Statistical analysis"
+        href: articles/a4_statistical_analysis.html
+      - text: "Machine learning workflows"
+        href: articles/a5_machine_learning.html
+      - text: "Multi-cohort analysis"
+        href: articles/a6_batch_analysis.html
 
 articles:
-- title: Tutorials
-  navbar: Tutorials
+- title: "Tutorial"
   contents:
-  - articles/01-feature-computation
-  - articles/02-cell-groups
-  - articles/03-tme-states
-  - articles/04-analysis
-  - articles/06-machine-learning
-  - articles/07-batch-analysis
+  - a1_feature_computation
+  - a2_cell_groups
+  - a3_tme_states
+  - a4_statistical_analysis
+  - a5_machine_learning
+  - a6_batch_analysis
 
 reference:
 - title: Main
   desc: >
-    Compute cell type deconvolution
+    Full pipeline in one call
   contents:
   - CellTFusion
+- title: Feature computation
+  desc: >
+    TF activity, TF co-activity modules and pathway activity
+  contents:
   - compute.TFs.activity
   - compute.WTCNA
   - compute.pathway.activity
-  - compute_factor_gsea
   - identify_hub_TFs
-  - construct_cell_groups
-  - compute.test.set
-- title: Utils
-  desc: >
-    Visualization
-  contents:
-  - compute.metadata.association
-  - compute.modules.relationship
   - compute.modules.enrichment
-- title: Analysis
+  - compute.modules.relationship
+- title: Cell groups and latent factors
   desc: >
-    Cell groups analysis
+    Cell group construction, NMF latent factors and cell niches
   contents:
-  - scores.fisher.test
-  - scores.anova.test
-  - scores.wilcox.test
-  - scores.kruskal.test
-  - scores.ttest
-  - scores.stat.analysis
-  - compute.latent_factors
+  - construct_cell_groups
   - identify.cell.groups
-  - compute.survival.analysis
-- title: Meta-programs and TME
+  - cell.groups.computation
+  - compute_composite_score
+  - compute.composition.matrix
+  - extract_cells
+  - compute.latent_factors
+  - compute_cells_niches
+- title: TME state characterization
   desc: >
-    Meta-program derivation and TME mapping
+    Hallmark GSEA, TCGA meta-programs and TME subtypes
   contents:
+  - compute_factor_gsea
+  - build_nes_matrix
   - derive_meta_programs
   - map_factors_to_metaprograms
   - map_factors_to_TME
   - annotate_metaprograms_TME
-  - build_nes_matrix
-  - project_factors
-  - project_test_factors
-- title: Utils
+- title: Statistical analysis
   desc: >
-    Internal use (not exported functions)
+    Associations with clinical variables and survival
   contents:
-  - cell.groups.computation
-  - classify.deconvolution
-  - compute.TF.network.classification
-  - compute.composition.matrix
-  - compute_composite_score
-  - create_tfs_modules
-  - extract_cells
-  - extract_colors
-  - extract_wilcox_significant
-- title: Package Data
+  - scores.stat.analysis
+  - scores.wilcox.test
+  - scores.ttest
+  - scores.kruskal.test
+  - scores.anova.test
+  - scores.fisher.test
+  - compute.metadata.association
+  - compute.survival.analysis
+- title: Projection of new cohorts
+  desc: >
+    Apply trained cell groups and latent factors to independent data
+  contents:
+  - project_test_factors
+  - compute.test.set
+  - project_factors
+- title: Package data
   desc: >
     Example data
   contents:
   - raw.counts.tuto
-  - traitdata.tuto
-  - tfs.tuto
   - counts.norm.tuto
-  - network.tuto
+  - traitdata.tuto
   - deconv.tuto
   - deconv_subgroups.tuto
+  - tfs.tuto
+  - network.tuto
