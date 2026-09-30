@@ -76,97 +76,99 @@
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://verapancaldilab.github.io/CellTFusion/">CellTFusion</a></span><span class="op">)</span></span>
 <span><span class="co">#&gt; </span></span></code></pre></div>
-<p><code>CellTFusion</code> latent factors
-(<code>res$Latent_spaces$Z</code>) can be used as features to predict
-clinical outcomes. This tutorial trains a classifier on a training
-cohort and applies it to an independent cohort by projecting the new
-samples onto the latent factors learned in training, with
-<code><a href="../reference/project_test_factors.html">project_test_factors()</a></code>.</p>
-<p>Model training uses the <a href="https://github.com/VeraPancaldiLab/pipeML" class="external-link"><code>pipeML</code></a>
+<p><code>CellTFusion</code> latent factors can be used as features to
+predict clinical outcomes with the <a href="https://github.com/VeraPancaldiLab/pipeML" class="external-link"><code>pipeML</code></a>
 package:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># install.packages("pak")</span></span>
 <span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pkg_install.html" class="external-link">pkg_install</a></span><span class="op">(</span><span class="st">"VeraPancaldiLab/pipeML"</span><span class="op">)</span></span></code></pre></div>
+<p>Latent factors are learned from the data (cell groups, TF modules,
+NMF), so they must be learned <strong>within each cross-validation
+fold</strong>: learning them on all the training samples before
+cross-validation would let the test samples of each fold influence the
+features and overestimate performance.
+<code><a href="../reference/prepare_celltfusion_folds.html">prepare_celltfusion_folds()</a></code> does this for
+<code>pipeML</code>: in each fold, <code><a href="../reference/CellTFusion.html">CellTFusion()</a></code> is run on
+the training samples only, and the test samples are projected onto the
+resulting latent factors with <code><a href="../reference/project_test_factors.html">project_test_factors()</a></code>.</p>
 <div class="section level2">
 <h2 id="input-data">
 <strong>Input data</strong><a class="anchor" aria-label="anchor" href="#input-data"></a>
 </h2>
-<p>Split the example data into a training and a test set:</p>
+<p>Split the example data into a training and a test set. The
+deconvolution is computed once for all the samples: it is computed
+independently for each sample, so this does not leak information between
+samples.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">raw.counts</span> <span class="op">&lt;-</span> <span class="fu">CellTFusion</span><span class="fu">::</span><span class="va"><a href="../reference/raw.counts.tuto.html">raw.counts.tuto</a></span></span>
 <span><span class="va">traitdata</span>  <span class="op">&lt;-</span> <span class="fu">CellTFusion</span><span class="fu">::</span><span class="va"><a href="../reference/traitdata.tuto.html">traitdata.tuto</a></span></span>
 <span></span>
-<span><span class="va">index</span> <span class="op">&lt;-</span> <span class="fu">caret</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/caret/man/createDataPartition.html" class="external-link">createDataPartition</a></span><span class="op">(</span></span>
-<span>  <span class="va">traitdata</span><span class="op">[</span>, <span class="st">"Best.Confirmed.Overall.Response"</span><span class="op">]</span>,</span>
-<span>  times <span class="op">=</span> <span class="fl">1</span>, p <span class="op">=</span> <span class="fl">0.8</span>, list <span class="op">=</span> <span class="cn">FALSE</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">traitdata_train</span>  <span class="op">&lt;-</span> <span class="va">traitdata</span><span class="op">[</span><span class="va">index</span>, <span class="op">]</span></span>
-<span><span class="va">raw.counts_train</span> <span class="op">&lt;-</span> <span class="va">raw.counts</span><span class="op">[</span>, <span class="va">index</span><span class="op">]</span></span>
-<span></span>
-<span><span class="va">traitdata_test</span>   <span class="op">&lt;-</span> <span class="va">traitdata</span><span class="op">[</span><span class="op">-</span><span class="va">index</span>, <span class="op">]</span></span>
-<span><span class="va">raw.counts_test</span>  <span class="op">&lt;-</span> <span class="va">raw.counts</span><span class="op">[</span>, <span class="op">-</span><span class="va">index</span><span class="op">]</span></span></code></pre></div>
-</div>
-<div class="section level2">
-<h2 id="training">
-<strong>Training</strong><a class="anchor" aria-label="anchor" href="#training"></a>
-</h2>
-<p>Run <code><a href="../reference/CellTFusion.html">CellTFusion()</a></code> on the training set only:</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">res_train</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/CellTFusion.html">CellTFusion</a></span><span class="op">(</span></span>
-<span>  raw.counts     <span class="op">=</span> <span class="va">raw.counts_train</span>,</span>
-<span>  normalized     <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  deconv_methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Quantiseq"</span>, <span class="st">"Epidish"</span><span class="op">)</span>,</span>
-<span>  cancer_type    <span class="op">=</span> <span class="st">"skcm"</span>,</span>
-<span>  file_name      <span class="op">=</span> <span class="st">"Train"</span>,</span>
-<span>  return         <span class="op">=</span> <span class="cn">TRUE</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-<p>The latent factor scores are the features.
-<code>pipeML::compute_features.training.ML()</code> trains and
-cross-validates several classifiers and keeps the best one:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">ml_res</span> <span class="op">&lt;-</span> <span class="fu">pipeML</span><span class="fu">::</span><span class="fu">compute_features.training.ML</span><span class="op">(</span></span>
-<span>  features_train <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="va">res_train</span><span class="op">$</span><span class="va">Latent_spaces</span><span class="op">$</span><span class="va">Z</span><span class="op">)</span>,</span>
-<span>  task_type      <span class="op">=</span> <span class="st">"classification"</span>,</span>
-<span>  target_var     <span class="op">=</span> <span class="va">traitdata_train</span><span class="op">$</span><span class="va">Best.Confirmed.Overall.Response</span>,</span>
-<span>  trait.positive <span class="op">=</span> <span class="st">"PD"</span>,</span>
-<span>  metric         <span class="op">=</span> <span class="st">"AUROC"</span>,</span>
-<span>  k_folds        <span class="op">=</span> <span class="fl">5</span>,</span>
-<span>  n_rep          <span class="op">=</span> <span class="fl">10</span>,</span>
-<span>  ncores         <span class="op">=</span> <span class="fl">2</span>,</span>
-<span>  return         <span class="op">=</span> <span class="cn">TRUE</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level2">
-<h2 id="projection-of-an-independent-cohort">
-<strong>Projection of an independent cohort</strong><a class="anchor" aria-label="anchor" href="#projection-of-an-independent-cohort"></a>
-</h2>
-<p><code><a href="../reference/project_test_factors.html">project_test_factors()</a></code> computes the latent factors of
-new samples from their deconvolution, using the cell groups and factors
-learned on the training set. Nothing is re-estimated on the test
-samples, so no information leaks from the test set into the
-features.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">deconv_test</span> <span class="op">&lt;-</span> <span class="fu">multideconv</span><span class="fu">::</span><span class="fu"><a href="https://verapancaldilab.github.io/multideconv/reference/compute.deconvolution.html" class="external-link">compute.deconvolution</a></span><span class="op">(</span></span>
-<span>  <span class="va">raw.counts_test</span>,</span>
+<span><span class="va">deconv</span> <span class="op">&lt;-</span> <span class="fu">multideconv</span><span class="fu">::</span><span class="fu"><a href="https://verapancaldilab.github.io/multideconv/reference/compute.deconvolution.html" class="external-link">compute.deconvolution</a></span><span class="op">(</span></span>
+<span>  <span class="va">raw.counts</span>,</span>
 <span>  methods    <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Quantiseq"</span>, <span class="st">"Epidish"</span><span class="op">)</span>,</span>
 <span>  normalized <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  return     <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">features_test</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="fu"><a href="../reference/project_test_factors.html">project_test_factors</a></span><span class="op">(</span><span class="va">res_train</span>, <span class="va">deconv_test</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p><strong>Note:</strong> if the model was trained with
-<code>batch = TRUE</code> (see <a href="a6_batch_analysis.html">Multi-cohort analysis</a>), the test
-samples are centered on their own means, as each training cohort was.
-Project one cohort at a time, with enough samples to estimate its
-mean.</p>
+<span><span class="va">index</span> <span class="op">&lt;-</span> <span class="fu">caret</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/caret/man/createDataPartition.html" class="external-link">createDataPartition</a></span><span class="op">(</span><span class="va">traitdata</span><span class="op">$</span><span class="va">Best.Confirmed.Overall.Response</span>, p <span class="op">=</span> <span class="fl">0.8</span>, list <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">raw.counts_train</span> <span class="op">&lt;-</span> <span class="va">raw.counts</span><span class="op">[</span>, <span class="va">index</span><span class="op">]</span></span>
+<span><span class="va">traitdata_train</span>  <span class="op">&lt;-</span> <span class="va">traitdata</span><span class="op">[</span><span class="va">index</span>, <span class="op">]</span></span>
+<span><span class="va">deconv_train</span>     <span class="op">&lt;-</span> <span class="va">deconv</span><span class="op">[</span><span class="va">index</span>, <span class="op">]</span></span>
+<span></span>
+<span><span class="va">raw.counts_test</span>  <span class="op">&lt;-</span> <span class="va">raw.counts</span><span class="op">[</span>, <span class="op">-</span><span class="va">index</span><span class="op">]</span></span>
+<span><span class="va">traitdata_test</span>   <span class="op">&lt;-</span> <span class="va">traitdata</span><span class="op">[</span><span class="op">-</span><span class="va">index</span>, <span class="op">]</span></span>
+<span><span class="va">deconv_test</span>      <span class="op">&lt;-</span> <span class="va">deconv</span><span class="op">[</span><span class="op">-</span><span class="va">index</span>, <span class="op">]</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="prediction">
-<strong>Prediction</strong><a class="anchor" aria-label="anchor" href="#prediction"></a>
+<h2 id="training">
+<strong>Training</strong><a class="anchor" aria-label="anchor" href="#training"></a>
 </h2>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">pred</span> <span class="op">&lt;-</span> <span class="fu">pipeML</span><span class="fu">::</span><span class="fu">compute_prediction</span><span class="op">(</span></span>
+<p>Pass <code><a href="../reference/prepare_celltfusion_folds.html">prepare_celltfusion_folds()</a></code> as
+<code>fold_construction_fun</code>, and its arguments through
+<code>fold_construction_args_fixed</code>:</p>
+<ul>
+<li>
+<code>deconv</code> — deconvolution of the training samples, in the
+same order as <code>features_train</code>.</li>
+<li>
+<code>raw.counts</code> — count matrix of the training samples.
+<code>pipeML</code> converts gene names with <code><a href="https://rdrr.io/r/base/make.names.html" class="external-link">make.names()</a></code>
+(e.g. <code>HLA-A</code> becomes <code>HLA.A</code>); passing the counts
+keeps the original gene symbols.</li>
+<li>any other <code><a href="../reference/CellTFusion.html">CellTFusion()</a></code> argument,
+e.g. <code>TF.collection</code>, <code>minMod</code> or
+<code>corr</code>.</li>
+</ul>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">ml_res</span> <span class="op">&lt;-</span> <span class="fu">pipeML</span><span class="fu">::</span><span class="fu">compute_features.training.ML</span><span class="op">(</span></span>
+<span>  features_train <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">raw.counts_train</span><span class="op">)</span>,</span>
+<span>  task_type      <span class="op">=</span> <span class="st">"classification"</span>,</span>
+<span>  target_var     <span class="op">=</span> <span class="va">traitdata_train</span><span class="op">$</span><span class="va">Best.Confirmed.Overall.Response</span>,</span>
+<span>  trait.positive <span class="op">=</span> <span class="st">"PD"</span>,</span>
+<span>  metric         <span class="op">=</span> <span class="st">"AUROC"</span>,</span>
+<span>  k_folds        <span class="op">=</span> <span class="fl">5</span>,</span>
+<span>  n_rep          <span class="op">=</span> <span class="fl">5</span>,</span>
+<span>  ncores         <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>  fold_construction_fun        <span class="op">=</span> <span class="va">prepare_celltfusion_folds</span>,</span>
+<span>  fold_construction_args_fixed <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>deconv     <span class="op">=</span> <span class="va">deconv_train</span>,</span>
+<span>                                      raw.counts <span class="op">=</span> <span class="va">raw.counts_train</span>,</span>
+<span>                                      TF.collection <span class="op">=</span> <span class="st">"CollecTRI"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p>The final model is trained on the latent factors learned on all the
+training samples. The corresponding <code><a href="../reference/CellTFusion.html">CellTFusion()</a></code> result is
+returned in <code>ml_res$Custom_output</code>.</p>
+</div>
+<div class="section level2">
+<h2 id="prediction-on-an-independent-cohort">
+<strong>Prediction on an independent cohort</strong><a class="anchor" aria-label="anchor" href="#prediction-on-an-independent-cohort"></a>
+</h2>
+<p>Project the test samples onto the latent factors of
+<code>ml_res$Custom_output</code>, then predict:</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">features_test</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="fu"><a href="../reference/project_test_factors.html">project_test_factors</a></span><span class="op">(</span><span class="va">ml_res</span><span class="op">$</span><span class="va">Custom_output</span>, <span class="va">deconv_test</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">pred</span> <span class="op">&lt;-</span> <span class="fu">pipeML</span><span class="fu">::</span><span class="fu">compute_prediction</span><span class="op">(</span></span>
 <span>  model          <span class="op">=</span> <span class="va">ml_res</span><span class="op">$</span><span class="va">Model</span>,</span>
 <span>  test_data      <span class="op">=</span> <span class="va">features_test</span>,</span>
 <span>  target_var     <span class="op">=</span> <span class="va">traitdata_test</span><span class="op">$</span><span class="va">Best.Confirmed.Overall.Response</span>,</span>
@@ -177,44 +179,71 @@ mean.</p>
 <span><span class="va">pred</span><span class="op">$</span><span class="va">AUC</span><span class="op">$</span><span class="va">AUROC</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="cross-validation-with-features-recomputed-in-each-fold">
-<strong>Cross-validation with features recomputed in each
-fold</strong><a class="anchor" aria-label="anchor" href="#cross-validation-with-features-recomputed-in-each-fold"></a>
+<h2 id="survival-outcomes">
+<strong>Survival outcomes</strong><a class="anchor" aria-label="anchor" href="#survival-outcomes"></a>
 </h2>
-<p>For an unbiased estimate of performance, the <code>CellTFusion</code>
-features should be learned inside each cross-validation fold: on the
-training part of the fold, then projected onto its test part.
-<code>pipeML</code> supports this through its
-<code>fold_construction_fun</code> argument. The function below computes
-the features in both modes and can be used inside such a
-fold-construction function:</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">compute_features_modular</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">data</span>, <span class="va">structure</span> <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">deconv</span> <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>                                     <span class="va">coldata</span> <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">cancer_type</span> <span class="op">=</span> <span class="st">"skcm"</span>,</span>
-<span>                                     <span class="va">TF.collection</span> <span class="op">=</span> <span class="st">"CollecTRI"</span>, <span class="va">file_name</span> <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>                                     <span class="va">final_training</span> <span class="op">=</span> <span class="cn">FALSE</span>, <span class="va">normalized</span> <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="va">structure</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span>    <span class="co"># Training: learn cell groups and latent factors on the training samples</span></span>
-<span>    <span class="va">structure</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/CellTFusion.html">CellTFusion</a></span><span class="op">(</span></span>
-<span>      raw.counts    <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">data</span><span class="op">)</span>,</span>
-<span>      deconv        <span class="op">=</span> <span class="va">deconv</span>,</span>
-<span>      normalized    <span class="op">=</span> <span class="va">normalized</span>,</span>
-<span>      coldata       <span class="op">=</span> <span class="va">coldata</span>,</span>
-<span>      cancer_type   <span class="op">=</span> <span class="va">cancer_type</span>,</span>
-<span>      TF.collection <span class="op">=</span> <span class="va">TF.collection</span>,</span>
-<span>      file_name     <span class="op">=</span> <span class="va">file_name</span>,</span>
-<span>      return        <span class="op">=</span> <span class="va">final_training</span>,</span>
-<span>      verbose       <span class="op">=</span> <span class="cn">FALSE</span></span>
-<span>    <span class="op">)</span></span>
-<span>    <span class="va">features</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="va">structure</span><span class="op">$</span><span class="va">Latent_spaces</span><span class="op">$</span><span class="va">Z</span><span class="op">)</span></span>
-<span>  <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span></span>
-<span>    <span class="co"># Test: project the test samples onto the training structure</span></span>
-<span>    <span class="va">features</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="fu"><a href="../reference/project_test_factors.html">project_test_factors</a></span><span class="op">(</span><span class="va">structure</span>, <span class="va">deconv</span><span class="op">)</span><span class="op">)</span></span>
-<span>  <span class="op">}</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>features <span class="op">=</span> <span class="va">features</span>, structure <span class="op">=</span> <span class="va">structure</span><span class="op">)</span></span>
-<span><span class="op">}</span></span></code></pre></div>
-<p>See the <code>pipeML</code> documentation for the full
-fold-construction interface.</p>
+<p>The same function is used for survival models, with the follow-up
+time and event of each sample:</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">surv_res</span> <span class="op">&lt;-</span> <span class="fu">pipeML</span><span class="fu">::</span><span class="fu">compute_features.training.ML</span><span class="op">(</span></span>
+<span>  features_train <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">raw.counts_train</span><span class="op">)</span>,</span>
+<span>  task_type      <span class="op">=</span> <span class="st">"survival"</span>,</span>
+<span>  time_var       <span class="op">=</span> <span class="va">traitdata_train</span><span class="op">$</span><span class="va">PFS</span>,</span>
+<span>  event_var      <span class="op">=</span> <span class="va">traitdata_train</span><span class="op">$</span><span class="va">PFS_event</span>,</span>
+<span>  k_folds        <span class="op">=</span> <span class="fl">5</span>,</span>
+<span>  n_rep          <span class="op">=</span> <span class="fl">5</span>,</span>
+<span>  ncores         <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>  fold_construction_fun        <span class="op">=</span> <span class="va">prepare_celltfusion_folds</span>,</span>
+<span>  fold_construction_args_fixed <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>deconv <span class="op">=</span> <span class="va">deconv_train</span>, raw.counts <span class="op">=</span> <span class="va">raw.counts_train</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">features_test</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="fu"><a href="../reference/project_test_factors.html">project_test_factors</a></span><span class="op">(</span><span class="va">surv_res</span><span class="op">$</span><span class="va">Custom_output</span>, <span class="va">deconv_test</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">surv_pred</span> <span class="op">&lt;-</span> <span class="fu">pipeML</span><span class="fu">::</span><span class="fu">compute_prediction</span><span class="op">(</span></span>
+<span>  model     <span class="op">=</span> <span class="va">surv_res</span><span class="op">$</span><span class="va">Model</span>,</span>
+<span>  test_data <span class="op">=</span> <span class="va">features_test</span>,</span>
+<span>  task_type <span class="op">=</span> <span class="st">"survival"</span>,</span>
+<span>  time_var  <span class="op">=</span> <span class="va">traitdata_test</span><span class="op">$</span><span class="va">PFS</span>,</span>
+<span>  event_var <span class="op">=</span> <span class="va">traitdata_test</span><span class="op">$</span><span class="va">PFS_event</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">surv_pred</span><span class="op">$</span><span class="va">c_index</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="multi-cohort-data">
+<strong>Multi-cohort data</strong><a class="anchor" aria-label="anchor" href="#multi-cohort-data"></a>
+</h2>
+<p>For samples from several cohorts, pass <code>batch = TRUE</code>, the
+metadata of the training samples (<code>coldata</code>, in the same
+order as <code>features_train</code>) and the cohort column
+(<code>batch_id</code>). <code><a href="../reference/CellTFusion.html">CellTFusion()</a></code> then corrects for
+cohort in each fold (see <a href="a6_batch_analysis.html">Multi-cohort
+analysis</a>), and the test samples of each cohort are projected
+separately, centered on their own means. With <code>LODO = TRUE</code>,
+<code>pipeML</code> leaves one cohort out in each fold:</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">ml_res</span> <span class="op">&lt;-</span> <span class="fu">pipeML</span><span class="fu">::</span><span class="fu">compute_features.training.ML</span><span class="op">(</span></span>
+<span>  features_train <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">raw.counts_train</span><span class="op">)</span>,</span>
+<span>  task_type      <span class="op">=</span> <span class="st">"classification"</span>,</span>
+<span>  target_var     <span class="op">=</span> <span class="va">coldata_train</span><span class="op">$</span><span class="va">Response</span>,</span>
+<span>  trait.positive <span class="op">=</span> <span class="st">"R"</span>,</span>
+<span>  metric         <span class="op">=</span> <span class="st">"AUROC"</span>,</span>
+<span>  LODO           <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  batch_var      <span class="op">=</span> <span class="va">coldata_train</span><span class="op">$</span><span class="va">Cohort</span>,</span>
+<span>  fold_construction_fun        <span class="op">=</span> <span class="va">prepare_celltfusion_folds</span>,</span>
+<span>  fold_construction_args_fixed <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>deconv     <span class="op">=</span> <span class="va">deconv_train</span>,</span>
+<span>                                      raw.counts <span class="op">=</span> <span class="va">raw.counts_train</span>,</span>
+<span>                                      coldata    <span class="op">=</span> <span class="va">coldata_train</span>,</span>
+<span>                                      batch      <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>                                      batch_id   <span class="op">=</span> <span class="st">"Cohort"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p>For a model trained with <code>batch = TRUE</code>, project each new
+cohort separately with <code><a href="../reference/project_test_factors.html">project_test_factors()</a></code>, as its
+samples are centered on their own means.</p>
+<p><strong>Note:</strong> <code><a href="../reference/prepare_celltfusion_folds.html">prepare_celltfusion_folds()</a></code> runs
+<code><a href="../reference/CellTFusion.html">CellTFusion()</a></code> in every fold. Use <code>ncores</code> in
+<code>fold_construction_args_fixed</code> to compute several folds in
+parallel (the package must be installed).</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

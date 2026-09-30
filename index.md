@@ -1,7 +1,5 @@
 # CellTFusion
 
-# CellTFusion
-
 Integration of immune-cell type deconvolution features and
 prior-knowledge networks of TFs-gene interactions to characterize
 potential cell states of the tumor microenvironment using bulk RNAseq
@@ -172,6 +170,38 @@ test_scores <- compute.test.set(
 )
 ```
 
+## Machine learning with pipeML
+
+To use the latent factors as features in
+[pipeML](https://github.com/VeraPancaldiLab/pipeML) without information
+leakage, pass
+[`prepare_celltfusion_folds()`](https://verapancaldilab.github.io/CellTFusion/reference/prepare_celltfusion_folds.md)
+as the fold construction function:
+[`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md)
+is then run on the training samples of each cross-validation fold, and
+the test samples are projected onto the resulting latent factors. It
+works for classification and survival tasks.
+
+``` r
+
+ml_res <- pipeML::compute_features.training.ML(
+  features_train = t(raw.counts),
+  task_type = "classification",
+  target_var = traitdata$Response,
+  trait.positive = "R",
+  metric = "AUROC",
+  fold_construction_fun = prepare_celltfusion_folds,
+  fold_construction_args_fixed = list(deconv = deconv, raw.counts = raw.counts)
+)
+
+# Features of new samples, projected onto the final model
+features_test <- project_test_factors(ml_res$Custom_output, deconv_test)
+```
+
+See the [Machine learning
+workflows](https://VeraPancaldiLab.github.io/CellTFusion/articles/a5_machine_learning.html)
+article for details.
+
 ## Issues
 
 If you encounter any problems or have questions about the package, we
@@ -189,6 +219,9 @@ is the primary maintainer of this package.
 
 ## Citing `CellTFusion`
 
-If you use `CellTFusion` in a scientific publication, please cite the
-GitHub repository (<https://github.com/VeraPancaldiLab/CellTFusion>).
-The reference to the associated publication will be added here.
+If you use `CellTFusion` in a scientific publication, please cite:
+
+> Hurtado, M., & Pancaldi, V. (2026). *CellTFusion: A transcriptional
+> regulatory network framework for the identification of functional
+> multicellular states from bulk RNA-seq data.* bioRxiv.
+> <https://doi.org/10.64898/2026.06.30.735682>

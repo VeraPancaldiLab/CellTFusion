@@ -91,7 +91,7 @@
 <li>
 <strong>Statistical analysis</strong> — clinical trait association (<code><a href="reference/scores.stat.analysis.html">scores.stat.analysis()</a></code> and the <code>scores.*</code> family), survival analysis (<code><a href="reference/compute.survival.analysis.html">compute.survival.analysis()</a></code>)</li>
 <li>
-<strong>Test-set / batch projection</strong> — apply a trained model to new data (<code><a href="reference/compute.test.set.html">compute.test.set()</a></code>, <code><a href="reference/project_test_factors.html">project_test_factors()</a></code>) or run multi-cohort analysis via <code>batch = TRUE</code> in <code><a href="reference/CellTFusion.html">CellTFusion()</a></code>
+<strong>Test-set / batch projection</strong> — apply a trained model to new data (<code><a href="reference/compute.test.set.html">compute.test.set()</a></code>, <code><a href="reference/project_test_factors.html">project_test_factors()</a></code>), run leakage-aware cross-validation with <code>pipeML</code> (<code><a href="reference/prepare_celltfusion_folds.html">prepare_celltfusion_folds()</a></code>), or run multi-cohort analysis via <code>batch = TRUE</code> in <code><a href="reference/CellTFusion.html">CellTFusion()</a></code>
 </li>
 </ol></div>
 <div class="section level3">
@@ -126,6 +126,9 @@
 <code><a href="reference/compute.test.set.html">compute.test.set()</a></code> / <code><a href="reference/project_test_factors.html">project_test_factors()</a></code>
 </td>
 <td>Apply a trained model / project a test set onto trained NMF factors</td>
+</tr><tr><td><code><a href="reference/prepare_celltfusion_folds.html">prepare_celltfusion_folds()</a></code></td>
+<td>
+<code>pipeML</code> fold construction function (<code>fold_construction_fun</code>): runs <code><a href="reference/CellTFusion.html">CellTFusion()</a></code> within each CV fold and projects the test samples (classification and survival)</td>
 </tr><tr><td><code><a href="reference/identify_hub_TFs.html">identify_hub_TFs()</a></code></td>
 <td>Identify driver TFs from modules</td>
 </tr><tr><td><code><a href="reference/compute_factor_gsea.html">compute_factor_gsea()</a></code></td>

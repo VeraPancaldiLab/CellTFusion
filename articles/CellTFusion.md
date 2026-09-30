@@ -72,6 +72,7 @@ res$TME_states             # mapping of each latent factor to a TCGA meta-progra
 | TME subtype annotation | [`map_factors_to_TME()`](https://verapancaldilab.github.io/CellTFusion/reference/map_factors_to_TME.md) | [TME state characterization](https://verapancaldilab.github.io/CellTFusion/articles/a3_tme_states.md) |
 | Clinical associations | [`scores.stat.analysis()`](https://verapancaldilab.github.io/CellTFusion/reference/scores.stat.analysis.md) | [Statistical analysis](https://verapancaldilab.github.io/CellTFusion/articles/a4_statistical_analysis.md) |
 | Survival analysis | [`compute.survival.analysis()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.survival.analysis.md) | [Statistical analysis](https://verapancaldilab.github.io/CellTFusion/articles/a4_statistical_analysis.md) |
+| Cross-validation with `pipeML` | [`prepare_celltfusion_folds()`](https://verapancaldilab.github.io/CellTFusion/reference/prepare_celltfusion_folds.md) | [Machine learning workflows](https://verapancaldilab.github.io/CellTFusion/articles/a5_machine_learning.md) |
 | Projection of new cohorts | [`project_test_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/project_test_factors.md) | [Machine learning workflows](https://verapancaldilab.github.io/CellTFusion/articles/a5_machine_learning.md) |
 | Multi-cohort analysis | `CellTFusion(batch = TRUE)` | [Multi-cohort analysis](https://verapancaldilab.github.io/CellTFusion/articles/a6_batch_analysis.md) |
 
@@ -113,6 +114,9 @@ shiny::runApp(system.file("shiny", package = "CellTFusion"))
 
 ## Citation
 
-If you use `CellTFusion` in a scientific publication, please cite the
-GitHub repository (<https://github.com/VeraPancaldiLab/CellTFusion>).
-The reference to the associated publication will be added here.
+If you use `CellTFusion` in a scientific publication, please cite:
+
+> Hurtado, M., & Pancaldi, V. (2026). *CellTFusion: A transcriptional
+> regulatory network framework for the identification of functional
+> multicellular states from bulk RNA-seq data.* bioRxiv.
+> <https://doi.org/10.64898/2026.06.30.735682>

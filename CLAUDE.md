@@ -96,7 +96,9 @@ mapping):
     ([`compute.survival.analysis()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.survival.analysis.md))
 10. **Test-set / batch projection** — apply a trained model to new data
     ([`compute.test.set()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.test.set.md),
-    [`project_test_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/project_test_factors.md))
+    [`project_test_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/project_test_factors.md)),
+    run leakage-aware cross-validation with `pipeML`
+    ([`prepare_celltfusion_folds()`](https://verapancaldilab.github.io/CellTFusion/reference/prepare_celltfusion_folds.md)),
     or run multi-cohort analysis via `batch = TRUE` in
     [`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md)
 
@@ -125,6 +127,7 @@ mapping):
 | [`construct_cell_groups()`](https://verapancaldilab.github.io/CellTFusion/reference/construct_cell_groups.md) | Cell group construction and composite scores |
 | [`compute.latent_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.latent_factors.md) | NMF-based latent factor extraction from cell group scores |
 | [`compute.test.set()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.test.set.md) / [`project_test_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/project_test_factors.md) | Apply a trained model / project a test set onto trained NMF factors |
+| [`prepare_celltfusion_folds()`](https://verapancaldilab.github.io/CellTFusion/reference/prepare_celltfusion_folds.md) | `pipeML` fold construction function (`fold_construction_fun`): runs [`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md) within each CV fold and projects the test samples (classification and survival) |
 | [`identify_hub_TFs()`](https://verapancaldilab.github.io/CellTFusion/reference/identify_hub_TFs.md) | Identify driver TFs from modules |
 | [`compute_factor_gsea()`](https://verapancaldilab.github.io/CellTFusion/reference/compute_factor_gsea.md) | Hallmark GSEA on latent factors |
 | [`derive_meta_programs()`](https://verapancaldilab.github.io/CellTFusion/reference/derive_meta_programs.md) / [`map_factors_to_metaprograms()`](https://verapancaldilab.github.io/CellTFusion/reference/map_factors_to_metaprograms.md) | Derive and map latent factors to TCGA meta-programs |

@@ -64,17 +64,13 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="section level1">
 <div class="page-header">
-<img src="logo.png" class="logo" alt=""><h1 id="celltfusion">CellTFusion<a class="anchor" aria-label="anchor" href="#celltfusion"></a>
-</h1>
-</div>
-</div>
-<div class="section level1">
-<h1 id="celltfusion-">CellTFusion 
+<img src="logo.png" class="logo" alt=""><h1 id="celltfusion-">CellTFusion 
 <a class="anchor" aria-label="anchor" href="#celltfusion-"></a>
 </h1>
+</div>
 <p>Integration of immune-cell type deconvolution features and prior-knowledge networks of TFs-gene interactions to characterize potential cell states of the tumor microenvironment using bulk RNAseq data</p>
 <!-- badges: start -->
-<!-- badges: end -->
+
 <p align="center">
 <img src="reference/figures/CellTFusion_pipeline.png" alt="Overview of the CellTFusion pipeline"></p>
 <p align="center">
@@ -173,6 +169,25 @@
 <span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
+<h2 id="machine-learning-with-pipeml">Machine learning with pipeML<a class="anchor" aria-label="anchor" href="#machine-learning-with-pipeml"></a>
+</h2>
+<p>To use the latent factors as features in <a href="https://github.com/VeraPancaldiLab/pipeML" class="external-link">pipeML</a> without information leakage, pass <code><a href="reference/prepare_celltfusion_folds.html">prepare_celltfusion_folds()</a></code> as the fold construction function: <code><a href="reference/CellTFusion.html">CellTFusion()</a></code> is then run on the training samples of each cross-validation fold, and the test samples are projected onto the resulting latent factors. It works for classification and survival tasks.</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">ml_res</span> <span class="op">&lt;-</span> <span class="fu">pipeML</span><span class="fu">::</span><span class="fu">compute_features.training.ML</span><span class="op">(</span></span>
+<span>  features_train <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">raw.counts</span><span class="op">)</span>,</span>
+<span>  task_type <span class="op">=</span> <span class="st">"classification"</span>,</span>
+<span>  target_var <span class="op">=</span> <span class="va">traitdata</span><span class="op">$</span><span class="va">Response</span>,</span>
+<span>  trait.positive <span class="op">=</span> <span class="st">"R"</span>,</span>
+<span>  metric <span class="op">=</span> <span class="st">"AUROC"</span>,</span>
+<span>  fold_construction_fun <span class="op">=</span> <span class="va">prepare_celltfusion_folds</span>,</span>
+<span>  fold_construction_args_fixed <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>deconv <span class="op">=</span> <span class="va">deconv</span>, raw.counts <span class="op">=</span> <span class="va">raw.counts</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Features of new samples, projected onto the final model</span></span>
+<span><span class="va">features_test</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/project_test_factors.html">project_test_factors</a></span><span class="op">(</span><span class="va">ml_res</span><span class="op">$</span><span class="va">Custom_output</span>, <span class="va">deconv_test</span><span class="op">)</span></span></code></pre></div>
+<p>See the <a href="https://VeraPancaldiLab.github.io/CellTFusion/articles/a5_machine_learning.html" class="external-link">Machine learning workflows</a> article for details.</p>
+</div>
+<div class="section level2">
 <h2 id="issues">Issues<a class="anchor" aria-label="anchor" href="#issues"></a>
 </h2>
 <p>If you encounter any problems or have questions about the package, we encourage you to open an issue <a href="https://github.com/VeraPancaldiLab/CellTFusion/issues" class="external-link">here</a>. We’ll do our best to assist you!</p>
@@ -186,10 +201,12 @@
 <h2 id="citing-celltfusion">Citing <code>CellTFusion</code>
 <a class="anchor" aria-label="anchor" href="#citing-celltfusion"></a>
 </h2>
-<p>If you use <code>CellTFusion</code> in a scientific publication, please cite the GitHub repository (<a href="https://github.com/VeraPancaldiLab/CellTFusion" class="external-link uri">https://github.com/VeraPancaldiLab/CellTFusion</a>). The reference to the associated publication will be added here.</p>
+<p>If you use <code>CellTFusion</code> in a scientific publication, please cite:</p>
+<blockquote>
+<p>Hurtado, M., &amp; Pancaldi, V. (2026). <em>CellTFusion: A transcriptional regulatory network framework for the identification of functional multicellular states from bulk RNA-seq data.</em> bioRxiv. <a href="https://doi.org/10.64898/2026.06.30.735682" class="external-link uri">https://doi.org/10.64898/2026.06.30.735682</a></p>
+</blockquote>
 </div>
 </div>
-
   </main><aside class="col-md-3"><div class="license">
 <h2 data-toc-skip>License</h2>
 <ul class="list-unstyled">
@@ -214,7 +231,13 @@
 </ul>
 </div>
 
-
+<div class="dev-status">
+<h2 data-toc-skip>Dev status</h2>
+<ul class="list-unstyled">
+<li><a href="https://github.com/VeraPancaldiLab/CellTFusion/actions/workflows/R-CMD-check.yaml" class="external-link"><img src="https://github.com/VeraPancaldiLab/CellTFusion/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R-CMD-check"></a></li>
+<li><a href="https://github.com/VeraPancaldiLab/CellTFusion/actions/workflows/pkgdown.yaml" class="external-link"><img src="https://github.com/VeraPancaldiLab/CellTFusion/actions/workflows/pkgdown.yaml/badge.svg" alt="pkgdown"></a></li>
+</ul>
+</div>
 
   </aside>
 </div>

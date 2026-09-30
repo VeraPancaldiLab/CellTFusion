@@ -85,10 +85,13 @@ Associations with clinical variables and survival
   : Kaplan-Meier survival analysis on clinical groups or CellTFusion
   features
 
-## Projection of new cohorts
+## Machine learning and new cohorts
 
-Apply trained cell groups and latent factors to independent data
+Leakage-aware cross-validation with pipeML and projection of independent
+data
 
+- [`prepare_celltfusion_folds()`](https://verapancaldilab.github.io/CellTFusion/reference/prepare_celltfusion_folds.md)
+  : Prepare CellTFusion cross-validation folds for pipeML
 - [`project_test_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/project_test_factors.md)
   : Project test-set samples onto training NMF factors
 - [`compute.test.set()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.test.set.md)
