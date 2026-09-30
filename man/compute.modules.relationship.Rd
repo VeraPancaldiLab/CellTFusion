@@ -69,7 +69,7 @@ If \code{return = TRUE}, returns a list with:
 \item A named list with significant features per module (after p-value or adjusted p-value thresholding).
 }
 If \code{return = FALSE} and \code{plot = TRUE}, the function saves a heatmap of significant correlations to
-"Results/{file_name}.pdf" (the ".pdf" extension is added if missing).
+"Results/<file_name>.pdf" (the ".pdf" extension is added if missing).
 }
 \description{
 Performs linear correlation between two matrices (e.g., TF modules and external features such as deconvolution estimates or pathway activities)
@@ -81,15 +81,7 @@ names are compared after \code{make.names()}, so e.g. "TCGA-XX" and "TCGA.XX" ma
 \code{cor()} and \code{corPvalueStudent()} functions. Insignificant correlations (based on p-value or adjusted p-value) are excluded from the visualization.
 }
 \examples{
-data("counts.norm.tuto")
 data("network.tuto")
-
-pathways <- compute.pathway.activity(counts.norm.tuto)
-compute.modules.relationship(network.tuto[[1]],
-                             pathways,
-                             "Pathways_Progeny-TFs_Modules",
-                             width = 15)
-
 data("deconv_subgroups.tuto")
 corr = compute.modules.relationship(network.tuto[[1]],
                                     deconv_subgroups.tuto[[1]],
@@ -97,5 +89,15 @@ corr = compute.modules.relationship(network.tuto[[1]],
                                     plot = FALSE,
                                     return = TRUE,
                                     pval = 0.01)
+
+\dontrun{
+# TF modules vs PROGENy pathways (downloads the PROGENy model from OmniPath)
+data("counts.norm.tuto")
+pathways <- compute.pathway.activity(counts.norm.tuto)
+compute.modules.relationship(network.tuto[[1]],
+                             pathways,
+                             "Pathways_Progeny-TFs_Modules",
+                             width = 15)
+}
 
 }

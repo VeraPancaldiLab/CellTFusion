@@ -55,8 +55,11 @@ The TF-target network can be provided by the user, obtained from OmnipathR resou
 Dorothea), or read from an ARACNe-inferred network.
 }
 \examples{
+\dontrun{
+# Downloads the CollecTRI network from OmniPath
 data("counts.norm.tuto")
 tfs_activity <- compute.TFs.activity(counts.norm.tuto)
+}
 
 }
 \references{

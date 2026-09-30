@@ -694,7 +694,7 @@ compute.modules.enrichment <- function(RNA.tpm, hub_tfs){
 #'   \item A named list with significant features per module (after p-value or adjusted p-value thresholding).
 #' }
 #' If `return = FALSE` and `plot = TRUE`, the function saves a heatmap of significant correlations to
-#' "Results/{file_name}.pdf" (the ".pdf" extension is added if missing).
+#' "Results/<file_name>.pdf" (the ".pdf" extension is added if missing).
 #'
 #' 
 #' @details
@@ -703,15 +703,7 @@ compute.modules.enrichment <- function(RNA.tpm, hub_tfs){
 #' `cor()` and `corPvalueStudent()` functions. Insignificant correlations (based on p-value or adjusted p-value) are excluded from the visualization.
 #'
 #' @examples
-#' data("counts.norm.tuto")
 #' data("network.tuto")
-#'
-#' pathways <- compute.pathway.activity(counts.norm.tuto)
-#' compute.modules.relationship(network.tuto[[1]],
-#'                              pathways,
-#'                              "Pathways_Progeny-TFs_Modules",
-#'                              width = 15)
-#'
 #' data("deconv_subgroups.tuto")
 #' corr = compute.modules.relationship(network.tuto[[1]],
 #'                                     deconv_subgroups.tuto[[1]],
@@ -719,6 +711,16 @@ compute.modules.enrichment <- function(RNA.tpm, hub_tfs){
 #'                                     plot = FALSE,
 #'                                     return = TRUE,
 #'                                     pval = 0.01)
+#'
+#' \dontrun{
+#' # TF modules vs PROGENy pathways (downloads the PROGENy model from OmniPath)
+#' data("counts.norm.tuto")
+#' pathways <- compute.pathway.activity(counts.norm.tuto)
+#' compute.modules.relationship(network.tuto[[1]],
+#'                              pathways,
+#'                              "Pathways_Progeny-TFs_Modules",
+#'                              width = 15)
+#' }
 #'
 compute.modules.relationship <- function(matA, matB, file_name, batch = NULL, width = 8, height = 8, par_mar = NULL, pval=0.05, padj = F, cor_type = "p", return = F, vertical = F, plot = T, plot.grid = F, width.grid = 12, height.grid = 10, ncol.grid = NULL){
 
@@ -763,7 +765,7 @@ compute.modules.relationship <- function(matA, matB, file_name, batch = NULL, wi
   }
 
   if (plot.grid) {
-    plot.module.scatter.grid(
+    plot_module_scatter_grid(
       matA = matA,
       matB = matB,
       cor_mat = moduleTraitCor,
@@ -971,9 +973,11 @@ compute.modules.relationship <- function(matA, matB, file_name, batch = NULL, wi
 #' Perturbation-response genes reveal signaling footprints in cancer gene expression. Nature Communications. 2018. \doi{10.1038/s41467-017-02391-6}
 #'
 #' @examples
-#' # Compute only PROGENy activities
+#' \dontrun{
+#' # Compute only PROGENy activities (downloads the PROGENy model from OmniPath)
 #' data("counts.norm.tuto")
 #' pathways <- compute.pathway.activity(counts.norm.tuto)
+#' }
 #'
 compute.pathway.activity <- function(RNA.tpm, gene_sets = NULL, paths = NULL, return = TRUE, file.name = NULL) {
 
@@ -1092,8 +1096,11 @@ compute.pathway.activity <- function(RNA.tpm, gene_sets = NULL, paths = NULL, re
 #' Margolin, A.A. et al. (2006). ARACNE: an algorithm for the reconstruction of gene regulatory networks in a mammalian cellular context. *BMC Bioinformatics*, 7(Suppl 1), S7. https://doi.org/10.1186/1471-2105-7-S1-S7
 #'
 #' @examples
+#' \dontrun{
+#' # Downloads the CollecTRI network from OmniPath
 #' data("counts.norm.tuto")
 #' tfs_activity <- compute.TFs.activity(counts.norm.tuto)
+#' }
 #'
 compute.TFs.activity <- function(RNA.counts, TF.collection = "CollecTRI", min_targets_size = 5, universe = NULL, cancer.type = NULL, scale = TRUE, return = TRUE, file.name = NULL){
 
@@ -3519,7 +3526,7 @@ prepare_celltfusion_folds <- function(data, folds = NULL, bestune = NULL, deconv
 #' @return Called for its side effect (saves SVG); returns \code{NULL} invisibly.
 #'
 #' @keywords internal
-plot.module.scatter.grid <- function(matA, matB, cor_mat, p_mat,
+plot_module_scatter_grid <- function(matA, matB, cor_mat, p_mat,
                                      file_name,
                                      pval = 0.05,
                                      width = 12,

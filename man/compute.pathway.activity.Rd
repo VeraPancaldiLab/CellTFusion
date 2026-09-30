@@ -38,9 +38,11 @@ This function computes pathway activity scores from normalized gene expression d
 Optionally, it also performs Gene Set Variation Analysis (GSVA) using hallmark signatures or any user-provided gene sets.
 }
 \examples{
-# Compute only PROGENy activities
+\dontrun{
+# Compute only PROGENy activities (downloads the PROGENy model from OmniPath)
 data("counts.norm.tuto")
 pathways <- compute.pathway.activity(counts.norm.tuto)
+}
 
 }
 \references{
