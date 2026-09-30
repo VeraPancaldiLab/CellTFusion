@@ -3300,6 +3300,198 @@ project_test_factors <- function(train_processed, test_deconv) {
   project_factors(train_processed$Latent_spaces, cell_groups_scores)
 }
 
+#' Prepare CellTFusion cross-validation folds for pipeML
+#'
+#' Fold construction function for \code{pipeML::compute_features.training.ML()} (argument
+#' \code{fold_construction_fun}) that computes \code{CellTFusion} latent factors within each
+#' cross-validation fold, without information leakage: cell groups and latent factors are learned with
+#' \code{CellTFusion()} on the training samples of each fold only, and the test samples of the fold are
+#' projected onto them with \code{project_test_factors()}. It works for classification and survival tasks.
+#'
+#' @param data Data frame provided by \code{pipeML}: samples as rows and genes as columns (the
+#'   \code{features_train} given to \code{compute_features.training.ML()}, i.e. the transposed count matrix),
+#'   plus the outcome columns (\code{target} for classification, \code{time} and \code{event} for survival).
+#' @param folds Named list with the training rows of each fold, provided by \code{pipeML}.
+#' @param bestune Provided by \code{pipeML} when building the features of the final model; \code{NULL} while
+#'   running the folds.
+#' @param deconv Deconvolution matrix of all the samples (samples x features, e.g. from
+#'   \code{multideconv::compute.deconvolution()}), with rows in the same order as \code{data}. Deconvolution is
+#'   computed independently for each sample, so computing it once for all samples does not leak information
+#'   between folds.
+#' @param raw.counts Optional count matrix (genes x samples) with the samples in the same order as \code{data}.
+#'   \code{pipeML} converts the column names of \code{features_train} with \code{make.names()} (e.g.
+#'   \code{"HLA-A"} becomes \code{"HLA.A"}), so gene symbols in \code{data} may no longer match TF regulons and
+#'   gene sets; passing \code{raw.counts} keeps the original gene symbols. If \code{NULL} (default),
+#'   \code{t(data)} is used.
+#' @param coldata Optional data frame of sample metadata with rows in the same order as \code{data}. Required
+#'   when \code{batch = TRUE}.
+#' @param batch Logical; whether to run \code{CellTFusion()} in multi-cohort mode (see \code{CellTFusion()}).
+#'   The test samples of each cohort are then projected separately, centered on their own means. Default FALSE.
+#' @param batch_id Column of \code{coldata} with the cohort of each sample. Required when \code{batch = TRUE}.
+#' @param ncores Integer. Number of folds computed in parallel. Default 1 (sequential).
+#' @param return Logical; in final mode, whether \code{CellTFusion()} saves its outputs and plots in
+#'   \code{Results/}. Outputs are never saved for the folds. Default FALSE.
+#' @param verbose Logical; whether \code{CellTFusion()} prints its progress messages. Default FALSE.
+#' @param ... Other arguments passed to \code{CellTFusion()} (e.g. \code{normalized}, \code{TF.collection},
+#'   \code{min_targets_size}, \code{minMod}, \code{corr_mod}, \code{corr}, \code{pval}, \code{cancer_type}).
+#'   \code{dt}, \code{tfs} and \code{pathways} are not allowed, as they must be computed within each fold.
+#'
+#' @return
+#' \itemize{
+#'   \item In fold mode (\code{bestune = NULL}): each fold is saved to \code{Results/fold_<fold name>.rds}, which
+#'     \code{pipeML} reads back, as a list with \code{train_data} (latent factors of the training samples plus
+#'     the outcome columns), \code{test_data} (latent factors of the test samples, plus \code{time} and
+#'     \code{event} for survival), \code{obs_test} (observed outcome of the test samples), \code{rowIndex} (rows
+#'     of the test samples) and \code{fold_name}. The list of folds is returned invisibly.
+#'   \item In final mode (\code{bestune} provided): a list with (1) the latent factors of all the samples plus
+#'     the outcome columns, (2) the \code{CellTFusion()} result on all the samples, available as
+#'     \code{Custom_output} in the \code{pipeML} result and used to compute the features of new samples with
+#'     \code{project_test_factors()}, and (3) \code{bestune}.
+#' }
+#'
+#' @details
+#' Pass the fixed arguments (\code{deconv}, and optionally \code{raw.counts}, \code{coldata}, \code{batch},
+#' \code{batch_id} and any \code{CellTFusion()} argument) through \code{fold_construction_args_fixed}. Tunable
+#' arguments (\code{fold_construction_args_tunable}) are not supported. With \code{ncores > 1}, the first fold is
+#' computed before the others start in parallel, so that the TF and pathway collections cached in
+#' \code{Results/} are downloaded only once; the package must be installed for the parallel workers.
+#'
+#' @examples
+#' \dontrun{
+#' raw.counts <- CellTFusion::raw.counts.tuto
+#' traitdata  <- CellTFusion::traitdata.tuto
+#' deconv     <- CellTFusion::deconv.tuto  # deconvolution of all the samples
+#'
+#' # Classification
+#' ml_res <- pipeML::compute_features.training.ML(
+#'   features_train = t(raw.counts),
+#'   task_type      = "classification",
+#'   target_var     = traitdata$Best.Confirmed.Overall.Response,
+#'   trait.positive = "PD",
+#'   metric         = "AUROC",
+#'   k_folds        = 5,
+#'   n_rep          = 1,
+#'   fold_construction_fun        = prepare_celltfusion_folds,
+#'   fold_construction_args_fixed = list(deconv = deconv, raw.counts = raw.counts)
+#' )
+#'
+#' # Features of new samples: projected onto the model trained on all the training samples
+#' features_test <- project_test_factors(ml_res$Custom_output, deconv_test)
+#'
+#' # Survival (time and event of each sample)
+#' surv_res <- pipeML::compute_features.training.ML(
+#'   features_train = t(raw.counts),
+#'   task_type      = "survival",
+#'   time_var       = time,
+#'   event_var      = event,
+#'   k_folds        = 5,
+#'   n_rep          = 1,
+#'   fold_construction_fun        = prepare_celltfusion_folds,
+#'   fold_construction_args_fixed = list(deconv = deconv, raw.counts = raw.counts)
+#' )
+#' }
+#'
+#' @export
+prepare_celltfusion_folds <- function(data, folds = NULL, bestune = NULL, deconv, raw.counts = NULL,
+                                      coldata = NULL, batch = FALSE, batch_id = NULL, ncores = 1,
+                                      return = FALSE, verbose = FALSE, ...) {
+
+  if (any(c("dt", "tfs", "pathways") %in% names(list(...)))) {
+    stop("'dt', 'tfs' and 'pathways' cannot be given: they must be computed within each fold")
+  }
+
+  # Outcome columns given by pipeML in data: "target" (classification) or "time" + "event" (survival)
+  if ("target" %in% colnames(data)) {
+    outcome_cols <- "target"
+  } else if (all(c("time", "event") %in% colnames(data))) {
+    outcome_cols <- c("time", "event")
+  } else {
+    stop("data must contain a 'target' column (classification) or 'time' and 'event' columns (survival)")
+  }
+  survival <- !identical(outcome_cols, "target")
+  outcome <- data[, outcome_cols, drop = FALSE]
+
+  # Counts (genes x samples), deconvolution and metadata of all the samples, in the same order as data
+  counts <- if (is.null(raw.counts)) t(data[, setdiff(colnames(data), outcome_cols), drop = FALSE]) else raw.counts
+  if (ncol(counts) != nrow(data) || nrow(deconv) != nrow(data) || (!is.null(coldata) && nrow(coldata) != nrow(data))) {
+    stop("raw.counts (columns), deconv and coldata (rows) must have the same samples, in the same order, as data")
+  }
+  if (is.null(rownames(deconv))) rownames(deconv) <- rownames(data)
+  colnames(counts) <- rownames(deconv)
+
+  # CellTFusion on a subset of samples: cell groups and latent factors are learned on these samples only
+  fit_celltfusion <- function(idx, save) {
+    CellTFusion(raw.counts = counts[, idx, drop = FALSE], deconv = deconv[idx, , drop = FALSE],
+                coldata = if (!is.null(coldata)) coldata[idx, , drop = FALSE], batch = batch, batch_id = batch_id,
+                return = save, verbose = verbose, ...)
+  }
+
+  # Latent factors of test samples projected onto a trained CellTFusion result
+  # (with batch = TRUE, each cohort is projected separately, centered on its own means)
+  project_samples <- function(structure, idx) {
+    cohorts <- if (batch) as.character(coldata[idx, batch_id]) else rep("all", length(idx))
+    projected <- lapply(split(idx, cohorts), function(i) project_test_factors(structure, deconv[i, , drop = FALSE]))
+    do.call(rbind, unname(projected))[rownames(deconv)[idx], , drop = FALSE]
+  }
+
+  # -----------------------------
+  # CASE 1: bestune provided - CellTFusion on all the training samples
+  # -----------------------------
+  if (!is.null(bestune)) {
+    structure <- fit_celltfusion(seq_len(nrow(data)), save = return)
+    train_data_final <- cbind(data.frame(structure$Latent_spaces$Z), outcome)
+    return(list(train_data_final, structure, bestune))
+  }
+
+  # -----------------------------
+  # CASE 2: bestune NOT provided - compute folds
+  # -----------------------------
+  if (is.null(folds)) stop("Provide 'folds' (a list of training row indices) or 'bestune'.")
+  fold_names <- if (is.null(names(folds))) paste0("Fold", seq_along(folds)) else names(folds)
+
+  run_fold <- function(i) {
+    train_idx <- folds[[i]]
+    test_idx  <- setdiff(seq_len(nrow(data)), train_idx)
+
+    # TRAIN: cell groups and latent factors learned on the training samples of the fold
+    structure <- fit_celltfusion(train_idx, save = FALSE)
+    train_data <- cbind(data.frame(structure$Latent_spaces$Z), outcome[train_idx, , drop = FALSE])
+
+    # TEST: test samples projected onto the latent factors learned on the training samples
+    test_data <- data.frame(project_samples(structure, test_idx))
+    if (survival) test_data <- cbind(test_data, outcome[test_idx, , drop = FALSE])  # pipeML evaluates each fold with them
+
+    list(
+      train_data = train_data,
+      test_data  = test_data,
+      obs_test   = if (survival) outcome[test_idx, , drop = FALSE] else outcome$target[test_idx],
+      rowIndex   = test_idx,
+      fold_name  = fold_names[i]
+    )
+  }
+
+  if (ncores > 1 && length(folds) > 1) {
+    # The first fold runs first so the TF and pathway collections cached in Results/ are downloaded only once
+    processed_folds <- list(run_fold(1))
+    cl <- parallel::makeCluster(min(ncores, length(folds) - 1))
+    on.exit(parallel::stopCluster(cl), add = TRUE)
+    parallel::clusterCall(cl, setwd, getwd())
+    processed_folds <- c(processed_folds, parallel::parLapply(cl, seq_along(folds)[-1], run_fold))
+  } else {
+    processed_folds <- lapply(seq_along(folds), run_fold)
+  }
+
+  # Save each fold (pipeML reads back every Results/fold_*.rds, so drop stale files from earlier runs first)
+  dir.create("Results", showWarnings = FALSE)
+  file.remove(list.files("Results", pattern = "^fold_.*\\.rds$", full.names = TRUE))
+  names(processed_folds) <- fold_names
+  for (i in seq_along(processed_folds)) {
+    saveRDS(processed_folds[[i]], file = file.path("Results", paste0("fold_", fold_names[i], ".rds")))
+  }
+
+  invisible(processed_folds)
+}
+
 #' Save a grid of scatter plots for significant module-feature pairs
 #'
 #' For each pair of columns from \code{matA} and \code{matB} whose p-value in

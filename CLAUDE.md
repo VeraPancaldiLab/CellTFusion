@@ -48,7 +48,7 @@ The package implements a multi-step pipeline (see `vignettes/CellTFusion.Rmd` fo
 7. **Latent factor extraction** — `compute.latent_factors()`: NMF-based latent factors; `compute_cells_niches()` for cell niche derivation
 8. **TME state characterisation** — Hallmark GSEA per factor (`compute_factor_gsea()`), meta-program derivation/mapping (`derive_meta_programs()`, `map_factors_to_metaprograms()`), and TME subtype annotation against Bagaev et al. (2021) MFP subtypes (`map_factors_to_TME()`, `annotate_metaprograms_TME()`)
 9. **Statistical analysis** — clinical trait association (`scores.stat.analysis()` and the `scores.*` family), survival analysis (`compute.survival.analysis()`)
-10. **Test-set / batch projection** — apply a trained model to new data (`compute.test.set()`, `project_test_factors()`) or run multi-cohort analysis via `batch = TRUE` in `CellTFusion()`
+10. **Test-set / batch projection** — apply a trained model to new data (`compute.test.set()`, `project_test_factors()`), run leakage-aware cross-validation with `pipeML` (`prepare_celltfusion_folds()`), or run multi-cohort analysis via `batch = TRUE` in `CellTFusion()`
 
 ### Key Source Files
 
@@ -68,6 +68,7 @@ The package implements a multi-step pipeline (see `vignettes/CellTFusion.Rmd` fo
 | `construct_cell_groups()` | Cell group construction and composite scores |
 | `compute.latent_factors()` | NMF-based latent factor extraction from cell group scores |
 | `compute.test.set()` / `project_test_factors()` | Apply a trained model / project a test set onto trained NMF factors |
+| `prepare_celltfusion_folds()` | `pipeML` fold construction function (`fold_construction_fun`): runs `CellTFusion()` within each CV fold and projects the test samples (classification and survival) |
 | `identify_hub_TFs()` | Identify driver TFs from modules |
 | `compute_factor_gsea()` | Hallmark GSEA on latent factors |
 | `derive_meta_programs()` / `map_factors_to_metaprograms()` | Derive and map latent factors to TCGA meta-programs |

@@ -18,86 +18,75 @@ knitr::opts_chunk$set(
 library(CellTFusion)
 ```
 
-`CellTFusion` latent factors (`res$Latent_spaces$Z`) can be used as features to predict clinical outcomes. This tutorial trains a classifier on a training cohort and applies it to an independent cohort by projecting the new samples onto the latent factors learned in training, with `project_test_factors()`.
-
-Model training uses the [`pipeML`](https://github.com/VeraPancaldiLab/pipeML) package:
+`CellTFusion` latent factors can be used as features to predict clinical outcomes with the [`pipeML`](https://github.com/VeraPancaldiLab/pipeML) package:
 
 ```{r, eval = FALSE}
 # install.packages("pak")
 pak::pkg_install("VeraPancaldiLab/pipeML")
 ```
 
+Latent factors are learned from the data (cell groups, TF modules, NMF), so they must be learned **within each cross-validation fold**: learning them on all the training samples before cross-validation would let the test samples of each fold influence the features and overestimate performance. `prepare_celltfusion_folds()` does this for `pipeML`: in each fold, `CellTFusion()` is run on the training samples only, and the test samples are projected onto the resulting latent factors with `project_test_factors()`.
+
 ## **Input data**
 
-Split the example data into a training and a test set:
+Split the example data into a training and a test set. The deconvolution is computed once for all the samples: it is computed independently for each sample, so this does not leak information between samples.
 
 ```{r, eval = FALSE}
 raw.counts <- CellTFusion::raw.counts.tuto
 traitdata  <- CellTFusion::traitdata.tuto
 
-index <- caret::createDataPartition(
-  traitdata[, "Best.Confirmed.Overall.Response"],
-  times = 1, p = 0.8, list = FALSE
-)
-
-traitdata_train  <- traitdata[index, ]
-raw.counts_train <- raw.counts[, index]
-
-traitdata_test   <- traitdata[-index, ]
-raw.counts_test  <- raw.counts[, -index]
-```
-
-## **Training**
-
-Run `CellTFusion()` on the training set only:
-
-```{r, eval = FALSE}
-res_train <- CellTFusion(
-  raw.counts     = raw.counts_train,
-  normalized     = TRUE,
-  deconv_methods = c("Quantiseq", "Epidish"),
-  cancer_type    = "skcm",
-  file_name      = "Train",
-  return         = TRUE
-)
-```
-
-The latent factor scores are the features. `pipeML::compute_features.training.ML()` trains and cross-validates several classifiers and keeps the best one:
-
-```{r, eval = FALSE}
-ml_res <- pipeML::compute_features.training.ML(
-  features_train = data.frame(res_train$Latent_spaces$Z),
-  task_type      = "classification",
-  target_var     = traitdata_train$Best.Confirmed.Overall.Response,
-  trait.positive = "PD",
-  metric         = "AUROC",
-  k_folds        = 5,
-  n_rep          = 10,
-  ncores         = 2,
-  return         = TRUE
-)
-```
-
-## **Projection of an independent cohort**
-
-`project_test_factors()` computes the latent factors of new samples from their deconvolution, using the cell groups and factors learned on the training set. Nothing is re-estimated on the test samples, so no information leaks from the test set into the features.
-
-```{r, eval = FALSE}
-deconv_test <- multideconv::compute.deconvolution(
-  raw.counts_test,
+deconv <- multideconv::compute.deconvolution(
+  raw.counts,
   methods    = c("Quantiseq", "Epidish"),
   normalized = TRUE,
   return     = FALSE
 )
 
-features_test <- data.frame(project_test_factors(res_train, deconv_test))
+index <- caret::createDataPartition(traitdata$Best.Confirmed.Overall.Response, p = 0.8, list = FALSE)
+
+raw.counts_train <- raw.counts[, index]
+traitdata_train  <- traitdata[index, ]
+deconv_train     <- deconv[index, ]
+
+raw.counts_test  <- raw.counts[, -index]
+traitdata_test   <- traitdata[-index, ]
+deconv_test      <- deconv[-index, ]
 ```
 
-**Note:** if the model was trained with `batch = TRUE` (see [Multi-cohort analysis](a6_batch_analysis.html)), the test samples are centered on their own means, as each training cohort was. Project one cohort at a time, with enough samples to estimate its mean.
+## **Training**
 
-## **Prediction**
+Pass `prepare_celltfusion_folds()` as `fold_construction_fun`, and its arguments through `fold_construction_args_fixed`:
+
+- `deconv` — deconvolution of the training samples, in the same order as `features_train`.
+- `raw.counts` — count matrix of the training samples. `pipeML` converts gene names with `make.names()` (e.g. `HLA-A` becomes `HLA.A`); passing the counts keeps the original gene symbols.
+- any other `CellTFusion()` argument, e.g. `TF.collection`, `minMod` or `corr`.
 
 ```{r, eval = FALSE}
+ml_res <- pipeML::compute_features.training.ML(
+  features_train = t(raw.counts_train),
+  task_type      = "classification",
+  target_var     = traitdata_train$Best.Confirmed.Overall.Response,
+  trait.positive = "PD",
+  metric         = "AUROC",
+  k_folds        = 5,
+  n_rep          = 5,
+  ncores         = 2,
+  fold_construction_fun        = prepare_celltfusion_folds,
+  fold_construction_args_fixed = list(deconv     = deconv_train,
+                                      raw.counts = raw.counts_train,
+                                      TF.collection = "CollecTRI")
+)
+```
+
+The final model is trained on the latent factors learned on all the training samples. The corresponding `CellTFusion()` result is returned in `ml_res$Custom_output`.
+
+## **Prediction on an independent cohort**
+
+Project the test samples onto the latent factors of `ml_res$Custom_output`, then predict:
+
+```{r, eval = FALSE}
+features_test <- data.frame(project_test_factors(ml_res$Custom_output, deconv_test))
+
 pred <- pipeML::compute_prediction(
   model          = ml_res$Model,
   test_data      = features_test,
@@ -109,35 +98,58 @@ pred <- pipeML::compute_prediction(
 pred$AUC$AUROC
 ```
 
-## **Cross-validation with features recomputed in each fold**
+## **Survival outcomes**
 
-For an unbiased estimate of performance, the `CellTFusion` features should be learned inside each cross-validation fold: on the training part of the fold, then projected onto its test part. `pipeML` supports this through its `fold_construction_fun` argument. The function below computes the features in both modes and can be used inside such a fold-construction function:
+The same function is used for survival models, with the follow-up time and event of each sample:
 
 ```{r, eval = FALSE}
-compute_features_modular <- function(data, structure = NULL, deconv = NULL,
-                                     coldata = NULL, cancer_type = "skcm",
-                                     TF.collection = "CollecTRI", file_name = NULL,
-                                     final_training = FALSE, normalized = TRUE) {
-  if (is.null(structure)) {
-    # Training: learn cell groups and latent factors on the training samples
-    structure <- CellTFusion(
-      raw.counts    = t(data),
-      deconv        = deconv,
-      normalized    = normalized,
-      coldata       = coldata,
-      cancer_type   = cancer_type,
-      TF.collection = TF.collection,
-      file_name     = file_name,
-      return        = final_training,
-      verbose       = FALSE
-    )
-    features <- data.frame(structure$Latent_spaces$Z)
-  } else {
-    # Test: project the test samples onto the training structure
-    features <- data.frame(project_test_factors(structure, deconv))
-  }
-  list(features = features, structure = structure)
-}
+surv_res <- pipeML::compute_features.training.ML(
+  features_train = t(raw.counts_train),
+  task_type      = "survival",
+  time_var       = traitdata_train$PFS,
+  event_var      = traitdata_train$PFS_event,
+  k_folds        = 5,
+  n_rep          = 5,
+  ncores         = 2,
+  fold_construction_fun        = prepare_celltfusion_folds,
+  fold_construction_args_fixed = list(deconv = deconv_train, raw.counts = raw.counts_train)
+)
+
+features_test <- data.frame(project_test_factors(surv_res$Custom_output, deconv_test))
+
+surv_pred <- pipeML::compute_prediction(
+  model     = surv_res$Model,
+  test_data = features_test,
+  task_type = "survival",
+  time_var  = traitdata_test$PFS,
+  event_var = traitdata_test$PFS_event
+)
+
+surv_pred$c_index
 ```
 
-See the `pipeML` documentation for the full fold-construction interface.
+## **Multi-cohort data**
+
+For samples from several cohorts, pass `batch = TRUE`, the metadata of the training samples (`coldata`, in the same order as `features_train`) and the cohort column (`batch_id`). `CellTFusion()` then corrects for cohort in each fold (see [Multi-cohort analysis](a6_batch_analysis.html)), and the test samples of each cohort are projected separately, centered on their own means. With `LODO = TRUE`, `pipeML` leaves one cohort out in each fold:
+
+```{r, eval = FALSE}
+ml_res <- pipeML::compute_features.training.ML(
+  features_train = t(raw.counts_train),
+  task_type      = "classification",
+  target_var     = coldata_train$Response,
+  trait.positive = "R",
+  metric         = "AUROC",
+  LODO           = TRUE,
+  batch_var      = coldata_train$Cohort,
+  fold_construction_fun        = prepare_celltfusion_folds,
+  fold_construction_args_fixed = list(deconv     = deconv_train,
+                                      raw.counts = raw.counts_train,
+                                      coldata    = coldata_train,
+                                      batch      = TRUE,
+                                      batch_id   = "Cohort")
+)
+```
+
+For a model trained with `batch = TRUE`, project each new cohort separately with `project_test_factors()`, as its samples are centered on their own means.
+
+**Note:** `prepare_celltfusion_folds()` runs `CellTFusion()` in every fold. Use `ncores` in `fold_construction_args_fixed` to compute several folds in parallel (the package must be installed).

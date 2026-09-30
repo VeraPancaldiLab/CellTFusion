@@ -70,6 +70,7 @@ res$TME_states             # mapping of each latent factor to a TCGA meta-progra
 | TME subtype annotation | `map_factors_to_TME()` | [TME state characterization](a3_tme_states.html) |
 | Clinical associations | `scores.stat.analysis()` | [Statistical analysis](a4_statistical_analysis.html) |
 | Survival analysis | `compute.survival.analysis()` | [Statistical analysis](a4_statistical_analysis.html) |
+| Cross-validation with `pipeML` | `prepare_celltfusion_folds()` | [Machine learning workflows](a5_machine_learning.html) |
 | Projection of new cohorts | `project_test_factors()` | [Machine learning workflows](a5_machine_learning.html) |
 | Multi-cohort analysis | `CellTFusion(batch = TRUE)` | [Multi-cohort analysis](a6_batch_analysis.html) |
 
@@ -94,4 +95,6 @@ shiny::runApp(system.file("shiny", package = "CellTFusion"))
 
 ## Citation
 
-If you use `CellTFusion` in a scientific publication, please cite the GitHub repository (<https://github.com/VeraPancaldiLab/CellTFusion>). The reference to the associated publication will be added here.
+If you use `CellTFusion` in a scientific publication, please cite:
+
+> Hurtado, M., & Pancaldi, V. (2026). *CellTFusion: A transcriptional regulatory network framework for the identification of functional multicellular states from bulk RNA-seq data.* bioRxiv. <https://doi.org/10.64898/2026.06.30.735682>

@@ -89,10 +89,11 @@ reference:
   - scores.fisher.test
   - compute.metadata.association
   - compute.survival.analysis
-- title: Projection of new cohorts
+- title: Machine learning and new cohorts
   desc: >
-    Apply trained cell groups and latent factors to independent data
+    Leakage-aware cross-validation with pipeML and projection of independent data
   contents:
+  - prepare_celltfusion_folds
   - project_test_factors
   - compute.test.set
   - project_factors

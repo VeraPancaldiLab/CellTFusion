@@ -50,7 +50,8 @@ Imports:
     colorspace,
     fgsea,
     ppcor,
-    withr
+    withr,
+    parallel
 Remotes:
     VeraPancaldiLab/multideconv,
     saezlab/OmnipathR@devel
