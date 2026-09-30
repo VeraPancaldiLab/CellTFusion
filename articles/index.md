@@ -1,16 +1,16 @@
 # Articles
 
-### Tutorials
+### Tutorial
 
 - [Feature
-  Computation](https://verapancaldilab.github.io/CellTFusion/articles/01-feature-computation.md):
-- [Cell Group Construction and Latent
-  Factors](https://verapancaldilab.github.io/CellTFusion/articles/02-cell-groups.md):
-- [TME State
-  Characterisation](https://verapancaldilab.github.io/CellTFusion/articles/03-tme-states.md):
+  computation](https://verapancaldilab.github.io/CellTFusion/articles/a1_feature_computation.md):
+- [Cell groups and latent
+  factors](https://verapancaldilab.github.io/CellTFusion/articles/a2_cell_groups.md):
+- [TME state
+  characterization](https://verapancaldilab.github.io/CellTFusion/articles/a3_tme_states.md):
 - [Statistical
-  Analysis](https://verapancaldilab.github.io/CellTFusion/articles/04-analysis.md):
-- [Machine
-  Learning](https://verapancaldilab.github.io/CellTFusion/articles/06-machine-learning.md):
-- [Batch/Multi-cohort
-  Analysis](https://verapancaldilab.github.io/CellTFusion/articles/07-batch-analysis.md):
+  analysis](https://verapancaldilab.github.io/CellTFusion/articles/a4_statistical_analysis.md):
+- [Machine learning
+  workflows](https://verapancaldilab.github.io/CellTFusion/articles/a5_machine_learning.md):
+- [Multi-cohort
+  analysis](https://verapancaldilab.github.io/CellTFusion/articles/a6_batch_analysis.md):

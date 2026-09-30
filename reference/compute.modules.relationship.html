@@ -18,18 +18,16 @@ across the same set of samples, visualizing only significant associations."><met
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/CellTFusion.html">Get started</a></li>
-<li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><hr class="dropdown-divider"></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Tutorials</h6></li>
-    <li><a class="dropdown-item" href="../articles/01-feature-computation.html">Feature Computation</a></li>
-    <li><a class="dropdown-item" href="../articles/02-cell-groups.html">Cell Group Construction and Latent Factors</a></li>
-    <li><a class="dropdown-item" href="../articles/03-tme-states.html">TME State Characterisation</a></li>
-    <li><a class="dropdown-item" href="../articles/04-analysis.html">Statistical Analysis</a></li>
-    <li><a class="dropdown-item" href="../articles/06-machine-learning.html">Machine Learning</a></li>
-    <li><a class="dropdown-item" href="../articles/07-batch-analysis.html">Batch/Multi-cohort Analysis</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/a1_feature_computation.html">Feature computation</a></li>
+    <li><a class="dropdown-item" href="../articles/a2_cell_groups.html">Cell groups and latent factors</a></li>
+    <li><a class="dropdown-item" href="../articles/a3_tme_states.html">TME state characterization</a></li>
+    <li><a class="dropdown-item" href="../articles/a4_statistical_analysis.html">Statistical analysis</a></li>
+    <li><a class="dropdown-item" href="../articles/a5_machine_learning.html">Machine learning workflows</a></li>
+    <li><a class="dropdown-item" href="../articles/a6_batch_analysis.html">Multi-cohort analysis</a></li>
   </ul></li>
+<li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
       </ul></div>
@@ -51,8 +49,7 @@ across the same set of samples, visualizing only significant associations.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="co"># S3 method for class 'modules.relationship'</span></span>
-<span><span class="fu">compute</span><span class="op">(</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">compute.modules.relationship</span><span class="op">(</span></span>
 <span>  <span class="va">matA</span>,</span>
 <span>  <span class="va">matB</span>,</span>
 <span>  <span class="va">file_name</span>,</span>
@@ -90,7 +87,9 @@ across the same set of samples, visualizing only significant associations.</p>
 
 
 <dt id="arg-batch">batch<a class="anchor" aria-label="anchor" href="#arg-batch"></a></dt>
-<dd><p>Optional vector indicating batch assignment for samples. If provided, partial correlations are computed controlling for batch.</p></dd>
+<dd><p>Optional vector indicating batch assignment for samples. If it has two or more levels, Pearson
+partial correlations (<code><a href="https://rdrr.io/pkg/ppcor/man/pcor.test.html" class="external-link">ppcor::pcor.test()</a></code>) are computed controlling for batch and <code>cor_type</code> is
+ignored. Batch is treated as categorical (one dummy variable per level beyond the first).</p></dd>
 
 
 <dt id="arg-width">width<a class="anchor" aria-label="anchor" href="#arg-width"></a></dt>
@@ -122,7 +121,8 @@ across the same set of samples, visualizing only significant associations.</p>
 
 
 <dt id="arg-vertical">vertical<a class="anchor" aria-label="anchor" href="#arg-vertical"></a></dt>
-<dd><p>Logical; if TRUE, produces a vertical heatmap (traits on x-axis, modules on y-axis). Otherwise, a horizontal layout is used. Default is FALSE.</p></dd>
+<dd><p>Logical; if TRUE, modules are on the x-axis and the <code>matB</code> features on the y-axis.
+Otherwise (default), the <code>matB</code> features are on the x-axis and modules on the y-axis.</p></dd>
 
 
 <dt id="arg-plot">plot<a class="anchor" aria-label="anchor" href="#arg-plot"></a></dt>
@@ -134,11 +134,11 @@ across the same set of samples, visualizing only significant associations.</p>
 
 
 <dt id="arg-width-grid">width.grid<a class="anchor" aria-label="anchor" href="#arg-width-grid"></a></dt>
-<dd><p>Numeric width of the scatter grid output.</p></dd>
+<dd><p>Numeric width of the scatter grid output (increased if needed to fit all panels).</p></dd>
 
 
 <dt id="arg-height-grid">height.grid<a class="anchor" aria-label="anchor" href="#arg-height-grid"></a></dt>
-<dd><p>Numeric height of the scatter grid output.</p></dd>
+<dd><p>Numeric height of the scatter grid output (increased if needed to fit all panels).</p></dd>
 
 
 <dt id="arg-ncol-grid">ncol.grid<a class="anchor" aria-label="anchor" href="#arg-ncol-grid"></a></dt>
@@ -149,11 +149,13 @@ across the same set of samples, visualizing only significant associations.</p>
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>If <code>return = TRUE</code>, returns a list with:</p><ul><li><p>A correlation matrix between modules and external features.</p></li>
 <li><p>A named list with significant features per module (after p-value or adjusted p-value thresholding).</p></li>
-</ul><p>If <code>return = FALSE</code>, the function saves a heatmap of significant correlations to "Results/file_name.pdf".</p>
+</ul><p>If <code>return = FALSE</code> and <code>plot = TRUE</code>, the function saves a heatmap of significant correlations to
+"Results/file_name.pdf" (the ".pdf" extension is added if missing).</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>The function assumes that <code>matA</code> and <code>matB</code> share the same rownames (i.e., samples in the same order). The correlation is computed using WGCNA's
+    <p>The function assumes that <code>matA</code> and <code>matB</code> share the same rownames (i.e., samples in the same order);
+names are compared after <code><a href="https://rdrr.io/r/base/make.names.html" class="external-link">make.names()</a></code>, so e.g. "TCGA-XX" and "TCGA.XX" match. The correlation is computed using WGCNA's
 <code><a href="https://rdrr.io/r/stats/cor.html" class="external-link">cor()</a></code> and <code>corPvalueStudent()</code> functions. Insignificant correlations (based on p-value or adjusted p-value) are excluded from the visualization.</p>
     </div>
 

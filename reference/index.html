@@ -16,18 +16,16 @@
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/CellTFusion.html">Get started</a></li>
-<li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><hr class="dropdown-divider"></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Tutorials</h6></li>
-    <li><a class="dropdown-item" href="../articles/01-feature-computation.html">Feature Computation</a></li>
-    <li><a class="dropdown-item" href="../articles/02-cell-groups.html">Cell Group Construction and Latent Factors</a></li>
-    <li><a class="dropdown-item" href="../articles/03-tme-states.html">TME State Characterisation</a></li>
-    <li><a class="dropdown-item" href="../articles/04-analysis.html">Statistical Analysis</a></li>
-    <li><a class="dropdown-item" href="../articles/06-machine-learning.html">Machine Learning</a></li>
-    <li><a class="dropdown-item" href="../articles/07-batch-analysis.html">Batch/Multi-cohort Analysis</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/a1_feature_computation.html">Feature computation</a></li>
+    <li><a class="dropdown-item" href="../articles/a2_cell_groups.html">Cell groups and latent factors</a></li>
+    <li><a class="dropdown-item" href="../articles/a3_tme_states.html">TME state characterization</a></li>
+    <li><a class="dropdown-item" href="../articles/a4_statistical_analysis.html">Statistical analysis</a></li>
+    <li><a class="dropdown-item" href="../articles/a5_machine_learning.html">Machine learning workflows</a></li>
+    <li><a class="dropdown-item" href="../articles/a6_batch_analysis.html">Multi-cohort analysis</a></li>
   </ul></li>
+<li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
       </ul></div>
@@ -43,7 +41,7 @@
     <div class="section level2">
       <h2 id="main">Main<a class="anchor" aria-label="anchor" href="#main"></a></h2>
 
-      <div class="section-desc"><p>Compute cell type deconvolution</p></div>
+      <div class="section-desc"><p>Full pipeline in one call</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -56,34 +54,36 @@
 
         </dt>
         <dd>Compute one-step CellTFusion</dd>
+      </dl></div><div class="section level2">
+      <h2 id="feature-computation">Feature computation<a class="anchor" aria-label="anchor" href="#feature-computation"></a></h2>
 
-        <dt>
+      <div class="section-desc"><p>TF activity, TF co-activity modules and pathway activity</p></div>
 
-          <code><a href="compute.TFs.activity.html">compute(<i>&lt;TFs.activity&gt;</i>)</a></code>
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="compute.TFs.activity.html">compute.TFs.activity()</a></code>
 
         </dt>
         <dd>Compute Transcription Factor (TF) activity</dd>
 
         <dt>
 
-          <code><a href="compute.WTCNA.html">compute(<i>&lt;WTCNA&gt;</i>)</a></code>
+          <code><a href="compute.WTCNA.html">compute.WTCNA()</a></code>
 
         </dt>
         <dd>Compute Weighted TF-coactivity Network Analysis (WTCNA)</dd>
 
         <dt>
 
-          <code><a href="compute.pathway.activity.html">compute(<i>&lt;pathway.activity&gt;</i>)</a></code>
+          <code><a href="compute.pathway.activity.html">compute.pathway.activity()</a></code>
 
         </dt>
         <dd>Computes TF-modules pathway activities scores</dd>
-
-        <dt>
-
-          <code><a href="compute_factor_gsea.html">compute_factor_gsea()</a></code>
-
-        </dt>
-        <dd>Run multivariate feature-based GSEA using limma and Hallmark gene sets</dd>
 
         <dt>
 
@@ -94,105 +94,33 @@
 
         <dt>
 
+          <code><a href="compute.modules.enrichment.html">compute.modules.enrichment()</a></code>
+
+        </dt>
+        <dd>Compute TF module enrichment using directed target genes</dd>
+
+        <dt>
+
+          <code><a href="compute.modules.relationship.html">compute.modules.relationship()</a></code>
+
+        </dt>
+        <dd>Compute modules relationship</dd>
+      </dl></div><div class="section level2">
+      <h2 id="cell-groups-and-latent-factors">Cell groups and latent factors<a class="anchor" aria-label="anchor" href="#cell-groups-and-latent-factors"></a></h2>
+
+      <div class="section-desc"><p>Cell group construction, NMF latent factors and cell niches</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
           <code><a href="construct_cell_groups.html">construct_cell_groups()</a></code>
 
         </dt>
         <dd>Construct cell groups based on TF networks and deconvolution</dd>
-
-        <dt>
-
-          <code><a href="compute.test.set.html">compute(<i>&lt;test.set&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Compute composite scores on test set based on previous cell groups</dd>
-      </dl></div><div class="section level2">
-      <h2 id="utils">Utils<a class="anchor" aria-label="anchor" href="#utils"></a></h2>
-
-      <div class="section-desc"><p>Visualization</p></div>
-
-      <dl></dl></div><div class="section level2">
-
-
-
-
-      <dl><dt>
-
-          <code><a href="compute.metadata.association.html">compute(<i>&lt;metadata.association&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Compute associations between TF module scores and clinical metadata</dd>
-
-        <dt>
-
-          <code><a href="compute.modules.relationship.html">compute(<i>&lt;modules.relationship&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Compute modules relationship</dd>
-
-        <dt>
-
-          <code><a href="compute.modules.enrichment.html">compute(<i>&lt;modules.enrichment&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Compute TF module enrichment using directed target genes</dd>
-      </dl></div><div class="section level2">
-      <h2 id="analysis">Analysis<a class="anchor" aria-label="anchor" href="#analysis"></a></h2>
-
-      <div class="section-desc"><p>Cell groups analysis</p></div>
-
-      <dl></dl></div><div class="section level2">
-
-
-
-
-      <dl><dt>
-
-          <code><a href="scores.fisher.test.html">scores.fisher.test()</a></code>
-
-        </dt>
-        <dd>Fisher's exact test for score-trait association</dd>
-
-        <dt>
-
-          <code><a href="scores.anova.test.html">scores.anova.test()</a></code>
-
-        </dt>
-        <dd>One-way ANOVA test for multi-group comparisons</dd>
-
-        <dt>
-
-          <code><a href="scores.wilcox.test.html">scores.wilcox.test()</a></code>
-
-        </dt>
-        <dd>Wilcoxon rank-sum test for binary traits</dd>
-
-        <dt>
-
-          <code><a href="scores.kruskal.test.html">scores.kruskal.test()</a></code>
-
-        </dt>
-        <dd>Kruskal-Wallis test for multi-group comparisons</dd>
-
-        <dt>
-
-          <code><a href="scores.ttest.html">scores.ttest()</a></code>
-
-        </dt>
-        <dd>Student's t-test for cell group comparisons</dd>
-
-        <dt>
-
-          <code><a href="scores.stat.analysis.html">scores.stat.analysis()</a></code>
-
-        </dt>
-        <dd>Perform statistical analysis on scores using a specified test</dd>
-
-        <dt>
-
-          <code><a href="compute.latent_factors.html">compute(<i>&lt;latent_factors&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Compute latent factors from cell group scores using NMF</dd>
 
         <dt>
 
@@ -203,14 +131,49 @@
 
         <dt>
 
-          <code><a href="compute.survival.analysis.html">compute(<i>&lt;survival.analysis&gt;</i>)</a></code>
+          <code><a href="cell.groups.computation.html">cell.groups.computation()</a></code>
 
         </dt>
-        <dd>Kaplan-Meier survival analysis on clinical groups or CellTFusion features</dd>
-      </dl></div><div class="section level2">
-      <h2 id="meta-programs-and-tme">Meta-programs and TME<a class="anchor" aria-label="anchor" href="#meta-programs-and-tme"></a></h2>
+        <dd>Compute cell group scores from deconvolution and TF module network</dd>
 
-      <div class="section-desc"><p>Meta-program derivation and TME mapping</p></div>
+        <dt>
+
+          <code><a href="compute_composite_score.html">compute_composite_score()</a></code>
+
+        </dt>
+        <dd>Compute composite score for cell groups</dd>
+
+        <dt>
+
+          <code><a href="compute.composition.matrix.html">compute.composition.matrix()</a></code>
+
+        </dt>
+        <dd>Compute a cell-type composition matrix from deconvolution subgroups</dd>
+
+        <dt>
+
+          <code><a href="extract_cells.html">extract_cells()</a></code>
+
+        </dt>
+        <dd>Extract cells from cell type groups</dd>
+
+        <dt>
+
+          <code><a href="compute.latent_factors.html">compute.latent_factors()</a></code>
+
+        </dt>
+        <dd>Compute latent factors from cell group scores using NMF</dd>
+
+        <dt>
+
+          <code><a href="compute_cells_niches.html">compute_cells_niches()</a></code>
+
+        </dt>
+        <dd>Identify cell-type niches from NMF latent factors</dd>
+      </dl></div><div class="section level2">
+      <h2 id="tme-state-characterization">TME state characterization<a class="anchor" aria-label="anchor" href="#tme-state-characterization"></a></h2>
+
+      <div class="section-desc"><p>Hallmark GSEA, TCGA meta-programs and TME subtypes</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -218,6 +181,20 @@
 
 
       <dl><dt>
+
+          <code><a href="compute_factor_gsea.html">compute_factor_gsea()</a></code>
+
+        </dt>
+        <dd>Run multivariate feature-based GSEA using limma and Hallmark gene sets</dd>
+
+        <dt>
+
+          <code><a href="build_nes_matrix.html">build_nes_matrix()</a></code>
+
+        </dt>
+        <dd>Build a Hallmarks x factors NES matrix from GSEA results</dd>
+
+        <dt>
 
           <code><a href="derive_meta_programs.html">derive_meta_programs()</a></code>
 
@@ -244,31 +221,10 @@
 
         </dt>
         <dd>Annotate meta-programs with Bagaev TME subtypes</dd>
-
-        <dt>
-
-          <code><a href="build_nes_matrix.html">build_nes_matrix()</a></code>
-
-        </dt>
-        <dd>Build a Hallmarks x factors NES matrix from GSEA results</dd>
-
-        <dt>
-
-          <code><a href="project_factors.html">project_factors()</a></code>
-
-        </dt>
-        <dd>Project cell group scores onto trained NMF latent factors</dd>
-
-        <dt>
-
-          <code><a href="project_test_factors.html">project_test_factors()</a></code>
-
-        </dt>
-        <dd>Project test-set samples onto training NMF factors</dd>
       </dl></div><div class="section level2">
-      <h2 id="utils-1">Utils<a class="anchor" aria-label="anchor" href="#utils-1"></a></h2>
+      <h2 id="statistical-analysis">Statistical analysis<a class="anchor" aria-label="anchor" href="#statistical-analysis"></a></h2>
 
-      <div class="section-desc"><p>Internal use (not exported functions)</p></div>
+      <div class="section-desc"><p>Associations with clinical variables and survival</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -277,68 +233,91 @@
 
       <dl><dt>
 
-          <code><a href="cell.groups.computation.html">cell.groups.computation()</a></code>
+          <code><a href="scores.stat.analysis.html">scores.stat.analysis()</a></code>
 
         </dt>
-        <dd>Compute cell group scores from deconvolution and TF module network</dd>
+        <dd>Perform statistical analysis on scores using a specified test</dd>
 
         <dt>
 
-          <code><a href="classify.deconvolution.html">classify.deconvolution()</a></code>
+          <code><a href="scores.wilcox.test.html">scores.wilcox.test()</a></code>
 
         </dt>
-        <dd>Classify samples by high or low deconvolution values in given cell groups</dd>
+        <dd>Wilcoxon rank-sum test for binary traits</dd>
 
         <dt>
 
-          <code><a href="compute.TF.network.classification.html">compute(<i>&lt;TF.network.classification&gt;</i>)</a></code>
+          <code><a href="scores.ttest.html">scores.ttest()</a></code>
 
         </dt>
-        <dd>Compute TF Network Classification</dd>
+        <dd>Student's t-test for cell group comparisons</dd>
 
         <dt>
 
-          <code><a href="compute.composition.matrix.html">compute(<i>&lt;composition.matrix&gt;</i>)</a></code>
+          <code><a href="scores.kruskal.test.html">scores.kruskal.test()</a></code>
 
         </dt>
-        <dd>Compute a cell-type composition matrix from deconvolution subgroups</dd>
+        <dd>Kruskal-Wallis test for multi-group comparisons</dd>
 
         <dt>
 
-          <code><a href="compute_composite_score.html">compute_composite_score()</a></code>
+          <code><a href="scores.anova.test.html">scores.anova.test()</a></code>
 
         </dt>
-        <dd>Compute composite score for cell groups</dd>
+        <dd>One-way ANOVA test for multi-group comparisons</dd>
 
         <dt>
 
-          <code><a href="create_tfs_modules.html">create_tfs_modules()</a></code>
+          <code><a href="scores.fisher.test.html">scores.fisher.test()</a></code>
 
         </dt>
-        <dd>Create TFs modules</dd>
+        <dd>Fisher's exact test for score-trait association</dd>
 
         <dt>
 
-          <code><a href="extract_cells.html">extract_cells()</a></code>
+          <code><a href="compute.metadata.association.html">compute.metadata.association()</a></code>
 
         </dt>
-        <dd>Extract cells from cell type groups</dd>
+        <dd>Compute associations between TF module scores and clinical metadata</dd>
 
         <dt>
 
-          <code><a href="extract_colors.html">extract_colors()</a></code>
+          <code><a href="compute.survival.analysis.html">compute.survival.analysis()</a></code>
 
         </dt>
-        <dd>Extract colors</dd>
-
-        <dt>
-
-          <code><a href="extract_wilcox_significant.html">extract_wilcox_significant()</a></code>
-
-        </dt>
-        <dd>Extract significant features using Wilcoxon test</dd>
+        <dd>Kaplan-Meier survival analysis on clinical groups or CellTFusion features</dd>
       </dl></div><div class="section level2">
-      <h2 id="package-data">Package Data<a class="anchor" aria-label="anchor" href="#package-data"></a></h2>
+      <h2 id="projection-of-new-cohorts">Projection of new cohorts<a class="anchor" aria-label="anchor" href="#projection-of-new-cohorts"></a></h2>
+
+      <div class="section-desc"><p>Apply trained cell groups and latent factors to independent data</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="project_test_factors.html">project_test_factors()</a></code>
+
+        </dt>
+        <dd>Project test-set samples onto training NMF factors</dd>
+
+        <dt>
+
+          <code><a href="compute.test.set.html">compute.test.set()</a></code>
+
+        </dt>
+        <dd>Compute composite scores on test set based on previous cell groups</dd>
+
+        <dt>
+
+          <code><a href="project_factors.html">project_factors()</a></code>
+
+        </dt>
+        <dd>Project cell group scores onto trained NMF latent factors</dd>
+      </dl></div><div class="section level2">
+      <h2 id="package-data">Package data<a class="anchor" aria-label="anchor" href="#package-data"></a></h2>
 
       <div class="section-desc"><p>Example data</p></div>
 
@@ -356,20 +335,6 @@
 
         <dt>
 
-          <code><a href="traitdata.tuto.html">traitdata.tuto</a></code>
-
-        </dt>
-        <dd>Clinical data</dd>
-
-        <dt>
-
-          <code><a href="tfs.tuto.html">tfs.tuto</a></code>
-
-        </dt>
-        <dd>TFs data</dd>
-
-        <dt>
-
           <code><a href="counts.norm.tuto.html">counts.norm.tuto</a></code>
 
         </dt>
@@ -377,10 +342,10 @@
 
         <dt>
 
-          <code><a href="network.tuto.html">network.tuto</a></code>
+          <code><a href="traitdata.tuto.html">traitdata.tuto</a></code>
 
         </dt>
-        <dd>TF Network</dd>
+        <dd>Clinical data</dd>
 
         <dt>
 
@@ -395,6 +360,20 @@
 
         </dt>
         <dd>Cell subgroups</dd>
+
+        <dt>
+
+          <code><a href="tfs.tuto.html">tfs.tuto</a></code>
+
+        </dt>
+        <dd>TFs data</dd>
+
+        <dt>
+
+          <code><a href="network.tuto.html">network.tuto</a></code>
+
+        </dt>
+        <dd>TF Network</dd>
       </dl></div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>

@@ -1,0 +1,162 @@
+# Machine learning workflows
+
+``` r
+
+library(CellTFusion)
+#> 
+```
+
+`CellTFusion` latent factors (`res$Latent_spaces$Z`) can be used as
+features to predict clinical outcomes. This tutorial trains a classifier
+on a training cohort and applies it to an independent cohort by
+projecting the new samples onto the latent factors learned in training,
+with
+[`project_test_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/project_test_factors.md).
+
+Model training uses the
+[`pipeML`](https://github.com/VeraPancaldiLab/pipeML) package:
+
+``` r
+
+# install.packages("pak")
+pak::pkg_install("VeraPancaldiLab/pipeML")
+```
+
+## **Input data**
+
+Split the example data into a training and a test set:
+
+``` r
+
+raw.counts <- CellTFusion::raw.counts.tuto
+traitdata  <- CellTFusion::traitdata.tuto
+
+index <- caret::createDataPartition(
+  traitdata[, "Best.Confirmed.Overall.Response"],
+  times = 1, p = 0.8, list = FALSE
+)
+
+traitdata_train  <- traitdata[index, ]
+raw.counts_train <- raw.counts[, index]
+
+traitdata_test   <- traitdata[-index, ]
+raw.counts_test  <- raw.counts[, -index]
+```
+
+## **Training**
+
+Run
+[`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md)
+on the training set only:
+
+``` r
+
+res_train <- CellTFusion(
+  raw.counts     = raw.counts_train,
+  normalized     = TRUE,
+  deconv_methods = c("Quantiseq", "Epidish"),
+  cancer_type    = "skcm",
+  file_name      = "Train",
+  return         = TRUE
+)
+```
+
+The latent factor scores are the features.
+`pipeML::compute_features.training.ML()` trains and cross-validates
+several classifiers and keeps the best one:
+
+``` r
+
+ml_res <- pipeML::compute_features.training.ML(
+  features_train = data.frame(res_train$Latent_spaces$Z),
+  task_type      = "classification",
+  target_var     = traitdata_train$Best.Confirmed.Overall.Response,
+  trait.positive = "PD",
+  metric         = "AUROC",
+  k_folds        = 5,
+  n_rep          = 10,
+  ncores         = 2,
+  return         = TRUE
+)
+```
+
+## **Projection of an independent cohort**
+
+[`project_test_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/project_test_factors.md)
+computes the latent factors of new samples from their deconvolution,
+using the cell groups and factors learned on the training set. Nothing
+is re-estimated on the test samples, so no information leaks from the
+test set into the features.
+
+``` r
+
+deconv_test <- multideconv::compute.deconvolution(
+  raw.counts_test,
+  methods    = c("Quantiseq", "Epidish"),
+  normalized = TRUE,
+  return     = FALSE
+)
+
+features_test <- data.frame(project_test_factors(res_train, deconv_test))
+```
+
+**Note:** if the model was trained with `batch = TRUE` (see
+[Multi-cohort
+analysis](https://verapancaldilab.github.io/CellTFusion/articles/a6_batch_analysis.md)),
+the test samples are centered on their own means, as each training
+cohort was. Project one cohort at a time, with enough samples to
+estimate its mean.
+
+## **Prediction**
+
+``` r
+
+pred <- pipeML::compute_prediction(
+  model          = ml_res$Model,
+  test_data      = features_test,
+  target_var     = traitdata_test$Best.Confirmed.Overall.Response,
+  trait.positive = "PD",
+  task_type      = "classification"
+)
+
+pred$AUC$AUROC
+```
+
+## **Cross-validation with features recomputed in each fold**
+
+For an unbiased estimate of performance, the `CellTFusion` features
+should be learned inside each cross-validation fold: on the training
+part of the fold, then projected onto its test part. `pipeML` supports
+this through its `fold_construction_fun` argument. The function below
+computes the features in both modes and can be used inside such a
+fold-construction function:
+
+``` r
+
+compute_features_modular <- function(data, structure = NULL, deconv = NULL,
+                                     coldata = NULL, cancer_type = "skcm",
+                                     TF.collection = "CollecTRI", file_name = NULL,
+                                     final_training = FALSE, normalized = TRUE) {
+  if (is.null(structure)) {
+    # Training: learn cell groups and latent factors on the training samples
+    structure <- CellTFusion(
+      raw.counts    = t(data),
+      deconv        = deconv,
+      normalized    = normalized,
+      coldata       = coldata,
+      cancer_type   = cancer_type,
+      TF.collection = TF.collection,
+      file_name     = file_name,
+      return        = final_training,
+      verbose       = FALSE
+    )
+    features <- data.frame(structure$Latent_spaces$Z)
+  } else {
+    # Test: project the test samples onto the training structure
+    features <- data.frame(project_test_factors(structure, deconv))
+  }
+  list(features = features, structure = structure)
+}
+```
+
+See the `pipeML` documentation for the full fold-construction interface.

@@ -7,8 +7,7 @@ and saves a multi-panel SVG boxplot grid to `Results/`.
 ## Usage
 
 ``` r
-# S3 method for class 'metadata.association.boxplot_summary'
-compute(
+compute.metadata.association.boxplot_summary(
   tfs.modules,
   coldata,
   pval = 0.05,

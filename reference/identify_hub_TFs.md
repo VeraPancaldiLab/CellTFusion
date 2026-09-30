@@ -1,7 +1,11 @@
 # Identify hub TFs
 
 Identifies hub TFs per module using values of module membership and
-degree.
+degree. TFs with high module membership (correlation with the module
+eigengene \> `MM_thresh`) and a degree at or above the `degree_thresh`
+quantile of their module are considered hub TFs. The degree of a TF is
+its intramodular connectivity: the sum of its Pearson correlations with
+the other TFs of the same module.
 
 ## Usage
 
@@ -13,7 +17,9 @@ identify_hub_TFs(datExpr, TF.network, MM_thresh = 0.8, degree_thresh = 0.9)
 
 - datExpr:
 
-  A matrix of TF activity (TFs as rows and samples as columns).
+  A matrix of TF activity (TFs as rows and samples as columns), with TFs
+  in the same order as the module colors of `TF.network` (e.g.
+  `t(TF.network$TFs_matrix)`).
 
 - TF.network:
 
@@ -26,10 +32,6 @@ identify_hub_TFs(datExpr, TF.network, MM_thresh = 0.8, degree_thresh = 0.9)
 - degree_thresh:
 
   Quantile threshold for degree (e.g., 0.9 for top 10%).
-
-  TFs with high module membership (r \> MM_thresh) and among the top
-  percentage of genes by degree (above degree_thresh quantile) are
-  considered hub TFs.
 
 ## Value
 

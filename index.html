@@ -16,8 +16,8 @@
 <script src="deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="CellTFusion">
-<meta name="description" content="Integration of immune-cell type deconvolution and TF networks">
-<meta property="og:description" content="Integration of immune-cell type deconvolution and TF networks">
+<meta name="description" content="Integration of immune cell type deconvolution and TF networks to characterize TME cell states from bulk RNA-seq">
+<meta property="og:description" content="Integration of immune cell type deconvolution and TF networks to characterize TME cell states from bulk RNA-seq">
 <meta property="og:image" content="https://verapancaldilab.github.io/CellTFusion/logo.png">
 </head>
 <body>
@@ -38,20 +38,18 @@
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
 <li class="nav-item"><a class="nav-link" href="articles/CellTFusion.html">Get started</a></li>
-<li class="nav-item"><a class="nav-link" href="reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><hr class="dropdown-divider"></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Tutorials</h6></li>
-    <li><a class="dropdown-item" href="articles/01-feature-computation.html">Feature Computation</a></li>
-    <li><a class="dropdown-item" href="articles/02-cell-groups.html">Cell Group Construction and Latent Factors</a></li>
-    <li><a class="dropdown-item" href="articles/03-tme-states.html">TME State Characterisation</a></li>
-    <li><a class="dropdown-item" href="articles/04-analysis.html">Statistical Analysis</a></li>
-    <li><a class="dropdown-item" href="articles/06-machine-learning.html">Machine Learning</a></li>
-    <li><a class="dropdown-item" href="articles/07-batch-analysis.html">Batch/Multi-cohort Analysis</a></li>
+<li><a class="dropdown-item" href="articles/a1_feature_computation.html">Feature computation</a></li>
+    <li><a class="dropdown-item" href="articles/a2_cell_groups.html">Cell groups and latent factors</a></li>
+    <li><a class="dropdown-item" href="articles/a3_tme_states.html">TME state characterization</a></li>
+    <li><a class="dropdown-item" href="articles/a4_statistical_analysis.html">Statistical analysis</a></li>
+    <li><a class="dropdown-item" href="articles/a5_machine_learning.html">Machine learning workflows</a></li>
+    <li><a class="dropdown-item" href="articles/a6_batch_analysis.html">Multi-cohort analysis</a></li>
   </ul>
 </li>
+<li class="nav-item"><a class="nav-link" href="reference/index.html">Reference</a></li>
       </ul>
 <ul class="navbar-nav">
 <li class="nav-item"><form class="form-inline" role="search">
@@ -66,15 +64,19 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="section level1">
 <div class="page-header">
-<img src="logo.png" class="logo" alt=""><h1 id="celltfusion-">CellTFusion 
-<a class="anchor" aria-label="anchor" href="#celltfusion-"></a>
+<img src="logo.png" class="logo" alt=""><h1 id="celltfusion">CellTFusion<a class="anchor" aria-label="anchor" href="#celltfusion"></a>
 </h1>
 </div>
+</div>
+<div class="section level1">
+<h1 id="celltfusion-">CellTFusion 
+<a class="anchor" aria-label="anchor" href="#celltfusion-"></a>
+</h1>
 <p>Integration of immune-cell type deconvolution features and prior-knowledge networks of TFs-gene interactions to characterize potential cell states of the tumor microenvironment using bulk RNAseq data</p>
 <!-- badges: start -->
 <!-- badges: end -->
 <p align="center">
-<img src="reference/figures/CellTFusion_pipeline.png?raw=true"></p>
+<img src="reference/figures/CellTFusion_pipeline.png" alt="Overview of the CellTFusion pipeline"></p>
 <p align="center">
 <em>Figure 1. A schematic overview of the <code>CellTFusion</code> pipeline</em>
 </p>
@@ -146,7 +148,7 @@
 <span>  pval <span class="op">=</span> <span class="fl">0.05</span>,</span>
 <span>  return <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p><strong>NOTE</strong>: <code>CIBERSORTx</code> is included in the deconvolution methods, but it’s not an open-source program. To run it, please ask for a token in <a href="https://cibersortx.stanford.edu/register.php" class="external-link">CIBERSORTx</a> and once obtained, provided your username and password on the parameters <code>credentials.mail</code> and <code>credentials.token</code>.</p>
+<p><strong>NOTE</strong>: <code>CIBERSORTx</code> is included in the deconvolution methods, but it’s not an open-source program. To run it, request a token at <a href="https://cibersortx.stanford.edu/register.php" class="external-link">CIBERSORTx</a>, add <code>"CBSX"</code> to <code>deconv_methods</code> and provide your email and token with the <code>cbsx.mail</code> and <code>cbsx.token</code> parameters.</p>
 </div>
 <div class="section level2">
 <h2 id="output-structure">Output structure<a class="anchor" aria-label="anchor" href="#output-structure"></a>
@@ -155,13 +157,13 @@
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res</span><span class="op">$</span><span class="va">Cell_groups</span><span class="op">$</span><span class="va">Cell_groups</span>  <span class="co"># data frame of cell group scores (samples x groups)</span></span>
 <span><span class="va">res</span><span class="op">$</span><span class="va">Cell_groups</span><span class="op">$</span><span class="va">Composition</span>  <span class="co"># cell types included in each group</span></span>
-<span><span class="va">res</span><span class="op">$</span><span class="va">Cell_groups</span><span class="op">$</span><span class="va">Weights</span>      <span class="co"># feature loadings per group</span></span></code></pre></div>
+<span><span class="va">res</span><span class="op">$</span><span class="va">Cell_groups</span><span class="op">$</span><span class="va">Weights</span>      <span class="co"># CCA projection parameters per group (used to score new samples)</span></span></code></pre></div>
 <p>For a step-by-step walkthrough of every pipeline stage, see the <a href="https://VeraPancaldiLab.github.io/CellTFusion/articles/CellTFusion.html" class="external-link">Get started</a> vignette and the <a href="https://VeraPancaldiLab.github.io/CellTFusion/articles/" class="external-link">articles</a> section.</p>
 </div>
 <div class="section level2">
 <h2 id="replicate-cell-groups-on-an-independent-dataset">Replicate cell groups on an independent dataset<a class="anchor" aria-label="anchor" href="#replicate-cell-groups-on-an-independent-dataset"></a>
 </h2>
-<p>Use this function to apply the trained cell groups to an external test set and calculate group-specific composite scores.</p>
+<p>Use this function to apply the trained cell groups to an external test set and calculate group-specific composite scores. To directly obtain the latent factors of new samples, use <code>project_test_factors(res, deconv_test)</code> (see the <a href="https://VeraPancaldiLab.github.io/CellTFusion/articles/a5_machine_learning.html" class="external-link">Machine learning workflows</a> article).</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">test_scores</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/compute.test.set.html">compute.test.set</a></span><span class="op">(</span></span>
 <span>  deconv_res <span class="op">=</span> <span class="va">deconv_res_test</span>,</span>
@@ -184,9 +186,10 @@
 <h2 id="citing-celltfusion">Citing <code>CellTFusion</code>
 <a class="anchor" aria-label="anchor" href="#citing-celltfusion"></a>
 </h2>
-<p>If you use <code>CellTFusion</code> in a scientific publication, we would appreciate citation to the :</p>
+<p>If you use <code>CellTFusion</code> in a scientific publication, please cite the GitHub repository (<a href="https://github.com/VeraPancaldiLab/CellTFusion" class="external-link uri">https://github.com/VeraPancaldiLab/CellTFusion</a>). The reference to the associated publication will be added here.</p>
 </div>
 </div>
+
   </main><aside class="col-md-3"><div class="license">
 <h2 data-toc-skip>License</h2>
 <ul class="list-unstyled">

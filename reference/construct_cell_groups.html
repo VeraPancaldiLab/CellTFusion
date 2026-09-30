@@ -16,18 +16,16 @@
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/CellTFusion.html">Get started</a></li>
-<li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><hr class="dropdown-divider"></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Tutorials</h6></li>
-    <li><a class="dropdown-item" href="../articles/01-feature-computation.html">Feature Computation</a></li>
-    <li><a class="dropdown-item" href="../articles/02-cell-groups.html">Cell Group Construction and Latent Factors</a></li>
-    <li><a class="dropdown-item" href="../articles/03-tme-states.html">TME State Characterisation</a></li>
-    <li><a class="dropdown-item" href="../articles/04-analysis.html">Statistical Analysis</a></li>
-    <li><a class="dropdown-item" href="../articles/06-machine-learning.html">Machine Learning</a></li>
-    <li><a class="dropdown-item" href="../articles/07-batch-analysis.html">Batch/Multi-cohort Analysis</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/a1_feature_computation.html">Feature computation</a></li>
+    <li><a class="dropdown-item" href="../articles/a2_cell_groups.html">Cell groups and latent factors</a></li>
+    <li><a class="dropdown-item" href="../articles/a3_tme_states.html">TME state characterization</a></li>
+    <li><a class="dropdown-item" href="../articles/a4_statistical_analysis.html">Statistical analysis</a></li>
+    <li><a class="dropdown-item" href="../articles/a5_machine_learning.html">Machine learning workflows</a></li>
+    <li><a class="dropdown-item" href="../articles/a6_batch_analysis.html">Multi-cohort analysis</a></li>
   </ul></li>
+<li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
       </ul></div>
@@ -65,11 +63,11 @@
 
 
 <dl><dt id="arg-network">network<a class="anchor" aria-label="anchor" href="#arg-network"></a></dt>
-<dd><p>A list containing TF networks for cell types.</p></dd>
+<dd><p>A TF module network as returned by <code><a href="compute.WTCNA.html">compute.WTCNA()</a></code>.</p></dd>
 
 
 <dt id="arg-dt">dt<a class="anchor" aria-label="anchor" href="#arg-dt"></a></dt>
-<dd><p>A list containing deconvolution subgroup structures.</p></dd>
+<dd><p>Deconvolution subgroups as returned by <code><a href="https://verapancaldilab.github.io/multideconv/reference/compute.deconvolution.analysis.html" class="external-link">multideconv::compute.deconvolution.analysis()</a></code>.</p></dd>
 
 
 <dt id="arg-batch">batch<a class="anchor" aria-label="anchor" href="#arg-batch"></a></dt>
@@ -96,19 +94,20 @@ Higher values give more precise p-values but increase runtime. Default: 999.</p>
 
 
 <dt id="arg-return-dendrogram">return_dendrogram<a class="anchor" aria-label="anchor" href="#arg-return-dendrogram"></a></dt>
-<dd><p>Logical. If TRUE, includes the dendrogram in the returned list. Default FALSE.</p></dd>
+<dd><p>Logical. If TRUE, saves a PDF of the colored cell-group dendrograms to
+<code>Results/Dendrogram_color_clusters_&lt;dendrogram_file&gt;.pdf</code> (only when <code>dendrogram_file</code> is set). Default FALSE.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A list of 3 elements:</p><dl><dt>scores</dt>
-<dd><p>A data frame or matrix with the projected cell group scores (samples x groups).</p></dd>
+    <p>A named list of 3 elements:</p><dl><dt>Cell_groups</dt>
+<dd><p>A data frame with the projected cell group scores (samples x groups).</p></dd>
 
-<dt>composition</dt>
-<dd><p>A named list where each element is a character vector of original cell types per group.</p></dd>
+<dt>Composition</dt>
+<dd><p>A named list where each element is a character vector of the deconvolution features in each group.</p></dd>
 
-<dt>loadings</dt>
-<dd><p>A list of numeric vectors indicating the loadings (feature contributions) for each group.</p></dd>
+<dt>Weights</dt>
+<dd><p>A list of CCA projection parameters (<code>xcoef</code>, <code>train_means</code>, <code>train_sds</code>) for each group.</p></dd>
 
 
 </dl></div>

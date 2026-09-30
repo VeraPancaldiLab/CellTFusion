@@ -2,8 +2,9 @@
 
 Combines the per-factor GSEA outputs from
 [`compute_factor_gsea()`](https://verapancaldilab.github.io/CellTFusion/reference/compute_factor_gsea.md)
-into a single matrix. Hallmarks not significant in a given factor are
-filled with 0.
+into a single matrix. All tested Hallmarks are kept regardless of
+significance; Hallmarks absent from a factor's results, or whose NES
+could not be computed, are filled with 0.
 
 ## Usage
 
@@ -17,8 +18,8 @@ build_nes_matrix(gsea_results)
 
   Output list from
   [`compute_factor_gsea()`](https://verapancaldilab.github.io/CellTFusion/reference/compute_factor_gsea.md),
-  containing a `GSEA_results` element (named list of `enrichResult`
-  objects, one per factor).
+  containing a `GSEA_results` element (named list of `fgsea` result
+  tables, one per factor).
 
 ## Value
 

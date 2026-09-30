@@ -1,22 +1,22 @@
 # Compute Transcription Factor (TF) activity
 
 Infers transcription factor (TF) activity from a gene expression matrix
-using the VIPER algorithm (Alvarez et al., 2016). The function requires
-a TF-target gene regulatory network, which can be provided by the user
-or obtained from OmnipathR resources such as CollecTRI or Dorothea.
-ARACNE-inferred networks are also supported.
+with
+[`decoupleR::decouple()`](https://saezlab.github.io/decoupleR/reference/decouple.html),
+keeping the `consensus` score (ensemble of the decoupleR statistics;
+Badia-i-Mompel et al., 2022). The TF-target network can be provided by
+the user, obtained from OmnipathR resources (CollecTRI or Dorothea), or
+read from an ARACNe-inferred network.
 
 ## Usage
 
 ``` r
-# S3 method for class 'TFs.activity'
-compute(
+compute.TFs.activity(
   RNA.counts,
   TF.collection = "CollecTRI",
   min_targets_size = 5,
   universe = NULL,
   cancer.type = NULL,
-  cores = 3,
   scale = TRUE,
   return = TRUE,
   file.name = NULL
@@ -35,31 +35,36 @@ compute(
   Character. The source of the TF-target network. Options are
   `"CollecTRI"` (default), `"Dorothea"`, or `"ARACNE"`.
 
-  - `"CollecTRI"` and `"Dorothea"` use prebuilt collections from
-    OmnipathR.
+  - `"CollecTRI"` and `"Dorothea"` (confidence A and B) use prebuilt
+    collections from OmnipathR. Each collection is cached in its own
+    file, `Results/TF_target_collection_<TF.collection>.csv`, and reused
+    on later calls.
 
-  - `"ARACNE"` allows user input of a custom network file in a 3-column
-    format: `regulator`, `target`, and `mutual information`.
+  - `"ARACNE"` reads a tab-separated network file with `Regulator` and
+    `Target` columns from
+    `input/ARACNE/<cancer.type>/network/network.txt` (relative to the
+    working directory). The mode of regulation of each edge is the sign
+    of the Spearman correlation between TF and target expression.
 
 - min_targets_size:
 
-  Integer. Minimum number of target genes per regulon required for TF
-  activity inference. Default is 5.
+  Integer. Minimum number of target genes per regulon (passed to
+  [`decoupleR::decouple()`](https://saezlab.github.io/decoupleR/reference/decouple.html)
+  as `minsize`). Default is 5.
 
 - universe:
 
-  Optional. A user-specified data frame of TF-target interactions. If
-  not provided, the function will fetch the relevant network based on
-  the `TF.collection` argument.
+  Optional. A user-specified data frame of TF-target interactions
+  (columns `source`, `target`, `mor`). If not provided, the network is
+  fetched based on `TF.collection`. Ignored when
+  `TF.collection = "ARACNE"`.
 
 - cancer.type:
 
-  Optional character. Cancer type label used when caching the TF
-  collection.
-
-- cores:
-
-  Integer. Number of cores used by VIPER inference. Default is 4.
+  Optional character. TCGA cancer type abbreviation used to locate the
+  ARACNe network (only used when `TF.collection = "ARACNE"`). If `NULL`,
+  the network is auto-detected when only one `network.txt` exists under
+  `input/ARACNE/`.
 
 - scale:
 
@@ -77,14 +82,16 @@ compute(
 
 ## Value
 
-A data frame of inferred and scaled TF activity scores, with samples as
-rows and TFs as columns.
+A data frame of inferred (and, if `scale = TRUE`, scaled) TF activity
+scores, with samples as rows and TFs as columns. Column names are made
+syntactically valid with
+[`make.names()`](https://rdrr.io/r/base/make.names.html).
 
 ## References
 
-Alvarez, M. et al. (2016). Functional characterization of somatic
-mutations in cancer using network-based inference of protein activity.
-*Nature Genetics*, 48(8), 838-847. https://doi.org/10.1038/ng.3593
+Badia-i-Mompel, P. et al. (2022). decoupleR: ensemble of computational
+methods to infer biological activities from omics data. *Bioinformatics
+Advances*, 2(1), vbac016. https://doi.org/10.1093/bioadv/vbac016
 
 Tuerei, D., Korcsmaros, T., & Saez-Rodriguez, J. (2016). OmniPath:
 guidelines and gateway for literature-curated signaling pathway
@@ -109,7 +116,7 @@ https://doi.org/10.1186/1471-2105-7-S1-S7
 
 ``` r
 data("counts.norm.tuto")
-tfs_activity <- compute.TFs.activity(counts.norm.tuto, cores = 1)
+tfs_activity <- compute.TFs.activity(counts.norm.tuto)
 #> Warning: One or more parsing issues, call `problems()` on your data frame for details,
 #> e.g.:
 #>   dat <- vroom(...)

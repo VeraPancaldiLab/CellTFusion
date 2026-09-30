@@ -8,8 +8,7 @@ the eigenvalue of the module.
 ## Usage
 
 ``` r
-# S3 method for class 'WTCNA'
-compute(
+compute.WTCNA(
   TFs.matrix,
   batch = FALSE,
   network.type = "signed",
@@ -32,8 +31,12 @@ compute(
 
 - batch:
 
-  Logical; if TRUE, performs consensus WGCNA across cohorts provided as
-  a list.
+  Logical; if TRUE, performs consensus WGCNA
+  ([`WGCNA::blockwiseConsensusModules()`](https://rdrr.io/pkg/WGCNA/man/blockwiseConsensusModules.html))
+  across cohorts provided as a list of matrices. In this mode
+  `clustering.method` and `corr_mod` are not used (modules are merged
+  with a fixed `mergeCutHeight = 0.25`), and module eigengenes are
+  scaled within each cohort.
 
 - network.type:
 
@@ -42,7 +45,8 @@ compute(
 
 - clustering.method:
 
-  Clustering method for hierarchical clustering. Default is "ward.D2".
+  Clustering method for hierarchical clustering (single-cohort mode
+  only). Default is "ward.D2".
 
 - minMod:
 
@@ -50,13 +54,15 @@ compute(
 
 - corr_mod:
 
-  Correlation threshold (0-1) for merging similar modules. Default is
-  0.9.
+  Correlation threshold (0-1) above which module eigengenes are merged
+  (single-cohort mode only). Default is 0.9.
 
 - cor_type:
 
-  Correlation type for adjacency calculation: "p" (Pearson), "s"
-  (Spearman). Default is "p".
+  Correlation used to pick the soft-threshold power and build the
+  adjacency matrix: "p" (Pearson) or "s" (Spearman). Spearman is only
+  available when `batch = FALSE`, because WGCNA consensus modules only
+  support Pearson correlation. Default is "p".
 
 - verbose:
 
@@ -68,8 +74,10 @@ compute(
 
 - softPower:
 
-  Optional numeric value specifying the soft-thresholding power to be
-  used when constructing
+  Optional numeric value specifying the soft-thresholding power used to
+  build the adjacency matrix (one value per cohort when `batch = TRUE`).
+  If `NULL`, the power whose scale-free fit \\R^2\\ is closest to 0.9 is
+  chosen automatically.
 
 - return:
 
@@ -80,13 +88,18 @@ compute(
 
 A named list with:
 
-- `TFs module matrix`: Matrix of module eigengenes (samples x modules).
+- `TFs module matrix`: Scaled module eigengenes (samples x modules). In
+  batch mode, samples are concatenated in cohort order.
 
 - `TFs colors`: Vector of module colors assigned to each TF.
 
 - `TFs per module`: List of TF names in each module.
 
-- `Proportion of variance`: Matrix of variance explained per module.
+- `Proportion of variance`: Variance explained per module (single-cohort
+  mode only).
+
+- `TFs_matrix`: The TF activity matrix used (a list of per-cohort
+  matrices restricted to shared TFs in batch mode).
 
 ## References
 

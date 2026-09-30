@@ -1,91 +1,118 @@
-# Getting Started with CellTFusion
+# CellTFusion
+
+`CellTFusion` integrates immune cell type deconvolution with
+transcription factor (TF)–gene regulatory networks to characterize
+immune cell states in the tumor microenvironment (TME) from bulk RNA-seq
+data.
+
+Starting from a count matrix, `CellTFusion` builds **cell groups** —
+sets of deconvolution features whose abundance follows the activity of a
+TF co-activity module — and summarizes them into **latent factors**, a
+compact representation of the TME that can be annotated as TME states,
+tested against clinical variables and used as features for machine
+learning.
+
+## Installation
+
+To avoid GitHub API rate limit issues, set up a Personal Access Token
+(PAT) before installing:
+
+``` r
+
+# install.packages(c("usethis", "gitcreds"))
+usethis::create_github_token()
+gitcreds::gitcreds_set()
+```
+
+Install `CellTFusion` from GitHub:
+
+``` r
+
+# install.packages("pak")
+pak::pkg_install("VeraPancaldiLab/CellTFusion")
+```
+
+## Quick start
+
+The
+[`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md)
+wrapper runs the whole pipeline in one call, using the example data
+shipped with the package. Intermediate results and plots are saved in a
+`Results/` folder in the working directory.
 
 ``` r
 
 library(CellTFusion)
-#> 
-#> 
-```
-
-## Overview
-
-`CellTFusion` integrates immune cell-type deconvolution with
-transcription factor (TF)–gene regulatory networks to characterize
-immune cell states in the tumor microenvironment from bulk RNA-seq data.
-
-Starting from a raw count matrix, the pipeline produces **latent
-factors** — compact representations of the TME landscape that can be
-tested for clinical associations, mapped to known cancer meta-programs,
-and used as features for machine learning.
-
-## Pipeline steps
-
-| Step | Function | Article |
-|----|----|----|
-| Cell-type deconvolution | [`multideconv::compute.deconvolution()`](https://rdrr.io/pkg/multideconv/man/compute.deconvolution.html) | [Feature Computation](https://verapancaldilab.github.io/CellTFusion/articles/articles/01-feature-computation.md) |
-| TF activity inference | [`compute.TFs.activity()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.TFs.activity.md) | [Feature Computation](https://verapancaldilab.github.io/CellTFusion/articles/articles/01-feature-computation.md) |
-| TF module construction | [`compute.WTCNA()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.WTCNA.md) | [Feature Computation](https://verapancaldilab.github.io/CellTFusion/articles/articles/01-feature-computation.md) |
-| Pathway activity scoring | [`compute.pathway.activity()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.pathway.activity.md) | [Feature Computation](https://verapancaldilab.github.io/CellTFusion/articles/articles/01-feature-computation.md) |
-| Cell group construction | [`construct_cell_groups()`](https://verapancaldilab.github.io/CellTFusion/reference/construct_cell_groups.md) | [Cell Groups & Latent Factors](https://verapancaldilab.github.io/CellTFusion/articles/articles/02-cell-groups.md) |
-| Latent factor extraction | [`compute.latent_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.latent_factors.md) | [Cell Groups & Latent Factors](https://verapancaldilab.github.io/CellTFusion/articles/articles/02-cell-groups.md) |
-| Cell niche derivation | [`compute_cells_niches()`](https://verapancaldilab.github.io/CellTFusion/reference/compute_cells_niches.md) | [Cell Groups & Latent Factors](https://verapancaldilab.github.io/CellTFusion/articles/articles/02-cell-groups.md) |
-| Hallmark GSEA per factor | [`compute_factor_gsea()`](https://verapancaldilab.github.io/CellTFusion/reference/compute_factor_gsea.md) | [TME State Characterisation](https://verapancaldilab.github.io/CellTFusion/articles/articles/03-tme-states.md) |
-| Meta-program mapping | [`map_factors_to_metaprograms()`](https://verapancaldilab.github.io/CellTFusion/reference/map_factors_to_metaprograms.md) | [TME State Characterisation](https://verapancaldilab.github.io/CellTFusion/articles/articles/03-tme-states.md) |
-| TME subtype annotation | [`map_factors_to_TME()`](https://verapancaldilab.github.io/CellTFusion/reference/map_factors_to_TME.md) | [TME State Characterisation](https://verapancaldilab.github.io/CellTFusion/articles/articles/03-tme-states.md) |
-| Clinical association testing | [`scores.stat.analysis()`](https://verapancaldilab.github.io/CellTFusion/reference/scores.stat.analysis.md) | [Statistical Analysis](https://verapancaldilab.github.io/CellTFusion/articles/articles/04-analysis.md) |
-| Survival analysis | [`compute.survival.analysis()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.survival.analysis.md) | [Statistical Analysis](https://verapancaldilab.github.io/CellTFusion/articles/articles/04-analysis.md) |
-| Test-set projection | [`project_test_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/project_test_factors.md) | [Machine Learning](https://verapancaldilab.github.io/CellTFusion/articles/articles/06-machine-learning.md) |
-| ML model training | `pipeML::compute_features.training.ML()` | [Machine Learning](https://verapancaldilab.github.io/CellTFusion/articles/articles/06-machine-learning.md) |
-| Multi-cohort (batch) analysis | `batch = TRUE` in [`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md) | [Batch/Multi-cohort Analysis](https://verapancaldilab.github.io/CellTFusion/articles/articles/07-batch-analysis.md) |
-
-The full pipeline — every step above run in the right order in a single
-call — is available through the
-[`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md)
-wrapper function; see the package
-[README](https://VeraPancaldiLab.github.io/CellTFusion/) for usage
-examples, including multi-cohort mode and re-running with precomputed
-features (`dt`, `tfs`, `pathways`).
-
-## Quick start
-
-Load the pre-packaged example data and run the full pipeline in one
-call:
-
-``` r
-
-raw.counts <- CellTFusion::raw.counts.tuto
-traitdata  <- CellTFusion::traitdata.tuto
-```
-
-``` r
 
 res <- CellTFusion(
-  raw.counts    = raw.counts,
-  normalized    = TRUE,
-  coldata       = traitdata,
+  raw.counts     = CellTFusion::raw.counts.tuto,
+  normalized     = TRUE,
   deconv_methods = c("Quantiseq", "Epidish"),
-  cancer_type   = "skcm",
-  corr          = 0.7,
-  pval          = 0.05,
-  file_name     = "Tutorial",
-  return        = TRUE
+  cancer_type    = "skcm",
+  file_name      = "Tutorial"
 )
 
-# Latent factor scores — use for stat tests and ML
-head(res$Latent_spaces$Z)
-
-# TME state annotations
-head(res$TME_states)
+head(res$Latent_spaces$Z)  # latent factor scores (samples x factors)
+res$TME_states             # mapping of each latent factor to a TCGA meta-program
 ```
 
-Follow the articles linked in the table above for a step-by-step
-explanation of each stage.
+## Pipeline
 
-## Installation
+| Step | Function | Tutorial |
+|----|----|----|
+| Cell type deconvolution | [`multideconv::compute.deconvolution()`](https://verapancaldilab.github.io/multideconv/reference/compute.deconvolution.html) | [Feature computation](https://verapancaldilab.github.io/CellTFusion/articles/a1_feature_computation.md) |
+| TF activity inference | [`compute.TFs.activity()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.TFs.activity.md) | [Feature computation](https://verapancaldilab.github.io/CellTFusion/articles/a1_feature_computation.md) |
+| TF co-activity modules | [`compute.WTCNA()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.WTCNA.md) | [Feature computation](https://verapancaldilab.github.io/CellTFusion/articles/a1_feature_computation.md) |
+| Pathway activity | [`compute.pathway.activity()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.pathway.activity.md) | [Feature computation](https://verapancaldilab.github.io/CellTFusion/articles/a1_feature_computation.md) |
+| Cell groups | [`construct_cell_groups()`](https://verapancaldilab.github.io/CellTFusion/reference/construct_cell_groups.md) | [Cell groups and latent factors](https://verapancaldilab.github.io/CellTFusion/articles/a2_cell_groups.md) |
+| Latent factors | [`compute.latent_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.latent_factors.md) | [Cell groups and latent factors](https://verapancaldilab.github.io/CellTFusion/articles/a2_cell_groups.md) |
+| Cell niches | [`compute_cells_niches()`](https://verapancaldilab.github.io/CellTFusion/reference/compute_cells_niches.md) | [Cell groups and latent factors](https://verapancaldilab.github.io/CellTFusion/articles/a2_cell_groups.md) |
+| Hallmark GSEA per factor | [`compute_factor_gsea()`](https://verapancaldilab.github.io/CellTFusion/reference/compute_factor_gsea.md) | [TME state characterization](https://verapancaldilab.github.io/CellTFusion/articles/a3_tme_states.md) |
+| Meta-program mapping | [`map_factors_to_metaprograms()`](https://verapancaldilab.github.io/CellTFusion/reference/map_factors_to_metaprograms.md) | [TME state characterization](https://verapancaldilab.github.io/CellTFusion/articles/a3_tme_states.md) |
+| TME subtype annotation | [`map_factors_to_TME()`](https://verapancaldilab.github.io/CellTFusion/reference/map_factors_to_TME.md) | [TME state characterization](https://verapancaldilab.github.io/CellTFusion/articles/a3_tme_states.md) |
+| Clinical associations | [`scores.stat.analysis()`](https://verapancaldilab.github.io/CellTFusion/reference/scores.stat.analysis.md) | [Statistical analysis](https://verapancaldilab.github.io/CellTFusion/articles/a4_statistical_analysis.md) |
+| Survival analysis | [`compute.survival.analysis()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.survival.analysis.md) | [Statistical analysis](https://verapancaldilab.github.io/CellTFusion/articles/a4_statistical_analysis.md) |
+| Projection of new cohorts | [`project_test_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/project_test_factors.md) | [Machine learning workflows](https://verapancaldilab.github.io/CellTFusion/articles/a5_machine_learning.md) |
+| Multi-cohort analysis | `CellTFusion(batch = TRUE)` | [Multi-cohort analysis](https://verapancaldilab.github.io/CellTFusion/articles/a6_batch_analysis.md) |
+
+## Tutorials
+
+Step-by-step tutorials are available in the **Articles** section of the
+navigation bar:
+
+- **[Feature
+  computation](https://verapancaldilab.github.io/CellTFusion/articles/a1_feature_computation.md)**
+  — cell type deconvolution, TF activity, TF co-activity modules and
+  pathway activity
+- **[Cell groups and latent
+  factors](https://verapancaldilab.github.io/CellTFusion/articles/a2_cell_groups.md)**
+  — build cell groups, extract latent factors and characterize cell
+  niches
+- **[TME state
+  characterization](https://verapancaldilab.github.io/CellTFusion/articles/a3_tme_states.md)**
+  — Hallmark GSEA, TCGA meta-programs and TME subtypes
+- **[Statistical
+  analysis](https://verapancaldilab.github.io/CellTFusion/articles/a4_statistical_analysis.md)**
+  — associations with clinical variables and survival
+- **[Machine learning
+  workflows](https://verapancaldilab.github.io/CellTFusion/articles/a5_machine_learning.md)**
+  — use latent factors as features and project independent cohorts
+- **[Multi-cohort
+  analysis](https://verapancaldilab.github.io/CellTFusion/articles/a6_batch_analysis.md)**
+  — correct for cohort effects with `batch = TRUE`
+
+## Shiny app
+
+`CellTFusion` includes an interactive app to run the pipeline on the
+example data or on your own data:
 
 ``` r
 
-remotes::install_github("VeraPancaldiLab/CellTFusion")
+shiny::runApp(system.file("shiny", package = "CellTFusion"))
 ```
 
-## References
+## Citation
+
+If you use `CellTFusion` in a scientific publication, please cite the
+GitHub repository (<https://github.com/VeraPancaldiLab/CellTFusion>).
+The reference to the associated publication will be added here.

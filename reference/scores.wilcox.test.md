@@ -14,10 +14,13 @@ scores.wilcox.test(scores, coldata, trait, pval = 0.05)
 
 - scores:
 
-  A list, NMF output from
-  [`compute.latent_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.latent_factors.md),
-  or a score matrix. When a list, the first element must be a samples x
-  features score matrix.
+  A list whose first element is a samples x features score matrix, e.g.
+  the output of
+  [`construct_cell_groups()`](https://verapancaldilab.github.io/CellTFusion/reference/construct_cell_groups.md)
+  or
+  [`compute.latent_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.latent_factors.md).
+  To test a plain matrix, use
+  [`scores.stat.analysis()`](https://verapancaldilab.github.io/CellTFusion/reference/scores.stat.analysis.md).
 
 - coldata:
 

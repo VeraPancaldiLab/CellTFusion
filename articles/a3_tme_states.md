@@ -1,0 +1,207 @@
+# TME state characterization
+
+``` r
+
+library(CellTFusion)
+#> 
+```
+
+Once latent factors have been extracted (see [Cell groups and latent
+factors](https://verapancaldilab.github.io/CellTFusion/articles/a2_cell_groups.md)),
+each factor can be linked to known biological programs:
+
+1.  **Hallmark GSEA** — associate each factor with MSigDB Hallmark gene
+    sets.
+2.  **Meta-program mapping** — match each factor to cancer type-specific
+    reference programs derived from TCGA.
+3.  **TME subtype annotation** — relate factors to established TME
+    subtypes.
+
+These steps use:
+
+- `counts.norm` — normalized expression matrix (genes x samples).
+- `latent_spaces` — output of
+  [`compute.latent_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.latent_factors.md);
+  `latent_spaces$Z` is the samples x factors matrix.
+
+## **Hallmark GSEA per latent factor**
+
+[`compute_factor_gsea()`](https://verapancaldilab.github.io/CellTFusion/reference/compute_factor_gsea.md)
+fits a multivariate `limma` model with the latent factor scores as
+covariates, ranks genes by their moderated t-statistic for each factor,
+and runs a pre-ranked GSEA with `fgsea` ([Korotkevich et al.
+2021](#ref-Korotkevich2021)) against the MSigDB Hallmark collection
+([Liberzon et al. 2015](#ref-Liberzon2015)). The Hallmark collection
+summarizes about 50 well-defined biological processes (e.g. EMT,
+interferon response, hypoxia), a natural vocabulary to interpret
+data-driven factors. The samples of `features_df` must be in the same
+order as the columns of `RNA.tpm`.
+
+``` r
+
+gsea_results <- compute_factor_gsea(
+  RNA.tpm     = counts.norm,
+  features_df = latent_spaces$Z,
+  plot_dot    = TRUE,
+  top_n       = 10,
+  file_name   = "Tutorial"
+)
+```
+
+| Element         | Description                                   |
+|-----------------|-----------------------------------------------|
+| `$DE_results`   | Named list of `limma` results, one per factor |
+| `$GSEA_results` | Named list of `fgsea` results, one per factor |
+
+With `plot_dot = TRUE`, a dot plot of the top Hallmarks is saved per
+factor (dot size = significance, color = normalized enrichment score,
+NES):
+
+![Dot plot of the top Hallmark gene sets for latent factor
+1](figures/gsea_factor1.png)
+
+## **Mapping factors to TCGA meta-programs**
+
+### What are meta-programs?
+
+A **meta-program (MP)** is a recurrent transcriptional program
+reflecting a cell state (e.g. cell cycle, hypoxia,
+epithelial-mesenchymal transition, interferon response) that recurs
+across tumors and cancer types. Gavish et al. ([Gavish et al.
+2023](#ref-Gavish2023)) characterized such programs from single-cell
+RNA-seq across many cancers. `CellTFusion` follows the same logic with
+bulk TCGA data: it derives cancer type-specific meta-programs from TCGA,
+so that factors found in a new study can be described with a shared
+vocabulary of TME states.
+
+### How `map_factors_to_metaprograms()` works
+
+1.  **Reference (pre-built, per cancer type):** `CellTFusion` was run on
+    a TCGA cohort, and the Hallmarks were clustered by their NES
+    profiles across the TCGA factors
+    ([`derive_meta_programs()`](https://verapancaldilab.github.io/CellTFusion/reference/derive_meta_programs.md)).
+    Each resulting meta-program is a set of Hallmarks, annotated with a
+    TME subtype (see below). References are shipped for `"blca"`
+    (bladder cancer), `"luad"` (lung adenocarcinoma) and `"skcm"`
+    (melanoma).
+2.  **Study factors:** the Hallmark NES of each study factor come from
+    [`compute_factor_gsea()`](https://verapancaldilab.github.io/CellTFusion/reference/compute_factor_gsea.md).
+3.  **Matching:** for each study factor and each meta-program, the mean
+    NES of the meta-program’s Hallmarks is computed. The meta-program
+    with the highest positive mean NES is the factor’s `best_MP`.
+
+In other words: *which known program does this factor’s Hallmark
+signature resemble most?*
+
+``` r
+
+mp_mapping <- map_factors_to_metaprograms(
+  gsea_study  = gsea_results,
+  cancer_type = "skcm",
+  plot        = TRUE,
+  file_name   = "Tutorial"
+)
+```
+
+| Element | Description |
+|----|----|
+| `$factor_mapping` | One row per study factor: `factor`, `best_MP`, `best_score` (its mean NES), `all_scores` (mean NES for every meta-program) and `TME_subtype` of the best meta-program |
+| `$reference` | The meta-program reference: `meta_program`, its `hallmarks` and `TME_subtype` |
+
+A custom reference can be used with `mp_file`, either a data frame like
+`$reference` or the path to an `.RData` file containing an object named
+`meta_programs`.
+
+With `plot = TRUE`, each panel shows a study factor: grey bars are the
+mean NES for every meta-program, and the best-matching one is colored by
+its TME subtype:
+
+![Bar plots of mean NES per meta-program for each study factor, with the
+best match highlighted](figures/mp_mapping.png)
+
+## **TME subtypes**
+
+[`map_factors_to_TME()`](https://verapancaldilab.github.io/CellTFusion/reference/map_factors_to_TME.md)
+uses the TCGA annotations of Bagaev et al. ([Bagaev et al.
+2021](#ref-Bagaev2021)), who defined four pan-cancer TME subtypes
+(Molecular Functional Portraits, MFP):
+
+- **IE** (immune-enriched, non-fibrotic) — high immune infiltration, low
+  stromal signal.
+- **IE/F** (immune-enriched, fibrotic) — high immune infiltration with a
+  fibrotic/stromal signature.
+- **F** (fibrotic) — stroma-dominated, low immune infiltration.
+- **D** (depleted) — low immune infiltration and low fibrosis.
+
+These subtypes are associated with response to immune checkpoint
+blockade. For a TCGA cancer type,
+[`map_factors_to_TME()`](https://verapancaldilab.github.io/CellTFusion/reference/map_factors_to_TME.md)
+matches the TCGA patients in `Z` to their MFP subtype and tests each
+factor across the four subtypes with a Kruskal-Wallis test. Factors with
+p \< 0.05 are labeled with the subtype that has the highest median
+score; the others are labeled `"uncharacterized"`. This is how the TME
+subtypes of the TCGA meta-program references were assigned
+([`annotate_metaprograms_TME()`](https://verapancaldilab.github.io/CellTFusion/reference/annotate_metaprograms_TME.md)).
+
+``` r
+
+tme_annotation <- map_factors_to_TME(
+  cancer_name = "skcm",
+  Z           = latent_spaces$Z,   # TCGA samples x factors
+  plot        = TRUE,
+  file_name   = "Tutorial"
+)
+```
+
+## **Deriving meta-programs**
+
+To build your own reference, for example from several cohorts,
+[`derive_meta_programs()`](https://verapancaldilab.github.io/CellTFusion/reference/derive_meta_programs.md)
+clusters the Hallmarks by their NES profiles across factors. The number
+of meta-programs `k` is chosen at the elbow of the within-cluster sum of
+squares if `NULL`.
+
+``` r
+
+meta_programs <- derive_meta_programs(
+  gsea_results = gsea_results,
+  k            = NULL,
+  file_name    = "Tutorial",
+  plot         = TRUE
+)
+```
+
+## **Running everything with `CellTFusion()`**
+
+The GSEA and meta-program mapping are run by
+[`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md)
+when `cancer_type` is given:
+
+``` r
+
+res <- CellTFusion(raw.counts = raw.counts, cancer_type = "skcm")
+
+res$TME_states              # factor-to-meta-program mapping
+res$Metaprograms_reference  # meta-program reference used
+```
+
+## References
+
+Bagaev, Alexander, Nikita Kotlov, Krystle Nomie, et al. 2021. “Conserved
+Pan-Cancer Microenvironment Subtypes Predict Response to Immunotherapy.”
+*Cancer Cell* 39 (6): 845–865.e7.
+<https://doi.org/10.1016/j.ccell.2021.04.014>.
+
+Gavish, Avishai, Michael Tyler, Alissa C. Greenwald, et al. 2023.
+“Hallmarks of Transcriptional Intratumour Heterogeneity Across a
+Thousand Tumours.” *Nature* 618 (7965): 598–606.
+<https://doi.org/10.1038/s41586-023-06130-4>.
+
+Korotkevich, Gennady, Vladimir Sukhov, Nikolay Budin, Boris Shpak, Maxim
+N. Artyomov, and Alexey Sergushichev. 2021. “Fast Gene Set Enrichment
+Analysis.” *bioRxiv*, ahead of print. <https://doi.org/10.1101/060012>.
+
+Liberzon, Arthur, Chet Birger, Helga Thorvaldsdóttir, Mahmoud Ghandi,
+Jill P. Mesirov, and Pablo Tamayo. 2015. “The Molecular Signatures
+Database (MSigDB) Hallmark Gene Set Collection.” *Cell Systems* 1 (6):
+417–25. <https://doi.org/10.1016/j.cels.2015.12.004>.

@@ -29,7 +29,9 @@ project_test_factors(train_processed, test_deconv)
 
   A numeric matrix or data frame of deconvolution features for the test
   samples (samples x cell types). Column names must match those used
-  during training.
+  during training. If the model was trained with batch correction, the
+  test samples are centred on their own means (as each training cohort
+  was), so they should come from a single cohort.
 
 ## Value
 

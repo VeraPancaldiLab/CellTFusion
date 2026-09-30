@@ -16,9 +16,8 @@ plot(
   p_mat,
   file_name,
   pval = 0.05,
-  cor_type = "p",
-  width = width,
-  height = width,
+  width = 12,
+  height = 10,
   only_sig = TRUE,
   ncol = NULL
 )
@@ -52,18 +51,15 @@ plot(
 
   Numeric. P-value cutoff for displaying a pair. Default 0.05.
 
-- cor_type:
-
-  Character. Label used in axis text (e.g., `"p"` for Pearson). Default
-  `"p"`.
-
 - width:
 
-  Numeric. Width of the SVG output in inches. Default same as `height`.
+  Numeric. Width of the SVG output in inches. Default 12. Increased if
+  needed so that each panel is at least 2 inches wide.
 
 - height:
 
-  Numeric. Height of the SVG output in inches. Default same as `width`.
+  Numeric. Height of the SVG output in inches. Default 10. Increased if
+  needed so that each panel is at least 2 inches high.
 
 - only_sig:
 

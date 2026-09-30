@@ -7,8 +7,7 @@ canonical component learned during training.
 ## Usage
 
 ``` r
-# S3 method for class 'test.score'
-compute(cell_group, projection_params)
+compute.test.score(cell_group, projection_params)
 ```
 
 ## Arguments
@@ -29,7 +28,9 @@ compute(cell_group, projection_params)
 
   train_means
 
-  :   Named numeric vector of training column means.
+  :   Named numeric vector of training column means, or `NULL` if the
+      training used batch correction, in which case the test data are
+      centred on their own column means.
 
   train_sds
 

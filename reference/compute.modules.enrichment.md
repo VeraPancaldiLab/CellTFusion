@@ -1,8 +1,8 @@
 # Compute TF module enrichment using directed target genes
 
 This function performs enrichment analysis for transcription factor (TF)
-modules using known TF-target interactions. For each module, it
-identifies hub TFs and retrieves their known targets from the CollecTRI
+modules using known TF-target interactions. For each module, it takes
+the hub TFs and retrieves their known targets from the CollecTRI
 database. It then conducts an over-representation analysis (ORA) against
 the Reactome pathway database. To reduce redundancy, only unique
 pathways per module are retained by filtering out overlaps between
@@ -11,8 +11,7 @@ modules.
 ## Usage
 
 ``` r
-# S3 method for class 'modules.enrichment'
-compute(RNA.tpm, hub_tfs)
+compute.modules.enrichment(RNA.tpm, hub_tfs)
 ```
 
 ## Arguments
@@ -35,18 +34,22 @@ compute(RNA.tpm, hub_tfs)
 ## Value
 
 No object is returned. For each module with significant enrichment
-(p-value \< 0.05), a dot plot is saved in the `Results/` directory as a
-PDF file named `Module <color>.pdf`. If no enrichment is found for a
-module, a message is printed and no file is saved for that module.
+(adjusted p-value \< 0.05), a dot plot is saved in the `Results/`
+directory as a PDF file named `Enrichment_Reactome_Module_<color>.pdf`.
+If no enrichment is found for a module, a message is printed and no file
+is saved for that module.
 
 ## Details
 
 The function uses the
 [`decoupleR::get_collectri()`](https://saezlab.github.io/decoupleR/reference/get_collectri.html)
-function to obtain TF-target relationships, and
-`clusterProfiler::enrichPathway()` for ORA using the Reactome database.
-Pathways shared between multiple modules are filtered using a Venn
-diagram-based comparison to retain only module-specific results.
+function to obtain TF-target relationships (cached in
+`Results/TF_target_collection_CollecTRI.csv`), and
+[`ReactomePA::enrichPathway()`](https://rdrr.io/pkg/ReactomePA/man/enrichPathway.html)
+for ORA using the Reactome database. The ORA input is the 20% most
+variable targets of the module's hub TFs (at least one gene). Pathways
+enriched in more than one module are removed, so only module-specific
+results are kept.
 
 ## Examples
 

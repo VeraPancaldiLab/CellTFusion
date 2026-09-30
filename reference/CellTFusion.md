@@ -15,7 +15,7 @@ CellTFusion(
   coldata = NULL,
   batch = F,
   batch_id = NULL,
-  deconv_methods = c("Quantiseq", "CBSX", "Epidish", "DeconRNASeq", "DWLS"),
+  deconv_methods = c("Quantiseq", "Epidish", "DeconRNASeq", "DWLS"),
   cbsx.mail = NULL,
   cbsx.token = NULL,
   file_name = NULL,
@@ -55,7 +55,7 @@ CellTFusion(
 - dt:
 
   (Optional) A precomputed cell-subgroup object, typically the output of
-  [`multideconv::compute.deconvolution.analysis()`](https://rdrr.io/pkg/multideconv/man/compute.deconvolution.analysis.html)
+  [`multideconv::compute.deconvolution.analysis()`](https://verapancaldilab.github.io/multideconv/reference/compute.deconvolution.analysis.html)
   (or the `Processed_deconvolution` element returned by a previous
   `CellTFusion()` run). If supplied, cell-type deconvolution and the
   deconvolution analysis step are both skipped and the pipeline proceeds
@@ -85,8 +85,9 @@ CellTFusion(
 
 - coldata:
 
-  (Optional) A data frame containing clinical metadata for association
-  analysis with TF modules.
+  (Optional) A data frame of sample metadata (samples as rows). Only
+  used when `batch = TRUE`, to read the batch column given by
+  `batch_id`.
 
 - batch:
 
@@ -100,19 +101,19 @@ CellTFusion(
 
 - deconv_methods:
 
-  A character vector of deconvolution methods to apply. Default
-  includes:
-  `c("Quantiseq", "Epidish", "DeconRNASeq", "DWLS", "CibersortX")`.
+  A character vector of deconvolution methods to apply. Default is
+  `c("Quantiseq", "Epidish", "DeconRNASeq", "DWLS")`. Add `"CBSX"` to
+  also run CIBERSORTx (requires `cbsx.mail` and `cbsx.token`).
 
 - cbsx.mail:
 
-  (Optional) Email credential for CIBERSORTx. Required if "CibersortX"
-  is among deconv_methods.
+  (Optional) Email credential for CIBERSORTx. Required if "CBSX" is
+  among deconv_methods.
 
 - cbsx.token:
 
-  (Optional) Token credential for CIBERSORTx. Required if "CibersortX"
-  is among deconv_methods.
+  (Optional) Token credential for CIBERSORTx. Required if "CBSX" is
+  among deconv_methods.
 
 - file_name:
 
@@ -126,13 +127,15 @@ CellTFusion(
   - `"CollecTRI"` and `"Dorothea"` use prebuilt collections from
     OmnipathR.
 
-  - `"ARACNE"` allows user input of a custom network file in a 3-column
-    format: `regulator`, `target`, and `mutual information`.
+  - `"ARACNE"` reads a network file (tab-separated with `Regulator` and
+    `Target` columns) from
+    `input/ARACNE/<cancer_type>/network/network.txt`.
 
 - min_targets_size:
 
-  Integer. Minimum number of target genes per regulon required for TF
-  activity inference. Default is 5.
+  Integer. Minimum number of target genes per regulon, passed to
+  [`compute.TFs.activity()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.TFs.activity.md).
+  Default is 3.
 
 - universe:
 
@@ -148,18 +151,19 @@ CellTFusion(
 
 - gene_sets:
 
-  Optional. A data frame of custom gene sets passed to
+  Optional. A named list of custom gene sets (character vectors of gene
+  symbols) passed to
   [`compute.pathway.activity()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.pathway.activity.md)'s
   `gene_sets` argument for GSVA-based scoring. If `NULL`, only PROGENy
   is used.
 
 - minMod:
 
-  Integer; minimum module size for WGCNA module detection.
+  Integer; minimum module size for WGCNA module detection. Default is 3.
 
 - corr_mod:
 
-  Numeric; correlation threshold for merging TF modules.
+  Numeric; correlation threshold for merging TF modules. Default is 0.9.
 
 - corr:
 
@@ -177,8 +181,8 @@ CellTFusion(
 
 - pval:
 
-  Numeric; p-value threshold for statistical tests (e.g., metadata and
-  relationship associations).
+  Numeric; p-value threshold used when building cell groups (TF
+  module-deconvolution correlations and the CCA permutation test).
 
 - enrich_thresh:
 
@@ -193,17 +197,19 @@ CellTFusion(
 
 - cancer_type:
 
-  Character. TCGA cancer type abbreviation (e.g., `"blca"`, `"skcm"`).
-  Used for two purposes: (1) loading TCGA meta-programs for TME state
-  mapping, and (2) when `TF.collection = "ARACNE"`, locating the ARACNe
-  network at `input/ARACNE/<cancer_type>/network/network.txt`. If `NULL`
-  and only one ARACNe network exists under `input/ARACNE/`, it is
-  auto-detected.
+  Character. TCGA cancer type abbreviation (one of `"blca"`, `"luad"`,
+  `"skcm"`). Used for two purposes: (1) loading TCGA meta-programs for
+  TME state mapping, and (2) when `TF.collection = "ARACNE"`, locating
+  the ARACNe network at
+  `input/ARACNE/<cancer_type>/network/network.txt`. If `NULL`, the
+  meta-program mapping step is skipped (`TME_states` and
+  `Metaprograms_reference` are `NULL`) and, for ARACNE, the network is
+  auto-detected when only one exists under `input/ARACNE/`.
 
 - return:
 
-  Logical; if TRUE, returns intermediate results from internal
-  functions. Default is TRUE.
+  Logical; if TRUE, intermediate matrices and plots are written to the
+  "Results/" folder. Default is TRUE.
 
 - verbose:
 
@@ -216,27 +222,64 @@ A list containing:
 - Deconvolution:
 
   A matrix with cell-type proportions (samples as rows, cell types as
-  columns).
+  columns); `NULL` if `dt` was supplied.
 
 - TFs_matrix:
 
-  A matrix with TF activity scores (samples as rows, TFs as columns).
+  A matrix with TF activity scores (samples as rows, TFs as columns), or
+  a list of matrices (one per cohort) when `batch = TRUE`.
 
 - TF_network:
 
-  A list representing the TF module network and related WGCNA output.
+  The TF module network returned by
+  [`compute.WTCNA()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.WTCNA.md).
 
 - Pathways_scores:
 
-  A matrix of pathway activity scores.
+  Pathway activity scores returned by
+  [`compute.pathway.activity()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.pathway.activity.md).
 
 - Processed_deconvolution:
 
-  An object with the processed deconvolution analysis results.
+  The processed deconvolution subgroups (output of
+  [`multideconv::compute.deconvolution.analysis()`](https://verapancaldilab.github.io/multideconv/reference/compute.deconvolution.analysis.html)).
 
 - Cell_groups:
 
-  A matrix of scores representing the cell groups across samples.
+  Output of
+  [`construct_cell_groups()`](https://verapancaldilab.github.io/CellTFusion/reference/construct_cell_groups.md):
+  cell group scores, compositions and projection weights.
+
+- Latent_spaces:
+
+  NMF latent factors returned by
+  [`compute.latent_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.latent_factors.md).
+
+- Cells_niches:
+
+  Enriched cell types per latent factor (see
+  [`compute_cells_niches()`](https://verapancaldilab.github.io/CellTFusion/reference/compute_cells_niches.md)).
+
+- TME_states:
+
+  Factor-to-meta-program mapping (`factor_mapping` from
+  [`map_factors_to_metaprograms()`](https://verapancaldilab.github.io/CellTFusion/reference/map_factors_to_metaprograms.md)),
+  or `NULL` if `cancer_type` is `NULL`.
+
+- Metaprograms_reference:
+
+  The TCGA meta-program reference used for mapping, or `NULL` if
+  `cancer_type` is `NULL`.
+
+## Details
+
+The pipeline runs with a fixed random seed (123) so results are
+reproducible; the caller's random number generator state is restored
+when the function returns. With `normalized = TRUE`, sample names are
+converted with [`make.names()`](https://rdrr.io/r/base/make.names.html)
+(e.g. `"TCGA-XX-1234"` becomes `"TCGA.XX.1234"`), as
+[`multideconv::compute.deconvolution()`](https://verapancaldilab.github.io/multideconv/reference/compute.deconvolution.html)
+also does; `deconv` rows are matched to the samples in either form.
 
 ## Examples
 

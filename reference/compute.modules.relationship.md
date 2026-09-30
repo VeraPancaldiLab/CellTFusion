@@ -8,8 +8,7 @@ associations.
 ## Usage
 
 ``` r
-# S3 method for class 'modules.relationship'
-compute(
+compute.modules.relationship(
   matA,
   matB,
   file_name,
@@ -48,8 +47,12 @@ compute(
 
 - batch:
 
-  Optional vector indicating batch assignment for samples. If provided,
-  partial correlations are computed controlling for batch.
+  Optional vector indicating batch assignment for samples. If it has two
+  or more levels, Pearson partial correlations
+  ([`ppcor::pcor.test()`](https://rdrr.io/pkg/ppcor/man/pcor.test.html))
+  are computed controlling for batch and `cor_type` is ignored. Batch is
+  treated as categorical (one dummy variable per level beyond the
+  first).
 
 - width:
 
@@ -90,9 +93,9 @@ compute(
 
 - vertical:
 
-  Logical; if TRUE, produces a vertical heatmap (traits on x-axis,
-  modules on y-axis). Otherwise, a horizontal layout is used. Default is
-  FALSE.
+  Logical; if TRUE, modules are on the x-axis and the `matB` features on
+  the y-axis. Otherwise (default), the `matB` features are on the x-axis
+  and modules on the y-axis.
 
 - plot:
 
@@ -105,11 +108,13 @@ compute(
 
 - width.grid:
 
-  Numeric width of the scatter grid output.
+  Numeric width of the scatter grid output (increased if needed to fit
+  all panels).
 
 - height.grid:
 
-  Numeric height of the scatter grid output.
+  Numeric height of the scatter grid output (increased if needed to fit
+  all panels).
 
 - ncol.grid:
 
@@ -124,16 +129,19 @@ If `return = TRUE`, returns a list with:
 - A named list with significant features per module (after p-value or
   adjusted p-value thresholding).
 
-If `return = FALSE`, the function saves a heatmap of significant
-correlations to "Results/file_name.pdf".
+If `return = FALSE` and `plot = TRUE`, the function saves a heatmap of
+significant correlations to "Results/file_name.pdf" (the ".pdf"
+extension is added if missing).
 
 ## Details
 
 The function assumes that `matA` and `matB` share the same rownames
-(i.e., samples in the same order). The correlation is computed using
-WGCNA's [`cor()`](https://rdrr.io/r/stats/cor.html) and
-`corPvalueStudent()` functions. Insignificant correlations (based on
-p-value or adjusted p-value) are excluded from the visualization.
+(i.e., samples in the same order); names are compared after
+[`make.names()`](https://rdrr.io/r/base/make.names.html), so e.g.
+"TCGA-XX" and "TCGA.XX" match. The correlation is computed using WGCNA's
+[`cor()`](https://rdrr.io/r/stats/cor.html) and `corPvalueStudent()`
+functions. Insignificant correlations (based on p-value or adjusted
+p-value) are excluded from the visualization.
 
 ## Examples
 

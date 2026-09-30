@@ -9,8 +9,7 @@ scores represent summarized information from cell subgroup profiles.
 ## Usage
 
 ``` r
-# S3 method for class 'test.set'
-compute(deconv_res, cell_groups, features, deconvolution_test)
+compute.test.set(deconv_res, cell_groups, features, deconvolution_test)
 ```
 
 ## Arguments
@@ -34,7 +33,8 @@ compute(deconv_res, cell_groups, features, deconvolution_test)
 
 - features:
 
-  A character vector of feature names to select relevant cell groups.
+  A character vector of feature names to select relevant cell groups. An
+  error is raised if none of them match a cell group name.
 
 - deconvolution_test:
 
@@ -53,4 +53,7 @@ with a printed message.
 The function first simulates cell subgroups by computing median values
 across specified iterations and joins them with the original test
 deconvolution data. Then it extracts the relevant cells for each feature
-and calculates composite scores.
+and calculates composite scores. If the cell groups were built with
+batch correction, the test samples are centred on their own means (as
+each training cohort was), so `deconvolution_test` should contain a
+single cohort.

@@ -16,8 +16,8 @@ project_factors(latent_spaces, scores_test)
 
   A list returned by
   [`compute.latent_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.latent_factors.md),
-  containing at minimum `W` (features x rank), `rank`, and the RcppML
-  model object with `nmf_model$d` scaling vector.
+  containing at minimum `W` (features x rank) and the RcppML model
+  object with the `nmf_model$d` scaling vector.
 
 - scores_test:
 

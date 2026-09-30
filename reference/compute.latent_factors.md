@@ -8,8 +8,13 @@ components, then applying Non-negative Matrix Factorization via RcppML
 ## Usage
 
 ``` r
-# S3 method for class 'latent_factors'
-compute(X, rank = NULL, seed = 123, file_name = NULL, return = TRUE)
+compute.latent_factors(
+  X,
+  rank = NULL,
+  seed = 123,
+  file_name = NULL,
+  return = TRUE
+)
 ```
 
 ## Arguments
@@ -21,20 +26,23 @@ compute(X, rank = NULL, seed = 123, file_name = NULL, return = TRUE)
 
 - rank:
 
-  Integer; number of NMF factors. If NULL, estimated automatically via
-  elbow on reconstruction MSE across ranks 2:8.
+  Integer; number of NMF factors. If NULL, estimated automatically at
+  the elbow of the reconstruction MSE across ranks 2:8 (the rank with
+  the largest second difference of the MSE curve).
 
 - seed:
 
-  Random seed. Default 123.
+  Random seed used for the NMF fits. Default 123. The caller's random
+  number generator state is restored when the function returns.
 
 - file_name:
 
-  Optional character. If provided, saves results to this file path.
+  Optional character suffix for the saved patient-mixture plot.
 
 - return:
 
-  Logical. If TRUE (default), returns the result as an R object.
+  Logical. If TRUE (default), saves the patient-mixture barplot to
+  `Results/NMF_patient_mixture_<file_name>.pdf`.
 
 ## Value
 
@@ -46,15 +54,21 @@ A named list with:
 
 - W:
 
-  Feature weights per factor (2 x n_CGs x rank). Non-negative.
+  Feature weights per factor ((2 x n_CGs) x rank). Non-negative.
 
 - nmf_input:
 
-  The positive-negative split matrix fed to NMF (samples x 2 x n_CGs).
+  The positive-negative split matrix fed to NMF (samples x (2 x n_CGs)).
 
-- rank:
+- nmf_model:
 
-  The rank used.
+  The [`RcppML::nmf()`](https://rdrr.io/pkg/RcppML/man/nmf.html) model
+  object (includes the scaling vector `d`).
+
+- patient_mixture:
+
+  Long-format data frame of per-sample factor proportions used for the
+  mixture plot.
 
 ## Details
 

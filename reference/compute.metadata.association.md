@@ -1,16 +1,16 @@
 # Compute associations between TF module scores and clinical metadata
 
 This function tests for associations between transcription factor (TF)
-module scores and available clinical traits. It uses Pearson correlation
-for continuous (numeric) traits, and ANOVA for categorical traits.
-Results are visualized as a labeled heatmap and violin plots. All plots
-are saved in the `Results/` directory.
+module scores and available clinical traits. Numeric traits are
+correlated with each module (Pearson or Spearman) and shown as a labeled
+heatmap. If `plot_grid = TRUE`, categorical traits are additionally
+tested with one-way ANOVA (Tukey HSD post-hoc) and shown as boxplot
+grids. All plots are saved in the `Results/` directory.
 
 ## Usage
 
 ``` r
-# S3 method for class 'metadata.association'
-compute(
+compute.metadata.association(
   tfs.modules,
   coldata,
   pval = 0.05,
@@ -56,7 +56,7 @@ compute(
 
 - file.name:
 
-  Character. Base file name for saving PDF plots of results.
+  Character. Base file name for saving plots of results.
 
 - width:
 
@@ -82,7 +82,8 @@ compute(
 
 - plot_grid:
 
-  Logical; if TRUE, generates a grid of boxplot summaries.
+  Logical; if TRUE, tests categorical traits with ANOVA and saves
+  boxplot grids.
 
 - width_grid:
 
@@ -94,15 +95,15 @@ compute(
 
 ## Value
 
-This function saves the following to the `Results/` directory:
+Called for its side effects. Saves to the `Results/` directory:
 
-- A labeled heatmap showing Pearson correlations and ANOVA test
-  p-values.
+- `TF.modules_metadata_<file.name>.pdf`: a labeled heatmap of
+  module-trait correlations for numeric traits (only associations with
+  p-value \< `pval` are annotated).
 
-- Individual violin plots for significant categorical trait
-  associations.
-
-The function does not return an object to the R environment.
+- `ANOVA_boxplot_summary_<file.name>_<trait>.svg` (if
+  `plot_grid = TRUE`): one boxplot grid per categorical trait with the
+  significant modules.
 
 ## Examples
 

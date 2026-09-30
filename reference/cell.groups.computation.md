@@ -24,10 +24,9 @@ cell.groups.computation(
 
 - deconvolution:
 
-  A data frame with deconvolution features (typically a cell-type or
-  cluster x sample matrix). This is usually the first element returned
-  by
-  [`multideconv::compute.deconvolution.analysis()`](https://rdrr.io/pkg/multideconv/man/compute.deconvolution.analysis.html).
+  A data frame with deconvolution features (samples as rows, cell-type
+  features as columns). This is usually the first element returned by
+  [`multideconv::compute.deconvolution.analysis()`](https://verapancaldilab.github.io/multideconv/reference/compute.deconvolution.analysis.html).
 
 - cell.dendrograms:
 
@@ -67,8 +66,9 @@ cell.groups.computation(
 
 - return_dendrogram:
 
-  Logical. If TRUE, includes the dendrogram in the returned list.
-  Default FALSE.
+  Logical. If TRUE, saves a PDF of the colored cell-group dendrograms to
+  `Results/Dendrogram_color_clusters_<dendrogram_file>.pdf` (only when
+  `dendrogram_file` is set). Default FALSE.
 
 ## Value
 
@@ -86,7 +86,8 @@ A list of three elements:
 
 - loadings:
 
-  A list of loadings (feature contributions) for each cell group.
+  A list of CCA projection parameters (`xcoef`, `train_means`,
+  `train_sds`) for each cell group.
 
 If `return=TRUE`, two CSV files will be created:
 

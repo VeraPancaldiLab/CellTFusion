@@ -18,18 +18,16 @@ Significant features are plotted as boxplots and saved as PDF files in the &quot
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/CellTFusion.html">Get started</a></li>
-<li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><hr class="dropdown-divider"></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Tutorials</h6></li>
-    <li><a class="dropdown-item" href="../articles/01-feature-computation.html">Feature Computation</a></li>
-    <li><a class="dropdown-item" href="../articles/02-cell-groups.html">Cell Group Construction and Latent Factors</a></li>
-    <li><a class="dropdown-item" href="../articles/03-tme-states.html">TME State Characterisation</a></li>
-    <li><a class="dropdown-item" href="../articles/04-analysis.html">Statistical Analysis</a></li>
-    <li><a class="dropdown-item" href="../articles/06-machine-learning.html">Machine Learning</a></li>
-    <li><a class="dropdown-item" href="../articles/07-batch-analysis.html">Batch/Multi-cohort Analysis</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/a1_feature_computation.html">Feature computation</a></li>
+    <li><a class="dropdown-item" href="../articles/a2_cell_groups.html">Cell groups and latent factors</a></li>
+    <li><a class="dropdown-item" href="../articles/a3_tme_states.html">TME state characterization</a></li>
+    <li><a class="dropdown-item" href="../articles/a4_statistical_analysis.html">Statistical analysis</a></li>
+    <li><a class="dropdown-item" href="../articles/a5_machine_learning.html">Machine learning workflows</a></li>
+    <li><a class="dropdown-item" href="../articles/a6_batch_analysis.html">Multi-cohort analysis</a></li>
   </ul></li>
+<li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
       </ul></div>
@@ -59,8 +57,9 @@ Significant features are plotted as boxplots and saved as PDF files in the "Resu
 
 
 <dl><dt id="arg-scores">scores<a class="anchor" aria-label="anchor" href="#arg-scores"></a></dt>
-<dd><p>A list or matrix of cell group scores. When a list, the first element must be
-a data frame or matrix of scores (samples x features).</p></dd>
+<dd><p>A list whose first element is a samples x features score matrix, e.g. the output of
+<code><a href="construct_cell_groups.html">construct_cell_groups()</a></code> or <code><a href="compute.latent_factors.html">compute.latent_factors()</a></code>. To test a plain matrix, use
+<code><a href="scores.stat.analysis.html">scores.stat.analysis()</a></code>.</p></dd>
 
 
 <dt id="arg-coldata">coldata<a class="anchor" aria-label="anchor" href="#arg-coldata"></a></dt>

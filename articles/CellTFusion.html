@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Getting Started with CellTFusion • CellTFusion</title>
+<title>CellTFusion • CellTFusion</title>
 <!-- favicons --><link rel="icon" type="image/png" sizes="96x96" href="../favicon-96x96.png">
 <link rel="icon" type="”image/svg+xml”" href="../favicon.svg">
 <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
@@ -15,7 +15,7 @@
 <link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Getting Started with CellTFusion">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="CellTFusion">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -35,20 +35,18 @@
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
 <li class="active nav-item"><a class="nav-link" href="../articles/CellTFusion.html">Get started</a></li>
-<li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><hr class="dropdown-divider"></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Tutorials</h6></li>
-    <li><a class="dropdown-item" href="../articles/01-feature-computation.html">Feature Computation</a></li>
-    <li><a class="dropdown-item" href="../articles/02-cell-groups.html">Cell Group Construction and Latent Factors</a></li>
-    <li><a class="dropdown-item" href="../articles/03-tme-states.html">TME State Characterisation</a></li>
-    <li><a class="dropdown-item" href="../articles/04-analysis.html">Statistical Analysis</a></li>
-    <li><a class="dropdown-item" href="../articles/06-machine-learning.html">Machine Learning</a></li>
-    <li><a class="dropdown-item" href="../articles/07-batch-analysis.html">Batch/Multi-cohort Analysis</a></li>
+<li><a class="dropdown-item" href="../articles/a1_feature_computation.html">Feature computation</a></li>
+    <li><a class="dropdown-item" href="../articles/a2_cell_groups.html">Cell groups and latent factors</a></li>
+    <li><a class="dropdown-item" href="../articles/a3_tme_states.html">TME state characterization</a></li>
+    <li><a class="dropdown-item" href="../articles/a4_statistical_analysis.html">Statistical analysis</a></li>
+    <li><a class="dropdown-item" href="../articles/a5_machine_learning.html">Machine learning workflows</a></li>
+    <li><a class="dropdown-item" href="../articles/a6_batch_analysis.html">Multi-cohort analysis</a></li>
   </ul>
 </li>
+<li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
       </ul>
 <ul class="navbar-nav">
 <li class="nav-item"><form class="form-inline" role="search">
@@ -66,7 +64,7 @@
 
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
-      <img src="../logo.png" class="logo" alt=""><h1>Getting Started with CellTFusion</h1>
+      <img src="../logo.png" class="logo" alt=""><h1>CellTFusion</h1>
             
       
 
@@ -75,24 +73,54 @@
 
     
     
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://verapancaldilab.github.io/CellTFusion/">CellTFusion</a></span><span class="op">)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span></code></pre></div>
-<div class="section level2">
-<h2 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
-</h2>
-<p><code>CellTFusion</code> integrates immune cell-type deconvolution
+<p><code>CellTFusion</code> integrates immune cell type deconvolution
 with transcription factor (TF)–gene regulatory networks to characterize
-immune cell states in the tumor microenvironment from bulk RNA-seq
+immune cell states in the tumor microenvironment (TME) from bulk RNA-seq
 data.</p>
-<p>Starting from a raw count matrix, the pipeline produces
-<strong>latent factors</strong> — compact representations of the TME
-landscape that can be tested for clinical associations, mapped to known
-cancer meta-programs, and used as features for machine learning.</p>
+<p>Starting from a count matrix, <code>CellTFusion</code> builds
+<strong>cell groups</strong> — sets of deconvolution features whose
+abundance follows the activity of a TF co-activity module — and
+summarizes them into <strong>latent factors</strong>, a compact
+representation of the TME that can be annotated as TME states, tested
+against clinical variables and used as features for machine
+learning.</p>
+<div class="section level2">
+<h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
+</h2>
+<p>To avoid GitHub API rate limit issues, set up a Personal Access Token
+(PAT) before installing:</p>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># install.packages(c("usethis", "gitcreds"))</span></span>
+<span><span class="fu">usethis</span><span class="fu">::</span><span class="fu"><a href="https://usethis.r-lib.org/reference/github-token.html" class="external-link">create_github_token</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="fu">gitcreds</span><span class="fu">::</span><span class="fu"><a href="https://gitcreds.r-lib.org/reference/gitcreds_get.html" class="external-link">gitcreds_set</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<p>Install <code>CellTFusion</code> from GitHub:</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># install.packages("pak")</span></span>
+<span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pkg_install.html" class="external-link">pkg_install</a></span><span class="op">(</span><span class="st">"VeraPancaldiLab/CellTFusion"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="pipeline-steps">Pipeline steps<a class="anchor" aria-label="anchor" href="#pipeline-steps"></a>
+<h2 id="quick-start">Quick start<a class="anchor" aria-label="anchor" href="#quick-start"></a>
+</h2>
+<p>The <code><a href="../reference/CellTFusion.html">CellTFusion()</a></code> wrapper runs the whole pipeline in one
+call, using the example data shipped with the package. Intermediate
+results and plots are saved in a <code>Results/</code> folder in the
+working directory.</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://verapancaldilab.github.io/CellTFusion/">CellTFusion</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/CellTFusion.html">CellTFusion</a></span><span class="op">(</span></span>
+<span>  raw.counts     <span class="op">=</span> <span class="fu">CellTFusion</span><span class="fu">::</span><span class="va"><a href="../reference/raw.counts.tuto.html">raw.counts.tuto</a></span>,</span>
+<span>  normalized     <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  deconv_methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Quantiseq"</span>, <span class="st">"Epidish"</span><span class="op">)</span>,</span>
+<span>  cancer_type    <span class="op">=</span> <span class="st">"skcm"</span>,</span>
+<span>  file_name      <span class="op">=</span> <span class="st">"Tutorial"</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">Latent_spaces</span><span class="op">$</span><span class="va">Z</span><span class="op">)</span>  <span class="co"># latent factor scores (samples x factors)</span></span>
+<span><span class="va">res</span><span class="op">$</span><span class="va">TME_states</span>             <span class="co"># mapping of each latent factor to a TCGA meta-program</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="pipeline">Pipeline<a class="anchor" aria-label="anchor" href="#pipeline"></a>
 </h2>
 <table class="table">
 <colgroup>
@@ -103,146 +131,133 @@ cancer meta-programs, and used as features for machine learning.</p>
 <thead><tr class="header">
 <th>Step</th>
 <th>Function</th>
-<th>Article</th>
+<th>Tutorial</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td>Cell-type deconvolution</td>
-<td><code><a href="https://rdrr.io/pkg/multideconv/man/compute.deconvolution.html" class="external-link">multideconv::compute.deconvolution()</a></code></td>
-<td><a href="articles/01-feature-computation.html">Feature
-Computation</a></td>
+<td>Cell type deconvolution</td>
+<td><code><a href="https://verapancaldilab.github.io/multideconv/reference/compute.deconvolution.html" class="external-link">multideconv::compute.deconvolution()</a></code></td>
+<td><a href="a1_feature_computation.html">Feature computation</a></td>
 </tr>
 <tr class="even">
 <td>TF activity inference</td>
 <td><code><a href="../reference/compute.TFs.activity.html">compute.TFs.activity()</a></code></td>
-<td><a href="articles/01-feature-computation.html">Feature
-Computation</a></td>
+<td><a href="a1_feature_computation.html">Feature computation</a></td>
 </tr>
 <tr class="odd">
-<td>TF module construction</td>
+<td>TF co-activity modules</td>
 <td><code><a href="../reference/compute.WTCNA.html">compute.WTCNA()</a></code></td>
-<td><a href="articles/01-feature-computation.html">Feature
-Computation</a></td>
+<td><a href="a1_feature_computation.html">Feature computation</a></td>
 </tr>
 <tr class="even">
-<td>Pathway activity scoring</td>
+<td>Pathway activity</td>
 <td><code><a href="../reference/compute.pathway.activity.html">compute.pathway.activity()</a></code></td>
-<td><a href="articles/01-feature-computation.html">Feature
-Computation</a></td>
+<td><a href="a1_feature_computation.html">Feature computation</a></td>
 </tr>
 <tr class="odd">
-<td>Cell group construction</td>
+<td>Cell groups</td>
 <td><code><a href="../reference/construct_cell_groups.html">construct_cell_groups()</a></code></td>
-<td><a href="articles/02-cell-groups.html">Cell Groups &amp; Latent
-Factors</a></td>
+<td><a href="a2_cell_groups.html">Cell groups and latent
+factors</a></td>
 </tr>
 <tr class="even">
-<td>Latent factor extraction</td>
+<td>Latent factors</td>
 <td><code><a href="../reference/compute.latent_factors.html">compute.latent_factors()</a></code></td>
-<td><a href="articles/02-cell-groups.html">Cell Groups &amp; Latent
-Factors</a></td>
+<td><a href="a2_cell_groups.html">Cell groups and latent
+factors</a></td>
 </tr>
 <tr class="odd">
-<td>Cell niche derivation</td>
+<td>Cell niches</td>
 <td><code><a href="../reference/compute_cells_niches.html">compute_cells_niches()</a></code></td>
-<td><a href="articles/02-cell-groups.html">Cell Groups &amp; Latent
-Factors</a></td>
+<td><a href="a2_cell_groups.html">Cell groups and latent
+factors</a></td>
 </tr>
 <tr class="even">
 <td>Hallmark GSEA per factor</td>
 <td><code><a href="../reference/compute_factor_gsea.html">compute_factor_gsea()</a></code></td>
-<td><a href="articles/03-tme-states.html">TME State
-Characterisation</a></td>
+<td><a href="a3_tme_states.html">TME state characterization</a></td>
 </tr>
 <tr class="odd">
 <td>Meta-program mapping</td>
 <td><code><a href="../reference/map_factors_to_metaprograms.html">map_factors_to_metaprograms()</a></code></td>
-<td><a href="articles/03-tme-states.html">TME State
-Characterisation</a></td>
+<td><a href="a3_tme_states.html">TME state characterization</a></td>
 </tr>
 <tr class="even">
 <td>TME subtype annotation</td>
 <td><code><a href="../reference/map_factors_to_TME.html">map_factors_to_TME()</a></code></td>
-<td><a href="articles/03-tme-states.html">TME State
-Characterisation</a></td>
+<td><a href="a3_tme_states.html">TME state characterization</a></td>
 </tr>
 <tr class="odd">
-<td>Clinical association testing</td>
+<td>Clinical associations</td>
 <td><code><a href="../reference/scores.stat.analysis.html">scores.stat.analysis()</a></code></td>
-<td><a href="articles/04-analysis.html">Statistical Analysis</a></td>
+<td><a href="a4_statistical_analysis.html">Statistical analysis</a></td>
 </tr>
 <tr class="even">
 <td>Survival analysis</td>
 <td><code><a href="../reference/compute.survival.analysis.html">compute.survival.analysis()</a></code></td>
-<td><a href="articles/04-analysis.html">Statistical Analysis</a></td>
+<td><a href="a4_statistical_analysis.html">Statistical analysis</a></td>
 </tr>
 <tr class="odd">
-<td>Test-set projection</td>
+<td>Projection of new cohorts</td>
 <td><code><a href="../reference/project_test_factors.html">project_test_factors()</a></code></td>
-<td><a href="articles/06-machine-learning.html">Machine
-Learning</a></td>
+<td><a href="a5_machine_learning.html">Machine learning
+workflows</a></td>
 </tr>
 <tr class="even">
-<td>ML model training</td>
-<td><code>pipeML::compute_features.training.ML()</code></td>
-<td><a href="articles/06-machine-learning.html">Machine
-Learning</a></td>
-</tr>
-<tr class="odd">
-<td>Multi-cohort (batch) analysis</td>
-<td>
-<code>batch = TRUE</code> in <code><a href="../reference/CellTFusion.html">CellTFusion()</a></code>
-</td>
-<td><a href="articles/07-batch-analysis.html">Batch/Multi-cohort
-Analysis</a></td>
+<td>Multi-cohort analysis</td>
+<td><code>CellTFusion(batch = TRUE)</code></td>
+<td><a href="a6_batch_analysis.html">Multi-cohort analysis</a></td>
 </tr>
 </tbody>
 </table>
-<p>The full pipeline — every step above run in the right order in a
-single call — is available through the <code><a href="../reference/CellTFusion.html">CellTFusion()</a></code>
-wrapper function; see the package <a href="https://VeraPancaldiLab.github.io/CellTFusion/" class="external-link">README</a> for
-usage examples, including multi-cohort mode and re-running with
-precomputed features (<code>dt</code>, <code>tfs</code>,
-<code>pathways</code>).</p>
 </div>
 <div class="section level2">
-<h2 id="quick-start">Quick start<a class="anchor" aria-label="anchor" href="#quick-start"></a>
+<h2 id="tutorials">Tutorials<a class="anchor" aria-label="anchor" href="#tutorials"></a>
 </h2>
-<p>Load the pre-packaged example data and run the full pipeline in one
-call:</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">raw.counts</span> <span class="op">&lt;-</span> <span class="fu">CellTFusion</span><span class="fu">::</span><span class="va"><a href="../reference/raw.counts.tuto.html">raw.counts.tuto</a></span></span>
-<span><span class="va">traitdata</span>  <span class="op">&lt;-</span> <span class="fu">CellTFusion</span><span class="fu">::</span><span class="va"><a href="../reference/traitdata.tuto.html">traitdata.tuto</a></span></span></code></pre></div>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/CellTFusion.html">CellTFusion</a></span><span class="op">(</span></span>
-<span>  raw.counts    <span class="op">=</span> <span class="va">raw.counts</span>,</span>
-<span>  normalized    <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  coldata       <span class="op">=</span> <span class="va">traitdata</span>,</span>
-<span>  deconv_methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Quantiseq"</span>, <span class="st">"Epidish"</span><span class="op">)</span>,</span>
-<span>  cancer_type   <span class="op">=</span> <span class="st">"skcm"</span>,</span>
-<span>  corr          <span class="op">=</span> <span class="fl">0.7</span>,</span>
-<span>  pval          <span class="op">=</span> <span class="fl">0.05</span>,</span>
-<span>  file_name     <span class="op">=</span> <span class="st">"Tutorial"</span>,</span>
-<span>  return        <span class="op">=</span> <span class="cn">TRUE</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Latent factor scores — use for stat tests and ML</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">Latent_spaces</span><span class="op">$</span><span class="va">Z</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># TME state annotations</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">TME_states</span><span class="op">)</span></span></code></pre></div>
-<p>Follow the articles linked in the table above for a step-by-step
-explanation of each stage.</p>
+<p>Step-by-step tutorials are available in the <strong>Articles</strong>
+section of the navigation bar:</p>
+<ul>
+<li>
+<strong><a href="a1_feature_computation.html">Feature
+computation</a></strong> — cell type deconvolution, TF activity, TF
+co-activity modules and pathway activity</li>
+<li>
+<strong><a href="a2_cell_groups.html">Cell groups and latent
+factors</a></strong> — build cell groups, extract latent factors and
+characterize cell niches</li>
+<li>
+<strong><a href="a3_tme_states.html">TME state
+characterization</a></strong> — Hallmark GSEA, TCGA meta-programs and
+TME subtypes</li>
+<li>
+<strong><a href="a4_statistical_analysis.html">Statistical
+analysis</a></strong> — associations with clinical variables and
+survival</li>
+<li>
+<strong><a href="a5_machine_learning.html">Machine learning
+workflows</a></strong> — use latent factors as features and project
+independent cohorts</li>
+<li>
+<strong><a href="a6_batch_analysis.html">Multi-cohort
+analysis</a></strong> — correct for cohort effects with
+<code>batch = TRUE</code>
+</li>
+</ul>
 </div>
 <div class="section level2">
-<h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
+<h2 id="shiny-app">Shiny app<a class="anchor" aria-label="anchor" href="#shiny-app"></a>
 </h2>
+<p><code>CellTFusion</code> includes an interactive app to run the
+pipeline on the example data or on your own data:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">remotes</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"VeraPancaldiLab/CellTFusion"</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/runApp.html" class="external-link">runApp</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"shiny"</span>, package <span class="op">=</span> <span class="st">"CellTFusion"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
+<h2 id="citation">Citation<a class="anchor" aria-label="anchor" href="#citation"></a>
 </h2>
+<p>If you use <code>CellTFusion</code> in a scientific publication,
+please cite the GitHub repository (<a href="https://github.com/VeraPancaldiLab/CellTFusion" class="external-link uri">https://github.com/VeraPancaldiLab/CellTFusion</a>). The
+reference to the associated publication will be added here.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

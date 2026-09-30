@@ -54,13 +54,13 @@ after modifying roxygen comments.
 ### Pipeline Flow
 
 The package implements a multi-step pipeline (see
-`vignettes/CellTFusion.Rmd` for the authoritative step/function/article
+`vignettes/CellTFusion.Rmd` for the authoritative step/function/tutorial
 mapping):
 
 1.  **Normalization** — log-TPM normalization of raw counts
     ([`ADImpute::NormalizeTPM`](https://rdrr.io/pkg/ADImpute/man/NormalizeTPM.html))
 2.  **Cell-type deconvolution** — multiple algorithms via
-    [`multideconv::compute.deconvolution()`](https://rdrr.io/pkg/multideconv/man/compute.deconvolution.html)
+    [`multideconv::compute.deconvolution()`](https://verapancaldilab.github.io/multideconv/reference/compute.deconvolution.html)
     (Quantiseq, Epidish, DeconRNASeq, DWLS, CIBERSORTx)
 3.  **TF activity inference** —
     [`compute.TFs.activity()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.TFs.activity.md):
@@ -75,7 +75,8 @@ mapping):
     [`decoupleR::run_mlm()`](https://saezlab.github.io/decoupleR/reference/run_mlm.html)
 6.  **Cell group construction** —
     [`construct_cell_groups()`](https://verapancaldilab.github.io/CellTFusion/reference/construct_cell_groups.md):
-    supervised and unsupervised clustering
+    TF module–deconvolution correlation, dendrogram cutting and CCA
+    composite scores
 7.  **Latent factor extraction** —
     [`compute.latent_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.latent_factors.md):
     NMF-based latent factors;
@@ -104,21 +105,24 @@ mapping):
 - `R/CellTFusion.R` — All core logic (~5,050 lines); single monolithic
   file containing every exported function
 - `inst/shiny/server.R` / `ui.R` — Shiny app backend and frontend
-- `vignettes/CellTFusion.Rmd` — Getting-started overview with the full
-  pipeline step table
-- `vignettes/articles/` — In-depth tutorials: `01-feature-computation`,
-  `02-cell-groups`, `03-tme-states`, `04-analysis`,
-  `06-machine-learning`, `07-batch-analysis`
+- `vignettes/CellTFusion.Rmd` — Getting-started overview (installation,
+  quick start, pipeline step table, tutorial list)
+- `vignettes/a1_feature_computation.Rmd` … `a6_batch_analysis.Rmd` —
+  In-depth tutorials (feature computation, cell groups, TME states,
+  statistical analysis, machine learning, multi-cohort). They are
+  package vignettes (same layout as `multideconv`); heavy code chunks
+  use `eval = FALSE` and figures live in `vignettes/figures/`. The
+  pkgdown article menu is defined in `_pkgdown.yml`.
 
 ### Main Exported Functions
 
 | Function | Purpose |
 |----|----|
-| [`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md) | Full pipeline wrapper (unsupervised, supervised, and multi-cohort/batch modes) |
+| [`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md) | Full pipeline wrapper (single-cohort and multi-cohort/batch modes) |
 | [`compute.TFs.activity()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.TFs.activity.md) | TF activity scoring via `decoupleR` |
 | [`compute.WTCNA()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.WTCNA.md) | WGCNA module construction |
 | [`compute.pathway.activity()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.pathway.activity.md) | PROGENy pathway scoring |
-| [`construct_cell_groups()`](https://verapancaldilab.github.io/CellTFusion/reference/construct_cell_groups.md) | Unsupervised/supervised cell group clustering |
+| [`construct_cell_groups()`](https://verapancaldilab.github.io/CellTFusion/reference/construct_cell_groups.md) | Cell group construction and composite scores |
 | [`compute.latent_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.latent_factors.md) | NMF-based latent factor extraction from cell group scores |
 | [`compute.test.set()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.test.set.md) / [`project_test_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/project_test_factors.md) | Apply a trained model / project a test set onto trained NMF factors |
 | [`identify_hub_TFs()`](https://verapancaldilab.github.io/CellTFusion/reference/identify_hub_TFs.md) | Identify driver TFs from modules |
@@ -126,7 +130,7 @@ mapping):
 | [`derive_meta_programs()`](https://verapancaldilab.github.io/CellTFusion/reference/derive_meta_programs.md) / [`map_factors_to_metaprograms()`](https://verapancaldilab.github.io/CellTFusion/reference/map_factors_to_metaprograms.md) | Derive and map latent factors to TCGA meta-programs |
 | [`map_factors_to_TME()`](https://verapancaldilab.github.io/CellTFusion/reference/map_factors_to_TME.md) / [`annotate_metaprograms_TME()`](https://verapancaldilab.github.io/CellTFusion/reference/annotate_metaprograms_TME.md) | Annotate factors/meta-programs with Bagaev et al. (2021) TME (MFP) subtypes |
 | [`compute.metadata.association()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.metadata.association.md) | Clinical trait association + visualization |
-| [`compute.survival.analysis()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.survival.analysis.md) | Survival analysis (S3 method; requires `survival`, `survminer`, `gridExtra`) |
+| [`compute.survival.analysis()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.survival.analysis.md) | Kaplan-Meier / log-rank survival analysis (requires `survival`, `survminer`, `gridExtra`) |
 | [`compute.modules.relationship()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.modules.relationship.md) | Correlate TF modules with pathways |
 | [`compute.modules.enrichment()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.modules.enrichment.md) | Pathway enrichment of TF modules |
 
@@ -135,8 +139,8 @@ reference](https://verapancaldilab.github.io/CellTFusion/reference/index.html)
 for the full list, which also includes the `scores.*` statistical-test
 family and lower-level helpers
 ([`cell.groups.computation()`](https://verapancaldilab.github.io/CellTFusion/reference/cell.groups.computation.md),
-[`classify.deconvolution()`](https://verapancaldilab.github.io/CellTFusion/reference/classify.deconvolution.md),
-[`create_tfs_modules()`](https://verapancaldilab.github.io/CellTFusion/reference/create_tfs_modules.md),
+[`compute_composite_score()`](https://verapancaldilab.github.io/CellTFusion/reference/compute_composite_score.md),
+[`extract_cells()`](https://verapancaldilab.github.io/CellTFusion/reference/extract_cells.md),
 etc.).
 
 ### Tutorial Data (in `data/`)
@@ -149,11 +153,17 @@ Pre-built `.rda` objects for examples and testing: `raw.counts.tuto`,
 
 Heavy dependencies are in `Imports` (always loaded): `multideconv`,
 `decoupleR`, `WGCNA`, `limma`, `GSVA`, `ggplot2`, and several tidyverse
-packages (`dplyr`, `tidyr`, `tibble`, `stringr`, `purrr`).
+packages (`dplyr`, `tidyr`, `tibble`, `purrr`). `multideconv` functions
+are imported via `@importFrom` in `R/CellTFusion.R`; reference data in
+`inst/extdata/` is always located with
+[`system.file()`](https://rdrr.io/r/base/system.file.html) (never
+hardcoded paths).
 
-`viper`, `clusterProfiler`, `dorothea`, `OmnipathR`, and ML classifiers
-(`caret`, `C50`, `glmnet`, `randomForest`, `xgboost`) are all in
-`Suggests` (optional, loaded only when the relevant code path is used).
+`OmnipathR` (needed by `decoupleR` to fetch CollecTRI and PROGENy),
+`dorothea` (Dorothea TF collection), `RcppML` (NMF),
+`survival`/`survminer`/`gridExtra` (survival analysis) and `caret`
+(machine-learning vignette) are in `Suggests` (optional, loaded only
+when the relevant code path is used).
 
 ## CI/CD
 

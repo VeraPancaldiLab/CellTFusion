@@ -18,18 +18,16 @@ between cell group features and corresponding TF module scores."><meta property=
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/CellTFusion.html">Get started</a></li>
-<li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><hr class="dropdown-divider"></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Tutorials</h6></li>
-    <li><a class="dropdown-item" href="../articles/01-feature-computation.html">Feature Computation</a></li>
-    <li><a class="dropdown-item" href="../articles/02-cell-groups.html">Cell Group Construction and Latent Factors</a></li>
-    <li><a class="dropdown-item" href="../articles/03-tme-states.html">TME State Characterisation</a></li>
-    <li><a class="dropdown-item" href="../articles/04-analysis.html">Statistical Analysis</a></li>
-    <li><a class="dropdown-item" href="../articles/06-machine-learning.html">Machine Learning</a></li>
-    <li><a class="dropdown-item" href="../articles/07-batch-analysis.html">Batch/Multi-cohort Analysis</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/a1_feature_computation.html">Feature computation</a></li>
+    <li><a class="dropdown-item" href="../articles/a2_cell_groups.html">Cell groups and latent factors</a></li>
+    <li><a class="dropdown-item" href="../articles/a3_tme_states.html">TME state characterization</a></li>
+    <li><a class="dropdown-item" href="../articles/a4_statistical_analysis.html">Statistical analysis</a></li>
+    <li><a class="dropdown-item" href="../articles/a5_machine_learning.html">Machine learning workflows</a></li>
+    <li><a class="dropdown-item" href="../articles/a6_batch_analysis.html">Multi-cohort analysis</a></li>
   </ul></li>
+<li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
       </ul></div>
@@ -71,7 +69,8 @@ between cell group features and corresponding TF module scores.</p>
 
 
 <dt id="arg-module-group">module_group<a class="anchor" aria-label="anchor" href="#arg-module-group"></a></dt>
-<dd><p>A character vector indicating TF module group colors corresponding to the cell group (can be obtained via <code><a href="extract_colors.html">extract_colors()</a></code>).</p></dd>
+<dd><p>Character. Name (color) of the TF module the cell group was built from; must match a
+column name of the module matrix in <code>tfs.module.network</code> exactly.</p></dd>
 
 
 <dt id="arg-tfs-module-network">tfs.module.network<a class="anchor" aria-label="anchor" href="#arg-tfs-module-network"></a></dt>
@@ -79,7 +78,8 @@ between cell group features and corresponding TF module scores.</p>
 
 
 <dt id="arg-batch">batch<a class="anchor" aria-label="anchor" href="#arg-batch"></a></dt>
-<dd><p>Optional vector indicating batch assignment for samples.</p></dd>
+<dd><p>Optional vector indicating batch assignment for samples. It is treated as categorical: per-batch
+means are regressed out of the cell group features, the module eigengene and the module TFs before the CCA.</p></dd>
 
 
 <dt id="arg-discard">discard<a class="anchor" aria-label="anchor" href="#arg-discard"></a></dt>
@@ -97,9 +97,13 @@ permutation test for the first canonical correlation (default TRUE).</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A list with:</p><ul><li><p><code>selected_components</code>: Numeric matrix of the first canonical component scores across samples.</p></li>
-<li><p><code>xcoef</code>: The canonical weights (coefficients) for the cell group features.</p></li>
-</ul><p>If discarded due to low correlation, returns <code>list("NA", "NA")</code>.</p>
+    <p>An unnamed list of two elements:</p><ul><li><p><code>[[1]]</code>: Numeric matrix (samples x 1) with the composite score, i.e. the scaled cell group
+features projected onto the first canonical component.</p></li>
+<li><p><code>[[2]]</code>: Projection parameters used to score new samples: <code>xcoef</code> (canonical weights of
+the first component), <code>train_means</code> and <code>train_sds</code> (column means/SDs used for scaling).
+<code>train_means</code> is <code>NULL</code> when batch correction was applied: new samples are then centred on
+their own means, as each training cohort was.</p></li>
+</ul><p>If the permutation test is not significant (and <code>discard = TRUE</code>), returns <code>list("NA", "NA")</code>.</p>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

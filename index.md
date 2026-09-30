@@ -1,11 +1,14 @@
 # CellTFusion
 
+# CellTFusion
+
 Integration of immune-cell type deconvolution features and
 prior-knowledge networks of TFs-gene interactions to characterize
 potential cell states of the tumor microenvironment using bulk RNAseq
 data
 
-![](reference/figures/CellTFusion_pipeline.png?raw=true)
+![Overview of the CellTFusion
+pipeline](reference/figures/CellTFusion_pipeline.png)
 
 *Figure 1. A schematic overview of the `CellTFusion` pipeline*
 
@@ -122,10 +125,10 @@ res2 <- CellTFusion(
 ```
 
 **NOTE**: `CIBERSORTx` is included in the deconvolution methods, but
-it’s not an open-source program. To run it, please ask for a token in
-[CIBERSORTx](https://cibersortx.stanford.edu/register.php) and once
-obtained, provided your username and password on the parameters
-`credentials.mail` and `credentials.token`.
+it’s not an open-source program. To run it, request a token at
+[CIBERSORTx](https://cibersortx.stanford.edu/register.php), add `"CBSX"`
+to `deconv_methods` and provide your email and token with the
+`cbsx.mail` and `cbsx.token` parameters.
 
 ## Output structure
 
@@ -141,7 +144,7 @@ and are available at `res$Cell_groups`:
 
 res$Cell_groups$Cell_groups  # data frame of cell group scores (samples x groups)
 res$Cell_groups$Composition  # cell types included in each group
-res$Cell_groups$Weights      # feature loadings per group
+res$Cell_groups$Weights      # CCA projection parameters per group (used to score new samples)
 ```
 
 For a step-by-step walkthrough of every pipeline stage, see the [Get
@@ -153,7 +156,11 @@ section.
 ## Replicate cell groups on an independent dataset
 
 Use this function to apply the trained cell groups to an external test
-set and calculate group-specific composite scores.
+set and calculate group-specific composite scores. To directly obtain
+the latent factors of new samples, use
+`project_test_factors(res, deconv_test)` (see the [Machine learning
+workflows](https://VeraPancaldiLab.github.io/CellTFusion/articles/a5_machine_learning.html)
+article).
 
 ``` r
 
@@ -182,5 +189,6 @@ is the primary maintainer of this package.
 
 ## Citing `CellTFusion`
 
-If you use `CellTFusion` in a scientific publication, we would
-appreciate citation to the :
+If you use `CellTFusion` in a scientific publication, please cite the
+GitHub repository (<https://github.com/VeraPancaldiLab/CellTFusion>).
+The reference to the associated publication will be added here.

@@ -22,11 +22,13 @@ construct_cell_groups(
 
 - network:
 
-  A list containing TF networks for cell types.
+  A TF module network as returned by
+  [`compute.WTCNA()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.WTCNA.md).
 
 - dt:
 
-  A list containing deconvolution subgroup structures.
+  Deconvolution subgroups as returned by
+  [`multideconv::compute.deconvolution.analysis()`](https://verapancaldilab.github.io/multideconv/reference/compute.deconvolution.analysis.html).
 
 - batch:
 
@@ -54,24 +56,24 @@ construct_cell_groups(
 
 - return_dendrogram:
 
-  Logical. If TRUE, includes the dendrogram in the returned list.
-  Default FALSE.
+  Logical. If TRUE, saves a PDF of the colored cell-group dendrograms to
+  `Results/Dendrogram_color_clusters_<dendrogram_file>.pdf` (only when
+  `dendrogram_file` is set). Default FALSE.
 
 ## Value
 
-A list of 3 elements:
+A named list of 3 elements:
 
-- scores:
+- Cell_groups:
 
-  A data frame or matrix with the projected cell group scores (samples x
-  groups).
+  A data frame with the projected cell group scores (samples x groups).
 
-- composition:
+- Composition:
 
-  A named list where each element is a character vector of original cell
-  types per group.
+  A named list where each element is a character vector of the
+  deconvolution features in each group.
 
-- loadings:
+- Weights:
 
-  A list of numeric vectors indicating the loadings (feature
-  contributions) for each group.
+  A list of CCA projection parameters (`xcoef`, `train_means`,
+  `train_sds`) for each group.

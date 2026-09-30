@@ -26,9 +26,9 @@ compute_composite_score(
 
 - module_group:
 
-  A character vector indicating TF module group colors corresponding to
-  the cell group (can be obtained via
-  [`extract_colors()`](https://verapancaldilab.github.io/CellTFusion/reference/extract_colors.md)).
+  Character. Name (color) of the TF module the cell group was built
+  from; must match a column name of the module matrix in
+  `tfs.module.network` exactly.
 
 - tfs.module.network:
 
@@ -36,7 +36,9 @@ compute_composite_score(
 
 - batch:
 
-  Optional vector indicating batch assignment for samples.
+  Optional vector indicating batch assignment for samples. It is treated
+  as categorical: per-batch means are regressed out of the cell group
+  features, the module eigengene and the module TFs before the CCA.
 
 - discard:
 
@@ -55,12 +57,17 @@ compute_composite_score(
 
 ## Value
 
-A list with:
+An unnamed list of two elements:
 
-- `selected_components`: Numeric matrix of the first canonical component
-  scores across samples.
+- `[[1]]`: Numeric matrix (samples x 1) with the composite score, i.e.
+  the scaled cell group features projected onto the first canonical
+  component.
 
-- `xcoef`: The canonical weights (coefficients) for the cell group
-  features.
+- `[[2]]`: Projection parameters used to score new samples: `xcoef`
+  (canonical weights of the first component), `train_means` and
+  `train_sds` (column means/SDs used for scaling). `train_means` is
+  `NULL` when batch correction was applied: new samples are then centred
+  on their own means, as each training cohort was.
 
-If discarded due to low correlation, returns `list("NA", "NA")`.
+If the permutation test is not significant (and `discard = TRUE`),
+returns `list("NA", "NA")`.

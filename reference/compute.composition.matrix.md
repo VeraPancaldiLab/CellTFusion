@@ -6,8 +6,11 @@ present in higher-level cell groups.
 ## Usage
 
 ``` r
-# S3 method for class 'composition.matrix'
-compute(deconvolution.subgroupped, cell.groups, cells_extra = NULL)
+compute.composition.matrix(
+  deconvolution.subgroupped,
+  cell.groups,
+  cells_extra = NULL
+)
 ```
 
 ## Arguments

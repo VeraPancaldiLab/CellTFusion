@@ -16,8 +16,7 @@ log-rank test are returned.
 ## Usage
 
 ``` r
-# S3 method for class 'survival.analysis'
-compute(
+compute.survival.analysis(
   survival.data,
   PFS,
   PFS_event,
@@ -54,8 +53,9 @@ compute(
 
   Optional. A samples x features numeric matrix or data frame (e.g.
   `latent_spaces$Z`). If provided (and `group_column` is `NULL`), each
-  feature is tested individually. Mutually exclusive with
-  `group_column`.
+  feature is tested individually. Rows must be the same samples, in the
+  same order, as the rows of `survival.data` (checked by name). Mutually
+  exclusive with `group_column`.
 
 - p.value:
 

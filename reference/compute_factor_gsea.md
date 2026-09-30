@@ -3,8 +3,8 @@
 This function fits a multivariate linear model for each gene using all
 features in `features_df` as continuous covariates. For each feature, it
 extracts the moderated t-statistics and p-values, ranks genes, and
-performs GSEA using the Hallmark gene sets from MSigDB. Optional
-dotplots for the top enriched pathways can be saved as PDFs.
+performs GSEA (`fgsea`) using the Hallmark gene sets from MSigDB.
+Optional dotplots for the top enriched pathways can be saved as PDFs.
 
 ## Usage
 
@@ -30,7 +30,9 @@ compute_factor_gsea(
 - features_df:
 
   A data frame of continuous features (samples in rows, features in
-  columns) to be modeled as covariates.
+  columns) to be modeled as covariates. Rows must be the same samples,
+  in the same order, as the columns of `RNA.tpm` (checked by name; an
+  error is raised otherwise).
 
 - plot_dot:
 
@@ -65,8 +67,10 @@ A list containing:
 
 - GSEA_results:
 
-  A named list of `GSEA` results from `clusterProfiler` for each
-  feature.
+  A named list of
+  [`fgsea::fgsea()`](https://rdrr.io/pkg/fgsea/man/fgsea.html) result
+  tables (columns include `pathway`, `pval`, `padj`, `NES`) for each
+  feature, ordered by p-value.
 
 ## Details
 
@@ -87,7 +91,8 @@ The function works as follows:
 
     2.  Genes are ranked by moderated t-statistics.
 
-    3.  Hallmark GSEA is performed using the ranked gene list.
+    3.  Hallmark GSEA is performed on the ranked gene list with
+        [`fgsea::fgsea()`](https://rdrr.io/pkg/fgsea/man/fgsea.html).
 
     4.  Optionally, a dotplot of the top enriched pathways is generated.
 

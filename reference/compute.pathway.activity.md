@@ -9,8 +9,7 @@ user-provided gene sets.
 ## Usage
 
 ``` r
-# S3 method for class 'pathway.activity'
-compute(
+compute.pathway.activity(
   RNA.tpm,
   gene_sets = NULL,
   paths = NULL,
@@ -28,15 +27,16 @@ compute(
 
 - gene_sets:
 
-  A list of gene sets (e.g., hallmark signatures or user-defined sets).
-  If provided, GSVA scores will be computed for these sets. Default is
-  `NULL`.
+  A named list of gene sets (e.g., hallmark signatures or user-defined
+  sets). If provided, GSVA scores will be computed for these sets.
+  Default is `NULL`.
 
 - paths:
 
-  A data frame describing the pathway-gene interactions for use with
-  PROGENy. If `NULL`, the human PROGENy resource (top 500 genes) will be
-  used by default.
+  A data frame describing the pathway-gene interactions (columns
+  `source`, `target`, `weight`) for use with PROGENy. If `NULL`, the
+  human PROGENy resource (top 500 genes) is used and cached in
+  `Results/Pathways_collection_PROGENy.csv`.
 
 - return:
 
@@ -48,15 +48,17 @@ compute(
 
 ## Value
 
-If `gene_sets` is `NULL`, a scaled matrix of PROGENy pathway activity
-scores (samples as rows, pathways as columns). If `gene_sets` is
-provided, a list with two elements:
+If `gene_sets` is `NULL`, a scaled data frame of PROGENy pathway
+activity scores (samples as rows, pathways as columns). If `gene_sets`
+is provided, a list with two elements:
 
-- `sample_acts_progeny`: A scaled matrix of PROGENy pathway activity
-  scores.
+- `PROGENy`: A scaled data frame of PROGENy pathway activity scores.
 
-- `sample_acts_gsva`: A scaled matrix of GSVA scores based on the
-  provided gene sets.
+- `GSVA`: A scaled data frame of GSVA scores based on the provided gene
+  sets.
+
+Column names are made syntactically valid with
+[`make.names()`](https://rdrr.io/r/base/make.names.html).
 
 ## References
 

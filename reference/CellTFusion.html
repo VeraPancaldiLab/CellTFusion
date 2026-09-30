@@ -16,18 +16,16 @@
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/CellTFusion.html">Get started</a></li>
-<li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><hr class="dropdown-divider"></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Tutorials</h6></li>
-    <li><a class="dropdown-item" href="../articles/01-feature-computation.html">Feature Computation</a></li>
-    <li><a class="dropdown-item" href="../articles/02-cell-groups.html">Cell Group Construction and Latent Factors</a></li>
-    <li><a class="dropdown-item" href="../articles/03-tme-states.html">TME State Characterisation</a></li>
-    <li><a class="dropdown-item" href="../articles/04-analysis.html">Statistical Analysis</a></li>
-    <li><a class="dropdown-item" href="../articles/06-machine-learning.html">Machine Learning</a></li>
-    <li><a class="dropdown-item" href="../articles/07-batch-analysis.html">Batch/Multi-cohort Analysis</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/a1_feature_computation.html">Feature computation</a></li>
+    <li><a class="dropdown-item" href="../articles/a2_cell_groups.html">Cell groups and latent factors</a></li>
+    <li><a class="dropdown-item" href="../articles/a3_tme_states.html">TME state characterization</a></li>
+    <li><a class="dropdown-item" href="../articles/a4_statistical_analysis.html">Statistical analysis</a></li>
+    <li><a class="dropdown-item" href="../articles/a5_machine_learning.html">Machine learning workflows</a></li>
+    <li><a class="dropdown-item" href="../articles/a6_batch_analysis.html">Multi-cohort analysis</a></li>
   </ul></li>
+<li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
       </ul></div>
@@ -58,7 +56,7 @@
 <span>  coldata <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  batch <span class="op">=</span> <span class="cn">F</span>,</span>
 <span>  batch_id <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  deconv_methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Quantiseq"</span>, <span class="st">"CBSX"</span>, <span class="st">"Epidish"</span>, <span class="st">"DeconRNASeq"</span>, <span class="st">"DWLS"</span><span class="op">)</span>,</span>
+<span>  deconv_methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Quantiseq"</span>, <span class="st">"Epidish"</span>, <span class="st">"DeconRNASeq"</span>, <span class="st">"DWLS"</span><span class="op">)</span>,</span>
 <span>  cbsx.mail <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  cbsx.token <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  file_name <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -99,7 +97,7 @@ Ignored if <code>dt</code> is supplied.</p></dd>
 
 <dt id="arg-dt">dt<a class="anchor" aria-label="anchor" href="#arg-dt"></a></dt>
 <dd><p>(Optional) A precomputed cell-subgroup object, typically the output of
-<code><a href="https://rdrr.io/pkg/multideconv/man/compute.deconvolution.analysis.html" class="external-link">multideconv::compute.deconvolution.analysis()</a></code> (or the <code>Processed_deconvolution</code> element
+<code><a href="https://verapancaldilab.github.io/multideconv/reference/compute.deconvolution.analysis.html" class="external-link">multideconv::compute.deconvolution.analysis()</a></code> (or the <code>Processed_deconvolution</code> element
 returned by a previous <code>CellTFusion()</code> run). If supplied, cell-type deconvolution and the
 deconvolution analysis step are both skipped and the pipeline proceeds straight to cell group
 construction using this object.</p></dd>
@@ -122,7 +120,8 @@ If supplied, pathway activity inference is skipped.</p></dd>
 
 
 <dt id="arg-coldata">coldata<a class="anchor" aria-label="anchor" href="#arg-coldata"></a></dt>
-<dd><p>(Optional) A data frame containing clinical metadata for association analysis with TF modules.</p></dd>
+<dd><p>(Optional) A data frame of sample metadata (samples as rows). Only used when
+<code>batch = TRUE</code>, to read the batch column given by <code>batch_id</code>.</p></dd>
 
 
 <dt id="arg-batch">batch<a class="anchor" aria-label="anchor" href="#arg-batch"></a></dt>
@@ -134,16 +133,17 @@ If supplied, pathway activity inference is skipped.</p></dd>
 
 
 <dt id="arg-deconv-methods">deconv_methods<a class="anchor" aria-label="anchor" href="#arg-deconv-methods"></a></dt>
-<dd><p>A character vector of deconvolution methods to apply. Default includes:
-<code>c("Quantiseq", "Epidish", "DeconRNASeq", "DWLS", "CibersortX")</code>.</p></dd>
+<dd><p>A character vector of deconvolution methods to apply. Default is
+<code>c("Quantiseq", "Epidish", "DeconRNASeq", "DWLS")</code>. Add <code>"CBSX"</code> to also run CIBERSORTx
+(requires <code>cbsx.mail</code> and <code>cbsx.token</code>).</p></dd>
 
 
 <dt id="arg-cbsx-mail">cbsx.mail<a class="anchor" aria-label="anchor" href="#arg-cbsx-mail"></a></dt>
-<dd><p>(Optional) Email credential for CIBERSORTx. Required if "CibersortX" is among deconv_methods.</p></dd>
+<dd><p>(Optional) Email credential for CIBERSORTx. Required if "CBSX" is among deconv_methods.</p></dd>
 
 
 <dt id="arg-cbsx-token">cbsx.token<a class="anchor" aria-label="anchor" href="#arg-cbsx-token"></a></dt>
-<dd><p>(Optional) Token credential for CIBERSORTx. Required if "CibersortX" is among deconv_methods.</p></dd>
+<dd><p>(Optional) Token credential for CIBERSORTx. Required if "CBSX" is among deconv_methods.</p></dd>
 
 
 <dt id="arg-file-name">file_name<a class="anchor" aria-label="anchor" href="#arg-file-name"></a></dt>
@@ -152,12 +152,14 @@ If supplied, pathway activity inference is skipped.</p></dd>
 
 <dt id="arg-tf-collection">TF.collection<a class="anchor" aria-label="anchor" href="#arg-tf-collection"></a></dt>
 <dd><p>Character. The source of the TF-target network. Options are <code>"CollecTRI"</code> (default), <code>"Dorothea"</code>, or <code>"ARACNE"</code>.</p><ul><li><p><code>"CollecTRI"</code> and <code>"Dorothea"</code> use prebuilt collections from OmnipathR.</p></li>
-<li><p><code>"ARACNE"</code> allows user input of a custom network file in a 3-column format: <code>regulator</code>, <code>target</code>, and <code>mutual information</code>.</p></li>
+<li><p><code>"ARACNE"</code> reads a network file (tab-separated with <code>Regulator</code> and <code>Target</code> columns) from
+<code>input/ARACNE/&lt;cancer_type&gt;/network/network.txt</code>.</p></li>
 </ul></dd>
 
 
 <dt id="arg-min-targets-size">min_targets_size<a class="anchor" aria-label="anchor" href="#arg-min-targets-size"></a></dt>
-<dd><p>Integer. Minimum number of target genes per regulon required for TF activity inference. Default is 5.</p></dd>
+<dd><p>Integer. Minimum number of target genes per regulon, passed to
+<code><a href="compute.TFs.activity.html">compute.TFs.activity()</a></code>. Default is 3.</p></dd>
 
 
 <dt id="arg-universe">universe<a class="anchor" aria-label="anchor" href="#arg-universe"></a></dt>
@@ -169,16 +171,16 @@ If supplied, pathway activity inference is skipped.</p></dd>
 
 
 <dt id="arg-gene-sets">gene_sets<a class="anchor" aria-label="anchor" href="#arg-gene-sets"></a></dt>
-<dd><p>Optional. A data frame of custom gene sets passed to <code><a href="compute.pathway.activity.html">compute.pathway.activity()</a></code>'s
-<code>gene_sets</code> argument for GSVA-based scoring. If <code>NULL</code>, only PROGENy is used.</p></dd>
+<dd><p>Optional. A named list of custom gene sets (character vectors of gene symbols) passed to
+<code><a href="compute.pathway.activity.html">compute.pathway.activity()</a></code>'s <code>gene_sets</code> argument for GSVA-based scoring. If <code>NULL</code>, only PROGENy is used.</p></dd>
 
 
 <dt id="arg-minmod">minMod<a class="anchor" aria-label="anchor" href="#arg-minmod"></a></dt>
-<dd><p>Integer; minimum module size for WGCNA module detection.</p></dd>
+<dd><p>Integer; minimum module size for WGCNA module detection. Default is 3.</p></dd>
 
 
 <dt id="arg-corr-mod">corr_mod<a class="anchor" aria-label="anchor" href="#arg-corr-mod"></a></dt>
-<dd><p>Numeric; correlation threshold for merging TF modules.</p></dd>
+<dd><p>Numeric; correlation threshold for merging TF modules. Default is 0.9.</p></dd>
 
 
 <dt id="arg-corr">corr<a class="anchor" aria-label="anchor" href="#arg-corr"></a></dt>
@@ -194,7 +196,8 @@ If supplied, pathway activity inference is skipped.</p></dd>
 
 
 <dt id="arg-pval">pval<a class="anchor" aria-label="anchor" href="#arg-pval"></a></dt>
-<dd><p>Numeric; p-value threshold for statistical tests (e.g., metadata and relationship associations).</p></dd>
+<dd><p>Numeric; p-value threshold used when building cell groups (TF module-deconvolution
+correlations and the CCA permutation test).</p></dd>
 
 
 <dt id="arg-enrich-thresh">enrich_thresh<a class="anchor" aria-label="anchor" href="#arg-enrich-thresh"></a></dt>
@@ -208,15 +211,16 @@ cell groups per NMF factor. Default is 0.7.</p></dd>
 
 
 <dt id="arg-cancer-type">cancer_type<a class="anchor" aria-label="anchor" href="#arg-cancer-type"></a></dt>
-<dd><p>Character. TCGA cancer type abbreviation (e.g., <code>"blca"</code>, <code>"skcm"</code>).
+<dd><p>Character. TCGA cancer type abbreviation (one of <code>"blca"</code>, <code>"luad"</code>, <code>"skcm"</code>).
 Used for two purposes: (1) loading TCGA meta-programs for TME state mapping, and (2) when
 <code>TF.collection = "ARACNE"</code>, locating the ARACNe network at
-<code>input/ARACNE/&lt;cancer_type&gt;/network/network.txt</code>. If <code>NULL</code> and only one ARACNe
-network exists under <code>input/ARACNE/</code>, it is auto-detected.</p></dd>
+<code>input/ARACNE/&lt;cancer_type&gt;/network/network.txt</code>. If <code>NULL</code>, the meta-program mapping
+step is skipped (<code>TME_states</code> and <code>Metaprograms_reference</code> are <code>NULL</code>) and, for ARACNE,
+the network is auto-detected when only one exists under <code>input/ARACNE/</code>.</p></dd>
 
 
 <dt id="arg-return">return<a class="anchor" aria-label="anchor" href="#arg-return"></a></dt>
-<dd><p>Logical; if TRUE, returns intermediate results from internal functions. Default is TRUE.</p></dd>
+<dd><p>Logical; if TRUE, intermediate matrices and plots are written to the "Results/" folder. Default is TRUE.</p></dd>
 
 
 <dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>
@@ -226,25 +230,45 @@ network exists under <code>input/ARACNE/</code>, it is auto-detected.</p></dd>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A list containing:</p><dl><dt>Deconvolution</dt>
-<dd><p>A matrix with cell-type proportions (samples as rows, cell types as columns).</p></dd>
+<dd><p>A matrix with cell-type proportions (samples as rows, cell types as columns); <code>NULL</code> if <code>dt</code> was supplied.</p></dd>
 
 <dt>TFs_matrix</dt>
-<dd><p>A matrix with TF activity scores (samples as rows, TFs as columns).</p></dd>
+<dd><p>A matrix with TF activity scores (samples as rows, TFs as columns), or a list of matrices (one per cohort) when <code>batch = TRUE</code>.</p></dd>
 
 <dt>TF_network</dt>
-<dd><p>A list representing the TF module network and related WGCNA output.</p></dd>
+<dd><p>The TF module network returned by <code><a href="compute.WTCNA.html">compute.WTCNA()</a></code>.</p></dd>
 
 <dt>Pathways_scores</dt>
-<dd><p>A matrix of pathway activity scores.</p></dd>
+<dd><p>Pathway activity scores returned by <code><a href="compute.pathway.activity.html">compute.pathway.activity()</a></code>.</p></dd>
 
 <dt>Processed_deconvolution</dt>
-<dd><p>An object with the processed deconvolution analysis results.</p></dd>
+<dd><p>The processed deconvolution subgroups (output of <code><a href="https://verapancaldilab.github.io/multideconv/reference/compute.deconvolution.analysis.html" class="external-link">multideconv::compute.deconvolution.analysis()</a></code>).</p></dd>
 
 <dt>Cell_groups</dt>
-<dd><p>A matrix of scores representing the cell groups across samples.</p></dd>
+<dd><p>Output of <code><a href="construct_cell_groups.html">construct_cell_groups()</a></code>: cell group scores, compositions and projection weights.</p></dd>
+
+<dt>Latent_spaces</dt>
+<dd><p>NMF latent factors returned by <code><a href="compute.latent_factors.html">compute.latent_factors()</a></code>.</p></dd>
+
+<dt>Cells_niches</dt>
+<dd><p>Enriched cell types per latent factor (see <code><a href="compute_cells_niches.html">compute_cells_niches()</a></code>).</p></dd>
+
+<dt>TME_states</dt>
+<dd><p>Factor-to-meta-program mapping (<code>factor_mapping</code> from <code><a href="map_factors_to_metaprograms.html">map_factors_to_metaprograms()</a></code>), or <code>NULL</code> if <code>cancer_type</code> is <code>NULL</code>.</p></dd>
+
+<dt>Metaprograms_reference</dt>
+<dd><p>The TCGA meta-program reference used for mapping, or <code>NULL</code> if <code>cancer_type</code> is <code>NULL</code>.</p></dd>
 
 
 </dl></div>
+    <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p>The pipeline runs with a fixed random seed (123) so results are reproducible; the caller's random
+number generator state is restored when the function returns. With <code>normalized = TRUE</code>, sample
+names are converted with <code><a href="https://rdrr.io/r/base/make.names.html" class="external-link">make.names()</a></code> (e.g. <code>"TCGA-XX-1234"</code> becomes <code>"TCGA.XX.1234"</code>),
+as <code><a href="https://verapancaldilab.github.io/multideconv/reference/compute.deconvolution.html" class="external-link">multideconv::compute.deconvolution()</a></code> also does; <code>deconv</code> rows are matched to the samples
+in either form.</p>
+    </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
