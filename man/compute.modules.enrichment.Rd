@@ -4,7 +4,7 @@
 \alias{compute.modules.enrichment}
 \title{Compute TF module enrichment using directed target genes}
 \usage{
-\method{compute}{modules.enrichment}(RNA.tpm, hub_tfs)
+compute.modules.enrichment(RNA.tpm, hub_tfs)
 }
 \arguments{
 \item{RNA.tpm}{A numeric matrix of normalized gene expression values.
@@ -16,23 +16,24 @@ This should be a list of two elements: one with named hub TFs per module, and an
 with their module membership or additional metadata.}
 }
 \value{
-No object is returned. For each module with significant enrichment (p-value < 0.05),
+No object is returned. For each module with significant enrichment (adjusted p-value < 0.05),
 a dot plot is saved in the \verb{Results/} directory as a PDF file named
-\verb{Module <color>.pdf}. If no enrichment is found for a module, a message is printed
+\verb{Enrichment_Reactome_Module_<color>.pdf}. If no enrichment is found for a module, a message is printed
 and no file is saved for that module.
 }
 \description{
 This function performs enrichment analysis for transcription factor (TF) modules
-using known TF-target interactions. For each module, it identifies hub TFs and retrieves
+using known TF-target interactions. For each module, it takes the hub TFs and retrieves
 their known targets from the CollecTRI database. It then conducts an over-representation
 analysis (ORA) against the Reactome pathway database. To reduce redundancy, only unique
 pathways per module are retained by filtering out overlaps between modules.
 }
 \details{
-The function uses the \code{decoupleR::get_collectri()} function to obtain TF-target relationships,
-and \code{clusterProfiler::enrichPathway()} for ORA using the Reactome database.
-Pathways shared between multiple modules are filtered using a Venn diagram-based comparison
-to retain only module-specific results.
+The function uses the \code{decoupleR::get_collectri()} function to obtain TF-target relationships
+(cached in \code{Results/TF_target_collection_CollecTRI.csv}), and \code{ReactomePA::enrichPathway()} for ORA
+using the Reactome database. The ORA input is the 20\% most variable targets of the module's hub TFs
+(at least one gene).
+Pathways enriched in more than one module are removed, so only module-specific results are kept.
 }
 \examples{
 \dontrun{

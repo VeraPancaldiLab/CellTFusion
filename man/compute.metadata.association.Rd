@@ -4,7 +4,7 @@
 \alias{compute.metadata.association}
 \title{Compute associations between TF module scores and clinical metadata}
 \usage{
-\method{compute}{metadata.association}(
+compute.metadata.association(
   tfs.modules,
   coldata,
   pval = 0.05,
@@ -33,7 +33,7 @@ Only associations with p-values below this threshold are considered significant 
 \item{corr_method}{Character string specifying the correlation method to use for continuous variables.
 Options are \code{"p"} for pearson and \code{"s"} for spearman. Default is \code{"p"}.}
 
-\item{file.name}{Character. Base file name for saving PDF plots of results.}
+\item{file.name}{Character. Base file name for saving plots of results.}
 
 \item{width}{A numeric value indicating the width (in inches) of the output heatmap plot (default = 20).}
 
@@ -45,24 +45,26 @@ Options are \code{"p"} for pearson and \code{"s"} for spearman. Default is \code
 
 \item{y_max}{Numeric. Upper y-axis limit for grid boxplots.}
 
-\item{plot_grid}{Logical; if TRUE, generates a grid of boxplot summaries.}
+\item{plot_grid}{Logical; if TRUE, tests categorical traits with ANOVA and saves boxplot grids.}
 
 \item{width_grid}{Numeric width of the grid plot output.}
 
 \item{height_grid}{Numeric height of the grid plot output.}
 }
 \value{
-This function saves the following to the \verb{Results/} directory:
+Called for its side effects. Saves to the \verb{Results/} directory:
 \itemize{
-\item A labeled heatmap showing Pearson correlations and ANOVA test p-values.
-\item Individual violin plots for significant categorical trait associations.
+\item \code{TF.modules_metadata_<file.name>.pdf}: a labeled heatmap of module-trait correlations
+for numeric traits (only associations with p-value < \code{pval} are annotated).
+\item \code{ANOVA_boxplot_summary_<file.name>_<trait>.svg} (if \code{plot_grid = TRUE}): one boxplot
+grid per categorical trait with the significant modules.
 }
-The function does not return an object to the R environment.
 }
 \description{
 This function tests for associations between transcription factor (TF) module scores
-and available clinical traits. It uses Pearson correlation for continuous (numeric) traits,
-and ANOVA for categorical traits. Results are visualized as a labeled heatmap and violin plots.
+and available clinical traits. Numeric traits are correlated with each module (Pearson or
+Spearman) and shown as a labeled heatmap. If \code{plot_grid = TRUE}, categorical traits are
+additionally tested with one-way ANOVA (Tukey HSD post-hoc) and shown as boxplot grids.
 All plots are saved in the \verb{Results/} directory.
 }
 \examples{

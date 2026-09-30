@@ -7,8 +7,9 @@
 scores.ttest(scores, coldata, trait, pval = 0.05)
 }
 \arguments{
-\item{scores}{A list or matrix of cell group scores. When a list, the first element must be
-a data frame or matrix of scores (samples x features).}
+\item{scores}{A list whose first element is a samples x features score matrix, e.g. the output of
+\code{construct_cell_groups()} or \code{compute.latent_factors()}. To test a plain matrix, use
+\code{scores.stat.analysis()}.}
 
 \item{coldata}{A data frame containing sample-level annotations including the trait to test.}
 

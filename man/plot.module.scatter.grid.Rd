@@ -11,9 +11,8 @@
   p_mat,
   file_name,
   pval = 0.05,
-  cor_type = "p",
-  width = width,
-  height = width,
+  width = 12,
+  height = 10,
   only_sig = TRUE,
   ncol = NULL
 )
@@ -33,14 +32,11 @@
 
 \item{pval}{Numeric. P-value cutoff for displaying a pair. Default 0.05.}
 
-\item{cor_type}{Character. Label used in axis text (e.g., \code{"p"} for
-Pearson). Default \code{"p"}.}
+\item{width}{Numeric. Width of the SVG output in inches. Default 12. Increased if needed so that
+each panel is at least 2 inches wide.}
 
-\item{width}{Numeric. Width of the SVG output in inches. Default same as
-\code{height}.}
-
-\item{height}{Numeric. Height of the SVG output in inches. Default same as
-\code{width}.}
+\item{height}{Numeric. Height of the SVG output in inches. Default 10. Increased if needed so that
+each panel is at least 2 inches high.}
 
 \item{only_sig}{Logical. If \code{TRUE} (default), only pairs with
 \code{p <= pval} are plotted.}

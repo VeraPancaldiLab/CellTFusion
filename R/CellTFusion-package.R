@@ -3,8 +3,6 @@
 
 ## usethis namespace: start
 #' @importFrom ADImpute NormalizeTPM
-#' @importFrom broom tidy
-#' @importFrom cluster silhouette
 #' @importFrom decoupleR get_collectri
 #' @importFrom decoupleR get_dorothea
 #' @importFrom decoupleR get_progeny
@@ -21,8 +19,6 @@
 #' @importFrom dplyr select
 #' @importFrom dplyr slice
 #' @importFrom dplyr summarise
-#' @importFrom factoextra fviz_nbclust
-#' @importFrom factoextra hcut
 #' @importFrom ggplot2 aes
 #' @importFrom ggplot2 element_text
 #' @importFrom ggplot2 geom_abline

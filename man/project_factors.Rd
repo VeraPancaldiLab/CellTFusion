@@ -8,8 +8,8 @@ project_factors(latent_spaces, scores_test)
 }
 \arguments{
 \item{latent_spaces}{A list returned by \code{compute.latent_factors()},
-containing at minimum \code{W} (features x rank), \code{rank}, and
-the RcppML model object with \code{nmf_model$d} scaling vector.}
+containing at minimum \code{W} (features x rank) and the RcppML model
+object with the \code{nmf_model$d} scaling vector.}
 
 \item{scores_test}{A samples x cell groups matrix of signed CCA composite
 scores for the test cohort. Column names must match those used in training

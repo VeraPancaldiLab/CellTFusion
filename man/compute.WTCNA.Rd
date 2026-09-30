@@ -4,7 +4,7 @@
 \alias{compute.WTCNA}
 \title{Compute Weighted TF-coactivity Network Analysis (WTCNA)}
 \usage{
-\method{compute}{WTCNA}(
+compute.WTCNA(
   TFs.matrix,
   batch = FALSE,
   network.type = "signed",
@@ -21,33 +21,41 @@
 \arguments{
 \item{TFs.matrix}{Matrix of TF activity (samples x TFs).}
 
-\item{batch}{Logical; if TRUE, performs consensus WGCNA across cohorts provided as a list.}
+\item{batch}{Logical; if TRUE, performs consensus WGCNA (\code{WGCNA::blockwiseConsensusModules()}) across cohorts
+provided as a list of matrices. In this mode \code{clustering.method} and \code{corr_mod} are not used
+(modules are merged with a fixed \code{mergeCutHeight = 0.25}), and module eigengenes are scaled within each cohort.}
 
 \item{network.type}{Network type: "signed", "unsigned", "signed hybrid", or "distance". Default is "signed".}
 
-\item{clustering.method}{Clustering method for hierarchical clustering. Default is "ward.D2".}
+\item{clustering.method}{Clustering method for hierarchical clustering (single-cohort mode only). Default is "ward.D2".}
 
 \item{minMod}{Minimum number of TFs per module. Default is 15.}
 
-\item{corr_mod}{Correlation threshold (0-1) for merging similar modules. Default is 0.9.}
+\item{corr_mod}{Correlation threshold (0-1) above which module eigengenes are merged (single-cohort mode only). Default is 0.9.}
 
-\item{cor_type}{Correlation type for adjacency calculation: "p" (Pearson), "s" (Spearman). Default is "p".}
+\item{cor_type}{Correlation used to pick the soft-threshold power and build the adjacency matrix:
+"p" (Pearson) or "s" (Spearman). Spearman is only available when \code{batch = FALSE}, because WGCNA
+consensus modules only support Pearson correlation. Default is "p".}
 
 \item{verbose}{Boolen value to whether print or no the function messages}
 
 \item{file.name}{Optional character suffix used when writing WTCNA outputs.}
 
-\item{softPower}{Optional numeric value specifying the soft-thresholding power to be used when constructing}
+\item{softPower}{Optional numeric value specifying the soft-thresholding power used to build the adjacency
+matrix (one value per cohort when \code{batch = TRUE}). If \code{NULL}, the power whose scale-free fit
+\eqn{R^2} is closest to 0.9 is chosen automatically.}
 
 \item{return}{Logical, whether to save output plots and module list to "Results/". Default is TRUE.}
 }
 \value{
 A named list with:
 \itemize{
-\item \code{TFs module matrix}: Matrix of module eigengenes (samples x modules).
+\item \code{TFs module matrix}: Scaled module eigengenes (samples x modules). In batch mode, samples are
+concatenated in cohort order.
 \item \code{TFs colors}: Vector of module colors assigned to each TF.
 \item \code{TFs per module}: List of TF names in each module.
-\item \code{Proportion of variance}: Matrix of variance explained per module.
+\item \code{Proportion of variance}: Variance explained per module (single-cohort mode only).
+\item \code{TFs_matrix}: The TF activity matrix used (a list of per-cohort matrices restricted to shared TFs in batch mode).
 }
 }
 \description{

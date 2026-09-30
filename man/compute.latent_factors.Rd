@@ -4,27 +4,37 @@
 \alias{compute.latent_factors}
 \title{Compute latent factors from cell group scores using NMF}
 \usage{
-\method{compute}{latent_factors}(X, rank = NULL, seed = 123, file_name = NULL, return = TRUE)
+compute.latent_factors(
+  X,
+  rank = NULL,
+  seed = 123,
+  file_name = NULL,
+  return = TRUE
+)
 }
 \arguments{
 \item{X}{Numeric matrix of size samples x cell groups (signed CCA composite scores).}
 
 \item{rank}{Integer; number of NMF factors. If NULL, estimated automatically
-via elbow on reconstruction MSE across ranks 2:8.}
+at the elbow of the reconstruction MSE across ranks 2:8 (the rank with the largest
+second difference of the MSE curve).}
 
-\item{seed}{Random seed. Default 123.}
+\item{seed}{Random seed used for the NMF fits. Default 123. The caller's random number generator
+state is restored when the function returns.}
 
-\item{file_name}{Optional character. If provided, saves results to this file path.}
+\item{file_name}{Optional character suffix for the saved patient-mixture plot.}
 
-\item{return}{Logical. If TRUE (default), returns the result as an R object.}
+\item{return}{Logical. If TRUE (default), saves the patient-mixture barplot to
+\code{Results/NMF_patient_mixture_<file_name>.pdf}.}
 }
 \value{
 A named list with:
 \describe{
 \item{Z}{Sample-level NMF factor scores (samples x rank). Non-negative.}
-\item{W}{Feature weights per factor (2 x n_CGs x rank). Non-negative.}
-\item{nmf_input}{The positive-negative split matrix fed to NMF (samples x 2 x n_CGs).}
-\item{rank}{The rank used.}
+\item{W}{Feature weights per factor ((2 x n_CGs) x rank). Non-negative.}
+\item{nmf_input}{The positive-negative split matrix fed to NMF (samples x (2 x n_CGs)).}
+\item{nmf_model}{The \code{RcppML::nmf()} model object (includes the scaling vector \code{d}).}
+\item{patient_mixture}{Long-format data frame of per-sample factor proportions used for the mixture plot.}
 }
 }
 \description{

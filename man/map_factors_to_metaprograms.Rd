@@ -15,26 +15,33 @@ map_factors_to_metaprograms(
 \arguments{
 \item{gsea_study}{Output from compute_factor_gsea() on study cohort.}
 
-\item{cancer_type}{Character. TCGA cancer type abbreviation (e.g., \code{"blca"}, \code{"brca"},
-\code{"cesc"}, \code{"chol"}, \code{"coad"}, \code{"skcm"}) identifying which pre-built
-TCGA meta-program file to load from \code{inst/extdata/}.}
+\item{cancer_type}{Character. TCGA cancer type abbreviation identifying which pre-built
+TCGA meta-program reference shipped with the package to use. Available: \code{"blca"},
+\code{"luad"}, \code{"skcm"}. Ignored if \code{mp_file} is given.}
 
-\item{mp_file}{Optional character. Path to a custom meta-program RData file. If NULL,
-the pre-built file for \code{cancer_type} is loaded from \code{inst/extdata/}.}
+\item{mp_file}{Optional. Either a meta-program data frame (as returned by
+\code{derive_meta_programs()} / \code{annotate_metaprograms_TME()}) or the path to an
+RData file containing such an object named \code{meta_programs}. If NULL, the pre-built
+reference for \code{cancer_type} is used.}
 
-\item{plot}{Logical. If TRUE (default), saves a heatmap of factor-to-meta-program scores.}
+\item{plot}{Logical. If TRUE (default), saves a barplot of factor-to-meta-program scores
+to \code{Results/Factor_MP_mapping_<file_name>.pdf}.}
 
-\item{file_name}{Optional character. File path prefix for saving output plots.}
+\item{file_name}{Optional character suffix for saving output plots.}
 }
 \value{
-Data frame with one row per study factor:
-factor, best_MP, best_score, all_scores, active_hallmarks
+A list with:
+\itemize{
+\item \code{factor_mapping}: Data frame with one row per study factor and columns
+\code{best_MP}, \code{factor}, \code{best_score}, \code{all_scores} (all meta-program
+scores as \code{"MP:score"} pairs) and, if available, \code{TME_subtype}.
+\item \code{reference}: The meta-program reference data frame used.
+}
 }
 \description{
 For each study NMF factor, scores it against each TCGA meta-program
 by computing the mean NES of the meta-program's Hallmarks in that factor.
-The meta-program with the highest mean NES is the best match. If Bagaev
-MFP annotations are available (either embedded in the loaded
-meta-program object or in \code{inst/extdata/bagaev_factor_annotations.RData}),
-a \code{mfp_label} column is appended to the output.
+The meta-program with the highest positive mean NES is the best match. If the
+meta-program reference has a \code{TME_subtype} column (see
+\code{annotate_metaprograms_TME()}), it is appended to the output.
 }

@@ -8,7 +8,7 @@ build_nes_matrix(gsea_results)
 }
 \arguments{
 \item{gsea_results}{Output list from \code{compute_factor_gsea()}, containing
-a \code{GSEA_results} element (named list of \code{enrichResult} objects,
+a \code{GSEA_results} element (named list of \code{fgsea} result tables,
 one per factor).}
 }
 \value{
@@ -17,5 +17,6 @@ as columns. Missing Hallmark-factor combinations are set to 0.
 }
 \description{
 Combines the per-factor GSEA outputs from \code{compute_factor_gsea()} into
-a single matrix. Hallmarks not significant in a given factor are filled with 0.
+a single matrix. All tested Hallmarks are kept regardless of significance;
+Hallmarks absent from a factor's results, or whose NES could not be computed, are filled with 0.
 }

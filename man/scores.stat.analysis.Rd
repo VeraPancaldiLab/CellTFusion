@@ -69,7 +69,7 @@ sig <- scores.stat.analysis(cell.groups, coldata, trait = "response",
                             method = "kruskal", pval = 0.05)
 
 # NMF latent factors
-nmf <- compute.latent.factors(cell.groups)
+nmf <- compute.latent_factors(cell.groups$Cell_groups)
 sig <- scores.stat.analysis(nmf, coldata, trait = "response", method = "anova")
 }
 

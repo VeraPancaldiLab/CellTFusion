@@ -13,7 +13,8 @@ at minimum \code{Processed_deconvolution}, \code{Cell_groups}, and
 
 \item{test_deconv}{A numeric matrix or data frame of deconvolution features
 for the test samples (samples x cell types). Column names must match those
-used during training.}
+used during training. If the model was trained with batch correction, the test samples are
+centred on their own means (as each training cohort was), so they should come from a single cohort.}
 }
 \value{
 A numeric matrix (test samples x NMF factors) of non-negative

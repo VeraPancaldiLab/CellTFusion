@@ -50,4 +50,3 @@ weight), maps them to their constituent cell types, and keeps only cell
 types enriched relative to the background composition. Saves a star-network
 PDF per factor and returns the weighted cell-type associations.
 }
-\keyword{internal}

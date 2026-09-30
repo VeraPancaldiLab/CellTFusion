@@ -17,11 +17,13 @@ compute_composite_score(
 \arguments{
 \item{cell_group}{A numeric matrix of cell deconvolution features for a cell group (samples x features).}
 
-\item{module_group}{A character vector indicating TF module group colors corresponding to the cell group (can be obtained via \code{extract_colors()}).}
+\item{module_group}{Character. Name (color) of the TF module the cell group was built from; must match a
+column name of the module matrix in \code{tfs.module.network} exactly.}
 
 \item{tfs.module.network}{Output of compute.WTCNA().}
 
-\item{batch}{Optional vector indicating batch assignment for samples.}
+\item{batch}{Optional vector indicating batch assignment for samples. It is treated as categorical: per-batch
+means are regressed out of the cell group features, the module eigengene and the module TFs before the CCA.}
 
 \item{discard}{Logical; whether to discard cell groups that do not pass the
 permutation test for the first canonical correlation (default TRUE).}
@@ -31,12 +33,16 @@ permutation test for the first canonical correlation (default TRUE).}
 \item{n_perm}{Integer. Number of permutations used to build the null distribution (default 999).}
 }
 \value{
-A list with:
+An unnamed list of two elements:
 \itemize{
-\item \code{selected_components}: Numeric matrix of the first canonical component scores across samples.
-\item \code{xcoef}: The canonical weights (coefficients) for the cell group features.
+\item \code{[[1]]}: Numeric matrix (samples x 1) with the composite score, i.e. the scaled cell group
+features projected onto the first canonical component.
+\item \code{[[2]]}: Projection parameters used to score new samples: \code{xcoef} (canonical weights of
+the first component), \code{train_means} and \code{train_sds} (column means/SDs used for scaling).
+\code{train_means} is \code{NULL} when batch correction was applied: new samples are then centred on
+their own means, as each training cohort was.
 }
-If discarded due to low correlation, returns \code{list("NA", "NA")}.
+If the permutation test is not significant (and \code{discard = TRUE}), returns \code{list("NA", "NA")}.
 }
 \description{
 Computes a composite score by performing Canonical Correlation Analysis (CCA)

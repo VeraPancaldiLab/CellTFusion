@@ -14,21 +14,22 @@ e.g. \code{"skcm"}).}
 \item{Z}{Numeric matrix. Samples x factors NMF score matrix (row names =
 TCGA barcodes).}
 
-\item{plot}{Logical. If TRUE (default), saves a boxplot of factor scores by MFP group.}
+\item{plot}{Logical. If TRUE (default), saves violin/boxplots of factor scores by MFP group
+to \code{Results/TME_factors_MFP_<cancer_name>_<file_name>.pdf}.}
 
-\item{file_name}{Optional character. File path prefix for saving output plots.}
+\item{file_name}{Optional character suffix for saving output plots.}
 }
 \value{
 A data frame with columns \code{factor}, \code{best_MFP},
 \code{kw_pval}, \code{median_IE}, \code{median_IEF}, \code{median_F},
-\code{median_D}, \code{n_samples}, or \code{NULL} if fewer than 10
-patients are matched.
+\code{median_D}, \code{n_samples}, or \code{NULL} (with a warning) if the
+cancer type is not annotated or fewer than 10 patients are matched.
 }
 \description{
 For a single cancer type, matches TCGA patients present in the NMF factor
-score matrix \code{Z} to the Bagaev annotation, then computes Spearman
-correlations between each factor and each one-hot-encoded MFP subtype
-(IE, IE/F, F, D). The best-matching subtype per factor is returned; factors
-with a maximum absolute correlation below 0.15 are labelled
+score matrix \code{Z} to the Bagaev et al. (2021) MFP annotation shipped with the
+package, then tests each factor across the four MFP subtypes (IE, IE/F, F, D)
+with a Kruskal-Wallis test. Factors with p < 0.05 are labelled with the subtype
+that has the highest median factor score; the others are labelled
 \code{"uncharacterized"}.
 }

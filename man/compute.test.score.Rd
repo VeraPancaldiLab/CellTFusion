@@ -4,7 +4,7 @@
 \alias{compute.test.score}
 \title{Project test-set cell group scores using training CCA parameters}
 \usage{
-\method{compute}{test.score}(cell_group, projection_params)
+compute.test.score(cell_group, projection_params)
 }
 \arguments{
 \item{cell_group}{A numeric matrix of cell deconvolution features for test
@@ -13,7 +13,8 @@ samples (samples x features). Column names must overlap with training features.}
 \item{projection_params}{A list containing:
 \describe{
 \item{xcoef}{Named numeric matrix of CCA canonical weights (features x 1).}
-\item{train_means}{Named numeric vector of training column means.}
+\item{train_means}{Named numeric vector of training column means, or \code{NULL} if the training used
+batch correction, in which case the test data are centred on their own column means.}
 \item{train_sds}{Named numeric vector of training column standard deviations.}
 }}
 }

@@ -1,12 +1,12 @@
 
 utils::globalVariables(c("Trait", "Value" ,"level", ".", "Cells_level", "PC1", "Features", "tf", "Module", "shap_value", "mean_shap", "direction", "Feature", "Impact", "values", "ind", "Freq", "new_column", ".data", "id", "value", "P", "p", "sig_p", "r", "i",
                          ":=", "MFP", "MP", "NES", "Regulator", "TME_subtype", "Target", "as.hclust",
-                         "condition", "coord_cartesian", "dist", "facet_wrap", "feature_label",
-                         "geom_jitter", "group", "gs_name", "hclust", "kruskal.test", "labeller",
+                         "condition", "dist", "feature_label",
+                         "group", "gs_name", "hclust", "kruskal.test",
                          "lm", "meta_programs", "module", "mor", "mtext", "order.dendrogram", "padj",
                          "pathway", "proportion", "quantile", "read.delim", "residuals", "score",
-                         "score_level", "setNames", "stat_pvalue_manual", "svg", "target", "theme_bw", "title",
-                         "compute.deconvolution.analysis", "n", "n_distinct"))
+                         "score_level", "setNames", "svg", "target", "title",
+                         "n", "n_distinct"))
 
 #' @importFrom grDevices colorRampPalette svg
 #' @importFrom graphics mtext title
@@ -16,10 +16,10 @@ utils::globalVariables(c("Trait", "Value" ,"level", ".", "Cells_level", "PC1", "
 #' @importFrom colorspace rainbow_hcl
 #' @importFrom fgsea fgsea
 #' @importFrom ppcor pcor.test
+#' @importFrom multideconv compute.deconvolution compute.deconvolution.analysis get_cell_type_nomenclature
 #' @rawNamespace export(compute.TFs.activity)
 #' @rawNamespace export(compute.WTCNA)
 #' @rawNamespace export(compute.pathway.activity)
-#' @rawNamespace export(compute.TF.network.classification)
 #' @rawNamespace export(compute.metadata.association)
 #' @rawNamespace export(compute.latent_factors)
 #' @rawNamespace export(compute.modules.relationship)
@@ -29,8 +29,6 @@ utils::globalVariables(c("Trait", "Value" ,"level", ".", "Cells_level", "PC1", "
 #' @rawNamespace export(compute.survival.analysis)
 #' @rawNamespace export(identify.cell.groups)
 NULL
-
-compute <- function(x, ...) UseMethod("compute")
 
 
 #' Compute one-step CellTFusion
@@ -53,48 +51,65 @@ compute <- function(x, ...) UseMethod("compute")
 #'   element returned by a previous \code{CellTFusion()} run or by \code{compute.pathway.activity()}.
 #'   If supplied, pathway activity inference is skipped.
 #' @param normalized Logical; if TRUE, normalize raw counts to log-transformed TPM for TF computation. For deconvolution they are going to be normalize just as TPM. Default is TRUE.
-#' @param coldata (Optional) A data frame containing clinical metadata for association analysis with TF modules.
+#' @param coldata (Optional) A data frame of sample metadata (samples as rows). Only used when
+#'   \code{batch = TRUE}, to read the batch column given by \code{batch_id}.
 #' @param batch Logical; whether batch correction should be applied where supported. Default is FALSE.
 #' @param batch_id Optional character indicating the column name in coldata containing batch identifiers.
-#' @param deconv_methods A character vector of deconvolution methods to apply. Default includes:
-#'   \code{c("Quantiseq", "Epidish", "DeconRNASeq", "DWLS", "CibersortX")}.
-#' @param cbsx.mail (Optional) Email credential for CIBERSORTx. Required if "CibersortX" is among deconv_methods.
-#' @param cbsx.token (Optional) Token credential for CIBERSORTx. Required if "CibersortX" is among deconv_methods.
+#' @param deconv_methods A character vector of deconvolution methods to apply. Default is
+#'   \code{c("Quantiseq", "Epidish", "DeconRNASeq", "DWLS")}. Add \code{"CBSX"} to also run CIBERSORTx
+#'   (requires \code{cbsx.mail} and \code{cbsx.token}).
+#' @param cbsx.mail (Optional) Email credential for CIBERSORTx. Required if "CBSX" is among deconv_methods.
+#' @param cbsx.token (Optional) Token credential for CIBERSORTx. Required if "CBSX" is among deconv_methods.
 #' @param file_name (Optional) Prefix for output files saved in the "Results/" directory.
 #' @param TF.collection Character. The source of the TF-target network. Options are `"CollecTRI"` (default), `"Dorothea"`, or `"ARACNE"`.
 #' - `"CollecTRI"` and `"Dorothea"` use prebuilt collections from OmnipathR.
-#' - `"ARACNE"` allows user input of a custom network file in a 3-column format: `regulator`, `target`, and `mutual information`.
-#' @param min_targets_size Integer. Minimum number of target genes per regulon required for TF activity inference. Default is 5.
+#' - `"ARACNE"` reads a network file (tab-separated with `Regulator` and `Target` columns) from
+#'   \code{input/ARACNE/<cancer_type>/network/network.txt}.
+#' @param min_targets_size Integer. Minimum number of target genes per regulon, passed to
+#'   \code{compute.TFs.activity()}. Default is 3.
 #' @param universe Optional. A user-specified data frame of TF-target interactions. If not provided, the function will fetch the relevant network based on the `TF.collection` argument.
 #' @param paths Optional. A user-specified data frame of pathways gene sets. If not provided, the function will fetch the relevant pathways based on `PROGENy`.
-#' @param gene_sets Optional. A data frame of custom gene sets passed to \code{compute.pathway.activity()}'s
-#'   \code{gene_sets} argument for GSVA-based scoring. If \code{NULL}, only PROGENy is used.
-#' @param minMod Integer; minimum module size for WGCNA module detection.
-#' @param corr_mod Numeric; correlation threshold for merging TF modules.
+#' @param gene_sets Optional. A named list of custom gene sets (character vectors of gene symbols) passed to
+#'   \code{compute.pathway.activity()}'s \code{gene_sets} argument for GSVA-based scoring. If \code{NULL}, only PROGENy is used.
+#' @param minMod Integer; minimum module size for WGCNA module detection. Default is 3.
+#' @param corr_mod Numeric; correlation threshold for merging TF modules. Default is 0.9.
 #' @param corr Numeric; correlation threshold used in the deconvolution analysis.
 #' @param corr_type Correlation type used in deconvolution analysis. Default is \code{"spearman"}.
 #' @param cells_extra A string specifying the cells names to consider and that are not including in the nomenclature of multideconv (see R package)
-#' @param pval Numeric; p-value threshold for statistical tests (e.g., metadata and relationship associations).
+#' @param pval Numeric; p-value threshold used when building cell groups (TF module-deconvolution
+#'   correlations and the CCA permutation test).
 #' @param enrich_thresh Numeric. Minimum enrichment ratio (foreground/background cell-type frequency)
 #'   required to include a cell type in a latent factor's niche. Default is 1.5.
 #' @param quantile_cutoff Numeric between 0 and 1. Quantile threshold for selecting top-contributing
 #'   cell groups per NMF factor. Default is 0.7.
-#' @param return Logical; if TRUE, returns intermediate results from internal functions. Default is TRUE.
-#' @param cancer_type Character. TCGA cancer type abbreviation (e.g., \code{"blca"}, \code{"skcm"}).
+#' @param return Logical; if TRUE, intermediate matrices and plots are written to the "Results/" folder. Default is TRUE.
+#' @param cancer_type Character. TCGA cancer type abbreviation (one of \code{"blca"}, \code{"luad"}, \code{"skcm"}).
 #'   Used for two purposes: (1) loading TCGA meta-programs for TME state mapping, and (2) when
 #'   \code{TF.collection = "ARACNE"}, locating the ARACNe network at
-#'   \code{input/ARACNE/<cancer_type>/network/network.txt}. If \code{NULL} and only one ARACNe
-#'   network exists under \code{input/ARACNE/}, it is auto-detected.
+#'   \code{input/ARACNE/<cancer_type>/network/network.txt}. If \code{NULL}, the meta-program mapping
+#'   step is skipped (\code{TME_states} and \code{Metaprograms_reference} are \code{NULL}) and, for ARACNE,
+#'   the network is auto-detected when only one exists under \code{input/ARACNE/}.
 #' @param verbose Boolen value to whether print or no the function messages
+#'
+#' @details
+#' The pipeline runs with a fixed random seed (123) so results are reproducible; the caller's random
+#' number generator state is restored when the function returns. With \code{normalized = TRUE}, sample
+#' names are converted with \code{make.names()} (e.g. \code{"TCGA-XX-1234"} becomes \code{"TCGA.XX.1234"}),
+#' as \code{multideconv::compute.deconvolution()} also does; \code{deconv} rows are matched to the samples
+#' in either form.
 #'
 #' @return A list containing:
 #' \describe{
-#'   \item{Deconvolution}{A matrix with cell-type proportions (samples as rows, cell types as columns).}
-#'   \item{TFs_matrix}{A matrix with TF activity scores (samples as rows, TFs as columns).}
-#'   \item{TF_network}{A list representing the TF module network and related WGCNA output.}
-#'   \item{Pathways_scores}{A matrix of pathway activity scores.}
-#'   \item{Processed_deconvolution}{An object with the processed deconvolution analysis results.}
-#'   \item{Cell_groups}{A matrix of scores representing the cell groups across samples.}
+#'   \item{Deconvolution}{A matrix with cell-type proportions (samples as rows, cell types as columns); \code{NULL} if \code{dt} was supplied.}
+#'   \item{TFs_matrix}{A matrix with TF activity scores (samples as rows, TFs as columns), or a list of matrices (one per cohort) when \code{batch = TRUE}.}
+#'   \item{TF_network}{The TF module network returned by \code{compute.WTCNA()}.}
+#'   \item{Pathways_scores}{Pathway activity scores returned by \code{compute.pathway.activity()}.}
+#'   \item{Processed_deconvolution}{The processed deconvolution subgroups (output of \code{multideconv::compute.deconvolution.analysis()}).}
+#'   \item{Cell_groups}{Output of \code{construct_cell_groups()}: cell group scores, compositions and projection weights.}
+#'   \item{Latent_spaces}{NMF latent factors returned by \code{compute.latent_factors()}.}
+#'   \item{Cells_niches}{Enriched cell types per latent factor (see \code{compute_cells_niches()}).}
+#'   \item{TME_states}{Factor-to-meta-program mapping (\code{factor_mapping} from \code{map_factors_to_metaprograms()}), or \code{NULL} if \code{cancer_type} is \code{NULL}.}
+#'   \item{Metaprograms_reference}{The TCGA meta-program reference used for mapping, or \code{NULL} if \code{cancer_type} is \code{NULL}.}
 #' }
 #'
 #' @export
@@ -133,9 +148,10 @@ compute <- function(x, ...) UseMethod("compute")
 #' )
 #'}
 #'
-CellTFusion = function(raw.counts, deconv = NULL, dt = NULL, tfs = NULL, pathways = NULL, normalized = T, coldata = NULL, batch = F, batch_id = NULL, deconv_methods = c("Quantiseq", "CBSX", "Epidish", "DeconRNASeq", "DWLS"), cbsx.mail = NULL, cbsx.token = NULL, file_name = NULL,
+CellTFusion = function(raw.counts, deconv = NULL, dt = NULL, tfs = NULL, pathways = NULL, normalized = T, coldata = NULL, batch = F, batch_id = NULL, deconv_methods = c("Quantiseq", "Epidish", "DeconRNASeq", "DWLS"), cbsx.mail = NULL, cbsx.token = NULL, file_name = NULL,
                        TF.collection = "CollecTRI", min_targets_size = 3, universe = NULL, paths = NULL, gene_sets = NULL, minMod = 3, corr_mod = 0.9, corr = 0.7, corr_type = "spearman", cells_extra = NULL, pval = 0.05, enrich_thresh = 1.5, quantile_cutoff = 0.7, cancer_type = NULL, return = T, verbose = T){
 
+  withr::local_preserve_seed()
   set.seed(123)
 
   #Normalize counts
@@ -147,6 +163,9 @@ CellTFusion = function(raw.counts, deconv = NULL, dt = NULL, tfs = NULL, pathway
 
   #Extract batch column if TRUE
   if(batch){
+    if(is.null(coldata) || is.null(batch_id)) {
+      stop("When batch = TRUE, coldata and batch_id must be provided")
+    }
     batch_vec = coldata[,batch_id]
   }else{
     batch_vec = NULL
@@ -170,9 +189,10 @@ CellTFusion = function(raw.counts, deconv = NULL, dt = NULL, tfs = NULL, pathway
     }
 
     # Validate sample alignment between counts and deconv
-    if (!isTRUE(all.equal(colnames(counts.norm), rownames(deconv)))) {
+    if (!isTRUE(all.equal(make.names(colnames(counts.norm), unique = TRUE), make.names(rownames(deconv), unique = TRUE)))) {
       stop("Sample mismatch between counts columns and deconvolution rows.")
     }
+    rownames(deconv) = colnames(counts.norm) # multideconv converts sample names with make.names() (e.g. "TCGA-XX" -> "TCGA.XX")
   }
 
   #TF activity (skipped entirely if a precomputed `tfs` matrix is supplied)
@@ -212,7 +232,7 @@ CellTFusion = function(raw.counts, deconv = NULL, dt = NULL, tfs = NULL, pathway
   }
   network = compute.WTCNA(TFs.matrix = tfs, batch = batch, network.type = "signed", clustering.method = "ward.D2", minMod, corr_mod, cor_type = "p", return = return, file.name = file_name)
 
-  # 2. Pathways activity inference (skipped if a precomputed `pathways` matrix is supplied): only needed for dictionary
+  # 2. Pathways activity inference (skipped if a precomputed `pathways` matrix is supplied); returned for downstream analyses
   if(is.null(pathways)){
     if(verbose){
       cat("\nCalculating pathway activities............................................................\n")
@@ -259,12 +279,21 @@ CellTFusion = function(raw.counts, deconv = NULL, dt = NULL, tfs = NULL, pathway
     file_name    = file_name
   )
 
-  cat("\nMapping to metaprograms............................................................\n")
-  metaprograms_mapping <- map_factors_to_metaprograms(
-    gsea_study   = gsea_results,
-    cancer_type  = cancer_type,
-    plot = return, file_name = file_name
-  )
+  if(is.null(cancer_type)){
+    if(verbose){
+      cat("\nNo cancer_type given: skipping mapping to TCGA meta-programs.\n")
+    }
+    metaprograms_mapping <- list(factor_mapping = NULL, reference = NULL)
+  }else{
+    if(verbose){
+      cat("\nMapping to metaprograms............................................................\n")
+    }
+    metaprograms_mapping <- map_factors_to_metaprograms(
+      gsea_study   = gsea_results,
+      cancer_type  = cancer_type,
+      plot = return, file_name = file_name
+    )
+  }
 
   if(verbose){
     cat("\nEverything done! Results are saved in Results/ folder............................................................\n")
@@ -283,7 +312,7 @@ CellTFusion = function(raw.counts, deconv = NULL, dt = NULL, tfs = NULL, pathway
 #' This function identifies cell groups based on dendrogram cuts, computes composite scores for each group
 #' using deconvolution features and TF module networks, and optionally exports the results.
 #'
-#' @param deconvolution A data frame with deconvolution features (typically a cell-type or cluster x sample matrix).
+#' @param deconvolution A data frame with deconvolution features (samples as rows, cell-type features as columns).
 #' This is usually the first element returned by \code{multideconv::compute.deconvolution.analysis()}.
 #'
 #' @param cell.dendrograms A named list of dendrogram objects, each corresponding to a TF module, typically
@@ -297,13 +326,14 @@ CellTFusion = function(raw.counts, deconv = NULL, dt = NULL, tfs = NULL, pathway
 #' @param pval Numeric. P-value threshold for statistical tests. Default is 0.05.
 #' @param n_perm Integer. Number of permutations for significance testing. Default is 999.
 #' @param dendrogram_file Optional character. File path to save dendrogram plot.
-#' @param return_dendrogram Logical. If TRUE, includes the dendrogram in the returned list. Default FALSE.
+#' @param return_dendrogram Logical. If TRUE, saves a PDF of the colored cell-group dendrograms to
+#'   \code{Results/Dendrogram_color_clusters_<dendrogram_file>.pdf} (only when \code{dendrogram_file} is set). Default FALSE.
 #'
 #' @return A list of three elements:
 #' \describe{
 #'   \item{scores}{A data frame with the composite scores of all identified cell groups across samples.}
 #'   \item{composition}{A list of vectors indicating the composition (original features) of each cell group.}
-#'   \item{loadings}{A list of loadings (feature contributions) for each cell group.}
+#'   \item{loadings}{A list of CCA projection parameters (\code{xcoef}, \code{train_means}, \code{train_sds}) for each cell group.}
 #' }
 #' If \code{return=TRUE}, two CSV files will be created:
 #' \itemize{
@@ -415,8 +445,9 @@ cell.groups.computation = function(deconvolution, cell.dendrograms, tfs.module.n
 #' Compute associations between TF module scores and clinical metadata
 #'
 #' This function tests for associations between transcription factor (TF) module scores
-#' and available clinical traits. It uses Pearson correlation for continuous (numeric) traits,
-#' and ANOVA for categorical traits. Results are visualized as a labeled heatmap and violin plots.
+#' and available clinical traits. Numeric traits are correlated with each module (Pearson or
+#' Spearman) and shown as a labeled heatmap. If \code{plot_grid = TRUE}, categorical traits are
+#' additionally tested with one-way ANOVA (Tukey HSD post-hoc) and shown as boxplot grids.
 #' All plots are saved in the `Results/` directory.
 #'
 #' @param tfs.modules A numeric matrix or data frame of TF module scores across samples.
@@ -427,22 +458,23 @@ cell.groups.computation = function(deconvolution, cell.dendrograms, tfs.module.n
 #'        Only associations with p-values below this threshold are considered significant in the heatmap.
 #' @param corr_method Character string specifying the correlation method to use for continuous variables.
 #'        Options are `"p"` for pearson and `"s"` for spearman. Default is `"p"`.
-#' @param file.name Character. Base file name for saving PDF plots of results.
+#' @param file.name Character. Base file name for saving plots of results.
 #' @param width A numeric value indicating the width (in inches) of the output heatmap plot (default = 20).
 #' @param height A numeric value indicating the height (in inches) of the output heatmap plot (default = 8).
 #' @param ncol Integer. Number of columns in the grid of association boxplots.
 #' @param y_min Numeric. Lower y-axis limit for grid boxplots.
 #' @param y_max Numeric. Upper y-axis limit for grid boxplots.
-#' @param plot_grid Logical; if TRUE, generates a grid of boxplot summaries.
+#' @param plot_grid Logical; if TRUE, tests categorical traits with ANOVA and saves boxplot grids.
 #' @param width_grid Numeric width of the grid plot output.
 #' @param height_grid Numeric height of the grid plot output.
 #'
-#' @return This function saves the following to the `Results/` directory:
+#' @return Called for its side effects. Saves to the `Results/` directory:
 #' \itemize{
-#'   \item A labeled heatmap showing Pearson correlations and ANOVA test p-values.
-#'   \item Individual violin plots for significant categorical trait associations.
+#'   \item \code{TF.modules_metadata_<file.name>.pdf}: a labeled heatmap of module-trait correlations
+#'     for numeric traits (only associations with p-value < \code{pval} are annotated).
+#'   \item \code{ANOVA_boxplot_summary_<file.name>_<trait>.svg} (if \code{plot_grid = TRUE}): one boxplot
+#'     grid per categorical trait with the significant modules.
 #' }
-#' The function does not return an object to the R environment.
 #'
 #' @examples
 #'
@@ -505,7 +537,9 @@ compute.metadata.association <- function(
       method = corr_method,
       use = "pairwise.complete.obs"
     )
-    moduleTraitPvalue <- WGCNA::corPvalueStudent(moduleTraitCor, nrow(tfs.modules))
+    nObs <- t(!is.na(tfs.modules)) %*% (!is.na(coldata_quantitative)) # Samples with both values, per module-trait pair
+    moduleTraitPvalue <- WGCNA::corPvalueStudent(moduleTraitCor, nObs)
+    idx <- which(moduleTraitPvalue >= pval) # Non-significant entries (before p-values are replaced by labels)
 
     #### Replace p-values for significance labels
     breaks <- c(-Inf, 0.0001, 0.001, 0.01, 0.05, Inf)
@@ -521,10 +555,9 @@ compute.metadata.association <- function(
     dim(textMatrix) <- dim(moduleTraitCor)
 
     # Set non-significant entries to NA
-    idx <- which(moduleTraitPvalue == "" | moduleTraitPvalue > pval)
     for (i in idx) textMatrix[i] <- NA
 
-    pdf(paste0("Results/TF.modules_metadata_", file.name), width = width, height = height)
+    pdf(paste0("Results/TF.modules_metadata_", file.name, ".pdf"), width = width, height = height)
     par(mar = c(25, 15, 3, 3))
     WGCNA::labeledHeatmap(
       Matrix = moduleTraitCor,
@@ -549,7 +582,7 @@ compute.metadata.association <- function(
 #' Compute TF module enrichment using directed target genes
 #'
 #' This function performs enrichment analysis for transcription factor (TF) modules
-#' using known TF-target interactions. For each module, it identifies hub TFs and retrieves
+#' using known TF-target interactions. For each module, it takes the hub TFs and retrieves
 #' their known targets from the CollecTRI database. It then conducts an over-representation
 #' analysis (ORA) against the Reactome pathway database. To reduce redundancy, only unique
 #' pathways per module are retained by filtering out overlaps between modules.
@@ -561,16 +594,17 @@ compute.metadata.association <- function(
 #'        This should be a list of two elements: one with named hub TFs per module, and another
 #'        with their module membership or additional metadata.
 #'
-#' @return No object is returned. For each module with significant enrichment (p-value < 0.05),
+#' @return No object is returned. For each module with significant enrichment (adjusted p-value < 0.05),
 #'         a dot plot is saved in the `Results/` directory as a PDF file named
-#'         `Module <color>.pdf`. If no enrichment is found for a module, a message is printed
+#'         `Enrichment_Reactome_Module_<color>.pdf`. If no enrichment is found for a module, a message is printed
 #'         and no file is saved for that module.
 #'
 #' @details
-#' The function uses the `decoupleR::get_collectri()` function to obtain TF-target relationships,
-#' and `clusterProfiler::enrichPathway()` for ORA using the Reactome database.
-#' Pathways shared between multiple modules are filtered using a Venn diagram-based comparison
-#' to retain only module-specific results.
+#' The function uses the `decoupleR::get_collectri()` function to obtain TF-target relationships
+#' (cached in `Results/TF_target_collection_CollecTRI.csv`), and `ReactomePA::enrichPathway()` for ORA
+#' using the Reactome database. The ORA input is the 20% most variable targets of the module's hub TFs
+#' (at least one gene).
+#' Pathways enriched in more than one module are removed, so only module-specific results are kept.
 #'
 #'
 #' @examples
@@ -582,7 +616,7 @@ compute.metadata.association <- function(
 #' compute.modules.enrichment(counts.norm, hub_tfs)
 #' }
 compute.modules.enrichment <- function(RNA.tpm, hub_tfs){
-  tf_cache_file <- "Results/TF_target_collection.csv"
+  tf_cache_file <- "Results/TF_target_collection_CollecTRI.csv"
   if (file.exists(tf_cache_file)) {
     net = utils::read.csv(tf_cache_file, row.names = 1)
   } else {
@@ -595,10 +629,15 @@ compute.modules.enrichment <- function(RNA.tpm, hub_tfs){
   #Pathway enrichment using target genes
   for (i in 1:length(hub_tfs[[1]])) {
     color = names(hub_tfs[[1]])[i]
-    res[[i]] = module_enrich(as.matrix(RNA.tpm), color, hub_tfs, net)
+    res[i] = list(module_enrich(as.matrix(RNA.tpm), color, hub_tfs, net)) #list() keeps modules without enrichment (NULL)
     names(res)[i] = color
-    pathways[[i]] = res[[i]]@result[["Description"]]
+    pathways[[i]] = if(is.null(res[[i]])) character(0) else res[[i]]@result[["Description"]]
     names(pathways)[i] = color
+  }
+
+  if(length(unlist(pathways)) == 0){ #gplots::venn() fails when all sets are empty
+    print("No enrichment for any module")
+    return(invisible(NULL))
   }
 
   ItemsList <- gplots::venn(pathways, show.plot = FALSE)
@@ -614,7 +653,7 @@ compute.modules.enrichment <- function(RNA.tpm, hub_tfs){
       if(nrow(res[[i]]@result)==0){
         print(paste0("No enrichment for module ", color))
       }else{
-        pdf(paste0("Results/Enrichment by Reactome\nModule ", color))
+        pdf(paste0("Results/Enrichment_Reactome_Module_", color, ".pdf"))
         print(enrichplot::dotplot(res[[i]],  title=paste0("Enrichment by Reactome\nModule ", color)))
         dev.off()
       }
@@ -631,7 +670,9 @@ compute.modules.enrichment <- function(RNA.tpm, hub_tfs){
 #' @param matA A numeric matrix or data frame of features (samples x features).
 #' @param matB A numeric matrix or data frame of features to correlate with (samples x features).
 #' @param file_name A string indicating the base name (without extension) of the figure to be saved in the "Results/" folder.
-#' @param batch Optional vector indicating batch assignment for samples. If provided, partial correlations are computed controlling for batch.
+#' @param batch Optional vector indicating batch assignment for samples. If it has two or more levels, Pearson
+#'   partial correlations (\code{ppcor::pcor.test()}) are computed controlling for batch and \code{cor_type} is
+#'   ignored. Batch is treated as categorical (one dummy variable per level beyond the first).
 #' @param width An integer indicating the width (in inches) of the output PDF figure. Default is 8.
 #' @param height An integer indicating the height (in inches) of the output PDF figure. Default is 8.
 #' @param par_mar A numeric vector of length 4 specifying the margin sizes (bottom, left, top, right) for the heatmap. If NULL (default), reasonable defaults are chosen based on plot orientation.
@@ -639,11 +680,12 @@ compute.modules.enrichment <- function(RNA.tpm, hub_tfs){
 #' @param padj Logical; if TRUE, applies Bonferroni correction for multiple testing. Default is FALSE.
 #' @param cor_type Type of correlation to compute: "p" (Pearson), "s" (Spearman), or "k" (Kendall). Default is "p".
 #' @param return Logical; if TRUE, the function returns a list containing the correlation matrix and a named list of significant feature names per module. Default is FALSE.
-#' @param vertical Logical; if TRUE, produces a vertical heatmap (traits on x-axis, modules on y-axis). Otherwise, a horizontal layout is used. Default is FALSE.
+#' @param vertical Logical; if TRUE, modules are on the x-axis and the \code{matB} features on the y-axis.
+#'   Otherwise (default), the \code{matB} features are on the x-axis and modules on the y-axis.
 #' @param plot Logical; if TRUE, saves the heatmap plot as a PDF. Default is TRUE.
 #' @param plot.grid Logical; if TRUE, generates per-pair scatter grid plots for significant associations.
-#' @param width.grid Numeric width of the scatter grid output.
-#' @param height.grid Numeric height of the scatter grid output.
+#' @param width.grid Numeric width of the scatter grid output (increased if needed to fit all panels).
+#' @param height.grid Numeric height of the scatter grid output (increased if needed to fit all panels).
 #' @param ncol.grid Integer number of columns used in scatter grid layout.
 #'
 #' @return If `return = TRUE`, returns a list with:
@@ -651,11 +693,13 @@ compute.modules.enrichment <- function(RNA.tpm, hub_tfs){
 #'   \item A correlation matrix between modules and external features.
 #'   \item A named list with significant features per module (after p-value or adjusted p-value thresholding).
 #' }
-#' If `return = FALSE`, the function saves a heatmap of significant correlations to "Results/{file_name}.pdf".
+#' If `return = FALSE` and `plot = TRUE`, the function saves a heatmap of significant correlations to
+#' "Results/{file_name}.pdf" (the ".pdf" extension is added if missing).
 #'
 #' 
 #' @details
-#' The function assumes that `matA` and `matB` share the same rownames (i.e., samples in the same order). The correlation is computed using WGCNA's
+#' The function assumes that `matA` and `matB` share the same rownames (i.e., samples in the same order);
+#' names are compared after `make.names()`, so e.g. "TCGA-XX" and "TCGA.XX" match. The correlation is computed using WGCNA's
 #' `cor()` and `corPvalueStudent()` functions. Insignificant correlations (based on p-value or adjusted p-value) are excluded from the visualization.
 #'
 #' @examples
@@ -680,18 +724,17 @@ compute.modules.relationship <- function(matA, matB, file_name, batch = NULL, wi
 
   matA = data.frame(matA)
   matB = data.frame(matB)
+  out_file = if (!missing(file_name)) paste0("Results/", file_name, if (!grepl("\\.pdf$", file_name)) ".pdf")
 
-  if(length(rownames(matA)) == 0 || !all(rownames(matA) == rownames(matB)))
+  if(length(rownames(matA)) == 0 || !all(make.names(rownames(matA)) == make.names(rownames(matB))))
     stop("No equal names, verify the input objects")
 
   # ---------- PARTIAL CORRELATION IF BATCH PROVIDED ----------
-  if(!is.null(batch)){
+  if(!is.null(batch) && length(unique(batch)) > 1){
     if(length(batch) != nrow(matA)) stop("Length of batch must match number of samples")
 
-    # Convert batch to numeric if it is factor or character
-    if(is.factor(batch) || is.character(batch)){
-      batch <- as.numeric(as.factor(batch))
-    }
+    # Batch is categorical: one dummy variable per batch level beyond the first
+    batch <- stats::model.matrix(~ factor(batch))[, -1, drop = FALSE]
 
     moduleTraitCor <- matrix(NA, nrow = ncol(matA), ncol = ncol(matB))
     moduleTraitPvalue <- matrix(NA, nrow = ncol(matA), ncol = ncol(matB))
@@ -713,6 +756,12 @@ compute.modules.relationship <- function(matA, matB, file_name, batch = NULL, wi
     moduleTraitPvalue = WGCNA::corPvalueStudent(moduleTraitCor, nrow(matA))
   }
 
+  if(padj == T){
+    for (i in 1:ncol(moduleTraitPvalue)) {
+      moduleTraitPvalue[,i] = stats::p.adjust(moduleTraitPvalue[,i], method = 'bonferroni')
+    }
+  }
+
   if (plot.grid) {
     plot.module.scatter.grid(
       matA = matA,
@@ -721,25 +770,11 @@ compute.modules.relationship <- function(matA, matB, file_name, batch = NULL, wi
       p_mat = moduleTraitPvalue,
       file_name = file_name,
       pval = pval,
-      cor_type = cor_type,
       width = width.grid,
       height = height.grid,
       ncol = ncol.grid,
       only_sig = TRUE
     )
-  }
-
-  # rev = which(colSums(moduleTraitPvalue > pval)==nrow(moduleTraitPvalue)) #check if there are features no significant with any module
-  #
-  # if(length(rev)>0){
-  #   moduleTraitCor = moduleTraitCor[,-rev]
-  #   moduleTraitPvalue = moduleTraitPvalue[,-rev]
-  # }
-
-  if(padj == T){
-    for (i in 1:ncol(moduleTraitPvalue)) {
-      moduleTraitPvalue[,i] = stats::p.adjust(moduleTraitPvalue[,i], method = 'bonferroni')
-    }
   }
 
   ##Plot in vertical
@@ -761,7 +796,7 @@ compute.modules.relationship <- function(matA, matB, file_name, batch = NULL, wi
         vec = hc1[["order"]]
         textMatrix = paste(signif(moduleTraitCor, 2), "\n(", signif(moduleTraitPvalue, 2), ")", sep = "")
         dim(textMatrix) = dim(moduleTraitCor)
-        idx = which(round(moduleTraitPvalue,2)>pval)
+        idx = which(signif(moduleTraitPvalue,2)>pval)
         for (i in idx) {
           textMatrix[i] = NA
         }
@@ -772,7 +807,7 @@ compute.modules.relationship <- function(matA, matB, file_name, batch = NULL, wi
             par_mar = c(3, 25, 5, 3)
           }
 
-          pdf(paste0("Results/",file_name), width = width, height = height)
+          pdf(out_file, width = width, height = height)
           par(mar = par_mar)
           WGCNA::labeledHeatmap(Matrix = moduleTraitCor[vec,],
                                 xLabels = colnames(moduleTraitCor),
@@ -797,19 +832,19 @@ compute.modules.relationship <- function(matA, matB, file_name, batch = NULL, wi
           return(retu)
         }else{
           textMatrix = paste(signif(moduleTraitCor, 2), "\n(", signif(moduleTraitPvalue, 2), ")", sep = "")
-          idx = which(round(moduleTraitPvalue,2)>pval)
+          idx = which(signif(moduleTraitPvalue,2)>pval)
           for (i in idx) {
             textMatrix[i] = NA
           }
           textMatrix = t(textMatrix)
           moduleTraitCor = data.frame(t(moduleTraitCor))
-          colnames(moduleTraitCor)[1] = colnames(matB)
+          rownames(moduleTraitCor) = colnames(matB)
           if(plot){
             if(is.null(par_mar)){
               par_mar = c(25, 15, 3, 3)
             }
 
-            pdf(paste0("Results/",file_name), width = width, height = height)
+            pdf(out_file, width = width, height = height)
             par(mar = par_mar)
             WGCNA::labeledHeatmap(Matrix = moduleTraitCor,
                                   xLabels = colnames(moduleTraitCor),
@@ -843,7 +878,7 @@ compute.modules.relationship <- function(matA, matB, file_name, batch = NULL, wi
         vec = hc1[["order"]]
         textMatrix = paste(signif(moduleTraitCor, 2), "\n(", signif(moduleTraitPvalue, 2), ")", sep = "")
         dim(textMatrix) = dim(moduleTraitCor)
-        idx = which(round(moduleTraitPvalue,2)>pval)
+        idx = which(signif(moduleTraitPvalue,2)>pval)
         for (i in idx) {
           textMatrix[i] = NA
         }
@@ -853,7 +888,7 @@ compute.modules.relationship <- function(matA, matB, file_name, batch = NULL, wi
             par_mar = c(25, 15, 3, 3)
           }
 
-          pdf(paste0("Results/",file_name), width = width, height = height)
+          pdf(out_file, width = width, height = height)
           par(mar = par_mar)
           WGCNA::labeledHeatmap(Matrix = moduleTraitCor[,vec],
                          xLabels = names(moduleTraitCor[,vec]),
@@ -881,7 +916,7 @@ compute.modules.relationship <- function(matA, matB, file_name, batch = NULL, wi
           return(retu)
         }else{
           textMatrix = paste(signif(moduleTraitCor, 2), "\n(", signif(moduleTraitPvalue, 2), ")", sep = "")
-          idx = which(round(moduleTraitPvalue,2)>pval)
+          idx = which(signif(moduleTraitPvalue,2)>pval)
           for (i in idx) {
             textMatrix[i] = NA
           }
@@ -892,7 +927,7 @@ compute.modules.relationship <- function(matA, matB, file_name, batch = NULL, wi
               par_mar = c(25, 15, 3, 3)
             }
 
-            pdf(paste0("Results/",file_name), width = width, height = height)
+            pdf(out_file, width = width, height = height)
             par(mar = par_mar)
             WGCNA::labeledHeatmap(Matrix = moduleTraitCor,
                            xLabels = names(moduleTraitCor),
@@ -916,17 +951,19 @@ compute.modules.relationship <- function(matA, matB, file_name, batch = NULL, wi
 #' Optionally, it also performs Gene Set Variation Analysis (GSVA) using hallmark signatures or any user-provided gene sets.
 #'
 #' @param RNA.tpm A numeric matrix of normalized gene expression values with genes as rows and samples as columns.
-#' @param gene_sets A list of gene sets (e.g., hallmark signatures or user-defined sets). If provided, GSVA scores will be computed for these sets. Default is \code{NULL}.
-#' @param paths A data frame describing the pathway-gene interactions for use with PROGENy. If \code{NULL}, the human PROGENy resource (top 500 genes) will be used by default.
+#' @param gene_sets A named list of gene sets (e.g., hallmark signatures or user-defined sets). If provided, GSVA scores will be computed for these sets. Default is \code{NULL}.
+#' @param paths A data frame describing the pathway-gene interactions (columns \code{source}, \code{target}, \code{weight}) for use with PROGENy.
+#'   If \code{NULL}, the human PROGENy resource (top 500 genes) is used and cached in \code{Results/Pathways_collection_PROGENy.csv}.
 #' @param return Logical; if TRUE, saves matrices in Results/ folder. Default is TRUE.
 #' @param file.name Optional character suffix used when writing output CSV files.
 #'
-#' @return If \code{gene_sets} is \code{NULL}, a scaled matrix of PROGENy pathway activity scores (samples as rows, pathways as columns).
+#' @return If \code{gene_sets} is \code{NULL}, a scaled data frame of PROGENy pathway activity scores (samples as rows, pathways as columns).
 #' If \code{gene_sets} is provided, a list with two elements:
 #' \itemize{
-#'   \item \code{sample_acts_progeny}: A scaled matrix of PROGENy pathway activity scores.
-#'   \item \code{sample_acts_gsva}: A scaled matrix of GSVA scores based on the provided gene sets.
+#'   \item \code{PROGENy}: A scaled data frame of PROGENy pathway activity scores.
+#'   \item \code{GSVA}: A scaled data frame of GSVA scores based on the provided gene sets.
 #' }
+#' Column names are made syntactically valid with \code{make.names()}.
 #'
 #'
 #' @references
@@ -978,12 +1015,7 @@ compute.pathway.activity <- function(RNA.tpm, gene_sets = NULL, paths = NULL, re
   ###### GSVA (optional)
   if (!is.null(gene_sets)) {
     gsva_results <- GSVA::gsva(
-      RNA.tpm,
-      gene_sets,
-      method  = "gsva",
-      kcdf    = "Gaussian",
-      min.sz  = 1,
-      mx.diff = TRUE,
+      GSVA::gsvaParam(RNA.tpm, gene_sets, kcdf = "Gaussian", minSize = 1, maxDiff = TRUE),
       verbose = TRUE
     )
 
@@ -1019,134 +1051,37 @@ compute.pathway.activity <- function(RNA.tpm, gene_sets = NULL, paths = NULL, re
   return(results_list)
 }
 
-#' Compute TF Network Classification
-#'
-#' Classifies transcription factor (TF) modules into clusters based on their correlations with pathway activity values across samples.
-#' Uses hierarchical clustering and silhouette width to determine the optimal number of clusters.
-#'
-#' @param tf.network A list containing TF module eigengenes, typically output from \code{compute.WTCNA()}
-#' @param pathways.features A matrix with pathway activities, typically from \code{compute.pathway.activity()}
-#' @param return Logical. If TRUE, intermediate plots (e.g. silhouette, dendrogram, PCA) are saved in the \code{Results/} directory. Default is TRUE.
-#'
-#' @return A named list of TF module clusters.
-#'
-#' @examples
-#' \dontrun{
-#' data("network.tuto")
-#' data("counts.norm.tuto")
-#' pathways <- compute.pathway.activity(counts.norm.tuto)
-#' tfs.modules.clusters <- compute.TF.network.classification(tf.network = network.tuto,
-#'                                                           pathways.features = pathways,
-#'                                                           return = FALSE)
-#' }
-#'
-compute.TF.network.classification = function(tf.network, pathways.features, return = T){
-
-  tf.network = data.frame(tf.network[[1]])
-  pathways.features = data.frame(pathways.features)
-
-  moduleTraitCor = WGCNA::cor(tf.network, pathways.features, method = "p")
-  # moduleTraitPvalue = corPvalueStudent(moduleTraitCor, nrow(tf.network))
-  # significance_threshold <- 0.05
-  #
-  # # Replace non-significant correlations with zero
-  # moduleTraitCor[moduleTraitPvalue > significance_threshold] <- 0
-  #
-  # # Identify columns that have variance (i.e., are not constant or all zeros)
-  # non_constant_columns <- apply(moduleTraitCor, 2, function(x) var(x) != 0)
-  # moduleTraitCor <- moduleTraitCor[, non_constant_columns] # Filter out the columns that are constant or all zeros
-
-  ### Find clusters
-  silhouette = factoextra::fviz_nbclust(moduleTraitCor, hcut, method = "silhouette", k.max = nrow(moduleTraitCor)-1)
-  k_cluster = as.numeric(silhouette$data$clusters[which.max(silhouette$data$y)])
-
-  if(return){
-    pdf(paste0("Results/TFs_modules_Silhouette_scores"))
-    print(silhouette)
-    dev.off()
-  }
-
-  hc_modules = stats::hclust(dist(moduleTraitCor), method = "ward.D2")
-  dend_pathways = as.dendrogram(hc_modules)
-
-  if(return){
-    pdf(paste0("Results/TFs_modules_clusters"))
-    plot(dend_pathways, cex = 0.6)
-    stats::rect.hclust(hc_modules, k = k_cluster, border = 2:5)
-    dev.off()
-  }
-
-  ### Extract clusters
-  sub_grp <- dendextend::cutree(hc_modules, k = k_cluster)
-
-  ### Plot PCA and biplot
-  p = factoextra::fviz_cluster(list(data = moduleTraitCor, cluster = sub_grp))
-
-  if(return){
-    pdf(paste0("Results/PCA_TFs_modules_clusters"))
-    print(p)
-    dev.off()
-  }
-
-  res.pca <- stats::prcomp(moduleTraitCor,  scale = F)
-  p = factoextra::fviz_pca_biplot(res.pca, label="all", select.var = list(contrib = 6), addEllipses=TRUE, ellipse.level=0.75)
-
-  if(return){
-    pdf(paste0("Results/PCA_Biplot_TFs_modules_clusters"))
-    print(p)
-    dev.off()
-  }
-
-  # Extract the loadings
-  loadings <- res.pca$rotation
-  contribution <- (loadings^2)*100
-  features = contribution %>%
-    data.frame() %>%
-    tibble::rownames_to_column("Features") %>%
-    dplyr::arrange(desc(PC1))
-
-  if(return){
-    pdf("Results/Pathways_contribution_pca.pdf", width = 12, height = 8)
-    p = ggplot2::ggplot(features, aes(x = reorder(Features, -PC1), y = PC1)) +
-      geom_bar(stat = "identity", fill = "skyblue") +
-      labs(title = "Contribution of pathways",
-           x = "Feature",
-           y = "Contribution (%)") +
-      theme_minimal() +
-      theme(axis.text.x = element_text(angle = 90, hjust = 1, size=15))
-    print(p)
-    dev.off()
-  }
-
-  groups = list()
-  for (i in 1:length(unique(sub_grp))) {
-    groups[[i]] = names(sub_grp)[sub_grp == i]
-    names(groups)[i] = paste0(gsub("ME", "", groups[[i]]), collapse = "_")
-  }
-
-  return(groups)
-}
-
 #' Compute Transcription Factor (TF) activity
 #'
-#' Infers transcription factor (TF) activity from a gene expression matrix using the VIPER algorithm (Alvarez et al., 2016). The function requires a TF-target gene regulatory network, which can be provided by the user or obtained from OmnipathR resources such as CollecTRI or Dorothea. ARACNE-inferred networks are also supported.
+#' Infers transcription factor (TF) activity from a gene expression matrix with \code{decoupleR::decouple()},
+#' keeping the \code{consensus} score (ensemble of the decoupleR statistics; Badia-i-Mompel et al., 2022).
+#' The TF-target network can be provided by the user, obtained from OmnipathR resources (CollecTRI or
+#' Dorothea), or read from an ARACNe-inferred network.
 #'
 #' @param RNA.counts A gene expression matrix with genes as rows and samples as columns. The matrix should be normalized (e.g., TPM, log2CPM, etc.).
 #' @param TF.collection Character. The source of the TF-target network. Options are `"CollecTRI"` (default), `"Dorothea"`, or `"ARACNE"`.
-#' - `"CollecTRI"` and `"Dorothea"` use prebuilt collections from OmnipathR.
-#' - `"ARACNE"` allows user input of a custom network file in a 3-column format: `regulator`, `target`, and `mutual information`.
-#' @param min_targets_size Integer. Minimum number of target genes per regulon required for TF activity inference. Default is 5.
-#' @param universe Optional. A user-specified data frame of TF-target interactions. If not provided, the function will fetch the relevant network based on the `TF.collection` argument.
-#' @param cancer.type Optional character. Cancer type label used when caching the TF collection.
-#' @param cores Integer. Number of cores used by VIPER inference. Default is 4.
+#' - `"CollecTRI"` and `"Dorothea"` (confidence A and B) use prebuilt collections from OmnipathR. Each collection is
+#'   cached in its own file, `Results/TF_target_collection_<TF.collection>.csv`, and reused on later calls.
+#' - `"ARACNE"` reads a tab-separated network file with `Regulator` and `Target` columns from
+#'   `input/ARACNE/<cancer.type>/network/network.txt` (relative to the working directory). The mode of
+#'   regulation of each edge is the sign of the Spearman correlation between TF and target expression.
+#' @param min_targets_size Integer. Minimum number of target genes per regulon (passed to
+#'   \code{decoupleR::decouple()} as \code{minsize}). Default is 5.
+#' @param universe Optional. A user-specified data frame of TF-target interactions (columns \code{source},
+#'   \code{target}, \code{mor}). If not provided, the network is fetched based on `TF.collection`. Ignored when
+#'   \code{TF.collection = "ARACNE"}.
+#' @param cancer.type Optional character. TCGA cancer type abbreviation used to locate the ARACNe network
+#'   (only used when \code{TF.collection = "ARACNE"}). If \code{NULL}, the network is auto-detected when only one
+#'   \code{network.txt} exists under \code{input/ARACNE/}.
 #' @param scale Logical. If TRUE (default), z-score scales the TF activity matrix across samples.
 #' @param return Logical; if TRUE, saves matrix in Results/ folder. Default is TRUE.
 #' @param file.name Optional character suffix used when writing the TF activity matrix to disk.
 #'
-#' @return A data frame of inferred and scaled TF activity scores, with samples as rows and TFs as columns.
+#' @return A data frame of inferred (and, if \code{scale = TRUE}, scaled) TF activity scores, with samples as rows
+#'   and TFs as columns. Column names are made syntactically valid with \code{make.names()}.
 #'
 #' @references
-#' Alvarez, M. et al. (2016). Functional characterization of somatic mutations in cancer using network-based inference of protein activity. *Nature Genetics*, 48(8), 838-847. https://doi.org/10.1038/ng.3593
+#' Badia-i-Mompel, P. et al. (2022). decoupleR: ensemble of computational methods to infer biological activities from omics data. *Bioinformatics Advances*, 2(1), vbac016. https://doi.org/10.1093/bioadv/vbac016
 #'
 #' Tuerei, D., Korcsmaros, T., & Saez-Rodriguez, J. (2016). OmniPath: guidelines and gateway for literature-curated signaling pathway resources. *Nature Methods*, 13(12), 966-967. https://doi.org/10.1038/nmeth.4077
 #'
@@ -1158,11 +1093,11 @@ compute.TF.network.classification = function(tf.network, pathways.features, retu
 #'
 #' @examples
 #' data("counts.norm.tuto")
-#' tfs_activity <- compute.TFs.activity(counts.norm.tuto, cores = 1)
+#' tfs_activity <- compute.TFs.activity(counts.norm.tuto)
 #'
-compute.TFs.activity <- function(RNA.counts, TF.collection = "CollecTRI", min_targets_size = 5, universe = NULL, cancer.type = NULL, cores = 3, scale = TRUE, return = TRUE, file.name = NULL){
+compute.TFs.activity <- function(RNA.counts, TF.collection = "CollecTRI", min_targets_size = 5, universe = NULL, cancer.type = NULL, scale = TRUE, return = TRUE, file.name = NULL){
 
-  tf_cache_file <- "Results/TF_target_collection.csv"
+  tf_cache_file <- paste0("Results/TF_target_collection_", TF.collection, ".csv")
 
   if(TF.collection == "ARACNE"){
 
@@ -1178,7 +1113,7 @@ compute.TFs.activity <- function(RNA.counts, TF.collection = "CollecTRI", min_ta
       aracne.network <- candidates[1]
       cat("Auto-detected ARACNe network:", aracne.network, "\n")
     } else {
-      aracne.network <- file.path("~/Documents/CellTFusion_paper/input/ARACNE", cancer.type, "network/network.txt")
+      aracne.network <- file.path("input/ARACNE", cancer.type, "network", "network.txt")
       if(!file.exists(aracne.network))
         stop("ARACNe network not found for cancer type '", cancer.type, "': ", aracne.network)
     }
@@ -1249,6 +1184,7 @@ compute.TFs.activity <- function(RNA.counts, TF.collection = "CollecTRI", min_ta
                                        network = universe,
                                       .source = "source",
                                       .target = "target",
+                                      minsize = min_targets_size
                                     ) %>%
                                       dplyr::filter(.data$statistic == "consensus") %>%
                                       decoupleR::pivot_wider_profile(id_cols     = source,
@@ -1279,23 +1215,31 @@ compute.TFs.activity <- function(RNA.counts, TF.collection = "CollecTRI", min_ta
 #' represented by the eigenvalue of the module.
 #'
 #' @param TFs.matrix Matrix of TF activity (samples x TFs).
-#' @param batch Logical; if TRUE, performs consensus WGCNA across cohorts provided as a list.
+#' @param batch Logical; if TRUE, performs consensus WGCNA (\code{WGCNA::blockwiseConsensusModules()}) across cohorts
+#'   provided as a list of matrices. In this mode \code{clustering.method} and \code{corr_mod} are not used
+#'   (modules are merged with a fixed \code{mergeCutHeight = 0.25}), and module eigengenes are scaled within each cohort.
 #' @param network.type Network type: "signed", "unsigned", "signed hybrid", or "distance". Default is "signed".
-#' @param clustering.method Clustering method for hierarchical clustering. Default is "ward.D2".
+#' @param clustering.method Clustering method for hierarchical clustering (single-cohort mode only). Default is "ward.D2".
 #' @param minMod Minimum number of TFs per module. Default is 15.
-#' @param corr_mod Correlation threshold (0-1) for merging similar modules. Default is 0.9.
-#' @param cor_type Correlation type for adjacency calculation: "p" (Pearson), "s" (Spearman). Default is "p".
-#' @param softPower Optional numeric value specifying the soft-thresholding power to be used when constructing
+#' @param corr_mod Correlation threshold (0-1) above which module eigengenes are merged (single-cohort mode only). Default is 0.9.
+#' @param cor_type Correlation used to pick the soft-threshold power and build the adjacency matrix:
+#'   "p" (Pearson) or "s" (Spearman). Spearman is only available when \code{batch = FALSE}, because WGCNA
+#'   consensus modules only support Pearson correlation. Default is "p".
+#' @param softPower Optional numeric value specifying the soft-thresholding power used to build the adjacency
+#'   matrix (one value per cohort when \code{batch = TRUE}). If \code{NULL}, the power whose scale-free fit
+#'   \eqn{R^2} is closest to 0.9 is chosen automatically.
 #' @param verbose Boolen value to whether print or no the function messages
 #' @param file.name Optional character suffix used when writing WTCNA outputs.
 #' @param return Logical, whether to save output plots and module list to "Results/". Default is TRUE.
 #'
 #' @return A named list with:
 #' \itemize{
-#'   \item \code{TFs module matrix}: Matrix of module eigengenes (samples x modules).
+#'   \item \code{TFs module matrix}: Scaled module eigengenes (samples x modules). In batch mode, samples are
+#'     concatenated in cohort order.
 #'   \item \code{TFs colors}: Vector of module colors assigned to each TF.
 #'   \item \code{TFs per module}: List of TF names in each module.
-#'   \item \code{Proportion of variance}: Matrix of variance explained per module.
+#'   \item \code{Proportion of variance}: Variance explained per module (single-cohort mode only).
+#'   \item \code{TFs_matrix}: The TF activity matrix used (a list of per-cohort matrices restricted to shared TFs in batch mode).
 #' }
 #'
 #' @references
@@ -1328,7 +1272,7 @@ compute.WTCNA <- function(TFs.matrix, batch = FALSE, network.type = "signed", cl
       softPower <- numeric(nCohorts)
       for(i in 1:nCohorts){
         if(verbose) cat("Picking soft threshold for cohort", i, "...\n")
-        sft <- WGCNA::pickSoftThreshold(TFs.matrix[[i]], powerVector = powers, verbose = 0)
+        sft <- WGCNA::pickSoftThreshold(TFs.matrix[[i]], powerVector = powers, verbose = 0, networkType = network.type)
         target = 0.9
         diff = abs(-sign(sft$fitIndices[,3]) * sft$fitIndices[,2] - target)
         softPower[i] <- powers[which.min(diff)]
@@ -1398,7 +1342,8 @@ compute.WTCNA <- function(TFs.matrix, batch = FALSE, network.type = "signed", cl
     #####Choose parameter for scale-free network topology
     powers = c(c(1:10), seq(from = 12, to=20, by=1))
     sink(tempfile())
-    invisible(sft <- WGCNA::pickSoftThreshold(TFs.matrix, powerVector = powers, verbose = 0, networkType = network.type))
+    invisible(sft <- WGCNA::pickSoftThreshold(TFs.matrix, powerVector = powers, verbose = 0, networkType = network.type,
+                                              corOptions = list(use = "p", method = ifelse(cor_type == "p", "pearson", "spearman"))))
     sink()
 
     if(return){
@@ -1432,7 +1377,7 @@ compute.WTCNA <- function(TFs.matrix, batch = FALSE, network.type = "signed", cl
       cat("Calculating nodes adjacency and topological overlapping nodes.................................................\n\n")
     }
 
-    adjacency = WGCNA::adjacency(TFs.matrix, power =softPower, type=network.type, corFnc = "cor", corOptions = list(use = cor_type))
+    adjacency = WGCNA::adjacency(TFs.matrix, power =softPower, type=network.type, corFnc = "cor", corOptions = list(use = "p", method = ifelse(cor_type == "p", "pearson", "spearman")))
     TOM = WGCNA::TOMsimilarity(adjacency, TOMType = network.type, verbose = 0)
     dissTOM = 1-TOM
 
@@ -1520,14 +1465,16 @@ compute.WTCNA <- function(TFs.matrix, batch = FALSE, network.type = "signed", cl
 #' Identify hub TFs
 #'
 #' Identifies hub TFs per module using values of module membership and degree.
+#' TFs with high module membership (correlation with the module eigengene > \code{MM_thresh})
+#' and a degree at or above the \code{degree_thresh} quantile of their module are considered hub TFs.
+#' The degree of a TF is its intramodular connectivity: the sum of its Pearson correlations with
+#' the other TFs of the same module.
 #'
-#' @param datExpr A matrix of TF activity (TFs as rows and samples as columns).
+#' @param datExpr A matrix of TF activity (TFs as rows and samples as columns), with TFs in the same
+#'   order as the module colors of \code{TF.network} (e.g. \code{t(TF.network$TFs_matrix)}).
 #' @param TF.network TF network obtained from compute.WTCNA().
 #' @param MM_thresh Threshold for module membership (e.g., 0.8).
 #' @param degree_thresh Quantile threshold for degree (e.g., 0.9 for top 10%).
-#'
-#' TFs with high module membership (r > MM_thresh) and among the top percentage
-#' of genes by degree (above degree_thresh quantile) are considered hub TFs.
 #'
 #' @return A list with two elements:
 #' \describe{
@@ -1551,14 +1498,14 @@ identify_hub_TFs <- function(datExpr, TF.network, MM_thresh = 0.8, degree_thresh
     genesInModule <- which(moduleColors == module)
     eigengene <- moduleEigengenes_df[, module]
     stats::cor(t(datExpr[genesInModule, ]), eigengene)
-  })
+  }, simplify = FALSE)
 
   # Calculate adjacency matrices and degrees
   adjacencyList <- lapply(unique(moduleColors), function(module) {
     genesInModule <- which(moduleColors == module)
     moduleData <- datExpr[genesInModule, ]
     adjacency <- stats::cor(t(moduleData))
-    adjacency[lower.tri(adjacency)] <- 0
+    diag(adjacency) <- 0
     adjacency
   })
 
@@ -1580,7 +1527,6 @@ identify_hub_TFs <- function(datExpr, TF.network, MM_thresh = 0.8, degree_thresh
   allMemberships <- numeric()
 
   for (module in unique(moduleColors)) {
-    genesInModule <- which(moduleColors == module)
     degrees <- moduleDegrees[[module]]
     memberships <- moduleMemberships[[module]]
 
@@ -1590,36 +1536,6 @@ identify_hub_TFs <- function(datExpr, TF.network, MM_thresh = 0.8, degree_thresh
 
     # Calculate the cutoff for the top 10% by degree
     degreeCutoff <- stats::quantile(degrees, degree_thresh)
-
-    # Plot distribution of Degrees for the current module
-    # degree_plot_data <- data.frame(Degree = degrees)
-    #
-    # degree_plot <- ggplot(degree_plot_data, aes(x = Degree)) +
-    #   geom_histogram(binwidth = 5, fill = module, color = "black", alpha = 0.6) +
-    #   geom_vline(xintercept = degreeCutoff, linetype = "dashed", color = "red") +
-    #   labs(
-    #     title = paste("Distribution of Gene Degrees in Module", module),
-    #     x = "Degree",
-    #     y = "Frequency"
-    #   ) +
-    #   theme_minimal()
-    #
-    # print(degree_plot)
-
-    # Plot distribution of Module Membership for the current module
-    # membership_plot_data <- data.frame(ModuleMembership = memberships)
-    #
-    # membership_plot <- ggplot(membership_plot_data, aes(x = ModuleMembership)) +
-    #   geom_histogram(binwidth = 0.05, fill = module, color = "black", alpha = 0.6) +
-    #   geom_vline(xintercept = MM_thresh, linetype = "dashed", color = "red") +
-    #   labs(
-    #     title = paste("Distribution of Module Membership in Module", module),
-    #     x = "Module Membership",
-    #     y = "Frequency"
-    #   ) +
-    #   theme_minimal()
-    #
-    # print(membership_plot)
 
     # Identify hub genes (top 10% by degree)
     hubGenes <- names(degrees[degrees >= degreeCutoff])
@@ -1669,8 +1585,6 @@ identify.cell.groups = function(features, clustering.method = "ward.D2", width =
 
   moduleTraitCor = features[[1]]
 
-  #names(features[[2]]) = paste0("ME", names(features[[2]])) #To match names of columns from corr matrix
-
   features_vec = features[[2]]
 
   #Discard modules with no significant features
@@ -1690,25 +1604,14 @@ identify.cell.groups = function(features, clustering.method = "ward.D2", width =
   if(length(features_vec) == 0){
     return(NULL)
   }
-  #Gather significant features across TF modules clusters
-  # features_vec = list()
-  # for (i in 1:length(tfs.modules.groups)) {
-  #   features_vec[[i]] = unique(unlist(unname(features[[2]][tfs.modules.groups[[i]]])))
-  #   names(features_vec)[i] = names(tfs.modules.groups)[i]
-  # }
-
   lis.dendrogram = list()
 
   for (i in 1:length(features_vec)){
     TFmoduleTraitcor = moduleTraitCor[i,colnames(moduleTraitCor)%in%features_vec[[i]], drop = F]
-    #TFmoduleTraitcor = TFmoduleTraitcor[rownames(TFmoduleTraitcor)%in%tfs.modules.groups[[i]], , drop=F]
     ###Dendogram by Module
 
-    #d = 1 - TFmoduleTraitcor #Distance based on correlation (close to 0 means similar correlation per module)
-    #d = d/sqrt(nrow(TFmoduleTraitcor)) #Adjust/Scale distance matrix for number of features to make dendrograms comparable
     d <- stats::dist(t(TFmoduleTraitcor))
     dendrogram <- stats::hclust(d, method = clustering.method)
-    #dendrogram <- hclust(dist(t(d)), method = clustering.method)
     if(return){
       pdf(paste0("Results/Dendogram_cell_types_", names(features_vec)[i]), width = width, height = height)
       par(mar = c(5, 2, 4, 35)) #bottom, left, top, right
@@ -1790,8 +1693,8 @@ compute.composition.matrix = function(deconvolution.subgroupped, cell.groups, ce
 #'
 #' Identifies and projects cell groups using module relationships derived from TF networks and deconvolution outputs.
 #'
-#' @param network A list containing TF networks for cell types.
-#' @param dt A list containing deconvolution subgroup structures.
+#' @param network A TF module network as returned by \code{compute.WTCNA()}.
+#' @param dt Deconvolution subgroups as returned by \code{multideconv::compute.deconvolution.analysis()}.
 #' @param batch Optional vector indicating batch assignment for samples.
 #' @param pval Numeric. P-value threshold applied both to filter TF module-deconvolution
 #'   feature correlations and as the significance cutoff for the CCA permutation test.
@@ -1800,16 +1703,22 @@ compute.composition.matrix = function(deconvolution.subgroupped, cell.groups, ce
 #' @param n_perm Integer. Number of permutations for the CCA significance test per cell group.
 #'   Higher values give more precise p-values but increase runtime. Default: 999.
 #' @param dendrogram_file Optional character. File path to save dendrogram plot output.
-#' @param return_dendrogram Logical. If TRUE, includes the dendrogram in the returned list. Default FALSE.
+#' @param return_dendrogram Logical. If TRUE, saves a PDF of the colored cell-group dendrograms to
+#'   \code{Results/Dendrogram_color_clusters_<dendrogram_file>.pdf} (only when \code{dendrogram_file} is set). Default FALSE.
 #'
-#' @return A list of 3 elements:
+#' @return A named list of 3 elements:
 #' \describe{
-#'   \item{scores}{A data frame or matrix with the projected cell group scores (samples x groups).}
-#'   \item{composition}{A named list where each element is a character vector of original cell types per group.}
-#'   \item{loadings}{A list of numeric vectors indicating the loadings (feature contributions) for each group.}
+#'   \item{Cell_groups}{A data frame with the projected cell group scores (samples x groups).}
+#'   \item{Composition}{A named list where each element is a character vector of the deconvolution features in each group.}
+#'   \item{Weights}{A list of CCA projection parameters (\code{xcoef}, \code{train_means}, \code{train_sds}) for each group.}
 #' }
 #' @export
 construct_cell_groups = function(network, dt, batch = NULL, pval = 0.05, clustering.method = "ward.D2", n_perm = 999, dendrogram_file = NULL, return_dendrogram = FALSE){
+
+  if(is.list(network[["TFs_matrix"]]) & !is.data.frame(network[["TFs_matrix"]])){ # Batch mode: module scores are stacked cohort by cohort
+    idx = match(make.names(rownames(dt[[1]])), make.names(rownames(network[[1]])))
+    if(!anyNA(idx)) network[[1]] = network[[1]][idx, , drop = F] # Back to the sample order of dt
+  }
 
   corr_modules = compute.modules.relationship(network[[1]], dt[[1]], batch = batch, return = T, plot = F, pval = pval)
   cell_dendrograms = identify.cell.groups(corr_modules, clustering.method = clustering.method, height = 20, return = F)
@@ -1833,7 +1742,8 @@ construct_cell_groups = function(network, dt, batch = NULL, pval = 0.05, cluster
 #'   - composition: A named list of character vectors where each element represents
 #'     cells belonging to a specific group.
 #'   - loadings: A corresponding list of numeric vectors (loadings) for each cell group.
-#' @param features A character vector of feature names to select relevant cell groups.
+#' @param features A character vector of feature names to select relevant cell groups. An error is
+#'   raised if none of them match a cell group name.
 #' @param deconvolution_test A data frame or matrix of deconvolution features for the test set,
 #'   with cells as columns and samples as rows.
 #'
@@ -1846,7 +1756,9 @@ construct_cell_groups = function(network, dt, batch = NULL, pval = 0.05, cluster
 #' The function first simulates cell subgroups by computing median values across
 #' specified iterations and joins them with the original test deconvolution data.
 #' Then it extracts the relevant cells for each feature and calculates composite
-#' scores.
+#' scores. If the cell groups were built with batch correction, the test samples are centred on
+#' their own means (as each training cohort was), so \code{deconvolution_test} should contain a
+#' single cohort.
 #'
 compute.test.set = function(deconv_res, cell_groups, features, deconvolution_test){
 
@@ -1894,14 +1806,15 @@ compute.test.set = function(deconv_res, cell_groups, features, deconvolution_tes
 
   # Compute composite scores
   idx = which(names(cell_groups[[2]]) %in% features)
+  if(length(idx) == 0){
+    stop("None of the features match the cell group names")
+  }
   cell_dendrogram = c()
   names = c()
   for (i in 1:length(idx)) {
     cells = cell_groups[[2]][[idx[i]]]
     pca_cells = deconvolution_test[,colnames(deconvolution_test) %in% cells, drop = F]
     pca_cells <- pca_cells[, apply(pca_cells, 2, function(x) all(!is.na(x)) && var(x, na.rm = TRUE) != 0), drop = FALSE] #Drop zero-columns or NAs
-    name_cell_group = names(cell_groups[[2]][idx[i]])
-    color = stringr::str_split(name_cell_group, "_")[[1]][2]
     loadings_cells = cell_groups[[3]][[idx[i]]]
     cell_dendrogram = cbind(cell_dendrogram, compute.test.score(pca_cells, loadings_cells))
     names = c(names, names(cell_groups[[2]])[idx[i]])
@@ -1954,72 +1867,6 @@ extract_cells = function(groups, cells_extra = NULL){
   normalized_names <- unique(na.omit(normalized_names))
 
   return(normalized_names)
-}
-
-#' Extract colors
-#'
-#' Extract TF module colors from cell type group names
-#'
-#' @param module_colors Character vector of TF module colors, e.g., from compute.WTCNA()
-#' @param cell_group_name Character vector or string of cell type group names to search within
-#'
-#' @return Character vector of matched module colors found in cell_group_name, ordered by their appearance.
-#' Returns NA if no matches are found.
-#' @export
-#'
-extract_colors <- function(module_colors, cell_group_name) {
-  matches <- c() # For storing the matches
-  for (color in module_colors) {
-    match <- regexpr(color, cell_group_name) # Find the position of the match
-    if (match != -1) {
-      matches <- c(matches, regmatches(cell_group_name, match))
-    }
-  }
-
-
-  if (length(matches) > 0) {
-    order <- sapply(matches, function(m) regexpr(m, cell_group_name)) # Sort matches based on their position in the original string to ensure names are the same
-    matches <- matches[order(order)]  # Order the matches based on their position
-    return(matches)  # Return the ordered matches
-  } else {
-    return(NA)  # If no matches are found, return NA
-  }
-
-}
-
-#' Create TFs modules
-#'
-#' This function re-create existing TF modules on a different TF activity matrix.
-#'
-#' @param TF.matrix TFs activity matrix with samples as rows and TFs as columns (should be the output of compute.TF.activity()).
-#' @param network_tfs A TF network object obtained from compute.WTCNA() from which TF modules need to be re-create.
-#'
-#' @return A matrix of TFs modules scores across samples
-#' @export
-#'
-create_tfs_modules = function(TF.matrix, network_tfs){
-
-  TF.matrix = TF.matrix[, colnames(TF.matrix) %in% colnames(network_tfs$TFs_matrix)]
-
-  tfs.modules = TF.matrix %>%
-    t() %>%
-    data.frame() %>%
-    dplyr::mutate(Module = "na") ## Create column to assign the corresponding module to each TF
-
-  for (i in 1:length(network_tfs[[3]])) {
-    tfs.modules$Module[which(rownames(tfs.modules) %in% network_tfs[[3]][[i]])] = names(network_tfs[[3]])[i]
-  }
-
-  tfs_colors = tfs.modules %>%
-    dplyr::pull(Module)
-
-  MEList = WGCNA::moduleEigengenes(TF.matrix, colors = tfs_colors, scale = F) #Data already scale
-  MEs = MEList$eigengenes
-  MEs = WGCNA::orderMEs(MEs)
-
-  colnames(MEs) <- gsub("ME", "", colnames(MEs))
-
-  return(MEs)
 }
 
 #' Find maximum iteration from cell subgroups
@@ -2082,68 +1929,6 @@ mergeModules = function(data, colors, corr){
   }
 
   return(list(data, colors))
-}
-
-#' Remove cell groups with duplicate composition
-#'
-#' Identifies cell groups whose cell-type composition is identical to another group
-#' and removes the duplicates, keeping only the first occurrence.
-#'
-#' @param cell.values A list of numeric vectors of cell group scores.
-#' @param cell.composition A list of character vectors describing cell-type membership per group.
-#' @param cell.loadings A list of loading vectors corresponding to each cell group.
-#'
-#' @return A list of three elements:
-#' \itemize{
-#'   \item \code{[[1]]}: Deduplicated cell group scores.
-#'   \item \code{[[2]]}: Deduplicated cell group compositions.
-#'   \item \code{[[3]]}: Deduplicated cell group loadings.
-#' }
-#'
-#' @keywords internal
-remove_equal = function(cell.values, cell.composition, cell.loadings){
-
-  #Sorted list to avoid no recognizing vectors with equal composition but different order of cells
-  for(i in 1:length(cell.composition)){
-    for (j in 1:length(cell.composition[[i]])) {
-      cell.composition[[i]][[j]] = sort(cell.composition[[i]][[j]])
-    }
-  }
-
-  #Remove cell groups
-  for(i in 1:length(cell.composition)){
-    exist = c() #Initialize vector of equalities
-    rang = seq(1, length(cell.composition))[-i] #Create sequence to iterate all list elements except the one being analyzed
-    for (j in rang){
-      idx = which(cell.composition[[i]] %in% cell.composition[[j]] == TRUE) #Map all cell groups which already existed
-      exist = c(exist, idx) #Save index cluster
-    }
-    if(length(exist)!=0){
-      cell.composition[[i]] = cell.composition[[i]][-unique(exist)] #Remove cell groups that already exist
-      cell.values[[i]] = cell.values[[i]][-unique(exist)] #Remove cell groups that already exist
-      cell.loadings[[i]] = cell.loadings[[i]][-unique(exist)] #Remove cell loadings that already exist
-    }
-  }
-
-  #Remove dendrograms without elements (length equal 0)
-  vec = c()
-  for(i in 1:length(cell.composition)){
-    if(length(cell.composition[[i]]) == 0){
-      vec = c(vec, i)
-    }
-  }
-
-  if(length(vec)>0){
-    cell.composition = cell.composition[-vec]
-    cell.values = cell.values[-vec]
-    cell.loadings = cell.loadings[-vec]
-  }
-
-  cell.composition = unlist(cell.composition, recursive = FALSE)
-  cell.values = unlist(cell.values, recursive = FALSE)
-  cell.loadings = unlist(cell.loadings, recursive = FALSE)
-
-  return(list(cell.values, cell.composition, cell.loadings))
 }
 
 #' Remove cell groups composed of a single cell type
@@ -2266,189 +2051,6 @@ plot_dendrogram_clusters = function(cell.group.dendrogram, cuts_per_dendrogram, 
 
 }
 
-#' Remove highly correlated cell groups
-#'
-#' Computes pairwise Spearman correlations among cell group score vectors and
-#' removes one member of each pair whose absolute correlation exceeds
-#' \code{threshold}.
-#'
-#' @param data A list of three elements:
-#'   \describe{
-#'     \item{scores}{A numeric data frame or matrix of cell group scores (samples x groups).}
-#'     \item{compositions}{A named list of cell-type vectors describing group membership.}
-#'     \item{loadings}{A named list of loading vectors corresponding to each cell group.}
-#'   }
-#' @param threshold Numeric. Correlation threshold above which one of a correlated
-#'   pair is removed. Default is 0.95.
-#'
-#' @return A list of three elements (scores, compositions, loadings) with
-#'   redundant cell groups removed.
-#'
-#' @keywords internal
-remove.cell.groups.corr <- function(data, threshold = 0.95) {
-
-  # Compute correlation matrix
-  corr_matrix <- stats::cor(data[[1]])
-  # Find highly correlated features
-  contador = 1
-  while(nrow(corr_matrix)>0){
-    color_features = c()
-    feature = data.frame(corr_matrix[1, , drop = FALSE]) #Extract first row feature
-    feature_corr = feature %>%                                #Take only high corr above threshold
-      dplyr::mutate_all(~ifelse(. > threshold, ., NA)) %>%
-      dplyr::select_if(~all(!is.na(.)))
-    feature = feature_corr #In order to save original corr matrix and print names
-    corr_matrix = corr_matrix[-which(rownames(corr_matrix)%in%colnames(feature)),-which(colnames(corr_matrix)%in%colnames(feature)), drop = F] #Remove already joined features
-    color_features = list()
-    if(ncol(feature)>1){
-      for (m in 1:ncol(feature)) {
-        name_cell_group = colnames(feature)[m]
-        color = stringr::str_split(name_cell_group, "_")[[1]][2]
-        color_features[[m]] = color
-      }
-
-      len = length(unique(sapply(unname(data[[2]][colnames(feature)]), length)))
-      if(len != 1){
-        feature = feature[,which.min(sapply(unname(data[[2]][colnames(feature)]), length)), drop = F] #Remove elements with higher number of features and keep the min composition that explains the score (high corr > 0.95 of two different compositions implies that extra cell types are just noise)
-      }
-      new_group_composition = unique(unlist(unname(data[[2]][colnames(feature)])))
-      new_group_value = rowMeans(data[[1]][,colnames(data[[1]])%in%colnames(feature),drop=F])
-
-      ################ Merging cell loadings
-
-      # Select the loadings matrices corresponding to the current set of correlated features
-      mats <- data[[3]][colnames(data[[1]]) %in% colnames(feature)]
-
-      # Ensure that all matrices have proper column names (set the rownames() as colnames() as they are square)
-      mats_fixed <- lapply(mats, function(x) {
-        if (is.null(colnames(x))) {
-          colnames(x) <- rownames(x)
-        }
-        x
-      })
-
-      # Compute the union of all features across the selected matrices: full set of features that the merged matrix should contain
-      all_features <- Reduce(union, lapply(mats_fixed, rownames))
-
-      # Align each matrix to the full set of features
-      # - Add missing rows/columns filled with 0 for features not present in the matrix
-      # - Reorder rows and columns according to 'all_features'
-      mats_aligned <- lapply(mats_fixed, function(x) {
-        missing <- setdiff(all_features, rownames(x))  # Identify features missing in this matrix
-        if(length(missing) > 0){
-          # Add missing rows (initialized to 0)
-          x <- rbind(x, matrix(0, nrow = length(missing), ncol = ncol(x),
-                               dimnames = list(missing, colnames(x))))
-          # Add missing columns (initialized to 0)
-          x <- cbind(x, matrix(0, nrow = nrow(x), ncol = length(missing),
-                               dimnames = list(rownames(x), missing)))
-        }
-        # Reorder rows and columns so all matrices have the same order
-        x[all_features, all_features, drop = FALSE]
-      })
-
-      # # Ensure that all matrices have proper column names (set the rownames() as colnames() as they are square)
-      # mats_fixed <- lapply(mats, function(x) {
-      #
-      #   # Convert vector or scalar -> square matrix
-      #   if (is.null(dim(x))) {
-      #     # Give names if missing
-      #     if (is.null(names(x)) || any(names(x) == "")) {
-      #       names(x) <- paste0("Feature_", seq_along(x))
-      #     }
-      #     x <- matrix(x,
-      #                 nrow = length(x),
-      #                 ncol = length(x),
-      #                 dimnames = list(names(x), names(x)))
-      #   }
-      #
-      #   # Ensure rownames exist
-      #   if (is.null(rownames(x)) || any(rownames(x) == "")) {
-      #     rownames(x) <- paste0("Feature_", seq_len(nrow(x)))
-      #   }
-      #
-      #   # Ensure colnames exist
-      #   if (is.null(colnames(x)) || any(colnames(x) == "")) {
-      #     colnames(x) <- rownames(x)
-      #   }
-      #
-      #   x
-      # })
-      #
-      #
-      # # Compute the union of all features across the selected matrices: full set of features that the merged matrix should contain
-      # all_features <- Reduce(union, lapply(mats_fixed, rownames))
-      #
-      # # Align each matrix to the full set of features
-      # # - Add missing rows/columns filled with 0 for features not present in the matrix
-      # # - Reorder rows and columns according to 'all_features'
-      # mats_aligned <- lapply(mats_fixed, function(x) {
-      #   missing <- setdiff(all_features, rownames(x))  # Identify features missing in this matrix
-      #   if(length(missing) > 0){
-      #     # Add missing rows (initialized to 0)
-      #     x <- rbind(x, matrix(0, nrow = length(missing), ncol = ncol(x),
-      #                          dimnames = list(missing, colnames(x))))
-      #     # Add missing columns (initialized to 0)
-      #     x <- cbind(x, matrix(0, nrow = nrow(x), ncol = length(missing),
-      #                          dimnames = list(rownames(x), missing)))
-      #   }
-      #   # Reorder rows and columns so all matrices have the same order
-      #   x[all_features, all_features, drop = FALSE]
-      # })
-
-      # Combine all aligned matrices by computing the element-wise average
-      new_loadings_value <- Reduce("+", mats_aligned) / length(mats_aligned)
-
-      ################
-
-      if(contador==1){
-        #Remove features from original data
-        new_data <- data[[1]][, -which(colnames(data[[1]])%in%colnames(feature_corr)), drop = F]
-        new_groups = data[[2]][-which(names(data[[2]]) %in% colnames(feature_corr))]
-        new_loadings = data[[3]][-which(names(data[[2]]) %in% colnames(feature_corr))] #Using names from data[[2]] cause data[[3]] has the same order of elements
-      }else{
-        new_loadings = new_loadings[-which(names(new_groups) %in% colnames(feature_corr))]
-        new_data <- new_data[, -which(colnames(new_data)%in%colnames(feature_corr)), drop = F]
-        new_groups = new_groups[-which(names(new_groups) %in% colnames(feature_corr))]
-      }
-
-      #Add new combined features
-      class <- unique(stringr::str_extract(colnames(feature_corr), "positive|negative"))
-      if(length(class)>1){
-        class = paste0(class, collapse = ".")
-      }
-
-      ## If corr features are from two different classes don't combine, just discard them (as they don't make any distinction between classes for prediction)
-      if(is.na(class) == F){
-        new_name = paste0("Dendrogram_",  paste0(unique(unlist(color_features)), collapse = "_"), ".group_combined_", contador, "_", class)
-      }else{
-        new_name = paste0("Dendrogram_",  paste0(unique(unlist(color_features)), collapse = "_"), ".group_combined_", contador)
-      }
-      new_data = cbind(new_data, new_group_value)
-      colnames(new_data)[length(new_data)] = new_name
-
-      new_groups[[length(new_groups)+1]] = new_group_composition
-      names(new_groups)[length(new_groups)] = new_name
-
-      new_loadings[[length(new_loadings)+1]] = new_loadings_value
-      names(new_loadings)[length(new_loadings)] = new_name
-
-      contador = contador + 1
-
-    }else{ #Nothing is combined
-      if(contador == 1){
-        new_data = data[[1]]
-        new_groups = data[[2]]
-        new_loadings = data[[3]]
-      }
-    }
-  }
-
-  res = list(new_data, new_groups, new_loadings)
-
-  return(res)
-}
-
 #' Run Reactome pathway enrichment for a single TF module
 #'
 #' Given the hub TFs of a module, extracts their target genes from the TF-gene
@@ -2467,14 +2069,14 @@ remove.cell.groups.corr <- function(data, threshold = 0.95) {
 #'
 #' @keywords internal
 module_enrich = function(tpm.counts, module_color, hub_genes, tfs_universe){
-  # genes = colnames(TFs.matrix)
-  # inModule = is.finite(match(module_colors,module))
-  # modGenes = genes[inModule]
   targets = tfs_universe[tfs_universe$source %in% hub_genes[[1]][[module_color]],] #Extract targets from TFs
   targets = unique(targets$target) #Keep only unique targets from TFs
 
-  targets_genes = tpm.counts[rownames(tpm.counts)%in%targets,] #Extract gene expression from targets
-  targets_genes = targets_genes[order(matrixStats::rowVars(targets_genes), decreasing = T),][1:round(0.2*nrow(targets_genes)),] #Keep only highly variable targets (20%)
+  targets_genes = tpm.counts[rownames(tpm.counts)%in%targets, , drop = F] #Extract gene expression from targets
+  if(nrow(targets_genes) == 0){
+    return(NULL)
+  }
+  targets_genes = targets_genes[order(matrixStats::rowVars(targets_genes), decreasing = T), , drop = F][1:round(0.2*nrow(targets_genes)), , drop = F] #Keep only highly variable targets (20%)
 
   entrz <- AnnotationDbi::select(org.Hs.eg.db::org.Hs.eg.db, keys = rownames(targets_genes), columns = "ENTREZID", keytype = "SYMBOL") #Change to EntrezID
   universe = AnnotationDbi::select(org.Hs.eg.db::org.Hs.eg.db, keys = rownames(tpm.counts), columns = "ENTREZID", keytype = "SYMBOL") #Change to EntrezID
@@ -2483,6 +2085,9 @@ module_enrich = function(tpm.counts, module_color, hub_genes, tfs_universe){
                                     organism     = 'human',
                                     universe = universe$ENTREZID,
                                     pvalueCutoff = 0.05)
+  if(is.null(reac)){
+    return(NULL)
+  }
 
   reac@result = reac@result[reac@result$p.adjust<0.05,]
 
@@ -2521,20 +2126,26 @@ permutation_cca_test <- function(X, Y, n_perm = 999) {
 #' between cell group features and corresponding TF module scores.
 #'
 #' @param cell_group A numeric matrix of cell deconvolution features for a cell group (samples x features).
-#' @param module_group A character vector indicating TF module group colors corresponding to the cell group (can be obtained via `extract_colors()`).
+#' @param module_group Character. Name (color) of the TF module the cell group was built from; must match a
+#'   column name of the module matrix in \code{tfs.module.network} exactly.
 #' @param tfs.module.network Output of compute.WTCNA().
-#' @param batch Optional vector indicating batch assignment for samples.
+#' @param batch Optional vector indicating batch assignment for samples. It is treated as categorical: per-batch
+#'   means are regressed out of the cell group features, the module eigengene and the module TFs before the CCA.
 #' @param discard Logical; whether to discard cell groups that do not pass the
 #'   permutation test for the first canonical correlation (default TRUE).
 #' @param pval Numeric. Significance threshold for the permutation test (default 0.05).
 #' @param n_perm Integer. Number of permutations used to build the null distribution (default 999).
 #'
-#' @return A list with:
+#' @return An unnamed list of two elements:
 #' \itemize{
-#'   \item \code{selected_components}: Numeric matrix of the first canonical component scores across samples.
-#'   \item \code{xcoef}: The canonical weights (coefficients) for the cell group features.
+#'   \item \code{[[1]]}: Numeric matrix (samples x 1) with the composite score, i.e. the scaled cell group
+#'     features projected onto the first canonical component.
+#'   \item \code{[[2]]}: Projection parameters used to score new samples: \code{xcoef} (canonical weights of
+#'     the first component), \code{train_means} and \code{train_sds} (column means/SDs used for scaling).
+#'     \code{train_means} is \code{NULL} when batch correction was applied: new samples are then centred on
+#'     their own means, as each training cohort was.
 #' }
-#' If discarded due to low correlation, returns \code{list("NA", "NA")}.
+#' If the permutation test is not significant (and \code{discard = TRUE}), returns \code{list("NA", "NA")}.
 #'
 #' @export
 #'
@@ -2543,8 +2154,11 @@ compute_composite_score = function(cell_group, module_group, tfs.module.network,
   modules = tfs.module.network[["TFs module matrix"]]
   tfs_all = tfs.module.network[["TFs_matrix"]]
 
-  if(!is.null(batch) & is.list(tfs_all)){
-    tfs_all <- do.call(rbind, tfs_all)
+  if(!is.null(batch) & is.list(tfs_all) & !is.data.frame(tfs_all)){
+    tfs_all <- do.call(rbind, unname(tfs_all)) # unname() keeps the sample names as row names
+    # Stacked cohort by cohort: back to the sample order of cell_group
+    tfs_all <- tfs_all[match(make.names(rownames(cell_group)), make.names(rownames(tfs_all))), , drop = F]
+    modules <- modules[match(make.names(rownames(cell_group)), make.names(rownames(modules))), , drop = F]
   }
 
   ### Only in case there are groups combined
@@ -2553,11 +2167,11 @@ compute_composite_score = function(cell_group, module_group, tfs.module.network,
   }
 
   tf_per_module_matrix = tfs_all[, colnames(tfs_all) %in% tfs.module.network[["TFs per module"]][[module_group]]]
-  tf_module_matrix = modules[, grep(module_group, colnames(modules)), drop = F]
+  tf_module_matrix = modules[, colnames(modules) == module_group, drop = F]
 
   # ---- Regress out batch if provided ----
-  if(!is.null(batch)){
-    if(!is.numeric(batch)) batch <- as.numeric(as.factor(batch))  # Convert to numeric if needed
+  if(!is.null(batch) && length(unique(batch)) > 1){
+    batch <- as.factor(batch)  # Categorical: regress out per-batch means
     cell_group <- apply(cell_group, 2, function(x) residuals(lm(x ~ batch)))
     tf_module_matrix <- apply(tf_module_matrix, 2, function(x) residuals(lm(x ~ batch)))
     tf_per_module_matrix <- apply(tf_per_module_matrix, 2, function(x) residuals(lm(x ~ batch)))
@@ -2592,34 +2206,11 @@ compute_composite_score = function(cell_group, module_group, tfs.module.network,
   scaled_obj <- scale(as.matrix(cell_group))
   train_means <- attr(scaled_obj, "scaled:center")
   train_sds   <- attr(scaled_obj, "scaled:scale")
+  if(!is.null(batch) && length(unique(batch)) > 1) train_means <- NULL # Batch-corrected: new cohorts are centred on their own means
 
   ### xcoef[,1] corresponds to the most correlated linear component (we scale cause the coef came from the scale matrix)
   weighted_cell_group_matrix <- scaled_obj %*% cca_result$xcoef[, 1] #Multiply by the original matrix even if the coefx came from the inverse matrix because we need to find the inverse relationship
 
-  ### MIGHT BE USEFUL AFTER TO DISCARD VARIABLES THAT DONT HELP TO THE ASSOCIATION AND REDUCE GROUP COMPOSITION
-
-  # weights
-  # x_weights <- cca_result$xcoef[, 1]
-  #y_weights <- cca_result$ycoef[, 1]
-
-  # # canonical scores (variates)
-  # U1 <- as.vector(scale(cell_group_matrix) %*% x_weights)
-  # V1 <- as.vector(scale(tf_module_matrix) %*% y_weights)
-  #
-  #
-  # # canonical loadings (= correlations of original vars with their own variate)
-  # x_loadings <- as.numeric(cor(as.matrix(cell_group_matrix), U1))   # length = ncol(cell_group_matrix)
-  # y_loadings <- as.numeric(cor(as.matrix(tf_module_matrix), V1))   # length = ncol(tf_module_matrix)
-  #
-  # # cross-loadings (= correlation of X with V1 and Y with U1)
-  # x_cross_loadings <- as.numeric(cor(as.matrix(cell_group_matrix), V1))
-  # y_cross_loadings <- as.numeric(cor(as.matrix(tf_module_matrix), U1))
-  #
-  # x_df <- data.frame(variable = colnames(cell_group_matrix),
-  #                    weight = x_weights,
-  #                    loading = x_loadings,
-  #                    cross_loading = x_cross_loadings)
-  # x_df <- x_df[order(-abs(x_df$loading)), ]   # order by importance
   projection_params = list(
     xcoef       = cca_result$xcoef[, 1, drop = F],
     train_means = train_means,
@@ -2627,73 +2218,6 @@ compute_composite_score = function(cell_group, module_group, tfs.module.network,
   )
 
   return(list(weighted_cell_group_matrix, projection_params))
-
-}
-
-#' Extract significant features using Wilcoxon test
-#'
-#' Performs Wilcoxon rank-sum test for each feature comparing groups defined by the trait.
-#'
-#' @param features A numeric data frame or matrix where columns are features and rows are samples.
-#' @param trait A vector or factor defining group labels for each sample.
-#'
-#' @return A character vector of feature names with significant difference between trait groups (p < 0.05).
-#'
-#' @export
-#'
-extract_wilcox_significant = function(features, trait){
-  significant_features <- c()
-  data = cbind(trait, features)
-  colnames(data)[1] = "trait"
-  for (feature in colnames(data)[-1]) {  # Exclude the first column (trait)
-    test_result <- stats::wilcox.test(data[,feature] ~ data$trait)
-
-    if (test_result$p.value < 0.05) {
-      significant_features <- c(significant_features, feature)
-    }
-  }
-
-  return(significant_features)
-}
-
-#' Classify samples by high or low deconvolution values in given cell groups
-#'
-#' Classifies samples in `coldata` as "High" or "Low" based on whether their deconvolution
-#' values in all specified cell groups exceed the median.
-#'
-#' @param coldata A data frame with sample metadata.
-#' @param deconvolution A numeric matrix/data frame with cell deconvolution features (samples x cell groups).
-#' @param group A character vector specifying the cell groups (columns) to consider.
-#'
-#' @return The input `coldata` with an additional factor column `Cells_level` ("High" or "Low").
-#'
-#' @export
-#'
-classify.deconvolution = function(coldata, deconvolution, group){
-  deconv = deconvolution[,colnames(deconvolution)%in%group]
-
-  #Patients high in group 1 of cells
-  vec = c()
-  if(is.null(ncol(deconv))==T){
-    idx = which(deconv > median(deconv))
-    vec = c(vec,idx)
-  }else{
-    for (i in 1:ncol(deconv)) {
-      idx = which(deconv[,i] > stats::median(deconv[,i]))
-      vec = c(vec, idx)
-    }
-  }
-
-  #High in all deconv features from group
-  pos = which(table(vec) == length(group))
-
-  coldata = coldata %>%
-    dplyr::mutate(Cells_level = "Low")
-
-  coldata$Cells_level[pos] = "High"
-  coldata$Cells_level = factor(coldata$Cells_level)
-
-  return(coldata)
 
 }
 
@@ -2754,20 +2278,6 @@ get_all_cells <- function(subgroup_name, cell_subgroups) {
   }
 }
 
-#' Compute mean silhouette width for a clustering
-#'
-#' @param clusters An integer vector of cluster assignments (one per sample).
-#' @param distance_matrix A numeric matrix used to compute Euclidean distances
-#'   between samples.
-#'
-#' @return A single numeric value: the mean silhouette width across all samples.
-#'
-#' @keywords internal
-compute_silhouette <- function(clusters, distance_matrix) {
-  silhouette_scores <- cluster::silhouette(clusters, stats::dist(distance_matrix))
-  mean(silhouette_scores[, 3])  # Return average silhouette width
-}
-
 #' Project test-set cell group scores using training CCA parameters
 #'
 #' Scales a test-set cell group matrix using the mean and standard deviation
@@ -2779,7 +2289,8 @@ compute_silhouette <- function(clusters, distance_matrix) {
 #' @param projection_params A list containing:
 #'   \describe{
 #'     \item{xcoef}{Named numeric matrix of CCA canonical weights (features x 1).}
-#'     \item{train_means}{Named numeric vector of training column means.}
+#'     \item{train_means}{Named numeric vector of training column means, or \code{NULL} if the training used
+#'       batch correction, in which case the test data are centred on their own column means.}
 #'     \item{train_sds}{Named numeric vector of training column standard deviations.}
 #'   }
 #'
@@ -2806,25 +2317,10 @@ compute.test.score = function(cell_group, projection_params){
   train_sds   = train_sds[common_features]
 
   # Scale using training means/SDs (unflipped, matching training)
+  if(is.null(train_means)) train_means = colMeans(cell_group) # Batch-corrected training: centre the test cohort on its own means
   cell_group_scaled = scale(cell_group, center = train_means, scale = train_sds)
 
   return(as.matrix(cell_group_scaled) %*% xcoef)
-}
-
-#' Unregister a parallel backend registered with doParallel
-#'
-#' Switches the foreach backend back to sequential execution and calls
-#' \code{gc()} to release memory held by the parallel workers.
-#'
-#' @return Called for its side effect; returns \code{NULL} invisibly.
-#'
-#' @keywords internal
-unregister_dopar <- function() {
-  if (!is.null(foreach::getDoParRegistered())) {
-    # switch back to sequential backend
-    foreach::registerDoSEQ()
-    gc()
-  }
 }
 
 #' Student's t-test for cell group comparisons
@@ -2832,8 +2328,9 @@ unregister_dopar <- function() {
 #' Performs a Student's t-test comparing cell group scores between two groups of a binary trait.
 #' Significant features are plotted as boxplots and saved as PDF files in the "Results/" directory.
 #'
-#' @param scores A list or matrix of cell group scores. When a list, the first element must be
-#'        a data frame or matrix of scores (samples x features).
+#' @param scores A list whose first element is a samples x features score matrix, e.g. the output of
+#'   \code{construct_cell_groups()} or \code{compute.latent_factors()}. To test a plain matrix, use
+#'   \code{scores.stat.analysis()}.
 #' @param coldata A data frame containing sample-level annotations including the trait to test.
 #' @param trait Character. Name of the column in `coldata` used as the grouping variable.
 #' @param pval Numeric. P-value threshold for significance (default = 0.05).
@@ -2920,8 +2417,9 @@ scores.ttest <- function(scores, coldata, trait, pval = 0.05) {
 #' Performs a Kruskal-Wallis test to compare scores across multiple trait levels.
 #' Significant results are visualized as annotated boxplots with Dunn post-hoc tests.
 #'
-#' @param scores A list, NMF output from \code{compute.latent_factors()}, or a score matrix.
-#'   When a list, the first element must be a samples x features score matrix.
+#' @param scores A list whose first element is a samples x features score matrix, e.g. the output of
+#'   \code{construct_cell_groups()} or \code{compute.latent_factors()}. To test a plain matrix, use
+#'   \code{scores.stat.analysis()}.
 #' @param coldata A data frame containing sample annotations, including the grouping trait.
 #' @param trait Character. Name of the column in `coldata` used as the grouping variable.
 #' @param pval Numeric. P-value threshold for significance (default = 0.05).
@@ -3008,8 +2506,9 @@ scores.kruskal.test <- function(scores, coldata, trait, pval = 0.05) {
 #' two levels of a binary clinical trait.
 #' Significant features are plotted as boxplots and saved to the "Results/" folder.
 #'
-#' @param scores A list, NMF output from \code{compute.latent_factors()}, or a score matrix.
-#'   When a list, the first element must be a samples x features score matrix.
+#' @param scores A list whose first element is a samples x features score matrix, e.g. the output of
+#'   \code{construct_cell_groups()} or \code{compute.latent_factors()}. To test a plain matrix, use
+#'   \code{scores.stat.analysis()}.
 #' @param coldata A data frame containing sample annotations and clinical traits.
 #' @param trait Character. Name of the column in `coldata` used as the binary grouping variable.
 #' @param pval Numeric. P-value threshold for significance (default = 0.05).
@@ -3096,8 +2595,9 @@ scores.wilcox.test <- function(scores, coldata, trait, pval = 0.05) {
 #' Performs one-way ANOVA to test for differences in scores across multiple levels of a trait.
 #' Tukey post-hoc tests are used to identify pairwise differences and significance is visualized as annotated boxplots.
 #'
-#' @param scores A list, NMF output from \code{compute.latent_factors()}, or a score matrix.
-#'   When a list, the first element must be a samples x features score matrix.
+#' @param scores A list whose first element is a samples x features score matrix, e.g. the output of
+#'   \code{construct_cell_groups()} or \code{compute.latent_factors()}. To test a plain matrix, use
+#'   \code{scores.stat.analysis()}.
 #' @param coldata A data frame containing sample annotations including the grouping variable.
 #' @param trait Character. Name of the column in `coldata` used for the grouping variable.
 #' @param pval Numeric. P-value threshold for significance (default = 0.05).
@@ -3177,8 +2677,9 @@ scores.anova.test = function(scores, coldata, trait, pval = 0.05){
 
 #' Fisher's exact test for score-trait association
 #'
-#' @param scores A list, NMF output from \code{compute.latent_factors()}, or a score matrix.
-#'   When a list, the first element must be a samples x features score matrix.
+#' @param scores A list whose first element is a samples x features score matrix, e.g. the output of
+#'   \code{construct_cell_groups()} or \code{compute.latent_factors()}. To test a plain matrix, use
+#'   \code{scores.stat.analysis()}.
 #'   Continuous scores are binarised at the median into High/Low groups.
 #' @param coldata A data frame containing the clinical or experimental traits.
 #' @param trait Character. Name of the column in `coldata` to test with Fisher's exact test.
@@ -3292,7 +2793,7 @@ scores.fisher.test = function(scores, coldata, trait, pval = 0.05){
 #'                             method = "kruskal", pval = 0.05)
 #'
 #' # NMF latent factors
-#' nmf <- compute.latent.factors(cell.groups)
+#' nmf <- compute.latent_factors(cell.groups$Cell_groups)
 #' sig <- scores.stat.analysis(nmf, coldata, trait = "response", method = "anova")
 #' }
 #'
@@ -3304,10 +2805,10 @@ scores.stat.analysis <- function(scores, coldata, trait,
   method <- match.arg(method)
 
   # Accept NMF output from compute.latent_factors() (has $Z) or a raw score matrix
-  if (!is.null(scores$Z)) {
-    scores <- list(scores$Z)
-  } else if (is.matrix(scores) || is.data.frame(scores)) {
+  if (is.matrix(scores) || is.data.frame(scores)) {
     scores <- list(scores)
+  } else if (!is.null(scores$Z)) {
+    scores <- list(scores$Z)
   }
 
   message("Running ", toupper(method), " test for score comparison...\n")
@@ -3336,18 +2837,22 @@ scores.stat.analysis <- function(scores, coldata, trait,
 #'
 #' @param X Numeric matrix of size samples x cell groups (signed CCA composite scores).
 #' @param rank Integer; number of NMF factors. If NULL, estimated automatically
-#'   via elbow on reconstruction MSE across ranks 2:8.
-#' @param seed Random seed. Default 123.
+#'   at the elbow of the reconstruction MSE across ranks 2:8 (the rank with the largest
+#'   second difference of the MSE curve).
+#' @param seed Random seed used for the NMF fits. Default 123. The caller's random number generator
+#'   state is restored when the function returns.
 #'
-#' @param file_name Optional character. If provided, saves results to this file path.
-#' @param return Logical. If TRUE (default), returns the result as an R object.
+#' @param file_name Optional character suffix for the saved patient-mixture plot.
+#' @param return Logical. If TRUE (default), saves the patient-mixture barplot to
+#'   \code{Results/NMF_patient_mixture_<file_name>.pdf}.
 #'
 #' @return A named list with:
 #' \describe{
 #'   \item{Z}{Sample-level NMF factor scores (samples x rank). Non-negative.}
-#'   \item{W}{Feature weights per factor (2 x n_CGs x rank). Non-negative.}
-#'   \item{nmf_input}{The positive-negative split matrix fed to NMF (samples x 2 x n_CGs).}
-#'   \item{rank}{The rank used.}
+#'   \item{W}{Feature weights per factor ((2 x n_CGs) x rank). Non-negative.}
+#'   \item{nmf_input}{The positive-negative split matrix fed to NMF (samples x (2 x n_CGs)).}
+#'   \item{nmf_model}{The \code{RcppML::nmf()} model object (includes the scaling vector \code{d}).}
+#'   \item{patient_mixture}{Long-format data frame of per-sample factor proportions used for the mixture plot.}
 #' }
 #'
 #' @details
@@ -3362,6 +2867,7 @@ compute.latent_factors <- function(X, rank = NULL, seed = 123, file_name = NULL,
   if (!requireNamespace("RcppML", quietly = TRUE))
     stop("Install RcppML: install.packages('RcppML')")
 
+  withr::local_preserve_seed()
   set.seed(seed)
   X <- as.matrix(X)
 
@@ -3387,7 +2893,7 @@ compute.latent_factors <- function(X, rank = NULL, seed = 123, file_name = NULL,
     }, numeric(1))
     names(mse_vals) <- as.character(2:8)
     d2   <- diff(diff(mse_vals))
-    rank <- as.integer(names(mse_vals)[which.min(d2) + 1L])
+    rank <- as.integer(names(mse_vals)[which.max(d2) + 1L])
     message("MSE by rank: ", paste(sprintf("k%s=%.3g", names(mse_vals), mse_vals), collapse = "  "))
     message("Selected rank (elbow): ", rank)
   }
@@ -3540,7 +3046,7 @@ extract_contributing_features <- function(latent_factors,
 #'   the enriched cell types and their cumulative NMF edge weights, sorted
 #'   descending.
 #'
-#' @keywords internal
+#' @export
 compute_cells_niches <- function(latent_factors, dt, cell.groups,
                                  enrich_thresh   = 1.5,
                                  quantile_cutoff = 0.7,
@@ -3582,18 +3088,11 @@ compute_cells_niches <- function(latent_factors, dt, cell.groups,
 
     # Interpretation of edge
     #   Magnitude = cumulative strength of CGs containing it
-    #   Sign = direction of association with factor
-    #   Large positive -> enriched in positive CGs
-    #   Large negative -> enriched in negative CGs
 
     edge_weights <- colSums(
       comp_sub * top_features[rownames(comp_sub)]
     )
     edge_weights <- edge_weights[edge_weights > 0]
-
-    # If a cell type appears mostly in positive CGs -> positive edge
-    # If appears mostly in negative CGs -> negative edge
-    # If balanced -> near zero
 
     if (length(edge_weights) == 0) next
 
@@ -3661,10 +3160,6 @@ compute_cells_niches <- function(latent_factors, dt, cell.groups,
     #
     # edge_weights for a cell type represent how strongly the factor is associated with that cell type through the cell groups:
     #
-    # Positive if the cell type is mostly in positive-contributing cell groups.
-    #
-    # Negative if mostly in negative-contributing cell groups.
-    #
     # Magnitude = cumulative contribution across all cell groups for this factor.
 
     lay <- igraph::layout_as_star(g,
@@ -3710,8 +3205,8 @@ compute_cells_niches <- function(latent_factors, dt, cell.groups,
 #' pseudoinverse of the scaled basis matrix W.
 #'
 #' @param latent_spaces A list returned by \code{compute.latent_factors()},
-#'   containing at minimum \code{W} (features x rank), \code{rank}, and
-#'   the RcppML model object with \code{nmf_model$d} scaling vector.
+#'   containing at minimum \code{W} (features x rank) and the RcppML model
+#'   object with the \code{nmf_model$d} scaling vector.
 #' @param scores_test A samples x cell groups matrix of signed CCA composite
 #'   scores for the test cohort. Column names must match those used in training
 #'   (before the _pos/_neg suffix was added).
@@ -3786,7 +3281,8 @@ project_factors <- function(latent_spaces, scores_test) {
 #'   \code{Latent_spaces}.
 #' @param test_deconv A numeric matrix or data frame of deconvolution features
 #'   for the test samples (samples x cell types). Column names must match those
-#'   used during training.
+#'   used during training. If the model was trained with batch correction, the test samples are
+#'   centred on their own means (as each training cohort was), so they should come from a single cohort.
 #'
 #' @return A numeric matrix (test samples x NMF factors) of non-negative
 #'   projected factor scores.
@@ -3819,12 +3315,10 @@ project_test_factors <- function(train_processed, test_deconv) {
 #' @param file_name Character. Base name for the output SVG file (saved to
 #'   \code{Results/<file_name>_scatter_grid.svg}).
 #' @param pval Numeric. P-value cutoff for displaying a pair. Default 0.05.
-#' @param cor_type Character. Label used in axis text (e.g., \code{"p"} for
-#'   Pearson). Default \code{"p"}.
-#' @param width Numeric. Width of the SVG output in inches. Default same as
-#'   \code{height}.
-#' @param height Numeric. Height of the SVG output in inches. Default same as
-#'   \code{width}.
+#' @param width Numeric. Width of the SVG output in inches. Default 12. Increased if needed so that
+#'   each panel is at least 2 inches wide.
+#' @param height Numeric. Height of the SVG output in inches. Default 10. Increased if needed so that
+#'   each panel is at least 2 inches high.
 #' @param only_sig Logical. If \code{TRUE} (default), only pairs with
 #'   \code{p <= pval} are plotted.
 #' @param ncol Integer or \code{NULL}. Number of columns in the plot grid.
@@ -3836,9 +3330,8 @@ project_test_factors <- function(train_processed, test_deconv) {
 plot.module.scatter.grid <- function(matA, matB, cor_mat, p_mat,
                                      file_name,
                                      pval = 0.05,
-                                     cor_type = "p",
-                                     width = width,
-                                     height = width,
+                                     width = 12,
+                                     height = 10,
                                      only_sig = TRUE,
                                      ncol = NULL) {   # allow NULL for auto
 
@@ -3866,7 +3359,7 @@ plot.module.scatter.grid <- function(matA, matB, cor_mat, p_mat,
 
   nrow_grid <- ceiling(nplots / ncol)
   svg(paste0("Results/", file_name, "_scatter_grid.svg"),
-      width = width, height = height)
+      width = max(width, 2 * ncol), height = max(height, 2 * nrow_grid)) # at least 2 inches per panel so the margins fit
 
   # Increase margins a bit if needed
   par(
@@ -3955,7 +3448,7 @@ compute.metadata.association.boxplot_summary <- function(
   # ---- LOOP OVER EACH TRAIT ----
   for(tr in colnames(coldata_cat)){
 
-    df_long <- cbind(tfs.modules, group = coldata_cat[[tr]]) %>%
+    df_long <- cbind(as.data.frame(tfs.modules), group = coldata_cat[[tr]]) %>%
       as.data.frame() %>%
       tidyr::pivot_longer(
         cols = colnames(tfs.modules),
@@ -3998,9 +3491,9 @@ compute.metadata.association.boxplot_summary <- function(
       dplyr::group_by(module) %>%
       dplyr::filter(dplyr::n_distinct(group) > 1) %>%
       dplyr::group_modify(~ {
-        tuk <- tukey_hsd(.x, value ~ group)
+        tuk <- rstatix::tukey_hsd(.x, value ~ group)
         if(nrow(tuk) == 0) return(NULL)
-        add_xy_position(tuk, x = "group")
+        rstatix::add_xy_position(tuk, x = "group")
       }) %>%
       dplyr::ungroup()
 
@@ -4008,31 +3501,31 @@ compute.metadata.association.boxplot_summary <- function(
     svg(paste0("Results/ANOVA_boxplot_summary_", file.name, "_", tr, ".svg"),
         width = width, height = height)
 
-    p <- ggplot2::ggplot(df_long, aes(x = group, y = value, fill = group)) +
-      geom_boxplot(width = 0.6, outlier.size = 0.4, alpha = 0.85) +
-      geom_jitter(width = 0.2, size = 1, alpha = 0.7, color = "black") +
-      facet_wrap(~ module, ncol = ncol,
-                 labeller = labeller(module = feature_labels)) +
-      coord_cartesian(ylim = c(y_min, y_max)) +
-      labs(
+    p <- ggplot2::ggplot(df_long, ggplot2::aes(x = group, y = value, fill = group)) +
+      ggplot2::geom_boxplot(width = 0.6, outlier.size = 0.4, alpha = 0.85) +
+      ggplot2::geom_jitter(width = 0.2, size = 1, alpha = 0.7, color = "black") +
+      ggplot2::facet_wrap(~ module, ncol = ncol,
+                 labeller = ggplot2::labeller(module = feature_labels)) +
+      ggplot2::coord_cartesian(ylim = c(y_min, y_max)) +
+      ggplot2::labs(
         y = "Feature value",
         fill = "Group",
         title = paste0("Features-trait associations: ", tr),
         subtitle = paste0("One-way ANOVA with Tukey HSD | p-value < ", pval)
       ) +
-      theme_bw(base_size = 12) +
-      theme(
-        strip.text = element_text(size = 14),
-        axis.text.x = element_text(size = 14, angle = 45, hjust = 1),
-        axis.text.y = element_text(size = 14),
-        axis.title = element_text(size = 16, face = "bold"),
-        plot.title = element_text(size = 20, face = "bold"),
-        plot.subtitle = element_text(size = 16),
+      ggplot2::theme_bw(base_size = 12) +
+      ggplot2::theme(
+        strip.text = ggplot2::element_text(size = 14),
+        axis.text.x = ggplot2::element_text(size = 14, angle = 45, hjust = 1),
+        axis.text.y = ggplot2::element_text(size = 14),
+        axis.title = ggplot2::element_text(size = 16, face = "bold"),
+        plot.title = ggplot2::element_text(size = 20, face = "bold"),
+        plot.subtitle = ggplot2::element_text(size = 16),
         legend.position = "top"
       )
 
     if(nrow(tukey_df) > 0){
-      p <- p + stat_pvalue_manual(
+      p <- p + ggpubr::stat_pvalue_manual(
         tukey_df,
         hide.ns = TRUE,
         size = 6,
@@ -4051,14 +3544,15 @@ compute.metadata.association.boxplot_summary <- function(
 #'
 #' This function fits a multivariate linear model for each gene using all features
 #' in \code{features_df} as continuous covariates. For each feature, it extracts
-#' the moderated t-statistics and p-values, ranks genes, and performs GSEA using
-#' the Hallmark gene sets from MSigDB. Optional dotplots for the top enriched
+#' the moderated t-statistics and p-values, ranks genes, and performs GSEA (\code{fgsea})
+#' using the Hallmark gene sets from MSigDB. Optional dotplots for the top enriched
 #' pathways can be saved as PDFs.
 #'
 #' @param RNA.tpm A numeric matrix or data frame of gene expression values
 #'   (genes in rows, samples in columns).
 #' @param features_df A data frame of continuous features (samples in rows,
-#'   features in columns) to be modeled as covariates.
+#'   features in columns) to be modeled as covariates. Rows must be the same samples,
+#'   in the same order, as the columns of \code{RNA.tpm} (checked by name; an error is raised otherwise).
 #' @param plot_dot Logical; if TRUE, generates and saves dotplots of top
 #'   enriched Hallmark pathways for each feature. Default is TRUE.
 #' @param top_n Integer; number of top pathways to display in the dotplot. Default is 10.
@@ -4070,8 +3564,9 @@ compute.metadata.association.boxplot_summary <- function(
 #' \describe{
 #'   \item{DE_results}{A named list of \code{topTable} results for each feature,
 #'     including logFC, moderated t-statistics, p-values, and adjusted p-values.}
-#'   \item{GSEA_results}{A named list of \code{GSEA} results from
-#'     \code{clusterProfiler} for each feature.}
+#'   \item{GSEA_results}{A named list of \code{fgsea::fgsea()} result tables
+#'     (columns include \code{pathway}, \code{pval}, \code{padj}, \code{NES}) for each feature,
+#'     ordered by p-value.}
 #' }
 #'
 #' @details
@@ -4085,15 +3580,10 @@ compute.metadata.association.boxplot_summary <- function(
 #'       \item Differential expression results are extracted using \code{topTable} for
 #'         the coefficient of that feature.
 #'       \item Genes are ranked by moderated t-statistics.
-#'       \item Hallmark GSEA is performed using the ranked gene list.
+#'       \item Hallmark GSEA is performed on the ranked gene list with \code{fgsea::fgsea()}.
 #'       \item Optionally, a dotplot of the top enriched pathways is generated.
 #'     }
 #' }
-#'
-#' @import limma
-#' @import msigdbr
-#' @importFrom ReactomePA enrichPathway
-#' @importFrom enrichplot dotplot
 #'
 #' @examples
 #' \dontrun{
@@ -4115,6 +3605,9 @@ compute_factor_gsea <- function(RNA.tpm,
 
 
   features_df = data.frame(features_df)
+  if(!identical(make.names(rownames(features_df)), make.names(colnames(RNA.tpm)))){
+    stop("Samples must be the same and in the same order in features_df rows and RNA.tpm columns")
+  }
   # -----------------------------------------
   # Retrieve Hallmark gene sets
   # -----------------------------------------
@@ -4200,91 +3693,25 @@ compute_factor_gsea <- function(RNA.tpm,
 }
 
 
-#' Run differential expression analysis with edgeR/limma-voom
-#'
-#' Filters low-expression genes, applies TMM normalization, runs voom
-#' transformation, fits a linear model, and returns the top differentially
-#' expressed genes via \code{limma::topTable}.
-#'
-#' @param counts A raw count matrix (genes x samples).
-#' @param coldata A data frame of sample metadata whose row names match
-#'   the column names of \code{counts}.
-#' @param group_col Character. Name of the column in \code{coldata} used as
-#'   the grouping factor for differential expression.
-#' @param ref_level Character or \code{NULL}. Reference level for the group
-#'   factor. If \code{NULL}, the default factor ordering is used.
-#'
-#' @return A data frame of differentially expressed genes (p.adj < 0.05) as
-#'   returned by \code{limma::topTable}, with columns \code{logFC},
-#'   \code{AveExpr}, \code{t}, \code{P.Value}, \code{adj.P.Val}, and \code{B}.
-#'
-#' @keywords internal
-run_deg_analysis <- function(counts, coldata, group_col, ref_level = NULL) {
-  # Prepare counts
-  counts_mat <- as.matrix(counts)
-  mode(counts_mat) <- "numeric"
-  counts_mat <- counts_mat[, rownames(coldata)]
-
-  # Create group factor
-  group <- factor(coldata[[group_col]])
-
-  # Set reference level if provided
-  if (!is.null(ref_level)) {
-    group <- stats::relevel(group, ref = ref_level)
-  }
-
-  # Create DGE object and filter
-  dge <- edgeR::DGEList(counts = counts_mat, group = group)
-  keep <- edgeR::filterByExpr(dge)
-  dge <- dge[keep, , keep.lib.sizes = FALSE]
-  dge <- edgeR::calcNormFactors(dge)
-
-  # Design matrix
-  design <- stats::model.matrix(~ group)
-
-  # voom transformation
-  v <- limma::voom(dge, design)
-
-  # Fit model
-  fit <- limma::lmFit(v, design)
-  fit <- limma::eBayes(fit)
-  # Extract coefficient name (second column of design)
-  coef_name <- colnames(design)[2]
-
-  # Get results
-  res <- limma::topTable(fit, coef = coef_name, p.value = 0.05, number = Inf)
-
-  return(res)
-}
-
 #' Derive TME meta-programs by clustering Hallmarks across NMF factors
 #'
-#' Hierarchically clusters Hallmark gene sets by their NES profile across NMF
-#' factors to identify recurrent transcriptional programs in the TME.
-#' Optionally annotates each NMF factor with a Bagaev et al. (2021) MFP
-#' subtype (IE, IE/F, F, D) when \code{Z}, \code{annot}, and
-#' \code{cancer_name} are all supplied.
+#' Hierarchically clusters (Ward.D2 on Euclidean distance) Hallmark gene sets by
+#' their NES profile across NMF factors to identify recurrent transcriptional
+#' programs in the TME. Use \code{annotate_metaprograms_TME()} afterwards to label
+#' each meta-program with a Bagaev et al. (2021) MFP subtype.
 #'
-#' @param gsea_results A list of GSEA result data frames (one per NMF factor),
-#'   as returned by \code{compute_factor_gsea()}.
+#' @param gsea_results Output of \code{compute_factor_gsea()} (a list with a
+#'   \code{GSEA_results} element, one table per NMF factor).
 #' @param k Integer. Number of meta-programs (clusters) to extract. If
-#'   \code{NULL} (default), estimated automatically from the dendrogram.
-#' @param file_name Optional character. File path prefix for saving output plots.
+#'   \code{NULL} (default), chosen at the elbow of the within-cluster sum of squares
+#'   (the k with the largest second difference) for k = 2 to min(10, n_hallmarks - 1).
+#' @param file_name Optional character suffix for the saved heatmap
+#'   (\code{Results/TCGA_meta_programs_<file_name>.pdf}).
 #' @param plot Logical. If \code{TRUE} (default), saves a clustering heatmap.
 #'
-#' @return A list with:
-#' \itemize{
-#'   \item \code{meta_programs}: Named list mapping meta-program labels to
-#'     character vectors of Hallmark names.
-#'   \item \code{hallmark_clusters}: Data frame with columns \code{Hallmark},
-#'     \code{meta_program}, and \code{mean_NES}.
-#'   \item \code{heatmap}: The \code{pheatmap} object.
-#'   \item \code{k}: The number of meta-programs used.
-#'   \item \code{factor_mfp}: (Only when \code{Z}, \code{annot}, and
-#'     \code{cancer_name} are provided) Data frame with columns
-#'     \code{factor}, \code{best_MFP}, \code{cor_IE}, \code{cor_IEF},
-#'     \code{cor_F}, \code{cor_D}, \code{n_samples}.
-#' }
+#' @return A data frame with one row per meta-program and columns
+#'   \code{meta_program} (\code{"MP1"}, \code{"MP2"}, ...) and \code{hallmarks}
+#'   (comma-separated Hallmark gene set names).
 #'
 #' @export
 derive_meta_programs <- function(gsea_results,
@@ -4314,7 +3741,7 @@ derive_meta_programs <- function(gsea_results,
     })
     # second derivative elbow
     d2 <- diff(diff(wss))
-    k  <- which.min(d2) + 2L
+    k  <- which.max(d2) + 2L
     message("Selected k = ", k, " meta-programs")
   }
 
@@ -4330,7 +3757,6 @@ derive_meta_programs <- function(gsea_results,
   names(meta_programs) <- meta_names
 
   # -- heatmap ---------------------------------------------------------------
-  p <- NULL
   if (plot) {
 
     # annotation: which cluster each Hallmark belongs to
@@ -4347,7 +3773,7 @@ derive_meta_programs <- function(gsea_results,
 
     pdf(paste0("Results/TCGA_meta_programs_", file_name, ".pdf"),
         width = 8, height = 10)
-    p <- pheatmap::pheatmap(
+    pheatmap::pheatmap(
       nes_mat,
       cluster_rows     = hc,
       cluster_cols     = TRUE,
@@ -4379,10 +3805,11 @@ derive_meta_programs <- function(gsea_results,
 #' Build a Hallmarks x factors NES matrix from GSEA results
 #'
 #' Combines the per-factor GSEA outputs from \code{compute_factor_gsea()} into
-#' a single matrix. Hallmarks not significant in a given factor are filled with 0.
+#' a single matrix. All tested Hallmarks are kept regardless of significance;
+#' Hallmarks absent from a factor's results, or whose NES could not be computed, are filled with 0.
 #'
 #' @param gsea_results Output list from \code{compute_factor_gsea()}, containing
-#'   a \code{GSEA_results} element (named list of \code{enrichResult} objects,
+#'   a \code{GSEA_results} element (named list of \code{fgsea} result tables,
 #'   one per factor).
 #'
 #' @return A numeric matrix of NES values with Hallmarks as rows and NMF factors
@@ -4413,6 +3840,7 @@ build_nes_matrix <- function(gsea_results) {
 
     # NES per hallmark - fill missing with 0
     nes <- setNames(res$NES, res$pathway)
+    nes[is.na(nes)] <- 0
     scores <- setNames(rep(0, length(all_hallmarks)), all_hallmarks)
     scores[names(nes)] <- nes
     scores
@@ -4426,22 +3854,29 @@ build_nes_matrix <- function(gsea_results) {
 #'
 #' For each study NMF factor, scores it against each TCGA meta-program
 #' by computing the mean NES of the meta-program's Hallmarks in that factor.
-#' The meta-program with the highest mean NES is the best match. If Bagaev
-#' MFP annotations are available (either embedded in the loaded
-#' meta-program object or in \code{inst/extdata/bagaev_factor_annotations.RData}),
-#' a \code{mfp_label} column is appended to the output.
+#' The meta-program with the highest positive mean NES is the best match. If the
+#' meta-program reference has a \code{TME_subtype} column (see
+#' \code{annotate_metaprograms_TME()}), it is appended to the output.
 #'
 #' @param gsea_study Output from compute_factor_gsea() on study cohort.
-#' @param cancer_type Character. TCGA cancer type abbreviation (e.g., \code{"blca"}, \code{"brca"},
-#'   \code{"cesc"}, \code{"chol"}, \code{"coad"}, \code{"skcm"}) identifying which pre-built
-#'   TCGA meta-program file to load from \code{inst/extdata/}.
-#' @param mp_file Optional character. Path to a custom meta-program RData file. If NULL,
-#'   the pre-built file for \code{cancer_type} is loaded from \code{inst/extdata/}.
-#' @param plot Logical. If TRUE (default), saves a heatmap of factor-to-meta-program scores.
-#' @param file_name Optional character. File path prefix for saving output plots.
+#' @param cancer_type Character. TCGA cancer type abbreviation identifying which pre-built
+#'   TCGA meta-program reference shipped with the package to use. Available: \code{"blca"},
+#'   \code{"luad"}, \code{"skcm"}. Ignored if \code{mp_file} is given.
+#' @param mp_file Optional. Either a meta-program data frame (as returned by
+#'   \code{derive_meta_programs()} / \code{annotate_metaprograms_TME()}) or the path to an
+#'   RData file containing such an object named \code{meta_programs}. If NULL, the pre-built
+#'   reference for \code{cancer_type} is used.
+#' @param plot Logical. If TRUE (default), saves a barplot of factor-to-meta-program scores
+#'   to \code{Results/Factor_MP_mapping_<file_name>.pdf}.
+#' @param file_name Optional character suffix for saving output plots.
 #'
-#' @return Data frame with one row per study factor:
-#'   factor, best_MP, best_score, all_scores, active_hallmarks
+#' @return A list with:
+#' \itemize{
+#'   \item \code{factor_mapping}: Data frame with one row per study factor and columns
+#'     \code{best_MP}, \code{factor}, \code{best_score}, \code{all_scores} (all meta-program
+#'     scores as \code{"MP:score"} pairs) and, if available, \code{TME_subtype}.
+#'   \item \code{reference}: The meta-program reference data frame used.
+#' }
 #'
 #' @export
 map_factors_to_metaprograms <- function(gsea_study,
@@ -4452,21 +3887,18 @@ map_factors_to_metaprograms <- function(gsea_study,
   if(is.null(mp_file)){
     cancer_type <- tolower(cancer_type)
 
-    # Local path for development - uncomment system.file block below for package release
-    mp_file <- file.path("~/Documents/CellTFusion/inst/extdata",
-                         paste0("TCGA_meta_programs_", cancer_type, ".RData"))
-    if (!file.exists(mp_file)) {
-      stop("No meta-program file found for cancer type '", cancer_type, "'")
+    mp_file <- system.file("extdata",
+                           paste0("TCGA_meta_programs_", cancer_type, ".RData"),
+                           package = "CellTFusion")
+    if (mp_file == "") {
+      stop("No meta-program file found for cancer type '", cancer_type,
+           "'. Available types: blca, luad, skcm.")
     }
+  }
 
-    # mp_file <- system.file("extdata",
-    #                        paste0("TCGA_meta_programs_", cancer_type, ".RData"),
-    #                        package = "CellTFusion")
-    # if (mp_file == "") {
-    #   stop("No meta-program file found for cancer type '", cancer_type,
-    #        "'. Available types: blca, brca, cesc, chol, coad, skcm.")
-    # }
-
+  if(is.data.frame(mp_file)){
+    meta_programs <- mp_file
+  }else{
     load(mp_file)
   }
 
@@ -4683,10 +4115,10 @@ annotate_metaprograms_TME <- function(meta_programs_df, factor_tme_df,
 #' Annotate NMF factors with Bagaev et al. (2021) MFP subtypes
 #'
 #' For a single cancer type, matches TCGA patients present in the NMF factor
-#' score matrix \code{Z} to the Bagaev annotation, then computes Spearman
-#' correlations between each factor and each one-hot-encoded MFP subtype
-#' (IE, IE/F, F, D). The best-matching subtype per factor is returned; factors
-#' with a maximum absolute correlation below 0.15 are labelled
+#' score matrix \code{Z} to the Bagaev et al. (2021) MFP annotation shipped with the
+#' package, then tests each factor across the four MFP subtypes (IE, IE/F, F, D)
+#' with a Kruskal-Wallis test. Factors with p < 0.05 are labelled with the subtype
+#' that has the highest median factor score; the others are labelled
 #' \code{"uncharacterized"}.
 #'
 #' @param cancer_name Character. Cancer type abbreviation matching the
@@ -4694,20 +4126,20 @@ annotate_metaprograms_TME <- function(meta_programs_df, factor_tme_df,
 #'   e.g. \code{"skcm"}).
 #' @param Z Numeric matrix. Samples x factors NMF score matrix (row names =
 #'   TCGA barcodes).
-#' @param plot Logical. If TRUE (default), saves a boxplot of factor scores by MFP group.
-#' @param file_name Optional character. File path prefix for saving output plots.
+#' @param plot Logical. If TRUE (default), saves violin/boxplots of factor scores by MFP group
+#'   to \code{Results/TME_factors_MFP_<cancer_name>_<file_name>.pdf}.
+#' @param file_name Optional character suffix for saving output plots.
 #'
 #' @return A data frame with columns \code{factor}, \code{best_MFP},
 #'   \code{kw_pval}, \code{median_IE}, \code{median_IEF}, \code{median_F},
-#'   \code{median_D}, \code{n_samples}, or \code{NULL} if fewer than 10
-#'   patients are matched.
+#'   \code{median_D}, \code{n_samples}, or \code{NULL} (with a warning) if the
+#'   cancer type is not annotated or fewer than 10 patients are matched.
 #'
 #' @export
 map_factors_to_TME <- function(cancer_name, Z, plot = TRUE, file_name = NULL) {
 
-  # annot_file <- system.file("extdata", "annotation.tsv", package = "CellTFusion")
-  # if (annot_file == "") stop("annotation.tsv not found in inst/extdata.")
-  annot_file = "~/Documents/CellTFusion/inst/extdata/annotation.tsv"
+  annot_file <- system.file("extdata", "annotation.tsv", package = "CellTFusion")
+  if (annot_file == "") stop("annotation.tsv not found in inst/extdata.")
   annot <- read.delim(annot_file, row.names = 1, check.names = FALSE,
                       stringsAsFactors = FALSE)
   
@@ -4750,7 +4182,7 @@ map_factors_to_TME <- function(cancer_name, Z, plot = TRUE, file_name = NULL) {
   # align rows using truncated barcodes
   Z_matched    <- Z_matched[rownames(annot_matched), , drop = FALSE]
 
-  if(all.equal(rownames(Z_matched), rownames(annot_matched))==F) {
+  if(!isTRUE(all.equal(rownames(Z_matched), rownames(annot_matched)))) {
     stop("NMF matrix and TME annotation are not aligned")
   } 
 
@@ -4880,7 +4312,8 @@ map_factors_to_TME <- function(cancer_name, Z, plot = TRUE, file_name = NULL) {
 #' @param file_name Optional character. Suffix used when saving Kaplan-Meier plots to \code{Results/}.
 #' @param features Optional. A samples x features numeric matrix or data frame (e.g.
 #'   \code{latent_spaces$Z}). If provided (and \code{group_column} is \code{NULL}), each
-#'   feature is tested individually. Mutually exclusive with \code{group_column}.
+#'   feature is tested individually. Rows must be the same samples, in the same order, as the rows of
+#'   \code{survival.data} (checked by name). Mutually exclusive with \code{group_column}.
 #' @param p.value Numeric. Log-rank test p-value threshold used to keep a feature as
 #'   significant when \code{features} is used. Default is 0.05.
 #' @param thres Numeric between 0 and 1. Quantile cutoff used to split each feature into
@@ -4973,7 +4406,7 @@ compute.survival.analysis = function(survival.data, PFS, PFS_event, file_name = 
                                legend.labs = strata_names,
                                risk.table.height = 0.3,
                                ggtheme = ggplot2::theme_grey(),
-                               title = paste0("Cox PH for Surv(time, status) ~ ", group_column),
+                               title = paste0("Kaplan-Meier: Surv(time, status) ~ ", group_column),
                                xlab = "Time to death/recurrence/progression")
 
     p$table <- p$table + ggplot2::theme(legend.position = "none")
@@ -4997,6 +4430,9 @@ compute.survival.analysis = function(survival.data, PFS, PFS_event, file_name = 
 
   ###### CASE 2: Use features to define high/low groups automatically
   } else if (!is.null(features)) {
+    if(!identical(make.names(rownames(features)), make.names(rownames(survival.data)))){
+      stop("Samples must be the same and in the same order in features and survival.data rows")
+    }
     significant_combinations <- list()
     contador <- 1
     n_features <- ncol(features)
@@ -5037,7 +4473,7 @@ compute.survival.analysis = function(survival.data, PFS, PFS_event, file_name = 
                                    legend.labs = strata_names,
                                    risk.table.height = 0.3,
                                    ggtheme = ggplot2::theme_grey(),
-                                   title = paste0("Cox PH for Surv(time, status) ~", colnames(features)[n]),
+                                   title = paste0("Kaplan-Meier: Surv(time, status) ~ ", colnames(features)[n]),
                                    xlab = "Time to death/recurrence/progression")
 
         p$table <- p$table + ggplot2::theme(legend.position = "none")

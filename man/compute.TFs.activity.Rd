@@ -4,13 +4,12 @@
 \alias{compute.TFs.activity}
 \title{Compute Transcription Factor (TF) activity}
 \usage{
-\method{compute}{TFs.activity}(
+compute.TFs.activity(
   RNA.counts,
   TF.collection = "CollecTRI",
   min_targets_size = 5,
   universe = NULL,
   cancer.type = NULL,
-  cores = 3,
   scale = TRUE,
   return = TRUE,
   file.name = NULL
@@ -21,17 +20,23 @@
 
 \item{TF.collection}{Character. The source of the TF-target network. Options are \code{"CollecTRI"} (default), \code{"Dorothea"}, or \code{"ARACNE"}.
 \itemize{
-\item \code{"CollecTRI"} and \code{"Dorothea"} use prebuilt collections from OmnipathR.
-\item \code{"ARACNE"} allows user input of a custom network file in a 3-column format: \code{regulator}, \code{target}, and \verb{mutual information}.
+\item \code{"CollecTRI"} and \code{"Dorothea"} (confidence A and B) use prebuilt collections from OmnipathR. Each collection is
+cached in its own file, \verb{Results/TF_target_collection_<TF.collection>.csv}, and reused on later calls.
+\item \code{"ARACNE"} reads a tab-separated network file with \code{Regulator} and \code{Target} columns from
+\verb{input/ARACNE/<cancer.type>/network/network.txt} (relative to the working directory). The mode of
+regulation of each edge is the sign of the Spearman correlation between TF and target expression.
 }}
 
-\item{min_targets_size}{Integer. Minimum number of target genes per regulon required for TF activity inference. Default is 5.}
+\item{min_targets_size}{Integer. Minimum number of target genes per regulon (passed to
+\code{decoupleR::decouple()} as \code{minsize}). Default is 5.}
 
-\item{universe}{Optional. A user-specified data frame of TF-target interactions. If not provided, the function will fetch the relevant network based on the \code{TF.collection} argument.}
+\item{universe}{Optional. A user-specified data frame of TF-target interactions (columns \code{source},
+\code{target}, \code{mor}). If not provided, the network is fetched based on \code{TF.collection}. Ignored when
+\code{TF.collection = "ARACNE"}.}
 
-\item{cancer.type}{Optional character. Cancer type label used when caching the TF collection.}
-
-\item{cores}{Integer. Number of cores used by VIPER inference. Default is 4.}
+\item{cancer.type}{Optional character. TCGA cancer type abbreviation used to locate the ARACNe network
+(only used when \code{TF.collection = "ARACNE"}). If \code{NULL}, the network is auto-detected when only one
+\code{network.txt} exists under \code{input/ARACNE/}.}
 
 \item{scale}{Logical. If TRUE (default), z-score scales the TF activity matrix across samples.}
 
@@ -40,18 +45,22 @@
 \item{file.name}{Optional character suffix used when writing the TF activity matrix to disk.}
 }
 \value{
-A data frame of inferred and scaled TF activity scores, with samples as rows and TFs as columns.
+A data frame of inferred (and, if \code{scale = TRUE}, scaled) TF activity scores, with samples as rows
+and TFs as columns. Column names are made syntactically valid with \code{make.names()}.
 }
 \description{
-Infers transcription factor (TF) activity from a gene expression matrix using the VIPER algorithm (Alvarez et al., 2016). The function requires a TF-target gene regulatory network, which can be provided by the user or obtained from OmnipathR resources such as CollecTRI or Dorothea. ARACNE-inferred networks are also supported.
+Infers transcription factor (TF) activity from a gene expression matrix with \code{decoupleR::decouple()},
+keeping the \code{consensus} score (ensemble of the decoupleR statistics; Badia-i-Mompel et al., 2022).
+The TF-target network can be provided by the user, obtained from OmnipathR resources (CollecTRI or
+Dorothea), or read from an ARACNe-inferred network.
 }
 \examples{
 data("counts.norm.tuto")
-tfs_activity <- compute.TFs.activity(counts.norm.tuto, cores = 1)
+tfs_activity <- compute.TFs.activity(counts.norm.tuto)
 
 }
 \references{
-Alvarez, M. et al. (2016). Functional characterization of somatic mutations in cancer using network-based inference of protein activity. \emph{Nature Genetics}, 48(8), 838-847. https://doi.org/10.1038/ng.3593
+Badia-i-Mompel, P. et al. (2022). decoupleR: ensemble of computational methods to infer biological activities from omics data. \emph{Bioinformatics Advances}, 2(1), vbac016. https://doi.org/10.1093/bioadv/vbac016
 
 Tuerei, D., Korcsmaros, T., & Saez-Rodriguez, J. (2016). OmniPath: guidelines and gateway for literature-curated signaling pathway resources. \emph{Nature Methods}, 13(12), 966-967. https://doi.org/10.1038/nmeth.4077
 

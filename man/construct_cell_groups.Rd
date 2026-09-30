@@ -16,9 +16,9 @@ construct_cell_groups(
 )
 }
 \arguments{
-\item{network}{A list containing TF networks for cell types.}
+\item{network}{A TF module network as returned by \code{compute.WTCNA()}.}
 
-\item{dt}{A list containing deconvolution subgroup structures.}
+\item{dt}{Deconvolution subgroups as returned by \code{multideconv::compute.deconvolution.analysis()}.}
 
 \item{batch}{Optional vector indicating batch assignment for samples.}
 
@@ -33,14 +33,15 @@ Higher values give more precise p-values but increase runtime. Default: 999.}
 
 \item{dendrogram_file}{Optional character. File path to save dendrogram plot output.}
 
-\item{return_dendrogram}{Logical. If TRUE, includes the dendrogram in the returned list. Default FALSE.}
+\item{return_dendrogram}{Logical. If TRUE, saves a PDF of the colored cell-group dendrograms to
+\code{Results/Dendrogram_color_clusters_<dendrogram_file>.pdf} (only when \code{dendrogram_file} is set). Default FALSE.}
 }
 \value{
-A list of 3 elements:
+A named list of 3 elements:
 \describe{
-\item{scores}{A data frame or matrix with the projected cell group scores (samples x groups).}
-\item{composition}{A named list where each element is a character vector of original cell types per group.}
-\item{loadings}{A list of numeric vectors indicating the loadings (feature contributions) for each group.}
+\item{Cell_groups}{A data frame with the projected cell group scores (samples x groups).}
+\item{Composition}{A named list where each element is a character vector of the deconvolution features in each group.}
+\item{Weights}{A list of CCA projection parameters (\code{xcoef}, \code{train_means}, \code{train_sds}) for each group.}
 }
 }
 \description{

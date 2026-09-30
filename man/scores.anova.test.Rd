@@ -7,8 +7,9 @@
 scores.anova.test(scores, coldata, trait, pval = 0.05)
 }
 \arguments{
-\item{scores}{A list, NMF output from \code{compute.latent_factors()}, or a score matrix.
-When a list, the first element must be a samples x features score matrix.}
+\item{scores}{A list whose first element is a samples x features score matrix, e.g. the output of
+\code{construct_cell_groups()} or \code{compute.latent_factors()}. To test a plain matrix, use
+\code{scores.stat.analysis()}.}
 
 \item{coldata}{A data frame containing sample annotations including the grouping variable.}
 

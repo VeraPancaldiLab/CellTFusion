@@ -4,7 +4,7 @@
 \alias{compute.modules.relationship}
 \title{Compute modules relationship}
 \usage{
-\method{compute}{modules.relationship}(
+compute.modules.relationship(
   matA,
   matB,
   file_name,
@@ -31,7 +31,9 @@
 
 \item{file_name}{A string indicating the base name (without extension) of the figure to be saved in the "Results/" folder.}
 
-\item{batch}{Optional vector indicating batch assignment for samples. If provided, partial correlations are computed controlling for batch.}
+\item{batch}{Optional vector indicating batch assignment for samples. If it has two or more levels, Pearson
+partial correlations (\code{ppcor::pcor.test()}) are computed controlling for batch and \code{cor_type} is
+ignored. Batch is treated as categorical (one dummy variable per level beyond the first).}
 
 \item{width}{An integer indicating the width (in inches) of the output PDF figure. Default is 8.}
 
@@ -47,15 +49,16 @@
 
 \item{return}{Logical; if TRUE, the function returns a list containing the correlation matrix and a named list of significant feature names per module. Default is FALSE.}
 
-\item{vertical}{Logical; if TRUE, produces a vertical heatmap (traits on x-axis, modules on y-axis). Otherwise, a horizontal layout is used. Default is FALSE.}
+\item{vertical}{Logical; if TRUE, modules are on the x-axis and the \code{matB} features on the y-axis.
+Otherwise (default), the \code{matB} features are on the x-axis and modules on the y-axis.}
 
 \item{plot}{Logical; if TRUE, saves the heatmap plot as a PDF. Default is TRUE.}
 
 \item{plot.grid}{Logical; if TRUE, generates per-pair scatter grid plots for significant associations.}
 
-\item{width.grid}{Numeric width of the scatter grid output.}
+\item{width.grid}{Numeric width of the scatter grid output (increased if needed to fit all panels).}
 
-\item{height.grid}{Numeric height of the scatter grid output.}
+\item{height.grid}{Numeric height of the scatter grid output (increased if needed to fit all panels).}
 
 \item{ncol.grid}{Integer number of columns used in scatter grid layout.}
 }
@@ -65,14 +68,16 @@ If \code{return = TRUE}, returns a list with:
 \item A correlation matrix between modules and external features.
 \item A named list with significant features per module (after p-value or adjusted p-value thresholding).
 }
-If \code{return = FALSE}, the function saves a heatmap of significant correlations to "Results/{file_name}.pdf".
+If \code{return = FALSE} and \code{plot = TRUE}, the function saves a heatmap of significant correlations to
+"Results/{file_name}.pdf" (the ".pdf" extension is added if missing).
 }
 \description{
 Performs linear correlation between two matrices (e.g., TF modules and external features such as deconvolution estimates or pathway activities)
 across the same set of samples, visualizing only significant associations.
 }
 \details{
-The function assumes that \code{matA} and \code{matB} share the same rownames (i.e., samples in the same order). The correlation is computed using WGCNA's
+The function assumes that \code{matA} and \code{matB} share the same rownames (i.e., samples in the same order);
+names are compared after \code{make.names()}, so e.g. "TCGA-XX" and "TCGA.XX" match. The correlation is computed using WGCNA's
 \code{cor()} and \code{corPvalueStudent()} functions. Insignificant correlations (based on p-value or adjusted p-value) are excluded from the visualization.
 }
 \examples{

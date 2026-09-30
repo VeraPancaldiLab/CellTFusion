@@ -4,7 +4,7 @@
 \alias{compute.metadata.association.boxplot_summary}
 \title{Summarize TF module-trait associations as ANOVA boxplot grids}
 \usage{
-\method{compute}{metadata.association.boxplot_summary}(
+compute.metadata.association.boxplot_summary(
   tfs.modules,
   coldata,
   pval = 0.05,

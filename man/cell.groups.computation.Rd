@@ -17,7 +17,7 @@ cell.groups.computation(
 )
 }
 \arguments{
-\item{deconvolution}{A data frame with deconvolution features (typically a cell-type or cluster x sample matrix).
+\item{deconvolution}{A data frame with deconvolution features (samples as rows, cell-type features as columns).
 This is usually the first element returned by \code{multideconv::compute.deconvolution.analysis()}.}
 
 \item{cell.dendrograms}{A named list of dendrogram objects, each corresponding to a TF module, typically
@@ -37,14 +37,15 @@ to the "Results/" folder.}
 
 \item{dendrogram_file}{Optional character. File path to save dendrogram plot.}
 
-\item{return_dendrogram}{Logical. If TRUE, includes the dendrogram in the returned list. Default FALSE.}
+\item{return_dendrogram}{Logical. If TRUE, saves a PDF of the colored cell-group dendrograms to
+\code{Results/Dendrogram_color_clusters_<dendrogram_file>.pdf} (only when \code{dendrogram_file} is set). Default FALSE.}
 }
 \value{
 A list of three elements:
 \describe{
 \item{scores}{A data frame with the composite scores of all identified cell groups across samples.}
 \item{composition}{A list of vectors indicating the composition (original features) of each cell group.}
-\item{loadings}{A list of loadings (feature contributions) for each cell group.}
+\item{loadings}{A list of CCA projection parameters (\code{xcoef}, \code{train_means}, \code{train_sds}) for each cell group.}
 }
 If \code{return=TRUE}, two CSV files will be created:
 \itemize{

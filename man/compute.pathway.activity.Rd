@@ -4,7 +4,7 @@
 \alias{compute.pathway.activity}
 \title{Computes TF-modules pathway activities scores}
 \usage{
-\method{compute}{pathway.activity}(
+compute.pathway.activity(
   RNA.tpm,
   gene_sets = NULL,
   paths = NULL,
@@ -15,21 +15,23 @@
 \arguments{
 \item{RNA.tpm}{A numeric matrix of normalized gene expression values with genes as rows and samples as columns.}
 
-\item{gene_sets}{A list of gene sets (e.g., hallmark signatures or user-defined sets). If provided, GSVA scores will be computed for these sets. Default is \code{NULL}.}
+\item{gene_sets}{A named list of gene sets (e.g., hallmark signatures or user-defined sets). If provided, GSVA scores will be computed for these sets. Default is \code{NULL}.}
 
-\item{paths}{A data frame describing the pathway-gene interactions for use with PROGENy. If \code{NULL}, the human PROGENy resource (top 500 genes) will be used by default.}
+\item{paths}{A data frame describing the pathway-gene interactions (columns \code{source}, \code{target}, \code{weight}) for use with PROGENy.
+If \code{NULL}, the human PROGENy resource (top 500 genes) is used and cached in \code{Results/Pathways_collection_PROGENy.csv}.}
 
 \item{return}{Logical; if TRUE, saves matrices in Results/ folder. Default is TRUE.}
 
 \item{file.name}{Optional character suffix used when writing output CSV files.}
 }
 \value{
-If \code{gene_sets} is \code{NULL}, a scaled matrix of PROGENy pathway activity scores (samples as rows, pathways as columns).
+If \code{gene_sets} is \code{NULL}, a scaled data frame of PROGENy pathway activity scores (samples as rows, pathways as columns).
 If \code{gene_sets} is provided, a list with two elements:
 \itemize{
-\item \code{sample_acts_progeny}: A scaled matrix of PROGENy pathway activity scores.
-\item \code{sample_acts_gsva}: A scaled matrix of GSVA scores based on the provided gene sets.
+\item \code{PROGENy}: A scaled data frame of PROGENy pathway activity scores.
+\item \code{GSVA}: A scaled data frame of GSVA scores based on the provided gene sets.
 }
+Column names are made syntactically valid with \code{make.names()}.
 }
 \description{
 This function computes pathway activity scores from normalized gene expression data using a multivariate linear model (MLM) based on the PROGENy resource (Schubert et al., 2018).

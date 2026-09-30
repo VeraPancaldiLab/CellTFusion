@@ -16,19 +16,17 @@ Depends:
 Imports: 
     ADImpute,
     AnnotationDbi,
-    broom,
     decoupleR,
     dendextend,
     ggpubr,
     dplyr,
     dynamicTreeCut,
     enrichplot,
-    factoextra,
     ggplot2,
     gplots,
     graphics,
     grDevices,
-    GSVA,
+    GSVA (>= 1.50.0),
     Hmisc,
     matrixStats,
     org.Hs.eg.db,
@@ -36,7 +34,6 @@ Imports:
     multideconv,
     rstatix,
     stats,
-    stringr,
     tibble,
     MASS,
     ggstatsplot,
@@ -48,46 +45,29 @@ Imports:
     WGCNA,
     pheatmap,
     purrr,
-    cluster,
-    foreach,
     igraph,
-    edgeR,
     RColorBrewer,
     colorspace,
     fgsea,
-    ppcor
+    ppcor,
+    withr
 Remotes:
     VeraPancaldiLab/multideconv,
-    saezlab/OmnipathR@devel,
-    YuLab-SMU/ggtree,
-    YuLab-SMU/treeio
+    saezlab/OmnipathR@devel
 Suggests:
     knitr,
     rmarkdown,
     testthat (>= 3.0.0),
     caret,
-    C50,
-    glmnet,
-    randomForest,
-    xgboost,
-    CCA,
     dorothea,
+    OmnipathR,
     survival,
     survminer,
     gridExtra,
-    RcppML,
-    MOFA2,
-    NMF,
-    clusterProfiler,
-    ggtree,
-    treeio,
-    fastcluster,
-    viper,
-    OmnipathR,
-    doParallel,
-    rms
+    RcppML
 Config/testthat/edition: 3
 LazyData: true
 LazyDataCompression: xz
 VignetteBuilder: knitr
 URL: https://verapancaldilab.github.io/CellTFusion/
+biocViews:

@@ -4,7 +4,7 @@
 \alias{compute.survival.analysis}
 \title{Kaplan-Meier survival analysis on clinical groups or CellTFusion features}
 \usage{
-\method{compute}{survival.analysis}(
+compute.survival.analysis(
   survival.data,
   PFS,
   PFS_event,
@@ -27,7 +27,8 @@
 
 \item{features}{Optional. A samples x features numeric matrix or data frame (e.g.
 \code{latent_spaces$Z}). If provided (and \code{group_column} is \code{NULL}), each
-feature is tested individually. Mutually exclusive with \code{group_column}.}
+feature is tested individually. Rows must be the same samples, in the same order, as the rows of
+\code{survival.data} (checked by name). Mutually exclusive with \code{group_column}.}
 
 \item{p.value}{Numeric. Log-rank test p-value threshold used to keep a feature as
 significant when \code{features} is used. Default is 0.05.}

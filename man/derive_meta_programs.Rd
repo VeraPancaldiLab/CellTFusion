@@ -7,35 +7,26 @@
 derive_meta_programs(gsea_results, k = NULL, file_name = NULL, plot = TRUE)
 }
 \arguments{
-\item{gsea_results}{A list of GSEA result data frames (one per NMF factor),
-as returned by \code{compute_factor_gsea()}.}
+\item{gsea_results}{Output of \code{compute_factor_gsea()} (a list with a
+\code{GSEA_results} element, one table per NMF factor).}
 
 \item{k}{Integer. Number of meta-programs (clusters) to extract. If
-\code{NULL} (default), estimated automatically from the dendrogram.}
+\code{NULL} (default), chosen at the elbow of the within-cluster sum of squares
+(the k with the largest second difference) for k = 2 to min(10, n_hallmarks - 1).}
 
-\item{file_name}{Optional character. File path prefix for saving output plots.}
+\item{file_name}{Optional character suffix for the saved heatmap
+(\code{Results/TCGA_meta_programs_<file_name>.pdf}).}
 
 \item{plot}{Logical. If \code{TRUE} (default), saves a clustering heatmap.}
 }
 \value{
-A list with:
-\itemize{
-\item \code{meta_programs}: Named list mapping meta-program labels to
-character vectors of Hallmark names.
-\item \code{hallmark_clusters}: Data frame with columns \code{Hallmark},
-\code{meta_program}, and \code{mean_NES}.
-\item \code{heatmap}: The \code{pheatmap} object.
-\item \code{k}: The number of meta-programs used.
-\item \code{factor_mfp}: (Only when \code{Z}, \code{annot}, and
-\code{cancer_name} are provided) Data frame with columns
-\code{factor}, \code{best_MFP}, \code{cor_IE}, \code{cor_IEF},
-\code{cor_F}, \code{cor_D}, \code{n_samples}.
-}
+A data frame with one row per meta-program and columns
+\code{meta_program} (\code{"MP1"}, \code{"MP2"}, ...) and \code{hallmarks}
+(comma-separated Hallmark gene set names).
 }
 \description{
-Hierarchically clusters Hallmark gene sets by their NES profile across NMF
-factors to identify recurrent transcriptional programs in the TME.
-Optionally annotates each NMF factor with a Bagaev et al. (2021) MFP
-subtype (IE, IE/F, F, D) when \code{Z}, \code{annot}, and
-\code{cancer_name} are all supplied.
+Hierarchically clusters (Ward.D2 on Euclidean distance) Hallmark gene sets by
+their NES profile across NMF factors to identify recurrent transcriptional
+programs in the TME. Use \code{annotate_metaprograms_TME()} afterwards to label
+each meta-program with a Bagaev et al. (2021) MFP subtype.
 }

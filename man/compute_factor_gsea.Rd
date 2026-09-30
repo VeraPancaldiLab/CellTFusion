@@ -19,7 +19,8 @@ compute_factor_gsea(
 (genes in rows, samples in columns).}
 
 \item{features_df}{A data frame of continuous features (samples in rows,
-features in columns) to be modeled as covariates.}
+features in columns) to be modeled as covariates. Rows must be the same samples,
+in the same order, as the columns of \code{RNA.tpm} (checked by name; an error is raised otherwise).}
 
 \item{plot_dot}{Logical; if TRUE, generates and saves dotplots of top
 enriched Hallmark pathways for each feature. Default is TRUE.}
@@ -37,15 +38,16 @@ A list containing:
 \describe{
 \item{DE_results}{A named list of \code{topTable} results for each feature,
 including logFC, moderated t-statistics, p-values, and adjusted p-values.}
-\item{GSEA_results}{A named list of \code{GSEA} results from
-\code{clusterProfiler} for each feature.}
+\item{GSEA_results}{A named list of \code{fgsea::fgsea()} result tables
+(columns include \code{pathway}, \code{pval}, \code{padj}, \code{NES}) for each feature,
+ordered by p-value.}
 }
 }
 \description{
 This function fits a multivariate linear model for each gene using all features
 in \code{features_df} as continuous covariates. For each feature, it extracts
-the moderated t-statistics and p-values, ranks genes, and performs GSEA using
-the Hallmark gene sets from MSigDB. Optional dotplots for the top enriched
+the moderated t-statistics and p-values, ranks genes, and performs GSEA (\code{fgsea})
+using the Hallmark gene sets from MSigDB. Optional dotplots for the top enriched
 pathways can be saved as PDFs.
 }
 \details{
@@ -59,7 +61,7 @@ The function works as follows:
 \item Differential expression results are extracted using \code{topTable} for
 the coefficient of that feature.
 \item Genes are ranked by moderated t-statistics.
-\item Hallmark GSEA is performed using the ranked gene list.
+\item Hallmark GSEA is performed on the ranked gene list with \code{fgsea::fgsea()}.
 \item Optionally, a dotplot of the top enriched pathways is generated.
 }
 }
