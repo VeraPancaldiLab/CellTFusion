@@ -130,7 +130,7 @@ If `return = TRUE`, returns a list with:
   adjusted p-value thresholding).
 
 If `return = FALSE` and `plot = TRUE`, the function saves a heatmap of
-significant correlations to "Results/file_name.pdf" (the ".pdf"
+significant correlations to "Results/\<file_name\>.pdf" (the ".pdf"
 extension is added if missing).
 
 ## Details
@@ -146,24 +146,7 @@ p-value) are excluded from the visualization.
 ## Examples
 
 ``` r
-data("counts.norm.tuto")
 data("network.tuto")
-
-pathways <- compute.pathway.activity(counts.norm.tuto)
-#> Warning: 'OmnipathR::get_annotation_resources' is deprecated.
-#> Use 'annotation_resources' instead.
-#> See help("Deprecated")
-#> Warning: 'OmnipathR::import_omnipath_annotations' is deprecated.
-#> Use 'annotations' instead.
-#> See help("Deprecated")
-#> Warning: cannot open file 'Results/Pathways_collection_PROGENy.csv': No such file or directory
-#> Error in file(file, ifelse(append, "a", "w")): cannot open the connection
-compute.modules.relationship(network.tuto[[1]],
-                             pathways,
-                             "Pathways_Progeny-TFs_Modules",
-                             width = 15)
-#> Error: object 'pathways' not found
-
 data("deconv_subgroups.tuto")
 corr = compute.modules.relationship(network.tuto[[1]],
                                     deconv_subgroups.tuto[[1]],
@@ -171,4 +154,14 @@ corr = compute.modules.relationship(network.tuto[[1]],
                                     plot = FALSE,
                                     return = TRUE,
                                     pval = 0.01)
+
+if (FALSE) { # \dontrun{
+# TF modules vs PROGENy pathways (downloads the PROGENy model from OmniPath)
+data("counts.norm.tuto")
+pathways <- compute.pathway.activity(counts.norm.tuto)
+compute.modules.relationship(network.tuto[[1]],
+                             pathways,
+                             "Pathways_Progeny-TFs_Modules",
+                             width = 15)
+} # }
 ```

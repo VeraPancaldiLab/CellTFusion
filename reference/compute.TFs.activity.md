@@ -115,11 +115,9 @@ https://doi.org/10.1186/1471-2105-7-S1-S7
 ## Examples
 
 ``` r
+if (FALSE) { # \dontrun{
+# Downloads the CollecTRI network from OmniPath
 data("counts.norm.tuto")
 tfs_activity <- compute.TFs.activity(counts.norm.tuto)
-#> Warning: One or more parsing issues, call `problems()` on your data frame for details,
-#> e.g.:
-#>   dat <- vroom(...)
-#>   problems(dat)
-#> Error in if (.keep) . else select(., -!!evs_col): argument is of length zero
+} # }
 ```

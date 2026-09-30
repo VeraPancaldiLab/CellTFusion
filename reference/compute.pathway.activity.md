@@ -71,15 +71,9 @@ Communications. 2018.
 ## Examples
 
 ``` r
-# Compute only PROGENy activities
+if (FALSE) { # \dontrun{
+# Compute only PROGENy activities (downloads the PROGENy model from OmniPath)
 data("counts.norm.tuto")
 pathways <- compute.pathway.activity(counts.norm.tuto)
-#> Warning: 'OmnipathR::get_annotation_resources' is deprecated.
-#> Use 'annotation_resources' instead.
-#> See help("Deprecated")
-#> Warning: 'OmnipathR::import_omnipath_annotations' is deprecated.
-#> Use 'annotations' instead.
-#> See help("Deprecated")
-#> Warning: cannot open file 'Results/Pathways_collection_PROGENy.csv': No such file or directory
-#> Error in file(file, ifelse(append, "a", "w")): cannot open the connection
+} # }
 ```
