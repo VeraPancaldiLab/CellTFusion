@@ -30,9 +30,9 @@ or experimental trait to test against (e.g., response, subtype, etc.).}
 \item \code{"wilcox"} - Wilcoxon rank-sum test (non-parametric, binary traits)
 \item \code{"anova"} - One-way ANOVA (parametric, >2 groups)
 \item \code{"kruskal"} - Kruskal-Wallis test (non-parametric, >2 groups)
-\item \code{"ttest"} - Student's t-test (parametric, binary traits)
+\item \code{"ttest"} - Welch's t-test (parametric, binary traits)
 }
-Defaults to all available options, but only one can be used per call.}
+Only one can be used per call; defaults to the first one (\code{"fisher"}).}
 
 \item{pval}{Numeric. P-value threshold for significance (default: 0.05).}
 }

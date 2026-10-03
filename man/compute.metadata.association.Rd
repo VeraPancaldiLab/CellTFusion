@@ -22,7 +22,7 @@ compute.metadata.association(
 }
 \arguments{
 \item{tfs.modules}{A numeric matrix or data frame of TF module scores across samples.
-Typically the output from \code{compute.WTCNA()}. Rows represent samples, columns represent TF modules.}
+Typically the first element (\verb{TFs module matrix}) of the output from \code{compute.WTCNA()}. Rows represent samples, columns represent TF modules.}
 
 \item{coldata}{A data frame containing clinical traits (both categorical and numerical) for the same samples.
 Row names should match those of \code{tfs.modules}.}
@@ -39,17 +39,17 @@ Options are \code{"p"} for pearson and \code{"s"} for spearman. Default is \code
 
 \item{height}{A numeric value indicating the height (in inches) of the output heatmap plot (default = 8).}
 
-\item{ncol}{Integer. Number of columns in the grid of association boxplots.}
+\item{ncol}{Integer. Number of columns in the grid of association boxplots. Default is 5.}
 
-\item{y_min}{Numeric. Lower y-axis limit for grid boxplots.}
+\item{y_min}{Numeric. Lower y-axis limit for grid boxplots. Default is 0.}
 
-\item{y_max}{Numeric. Upper y-axis limit for grid boxplots.}
+\item{y_max}{Numeric. Upper y-axis limit for grid boxplots. Default is 0.5.}
 
-\item{plot_grid}{Logical; if TRUE, tests categorical traits with ANOVA and saves boxplot grids.}
+\item{plot_grid}{Logical; if TRUE, tests categorical traits with ANOVA and saves boxplot grids. Default is FALSE.}
 
-\item{width_grid}{Numeric width of the grid plot output.}
+\item{width_grid}{Numeric width (in inches) of the grid plot output. Default is 18.}
 
-\item{height_grid}{Numeric height of the grid plot output.}
+\item{height_grid}{Numeric height (in inches) of the grid plot output. Default is 10.}
 }
 \value{
 Called for its side effects. Saves to the \verb{Results/} directory:

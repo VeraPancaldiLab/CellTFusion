@@ -16,7 +16,7 @@ utils::globalVariables(c("Trait", "Value" ,"level", ".", "Cells_level", "PC1", "
 #' @importFrom colorspace rainbow_hcl
 #' @importFrom fgsea fgsea
 #' @importFrom ppcor pcor.test
-#' @importFrom multideconv compute.deconvolution compute.deconvolution.analysis get_cell_type_nomenclature
+#' @importFrom multideconv compute.deconvolution compute.deconvolution.analysis get_cell_type_nomenclature replicate_deconvolution_subgroups
 #' @rawNamespace export(compute.TFs.activity)
 #' @rawNamespace export(compute.WTCNA)
 #' @rawNamespace export(compute.pathway.activity)
@@ -33,12 +33,17 @@ NULL
 
 #' Compute one-step CellTFusion
 #'
+#' Runs the full CellTFusion pipeline in a single call: cell-type deconvolution, TF activity inference,
+#' TF module construction, pathway activity, cell group construction, NMF latent factors, cell niches and
+#' TME state characterization (Hallmark GSEA per factor and mapping to TCGA meta-programs).
+#'
 #' @param raw.counts A matrix of raw gene expression counts (genes as rows, samples as columns).
 #'   Always required: even when \code{dt}, \code{tfs} and \code{pathways} are all supplied precomputed,
 #'   the (normalized) expression matrix is still needed for the downstream GSEA-based TME state
 #'   characterization step.
-#' @param deconv A data frame with deconvolution features (cell-type proportions as columns x samples as rows).
-#'   Ignored if \code{dt} is supplied.
+#' @param deconv (Optional) A data frame with deconvolution features (cell-type proportions as columns x samples as rows).
+#'   If \code{NULL} (default), it is computed with \code{multideconv::compute.deconvolution()} using
+#'   \code{deconv_methods}. Ignored if \code{dt} is supplied.
 #' @param dt (Optional) A precomputed cell-subgroup object, typically the output of
 #'   \code{multideconv::compute.deconvolution.analysis()} (or the \code{Processed_deconvolution} element
 #'   returned by a previous \code{CellTFusion()} run). If supplied, cell-type deconvolution and the
@@ -46,15 +51,21 @@ NULL
 #'   construction using this object.
 #' @param tfs (Optional) A precomputed TF activity matrix (samples as rows, TFs as columns), typically
 #'   the \code{TFs_matrix} element returned by a previous \code{CellTFusion()} run or by
-#'   \code{compute.TFs.activity()}. If supplied, TF activity inference is skipped.
+#'   \code{compute.TFs.activity()}. When \code{batch = TRUE}, a named list of such matrices (one per cohort).
+#'   If supplied, TF activity inference is skipped.
 #' @param pathways (Optional) A precomputed pathway activity matrix, typically the \code{Pathways_scores}
 #'   element returned by a previous \code{CellTFusion()} run or by \code{compute.pathway.activity()}.
 #'   If supplied, pathway activity inference is skipped.
-#' @param normalized Logical; if TRUE, normalize raw counts to log-transformed TPM for TF computation. For deconvolution they are going to be normalize just as TPM. Default is TRUE.
+#' @param normalized Logical; if TRUE (default), \code{raw.counts} are normalized to log-transformed TPM for the
+#'   TF activity, pathway activity and GSEA steps (for deconvolution they are normalized to TPM only). If FALSE,
+#'   \code{raw.counts} is assumed to be already normalized and is used as is.
 #' @param coldata (Optional) A data frame of sample metadata (samples as rows). Only used when
 #'   \code{batch = TRUE}, to read the batch column given by \code{batch_id}.
-#' @param batch Logical; whether batch correction should be applied where supported. Default is FALSE.
+#' @param batch Logical; whether to run the multi-cohort mode: TF activity is computed per cohort, TF modules are
+#'   built with consensus WGCNA across cohorts, and the cohort is controlled for in the deconvolution analysis
+#'   and cell group construction. Requires \code{coldata} and \code{batch_id}. Default is FALSE.
 #' @param batch_id Optional character indicating the column name in coldata containing batch identifiers.
+#'   Required when \code{batch = TRUE}.
 #' @param deconv_methods A character vector of deconvolution methods to apply. Default is
 #'   \code{c("Quantiseq", "Epidish", "DeconRNASeq", "DWLS")}. Add \code{"CBSX"} to also run CIBERSORTx
 #'   (requires \code{cbsx.mail} and \code{cbsx.token}).
@@ -62,7 +73,7 @@ NULL
 #' @param cbsx.token (Optional) Token credential for CIBERSORTx. Required if "CBSX" is among deconv_methods.
 #' @param file_name (Optional) Prefix for output files saved in the "Results/" directory.
 #' @param TF.collection Character. The source of the TF-target network. Options are `"CollecTRI"` (default), `"Dorothea"`, or `"ARACNE"`.
-#' - `"CollecTRI"` and `"Dorothea"` use prebuilt collections from OmnipathR.
+#' - `"CollecTRI"` uses the prebuilt collection from OmnipathR and `"Dorothea"` the one from the `dorothea` package.
 #' - `"ARACNE"` reads a network file (tab-separated with `Regulator` and `Target` columns) from
 #'   \code{input/ARACNE/<cancer_type>/network/network.txt}.
 #' @param min_targets_size Integer. Minimum number of target genes per regulon, passed to
@@ -73,11 +84,13 @@ NULL
 #'   \code{compute.pathway.activity()}'s \code{gene_sets} argument for GSVA-based scoring. If \code{NULL}, only PROGENy is used.
 #' @param minMod Integer; minimum module size for WGCNA module detection. Default is 3.
 #' @param corr_mod Numeric; correlation threshold for merging TF modules. Default is 0.9.
-#' @param corr Numeric; correlation threshold used in the deconvolution analysis.
+#' @param corr Numeric; correlation threshold used in the deconvolution analysis. Default is 0.7.
 #' @param corr_type Correlation type used in deconvolution analysis. Default is \code{"spearman"}.
-#' @param cells_extra A string specifying the cells names to consider and that are not including in the nomenclature of multideconv (see R package)
+#' @param cells_extra (Optional) A character vector with the cell names to consider that are not included in the nomenclature of multideconv (see R package).
+#'   This includes the group names created with \code{multideconv::aggregate_cell_groups()} on \code{deconv} (e.g. \code{"Lymphocytes"}):
+#'   if they are not listed here they are discarded.
 #' @param pval Numeric; p-value threshold used when building cell groups (TF module-deconvolution
-#'   correlations and the CCA permutation test).
+#'   correlations and the CCA permutation test). Default is 0.05.
 #' @param enrich_thresh Numeric. Minimum enrichment ratio (foreground/background cell-type frequency)
 #'   required to include a cell type in a latent factor's niche. Default is 1.5.
 #' @param quantile_cutoff Numeric between 0 and 1. Quantile threshold for selecting top-contributing
@@ -89,7 +102,7 @@ NULL
 #'   \code{input/ARACNE/<cancer_type>/network/network.txt}. If \code{NULL}, the meta-program mapping
 #'   step is skipped (\code{TME_states} and \code{Metaprograms_reference} are \code{NULL}) and, for ARACNE,
 #'   the network is auto-detected when only one exists under \code{input/ARACNE/}.
-#' @param verbose Boolen value to whether print or no the function messages
+#' @param verbose Logical; whether to print the function messages. Default is TRUE.
 #'
 #' @details
 #' The pipeline runs with a fixed random seed (123) so results are reproducible; the caller's random
@@ -100,7 +113,7 @@ NULL
 #'
 #' @return A list containing:
 #' \describe{
-#'   \item{Deconvolution}{A matrix with cell-type proportions (samples as rows, cell types as columns); \code{NULL} if \code{dt} was supplied.}
+#'   \item{Deconvolution}{A matrix with cell-type proportions (samples as rows, cell types as columns); \code{NULL} if \code{dt} was supplied without \code{deconv}.}
 #'   \item{TFs_matrix}{A matrix with TF activity scores (samples as rows, TFs as columns), or a list of matrices (one per cohort) when \code{batch = TRUE}.}
 #'   \item{TF_network}{The TF module network returned by \code{compute.WTCNA()}.}
 #'   \item{Pathways_scores}{Pathway activity scores returned by \code{compute.pathway.activity()}.}
@@ -246,7 +259,7 @@ CellTFusion = function(raw.counts, deconv = NULL, dt = NULL, tfs = NULL, pathway
       cat("\nPerforming deconvolution analysis............................................................\n")
     }
 
-    dt = compute.deconvolution.analysis(deconv, corr = corr, corr_type = corr_type, seed = 123, batch = batch_vec, cells_extra = cells_extra, file_name = file_name, return = return, verbose = FALSE)
+    dt = compute.deconvolution.analysis(deconv, corr = corr, corr_type = corr_type, batch = batch_vec, cells_extra = cells_extra, file_name = file_name, return = return, verbose = FALSE)
   }
 
   # 4. Cell groups construction and scores
@@ -315,30 +328,33 @@ CellTFusion = function(raw.counts, deconv = NULL, dt = NULL, tfs = NULL, pathway
 #' @param deconvolution A data frame with deconvolution features (samples as rows, cell-type features as columns).
 #' This is usually the first element returned by \code{multideconv::compute.deconvolution.analysis()}.
 #'
-#' @param cell.dendrograms A named list of dendrogram objects, each corresponding to a TF module, typically
+#' @param cell.dendrograms A named list of dendrogram (\code{hclust}) objects, each corresponding to a TF module, typically
 #' returned by \code{identify.cell.groups()}.
 #'
 #' @param tfs.module.network A list containing network information of transcription factor (TF) modules, as
-#' obtained from \code{compute.WTCNA()}. It should contain at least one element with TF module membership or connectivity.
+#' obtained from \code{compute.WTCNA()} (the elements \code{TFs module matrix}, \code{TFs per module} and
+#' \code{TFs_matrix} are used).
 #' @param batch Optional vector indicating batch assignment for samples.
 #' @param return Logical; if TRUE (default), writes CSV files with cell group compositions and scores
 #' to the "Results/" folder.
-#' @param pval Numeric. P-value threshold for statistical tests. Default is 0.05.
+#' @param pval Numeric. Significance threshold for the CCA permutation test of each cell group. Default is 0.05.
 #' @param n_perm Integer. Number of permutations for significance testing. Default is 999.
-#' @param dendrogram_file Optional character. File path to save dendrogram plot.
+#' @param dendrogram_file Optional character. Suffix of the dendrogram PDF file name (see \code{return_dendrogram}).
 #' @param return_dendrogram Logical. If TRUE, saves a PDF of the colored cell-group dendrograms to
 #'   \code{Results/Dendrogram_color_clusters_<dendrogram_file>.pdf} (only when \code{dendrogram_file} is set). Default FALSE.
 #'
-#' @return A list of three elements:
-#' \describe{
-#'   \item{scores}{A data frame with the composite scores of all identified cell groups across samples.}
-#'   \item{composition}{A list of vectors indicating the composition (original features) of each cell group.}
-#'   \item{loadings}{A list of CCA projection parameters (\code{xcoef}, \code{train_means}, \code{train_sds}) for each cell group.}
+#' @return An unnamed list of three elements:
+#' \itemize{
+#'   \item \code{[[1]]}: A data frame with the composite scores of all identified cell groups across samples.
+#'   \item \code{[[2]]}: A list of vectors indicating the composition (original features) of each cell group.
+#'   \item \code{[[3]]}: A list of CCA projection parameters (\code{xcoef}, \code{train_means}, \code{train_sds}) for each cell group.
 #' }
+#' Cell groups made of a single feature, or that do not pass the CCA permutation test, are discarded; an error
+#' is raised if no cell group remains.
 #' If \code{return=TRUE}, two CSV files will be created:
 #' \itemize{
-#'   \item{\code{Results/Cell.groups.composition.csv}: A table showing the composition of each cell group.}
-#'   \item{\code{Results/Cell.groups.scores.csv}: A matrix of cell group scores across samples.}
+#'   \item \code{Results/Cell.groups.composition.csv}: A table showing the composition of each cell group.
+#'   \item \code{Results/Cell.groups.scores.csv}: A matrix of cell group scores across samples.
 #' }
 #'
 #' @export
@@ -451,7 +467,7 @@ cell.groups.computation = function(deconvolution, cell.dendrograms, tfs.module.n
 #' All plots are saved in the `Results/` directory.
 #'
 #' @param tfs.modules A numeric matrix or data frame of TF module scores across samples.
-#'        Typically the output from `compute.WTCNA()`. Rows represent samples, columns represent TF modules.
+#'        Typically the first element (`TFs module matrix`) of the output from `compute.WTCNA()`. Rows represent samples, columns represent TF modules.
 #' @param coldata A data frame containing clinical traits (both categorical and numerical) for the same samples.
 #'        Row names should match those of `tfs.modules`.
 #' @param pval A numeric threshold (default = 0.05) to determine statistical significance.
@@ -461,12 +477,12 @@ cell.groups.computation = function(deconvolution, cell.dendrograms, tfs.module.n
 #' @param file.name Character. Base file name for saving plots of results.
 #' @param width A numeric value indicating the width (in inches) of the output heatmap plot (default = 20).
 #' @param height A numeric value indicating the height (in inches) of the output heatmap plot (default = 8).
-#' @param ncol Integer. Number of columns in the grid of association boxplots.
-#' @param y_min Numeric. Lower y-axis limit for grid boxplots.
-#' @param y_max Numeric. Upper y-axis limit for grid boxplots.
-#' @param plot_grid Logical; if TRUE, tests categorical traits with ANOVA and saves boxplot grids.
-#' @param width_grid Numeric width of the grid plot output.
-#' @param height_grid Numeric height of the grid plot output.
+#' @param ncol Integer. Number of columns in the grid of association boxplots. Default is 5.
+#' @param y_min Numeric. Lower y-axis limit for grid boxplots. Default is 0.
+#' @param y_max Numeric. Upper y-axis limit for grid boxplots. Default is 0.5.
+#' @param plot_grid Logical; if TRUE, tests categorical traits with ANOVA and saves boxplot grids. Default is FALSE.
+#' @param width_grid Numeric width (in inches) of the grid plot output. Default is 18.
+#' @param height_grid Numeric height (in inches) of the grid plot output. Default is 10.
 #'
 #' @return Called for its side effects. Saves to the `Results/` directory:
 #' \itemize{
@@ -682,11 +698,13 @@ compute.modules.enrichment <- function(RNA.tpm, hub_tfs){
 #' @param return Logical; if TRUE, the function returns a list containing the correlation matrix and a named list of significant feature names per module. Default is FALSE.
 #' @param vertical Logical; if TRUE, modules are on the x-axis and the \code{matB} features on the y-axis.
 #'   Otherwise (default), the \code{matB} features are on the x-axis and modules on the y-axis.
-#' @param plot Logical; if TRUE, saves the heatmap plot as a PDF. Default is TRUE.
-#' @param plot.grid Logical; if TRUE, generates per-pair scatter grid plots for significant associations.
-#' @param width.grid Numeric width of the scatter grid output (increased if needed to fit all panels).
-#' @param height.grid Numeric height of the scatter grid output (increased if needed to fit all panels).
-#' @param ncol.grid Integer number of columns used in scatter grid layout.
+#' @param plot Logical; if TRUE, saves the heatmap plot as a PDF (only when \code{return = FALSE}). Default is TRUE.
+#' @param plot.grid Logical; if TRUE, generates per-pair scatter grid plots for significant associations, saved to
+#'   "Results/<file_name>_scatter_grid.svg". Default is FALSE.
+#' @param width.grid Numeric width of the scatter grid output (increased if needed to fit all panels). Default is 12.
+#' @param height.grid Numeric height of the scatter grid output (increased if needed to fit all panels). Default is 10.
+#' @param ncol.grid Integer number of columns used in scatter grid layout. If NULL (default), it is set to
+#'   the ceiling of the square root of the number of panels.
 #'
 #' @return If `return = TRUE`, returns a list with:
 #' \itemize{
@@ -724,8 +742,8 @@ compute.modules.enrichment <- function(RNA.tpm, hub_tfs){
 #'
 compute.modules.relationship <- function(matA, matB, file_name, batch = NULL, width = 8, height = 8, par_mar = NULL, pval=0.05, padj = F, cor_type = "p", return = F, vertical = F, plot = T, plot.grid = F, width.grid = 12, height.grid = 10, ncol.grid = NULL){
 
-  matA = data.frame(matA)
-  matB = data.frame(matB)
+  matA = data.frame(matA, check.names = FALSE)
+  matB = data.frame(matB, check.names = FALSE) # keep feature names unchanged (e.g. "-") so they match the deconvolution columns
   out_file = if (!missing(file_name)) paste0("Results/", file_name, if (!grepl("\\.pdf$", file_name)) ".pdf")
 
   if(length(rownames(matA)) == 0 || !all(make.names(rownames(matA)) == make.names(rownames(matB))))
@@ -947,7 +965,7 @@ compute.modules.relationship <- function(matA, matB, file_name, batch = NULL, wi
         }}}
 }
 
-#' Computes TF-modules pathway activities scores
+#' Compute pathway activity scores
 #'
 #' This function computes pathway activity scores from normalized gene expression data using a multivariate linear model (MLM) based on the PROGENy resource (Schubert et al., 2018).
 #' Optionally, it also performs Gene Set Variation Analysis (GSVA) using hallmark signatures or any user-provided gene sets.
@@ -1059,13 +1077,14 @@ compute.pathway.activity <- function(RNA.tpm, gene_sets = NULL, paths = NULL, re
 #'
 #' Infers transcription factor (TF) activity from a gene expression matrix with \code{decoupleR::decouple()},
 #' keeping the \code{consensus} score (ensemble of the decoupleR statistics; Badia-i-Mompel et al., 2022).
-#' The TF-target network can be provided by the user, obtained from OmnipathR resources (CollecTRI or
-#' Dorothea), or read from an ARACNe-inferred network.
+#' The TF-target network can be provided by the user, obtained from prebuilt collections (CollecTRI from
+#' OmnipathR or Dorothea from the \code{dorothea} package), or read from an ARACNe-inferred network.
 #'
 #' @param RNA.counts A gene expression matrix with genes as rows and samples as columns. The matrix should be normalized (e.g., TPM, log2CPM, etc.).
 #' @param TF.collection Character. The source of the TF-target network. Options are `"CollecTRI"` (default), `"Dorothea"`, or `"ARACNE"`.
-#' - `"CollecTRI"` and `"Dorothea"` (confidence A and B) use prebuilt collections from OmnipathR. Each collection is
-#'   cached in its own file, `Results/TF_target_collection_<TF.collection>.csv`, and reused on later calls.
+#' - `"CollecTRI"` uses the prebuilt collection from OmnipathR and `"Dorothea"` (confidence A and B) the one from the
+#'   `dorothea` package. Each collection is cached in its own file,
+#'   `Results/TF_target_collection_<TF.collection>.csv`, and reused on later calls.
 #' - `"ARACNE"` reads a tab-separated network file with `Regulator` and `Target` columns from
 #'   `input/ARACNE/<cancer.type>/network/network.txt` (relative to the working directory). The mode of
 #'   regulation of each edge is the sign of the Spearman correlation between TF and target expression.
@@ -1219,9 +1238,10 @@ compute.TFs.activity <- function(RNA.counts, TF.collection = "CollecTRI", min_ta
 #'
 #' Construct a weighted signed or unsigned network using TF activity to cluster protein regulators
 #' into modules that share similar activity patterns. Each TF module will have a sample-level score
-#' represented by the eigenvalue of the module.
+#' represented by the eigengene of the module.
 #'
-#' @param TFs.matrix Matrix of TF activity (samples x TFs).
+#' @param TFs.matrix Matrix of TF activity (samples x TFs). When \code{batch = TRUE}, a list of such matrices,
+#'   one per cohort.
 #' @param batch Logical; if TRUE, performs consensus WGCNA (\code{WGCNA::blockwiseConsensusModules()}) across cohorts
 #'   provided as a list of matrices. In this mode \code{clustering.method} and \code{corr_mod} are not used
 #'   (modules are merged with a fixed \code{mergeCutHeight = 0.25}), and module eigengenes are scaled within each cohort.
@@ -1235,7 +1255,7 @@ compute.TFs.activity <- function(RNA.counts, TF.collection = "CollecTRI", min_ta
 #' @param softPower Optional numeric value specifying the soft-thresholding power used to build the adjacency
 #'   matrix (one value per cohort when \code{batch = TRUE}). If \code{NULL}, the power whose scale-free fit
 #'   \eqn{R^2} is closest to 0.9 is chosen automatically.
-#' @param verbose Boolen value to whether print or no the function messages
+#' @param verbose Logical; whether to print the function messages. Default is FALSE.
 #' @param file.name Optional character suffix used when writing WTCNA outputs.
 #' @param return Logical, whether to save output plots and module list to "Results/". Default is TRUE.
 #'
@@ -1576,17 +1596,19 @@ identify_hub_TFs <- function(datExpr, TF.network, MM_thresh = 0.8, degree_thresh
 #'
 #' Identifies cell dendrograms corresponding to each TF module group based on correlation with deconvolution features.
 #'
-#' @param features A list with two named elements:
-#'   \describe{
-#'     \item{correlations}{A matrix of correlations between TF modules and cell type features.}
-#'     \item{significant}{A named list of significant features per TF module (e.g., p-value < 0.05).}
+#' @param features A list of two elements (accessed by position), as returned by
+#'   \code{compute.modules.relationship()} with \code{return = TRUE}:
+#'   \itemize{
+#'     \item \code{[[1]]}: A matrix of correlations between TF modules (rows) and cell type features (columns).
+#'     \item \code{[[2]]}: A named list of significant features per TF module (e.g., p-value < 0.05).
 #'   }
 #' @param clustering.method Clustering method used in hclust. Default: "ward.D2".
-#' @param width Width of the saved PDF plots.
-#' @param height Height of the saved PDF plots.
-#' @param return Logical; whether to save dendrogram plots to the "Results/" folder.
+#' @param width Width (in inches) of the saved PDF plots. Default: 12.
+#' @param height Height (in inches) of the saved PDF plots. Default: 18.
+#' @param return Logical; whether to save dendrogram plots to the "Results/" folder. Default: TRUE.
 #'
-#' @return A named list of dendrograms for each TF module.
+#' @return A named list of dendrograms (\code{hclust} objects), one per TF module. Modules with fewer than two
+#'   significant features are discarded; \code{NULL} is returned if no module remains.
 #'
 identify.cell.groups = function(features, clustering.method = "ward.D2", width = 12, height = 18, return = T){
 
@@ -1620,7 +1642,7 @@ identify.cell.groups = function(features, clustering.method = "ward.D2", width =
     d <- stats::dist(t(TFmoduleTraitcor))
     dendrogram <- stats::hclust(d, method = clustering.method)
     if(return){
-      pdf(paste0("Results/Dendogram_cell_types_", names(features_vec)[i]), width = width, height = height)
+      pdf(paste0("Results/Dendrogram_cell_types_", names(features_vec)[i], ".pdf"), width = width, height = height)
       par(mar = c(5, 2, 4, 35)) #bottom, left, top, right
       plot(as.dendrogram(dendrogram), horiz= T)
       dev.off()
@@ -1638,11 +1660,17 @@ identify.cell.groups = function(features, clustering.method = "ward.D2", width =
 #'
 #' Builds a binary presence matrix indicating which original cell types are present in higher-level cell groups.
 #'
-#' @param deconvolution.subgroupped A list containing "Deconvolution subgroups composition" per model.
-#' @param cell.groups A list containing cell group definitions, where the second element holds the groupings.
+#' @param deconvolution.subgroupped Deconvolution subgroups as returned by
+#'   \code{multideconv::compute.deconvolution.analysis()} (the elements \code{Deconvolution matrix} and
+#'   \code{Deconvolution subgroups composition} are used).
+#' @param cell.groups A list containing cell group definitions, where the second element holds the groupings
+#'   (e.g. the output of \code{construct_cell_groups()}).
 #' @param cells_extra Optional vector of additional cell identifiers to consider during extraction.
 #'
 #' @return A binary matrix (data.frame) where rows are cell groups and columns are cell types (1 = present, 0 = absent).
+#'   Each cell group appears twice, as \code{<group>_pos} and \code{<group>_neg} (same composition), to match the
+#'   feature names used by \code{compute.latent_factors()}. Cell types not present in any cell group are dropped
+#'   (with a warning).
 #'
 compute.composition.matrix = function(deconvolution.subgroupped, cell.groups, cells_extra = NULL){
 
@@ -1709,7 +1737,7 @@ compute.composition.matrix = function(deconvolution.subgroupped, cell.groups, ce
 #' @param clustering.method Clustering method for hierarchical clustering. Default: "ward.D2".
 #' @param n_perm Integer. Number of permutations for the CCA significance test per cell group.
 #'   Higher values give more precise p-values but increase runtime. Default: 999.
-#' @param dendrogram_file Optional character. File path to save dendrogram plot output.
+#' @param dendrogram_file Optional character. Suffix of the dendrogram PDF file name (see \code{return_dendrogram}).
 #' @param return_dendrogram Logical. If TRUE, saves a PDF of the colored cell-group dendrograms to
 #'   \code{Results/Dendrogram_color_clusters_<dendrogram_file>.pdf} (only when \code{dendrogram_file} is set). Default FALSE.
 #'
@@ -1742,13 +1770,15 @@ construct_cell_groups = function(network, dt, batch = NULL, pval = 0.05, cluster
 #' coming from a training set into an independent set.
 #' The composite scores represent summarized information from cell subgroup profiles.
 #'
-#' @param deconv_res A list containing deconvolution results, including
-#'   subgroup compositions (list of data frames or matrices).
-#' @param cell_groups A list with three elements:
+#' @param deconv_res Deconvolution subgroups of the training set, as returned by
+#'   \code{multideconv::compute.deconvolution.analysis()} (the elements \code{Deconvolution matrix} and
+#'   \code{Deconvolution subgroups composition} are used).
+#' @param cell_groups A list with three elements, as returned by \code{construct_cell_groups()} on the training set:
 #'   - cell groups scores
 #'   - composition: A named list of character vectors where each element represents
 #'     cells belonging to a specific group.
-#'   - loadings: A corresponding list of numeric vectors (loadings) for each cell group.
+#'   - loadings: A corresponding list of CCA projection parameters (\code{xcoef}, \code{train_means},
+#'     \code{train_sds}) for each cell group.
 #' @param features A character vector of feature names to select relevant cell groups. An error is
 #'   raised if none of them match a cell group name.
 #' @param deconvolution_test A data frame or matrix of deconvolution features for the test set,
@@ -1760,8 +1790,9 @@ construct_cell_groups = function(network, dt, batch = NULL, pval = 0.05, cluster
 #'   returns an empty data frame with a printed message.
 #'
 #' @details
-#' The function first simulates cell subgroups by computing median values across
-#' specified iterations and joins them with the original test deconvolution data.
+#' The function first replicates the training cell subgroups in the test deconvolution data with
+#' \code{multideconv::replicate_deconvolution_subgroups()} (each subgroup is the median of its member
+#' features; subgroups or features missing in the test set are \code{NA} and are skipped).
 #' Then it extracts the relevant cells for each feature and calculates composite
 #' scores. If the cell groups were built with batch correction, the test samples are centred on
 #' their own means (as each training cohort was), so \code{deconvolution_test} should contain a
@@ -1769,47 +1800,8 @@ construct_cell_groups = function(network, dt, batch = NULL, pval = 0.05, cluster
 #'
 compute.test.set = function(deconv_res, cell_groups, features, deconvolution_test){
 
-  ################################################################################Simulate cell subgroups
-  deconv_subgroups = deconv_res[["Deconvolution subgroups composition"]]
-  iterations = find.maximum.iteration(deconv_subgroups)
-
-  if(is.infinite(iterations) && iterations < 0){
-    warning("No subgroups to replicate")
-
-    deconvolution_test = deconvolution_test[,colnames(deconvolution_test) %in% colnames(deconv_res[["Deconvolution matrix"]])]
-  }else{
-    # Create same groups composition
-    for (m in 1:iterations) {
-      base_groups = list()
-      for (i in 1:length(deconv_subgroups)){
-        if(length(deconv_subgroups[[i]])!=0){
-          idy = grep(paste0("Iteration.",m), names(deconv_subgroups[[i]]))
-          if(length(idy)!=0){
-            base_groups = append(base_groups, deconv_subgroups[[i]][idy])
-          }
-        }
-      }
-
-      deconv_subgroups_values = c()
-      for (i in 1:length(base_groups)) {
-
-        x = as.matrix(deconvolution_test[, colnames(deconvolution_test) %in% base_groups[[i]], drop = FALSE])
-
-        if(ncol(x) == 0){
-          med = rep(0, nrow(deconvolution_test))
-        } else {
-          med = matrixStats::rowMedians(x)
-        }
-
-        deconv_subgroups_values = cbind(deconv_subgroups_values, med) #Compute median using base groups
-      }
-      colnames(deconv_subgroups_values) = names(base_groups)
-      deconvolution_test = cbind(deconv_subgroups_values, deconvolution_test) # Join cell subgroups and deconv features
-
-    }
-
-    deconvolution_test = deconvolution_test[,colnames(deconvolution_test)%in%colnames(deconv_res[[1]])]
-  }
+  ################################################################################Replicate cell subgroups (training features, in the same order)
+  deconvolution_test = replicate_deconvolution_subgroups(deconv_res, deconvolution_test)
 
   # Compute composite scores
   idx = which(names(cell_groups[[2]]) %in% features)
@@ -1851,7 +1843,7 @@ extract_cells = function(groups, cells_extra = NULL){
   names_cells = get_cell_type_nomenclature(cells_extra = cells_extra)
 
   # Create regex to capture base cell type + cluster
-  # Matches known cell type, optionally followed by _Subgroup.x.Iteration.x
+  # Matches known cell type, optionally followed by _Subgroup.x (or _Subgroup.x.Iteration.x from multideconv < 0.2.0)
   regex_pattern <- paste0(
     "(",
     paste(names_cells, collapse = "|"),
@@ -1876,40 +1868,14 @@ extract_cells = function(groups, cells_extra = NULL){
   return(normalized_names)
 }
 
-#' Find maximum iteration from cell subgroups
-#'
-#' Scans a nested list of cell subgroups and returns the highest iteration number
-#' found across all elements.
-#'
-#' @param cells.groups A nested list of cell subgroups. Names of inner elements
-#'   must follow the pattern `*.Iteration.<n>` where `<n>` is an integer.
-#'
-#' @return An integer giving the maximum iteration number across all subgroups.
-#'
-#' @keywords internal
-find.maximum.iteration = function(cells.groups){
-  max_iteration = c()
-  for (i in 1:length(cells.groups)){
-    if(is.null(names(cells.groups[[i]]))==F){
-      iterations <- sapply(names(cells.groups[[i]]), function(x) {
-        as.numeric(sub(".*\\.Iteration\\.(\\d+)", "\\1", x))
-      })
-      local_max = max(unlist(iterations))
-      max_iteration = c(max_iteration, local_max)
-    }
-  }
-
-  return(max(max_iteration))
-}
-
 #' Merge highly correlated TF modules
 #'
 #' Identifies pairs of TF modules whose eigengene correlation exceeds \code{corr}
 #' and merges them by averaging their columns.
 #'
-#' @param data A numeric matrix or data frame of TF module eigengenes (samples x modules).
-#' @param colors A character vector of module color labels aligned with the columns of \code{data}.
-#' @param corr Numeric. Spearman correlation threshold above which two modules are merged. Default 0.9.
+#' @param data A data frame of TF module eigengenes (samples x modules), with columns named \code{ME<color>}.
+#' @param colors A character vector with the module color label of each TF.
+#' @param corr Numeric. Spearman correlation threshold above which two modules are merged.
 #'
 #' @return A list of two elements:
 #' \itemize{
@@ -1938,13 +1904,13 @@ mergeModules = function(data, colors, corr){
   return(list(data, colors))
 }
 
-#' Remove cell groups composed of a single cell type
+#' Remove cell groups composed of a single feature
 #'
-#' Filters out cell groups whose composition contains only one cell type, as these
+#' Filters out cell groups whose composition contains only one deconvolution feature, as these
 #' groups lack multi-cellular context.
 #'
 #' @param cell.values A list of numeric vectors of cell group scores.
-#' @param cell.composition A list of character vectors describing cell-type membership per group.
+#' @param cell.composition A list of character vectors with the deconvolution features of each group.
 #' @param cell.loadings A list of loading vectors corresponding to each cell group.
 #'
 #' @return A list of three elements (scores, compositions, loadings) with singleton groups
@@ -2014,6 +1980,23 @@ calculate_dendrogram_cuts = function(cell.group.dendrogram, deep_split = 4, min_
 
 }
 
+#' Plot cell-group dendrograms colored by cluster
+#'
+#' Draws each cell-type dendrogram with its branches colored by the cluster
+#' assignments from \code{calculate_dendrogram_cuts()} and saves all of them
+#' in a single PDF.
+#'
+#' @param cell.group.dendrogram A named list of \code{hclust}-convertible dendrogram objects,
+#'   one per TF module, as returned by \code{identify.cell.groups()}.
+#' @param cuts_per_dendrogram A list of integer cluster label vectors, one per dendrogram,
+#'   as returned by \code{calculate_dendrogram_cuts()}.
+#' @param file_name Optional character. Suffix of the output file
+#'   (\code{Results/Dendrogram_color_clusters_<file_name>.pdf}). If \code{NULL} (default),
+#'   nothing is saved.
+#'
+#' @return Called for its side effect (saves a PDF); returns \code{NULL} invisibly.
+#'
+#' @keywords internal
 plot_dendrogram_clusters = function(cell.group.dendrogram, cuts_per_dendrogram, file_name = NULL) {
   plots <- list()
 
@@ -2233,7 +2216,7 @@ compute_composite_score = function(cell_group, module_group, tfs.module.network,
 #' @param data A numeric matrix or data frame where columns are features.
 #'
 #' @return A data frame of pairwise significant correlations (p < 0.05), with
-#'   columns \code{measure1}, \code{measure2}, \code{r}, \code{p}, \code{sig_p},
+#'   columns \code{measure1}, \code{measure2}, \code{r}, \code{p}, \code{n}, \code{sig_p},
 #'   \code{p_if_sig}, \code{r_if_sig}, and \code{AbsR}, ordered by descending \code{r}.
 #'
 #' @keywords internal
@@ -2330,9 +2313,10 @@ compute.test.score = function(cell_group, projection_params){
   return(as.matrix(cell_group_scaled) %*% xcoef)
 }
 
-#' Student's t-test for cell group comparisons
+#' T-test for cell group comparisons
 #'
-#' Performs a Student's t-test comparing cell group scores between two groups of a binary trait.
+#' Performs a two-sample t-test (Welch's, unequal variances) comparing cell group scores between two groups
+#' of a binary trait.
 #' Significant features are plotted as boxplots and saved as PDF files in the "Results/" directory.
 #'
 #' @param scores A list whose first element is a samples x features score matrix, e.g. the output of
@@ -2386,7 +2370,7 @@ scores.ttest <- function(scores, coldata, trait, pval = 0.05) {
           ggplot2::scale_fill_brewer(palette = "Set2") +
           ggplot2::labs(
             title    = colnames(scores[[1]])[j],
-            subtitle = paste0("Student's t-test | ", trait),
+            subtitle = paste0("Welch's t-test | ", trait),
             x        = NULL,
             y        = "Score"
           ) +
@@ -2684,6 +2668,9 @@ scores.anova.test = function(scores, coldata, trait, pval = 0.05){
 
 #' Fisher's exact test for score-trait association
 #'
+#' Performs a Fisher's exact test between each score, binarised at its median into High/Low groups,
+#' and a categorical trait. Significant features are plotted as barplots and saved to the "Results/" folder.
+#'
 #' @param scores A list whose first element is a samples x features score matrix, e.g. the output of
 #'   \code{construct_cell_groups()} or \code{compute.latent_factors()}. To test a plain matrix, use
 #'   \code{scores.stat.analysis()}.
@@ -2692,8 +2679,8 @@ scores.anova.test = function(scores, coldata, trait, pval = 0.05){
 #' @param trait Character. Name of the column in `coldata` to test with Fisher's exact test.
 #' @param pval Numeric. P-value threshold for significance (default 0.05).
 #'
-#' @return A list containing the significant features after Fisher test. Additionally,
-#'         it saves corresponding barplot visualizations in the "Results/" folder.
+#' @return A list containing the significant features after Fisher test, or \code{NULL} if none
+#'         are significant. Additionally, it saves corresponding barplot visualizations in the "Results/" folder.
 #' @export
 #'
 scores.fisher.test = function(scores, coldata, trait, pval = 0.05){
@@ -2768,9 +2755,9 @@ scores.fisher.test = function(scores, coldata, trait, pval = 0.05){
 #'     \item `"wilcox"` - Wilcoxon rank-sum test (non-parametric, binary traits)
 #'     \item `"anova"` - One-way ANOVA (parametric, >2 groups)
 #'     \item `"kruskal"` - Kruskal-Wallis test (non-parametric, >2 groups)
-#'     \item `"ttest"` - Student's t-test (parametric, binary traits)
+#'     \item `"ttest"` - Welch's t-test (parametric, binary traits)
 #'   }
-#'   Defaults to all available options, but only one can be used per call.
+#'   Only one can be used per call; defaults to the first one (`"fisher"`).
 #' @param pval Numeric. P-value threshold for significance (default: 0.05).
 #'
 #' @details
@@ -2851,7 +2838,8 @@ scores.stat.analysis <- function(scores, coldata, trait,
 #'
 #' @param file_name Optional character suffix for the saved patient-mixture plot.
 #' @param return Logical. If TRUE (default), saves the patient-mixture barplot to
-#'   \code{Results/NMF_patient_mixture_<file_name>.pdf}.
+#'   \code{Results/NMF_patient_mixture_<file_name>.pdf} (\code{Results/NMF_patient_mixture.pdf} if
+#'   \code{file_name} is \code{NULL}).
 #'
 #' @return A named list with:
 #' \describe{
@@ -2864,8 +2852,10 @@ scores.stat.analysis <- function(scores, coldata, trait,
 #'
 #' @details
 #' Signed CCA scores are decomposed as:
-#' score_pos = max(score, 0) -- patient aligned with TF program
-#' score_neg = max(-score, 0) -- patient anti-aligned with TF program
+#' \itemize{
+#'   \item \code{score_pos = max(score, 0)}: patient aligned with TF program
+#'   \item \code{score_neg = max(-score, 0)}: patient anti-aligned with TF program
+#' }
 #' Both are concatenated column-wise before NMF. Column names are suffixed
 #' with "_pos" and "_neg" to track direction.
 #'
@@ -3616,19 +3606,22 @@ plot_module_scatter_grid <- function(matA, matB, cor_mat, p_mat,
 #' saves a multi-panel SVG boxplot grid to \code{Results/}.
 #'
 #' @param tfs.modules A numeric matrix or data frame of TF module scores
-#'   (samples x modules), typically from \code{compute.WTCNA()}.
+#'   (samples x modules), typically the first element (\code{TFs module matrix}) of the
+#'   output from \code{compute.WTCNA()}.
 #' @param coldata A data frame of sample metadata. Only character and factor
 #'   columns are used as traits.
 #' @param pval Numeric. ANOVA p-value threshold for significance. Default 0.05.
-#' @param file.name Character. Base name appended to output SVG file names.
+#' @param file.name Character. Base name appended to output SVG file names
+#'   (\code{Results/ANOVA_boxplot_summary_<file.name>_<trait>.svg}).
 #' @param ncol Integer. Number of columns in the boxplot facet grid. Default 5.
 #' @param y_min Numeric. Lower y-axis limit for boxplots. Default 0.
 #' @param y_max Numeric. Upper y-axis limit for boxplots. Default 0.5.
 #' @param width Numeric. Width of the SVG output in inches. Default 18.
 #' @param height Numeric. Height of the SVG output in inches. Default 10.
 #'
-#' @return Called for its side effect (saves SVG files); returns \code{NULL}
-#'   invisibly when no significant traits are found.
+#' @return Called for its side effect (saves one SVG file per categorical trait with at
+#'   least one significant module); returns \code{NULL} invisibly when \code{coldata} has no
+#'   categorical traits.
 #'
 #' @keywords internal
 compute.metadata.association.boxplot_summary <- function(
@@ -3755,7 +3748,8 @@ compute.metadata.association.boxplot_summary <- function(
 #' @param plot_dot Logical; if TRUE, generates and saves dotplots of top
 #'   enriched Hallmark pathways for each feature. Default is TRUE.
 #' @param top_n Integer; number of top pathways to display in the dotplot. Default is 10.
-#' @param file_name Character; optional suffix for saved PDF files. Default is NULL.
+#' @param file_name Character; optional suffix for saved PDF files
+#'   (\code{Results/GSEA_<feature>_<file_name>.pdf}). Default is NULL.
 #' @param width Numeric; width of the PDF plot in inches. Default is 8.
 #' @param height Numeric; height of the PDF plot in inches. Default is 10.
 #'
@@ -4053,7 +4047,8 @@ build_nes_matrix <- function(gsea_results) {
 #'
 #' For each study NMF factor, scores it against each TCGA meta-program
 #' by computing the mean NES of the meta-program's Hallmarks in that factor.
-#' The meta-program with the highest positive mean NES is the best match. If the
+#' The meta-program with the highest positive mean NES is the best match (\code{NA} if no
+#' meta-program has a positive score). If the
 #' meta-program reference has a \code{TME_subtype} column (see
 #' \code{annotate_metaprograms_TME()}), it is appended to the output.
 #'
@@ -4066,7 +4061,8 @@ build_nes_matrix <- function(gsea_results) {
 #'   RData file containing such an object named \code{meta_programs}. If NULL, the pre-built
 #'   reference for \code{cancer_type} is used.
 #' @param plot Logical. If TRUE (default), saves a barplot of factor-to-meta-program scores
-#'   to \code{Results/Factor_MP_mapping_<file_name>.pdf}.
+#'   to \code{Results/Factor_MP_mapping_<file_name>.pdf} (\code{Results/Factor_MP_mapping.pdf} if
+#'   \code{file_name} is \code{NULL}).
 #' @param file_name Optional character suffix for saving output plots.
 #'
 #' @return A list with:
@@ -4249,18 +4245,22 @@ map_factors_to_metaprograms <- function(gsea_study,
 
 #' Annotate meta-programs with Bagaev TME subtypes
 #'
-#' Assigns each meta-program a TME subtype (IE, IE/F, F, D) by majority vote
-#' across the TCGA factors that were mapped to it.
+#' Assigns each meta-program a TME subtype (IE, IE/F, F, D) by weighted majority vote
+#' across the TCGA factors with a positive score for it: the scores of the factors are
+#' summed per MFP subtype and the subtype with the highest total is assigned.
 #'
 #' @param meta_programs_df Data frame output of \code{derive_meta_programs()},
 #'   with columns \code{meta_program} and \code{hallmarks}.
 #' @param factor_tme_df Data frame output of \code{map_factors_to_TME()},
 #'   with columns \code{factor} and \code{best_MFP}.
-#' @param factors_mp_df Data frame output of \code{map_factors_to_metaprograms()}
-#'   run on the TCGA factors themselves, with columns \code{factor} and
-#'   \code{best_MP}.
+#' @param factors_mp_df The \code{factor_mapping} data frame returned by
+#'   \code{map_factors_to_metaprograms()} run on the TCGA factors themselves, with
+#'   columns \code{factor} and \code{all_scores}.
 #'
-#' @return \code{meta_programs_df} with an additional \code{TME_subtype} column.
+#' @return \code{meta_programs_df} with an additional \code{TME_subtype} column
+#'   (\code{"IE"}, \code{"IE/F"}, \code{"F"}, \code{"D"}, or \code{"uncharacterized"} when no
+#'   factor has a positive score for the meta-program, the vote is tied, or the winning label
+#'   is \code{"uncharacterized"}).
 #'
 #' @export
 annotate_metaprograms_TME <- function(meta_programs_df, factor_tme_df,
@@ -4326,7 +4326,7 @@ annotate_metaprograms_TME <- function(meta_programs_df, factor_tme_df,
 #' @param Z Numeric matrix. Samples x factors NMF score matrix (row names =
 #'   TCGA barcodes).
 #' @param plot Logical. If TRUE (default), saves violin/boxplots of factor scores by MFP group
-#'   to \code{Results/TME_factors_MFP_<cancer_name>_<file_name>.pdf}.
+#'   to \code{Results/TME_factors_MFP_<cancer_name>_<file_name>.pdf} (\code{cancer_name} in lower case).
 #' @param file_name Optional character suffix for saving output plots.
 #'
 #' @return A data frame with columns \code{factor}, \code{best_MFP},
@@ -4533,8 +4533,9 @@ map_factors_to_TME <- function(cancer_name, Z, plot = TRUE, file_name = NULL) {
 #' (one per feature with log-rank p-value below \code{p.value}); \code{NULL} (with a message)
 #' if none are significant.
 #'
-#' A Kaplan-Meier plot (with risk table) is saved as an SVG file per significant result to
-#' \code{Results/SurvPlot_<group-or-feature>_<file_name>.svg}.
+#' A Kaplan-Meier plot (with risk table) is saved as an SVG file to
+#' \code{Results/SurvPlot_<group-or-feature>_<file_name>.svg}: always for \code{group_column},
+#' and one per significant feature for \code{features}.
 #'
 #' @details
 #' Requires the \code{survival}, \code{survminer}, and \code{gridExtra} packages (see \code{Suggests}).

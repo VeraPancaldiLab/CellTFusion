@@ -5,7 +5,7 @@
 \alias{raw.counts.tuto}
 \title{Raw counts}
 \format{
-Matrix with genes as rows and samples as columns
+A data frame with 31086 genes as rows and 192 samples as columns
 }
 \source{
 Mariathasan et al. (2018), doi: https://doi.org/10.1038/nature25501

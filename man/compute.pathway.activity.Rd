@@ -2,7 +2,7 @@
 % Please edit documentation in R/CellTFusion.R
 \name{compute.pathway.activity}
 \alias{compute.pathway.activity}
-\title{Computes TF-modules pathway activities scores}
+\title{Compute pathway activity scores}
 \usage{
 compute.pathway.activity(
   RNA.tpm,

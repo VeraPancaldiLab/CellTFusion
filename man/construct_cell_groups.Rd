@@ -31,7 +31,7 @@ Default: 0.05.}
 \item{n_perm}{Integer. Number of permutations for the CCA significance test per cell group.
 Higher values give more precise p-values but increase runtime. Default: 999.}
 
-\item{dendrogram_file}{Optional character. File path to save dendrogram plot output.}
+\item{dendrogram_file}{Optional character. Suffix of the dendrogram PDF file name (see \code{return_dendrogram}).}
 
 \item{return_dendrogram}{Logical. If TRUE, saves a PDF of the colored cell-group dendrograms to
 \code{Results/Dendrogram_color_clusters_<dendrogram_file>.pdf} (only when \code{dendrogram_file} is set). Default FALSE.}

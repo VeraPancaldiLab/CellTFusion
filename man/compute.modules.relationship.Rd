@@ -52,15 +52,17 @@ ignored. Batch is treated as categorical (one dummy variable per level beyond th
 \item{vertical}{Logical; if TRUE, modules are on the x-axis and the \code{matB} features on the y-axis.
 Otherwise (default), the \code{matB} features are on the x-axis and modules on the y-axis.}
 
-\item{plot}{Logical; if TRUE, saves the heatmap plot as a PDF. Default is TRUE.}
+\item{plot}{Logical; if TRUE, saves the heatmap plot as a PDF (only when \code{return = FALSE}). Default is TRUE.}
 
-\item{plot.grid}{Logical; if TRUE, generates per-pair scatter grid plots for significant associations.}
+\item{plot.grid}{Logical; if TRUE, generates per-pair scatter grid plots for significant associations, saved to
+"Results/<file_name>_scatter_grid.svg". Default is FALSE.}
 
-\item{width.grid}{Numeric width of the scatter grid output (increased if needed to fit all panels).}
+\item{width.grid}{Numeric width of the scatter grid output (increased if needed to fit all panels). Default is 12.}
 
-\item{height.grid}{Numeric height of the scatter grid output (increased if needed to fit all panels).}
+\item{height.grid}{Numeric height of the scatter grid output (increased if needed to fit all panels). Default is 10.}
 
-\item{ncol.grid}{Integer number of columns used in scatter grid layout.}
+\item{ncol.grid}{Integer number of columns used in scatter grid layout. If NULL (default), it is set to
+the ceiling of the square root of the number of panels.}
 }
 \value{
 If \code{return = TRUE}, returns a list with:

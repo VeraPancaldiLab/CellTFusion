@@ -5,7 +5,9 @@
 \alias{network.tuto}
 \title{TF Network}
 \format{
-List where first element corresponds to the TF modules scores per sample
+A list of 5 elements (\code{TFs module matrix}, \code{TFs colors}, \code{TFs per module},
+\code{Proportion of variance} and \code{TFs_matrix}), where the first element corresponds to the
+TF modules scores per sample (192 samples x 10 modules)
 }
 \usage{
 network.tuto

@@ -13,14 +13,18 @@ with columns \code{meta_program} and \code{hallmarks}.}
 \item{factor_tme_df}{Data frame output of \code{map_factors_to_TME()},
 with columns \code{factor} and \code{best_MFP}.}
 
-\item{factors_mp_df}{Data frame output of \code{map_factors_to_metaprograms()}
-run on the TCGA factors themselves, with columns \code{factor} and
-\code{best_MP}.}
+\item{factors_mp_df}{The \code{factor_mapping} data frame returned by
+\code{map_factors_to_metaprograms()} run on the TCGA factors themselves, with
+columns \code{factor} and \code{all_scores}.}
 }
 \value{
-\code{meta_programs_df} with an additional \code{TME_subtype} column.
+\code{meta_programs_df} with an additional \code{TME_subtype} column
+(\code{"IE"}, \code{"IE/F"}, \code{"F"}, \code{"D"}, or \code{"uncharacterized"} when no
+factor has a positive score for the meta-program, the vote is tied, or the winning label
+is \code{"uncharacterized"}).
 }
 \description{
-Assigns each meta-program a TME subtype (IE, IE/F, F, D) by majority vote
-across the TCGA factors that were mapped to it.
+Assigns each meta-program a TME subtype (IE, IE/F, F, D) by weighted majority vote
+across the TCGA factors with a positive score for it: the scores of the factors are
+summed per MFP subtype and the subtype with the highest total is assigned.
 }

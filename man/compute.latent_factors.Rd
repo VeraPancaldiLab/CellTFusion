@@ -25,7 +25,8 @@ state is restored when the function returns.}
 \item{file_name}{Optional character suffix for the saved patient-mixture plot.}
 
 \item{return}{Logical. If TRUE (default), saves the patient-mixture barplot to
-\code{Results/NMF_patient_mixture_<file_name>.pdf}.}
+\code{Results/NMF_patient_mixture_<file_name>.pdf} (\code{Results/NMF_patient_mixture.pdf} if
+\code{file_name} is \code{NULL}).}
 }
 \value{
 A named list with:
@@ -44,8 +45,10 @@ then applying Non-negative Matrix Factorization via RcppML (fast C++ backend).
 }
 \details{
 Signed CCA scores are decomposed as:
-score_pos = max(score, 0) -- patient aligned with TF program
-score_neg = max(-score, 0) -- patient anti-aligned with TF program
+\itemize{
+\item \code{score_pos = max(score, 0)}: patient aligned with TF program
+\item \code{score_neg = max(-score, 0)}: patient anti-aligned with TF program
+}
 Both are concatenated column-wise before NMF. Column names are suffixed
 with "_pos" and "_neg" to track direction.
 }

@@ -5,7 +5,9 @@
 \alias{deconv.tuto}
 \title{Example Deconvolution Results}
 \format{
-A data frame with X rows and Y variables:
+A data frame with 192 samples as rows and 399 deconvolution features as columns
+(named \code{<method>_<signature>_<cell type>}, or \code{<method>_<cell type>} for methods
+with a single signature such as Quantiseq)
 }
 \usage{
 deconv.tuto
@@ -13,7 +15,8 @@ deconv.tuto
 \description{
 A toy dataset included with the package to illustrate usage of
 functions in \strong{CellTFusion}. This dataset contains the output
-of a deconvolution run for a small subset of genes.
+of a deconvolution run (cell-type proportions estimated with different
+methods and signatures) on the tutorial samples.
 }
 \examples{
 data(deconv.tuto)

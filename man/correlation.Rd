@@ -11,7 +11,7 @@ correlation(data)
 }
 \value{
 A data frame of pairwise significant correlations (p < 0.05), with
-columns \code{measure1}, \code{measure2}, \code{r}, \code{p}, \code{sig_p},
+columns \code{measure1}, \code{measure2}, \code{r}, \code{p}, \code{n}, \code{sig_p},
 \code{p_if_sig}, \code{r_if_sig}, and \code{AbsR}, ordered by descending \code{r}.
 }
 \description{

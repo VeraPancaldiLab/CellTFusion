@@ -19,7 +19,8 @@ compute.WTCNA(
 )
 }
 \arguments{
-\item{TFs.matrix}{Matrix of TF activity (samples x TFs).}
+\item{TFs.matrix}{Matrix of TF activity (samples x TFs). When \code{batch = TRUE}, a list of such matrices,
+one per cohort.}
 
 \item{batch}{Logical; if TRUE, performs consensus WGCNA (\code{WGCNA::blockwiseConsensusModules()}) across cohorts
 provided as a list of matrices. In this mode \code{clustering.method} and \code{corr_mod} are not used
@@ -37,7 +38,7 @@ provided as a list of matrices. In this mode \code{clustering.method} and \code{
 "p" (Pearson) or "s" (Spearman). Spearman is only available when \code{batch = FALSE}, because WGCNA
 consensus modules only support Pearson correlation. Default is "p".}
 
-\item{verbose}{Boolen value to whether print or no the function messages}
+\item{verbose}{Logical; whether to print the function messages. Default is FALSE.}
 
 \item{file.name}{Optional character suffix used when writing WTCNA outputs.}
 
@@ -61,7 +62,7 @@ concatenated in cohort order.
 \description{
 Construct a weighted signed or unsigned network using TF activity to cluster protein regulators
 into modules that share similar activity patterns. Each TF module will have a sample-level score
-represented by the eigenvalue of the module.
+represented by the eigengene of the module.
 }
 \examples{
 

@@ -42,8 +42,9 @@ Always required: even when \code{dt}, \code{tfs} and \code{pathways} are all sup
 the (normalized) expression matrix is still needed for the downstream GSEA-based TME state
 characterization step.}
 
-\item{deconv}{A data frame with deconvolution features (cell-type proportions as columns x samples as rows).
-Ignored if \code{dt} is supplied.}
+\item{deconv}{(Optional) A data frame with deconvolution features (cell-type proportions as columns x samples as rows).
+If \code{NULL} (default), it is computed with \code{multideconv::compute.deconvolution()} using
+\code{deconv_methods}. Ignored if \code{dt} is supplied.}
 
 \item{dt}{(Optional) A precomputed cell-subgroup object, typically the output of
 \code{multideconv::compute.deconvolution.analysis()} (or the \code{Processed_deconvolution} element
@@ -53,20 +54,26 @@ construction using this object.}
 
 \item{tfs}{(Optional) A precomputed TF activity matrix (samples as rows, TFs as columns), typically
 the \code{TFs_matrix} element returned by a previous \code{CellTFusion()} run or by
-\code{compute.TFs.activity()}. If supplied, TF activity inference is skipped.}
+\code{compute.TFs.activity()}. When \code{batch = TRUE}, a named list of such matrices (one per cohort).
+If supplied, TF activity inference is skipped.}
 
 \item{pathways}{(Optional) A precomputed pathway activity matrix, typically the \code{Pathways_scores}
 element returned by a previous \code{CellTFusion()} run or by \code{compute.pathway.activity()}.
 If supplied, pathway activity inference is skipped.}
 
-\item{normalized}{Logical; if TRUE, normalize raw counts to log-transformed TPM for TF computation. For deconvolution they are going to be normalize just as TPM. Default is TRUE.}
+\item{normalized}{Logical; if TRUE (default), \code{raw.counts} are normalized to log-transformed TPM for the
+TF activity, pathway activity and GSEA steps (for deconvolution they are normalized to TPM only). If FALSE,
+\code{raw.counts} is assumed to be already normalized and is used as is.}
 
 \item{coldata}{(Optional) A data frame of sample metadata (samples as rows). Only used when
 \code{batch = TRUE}, to read the batch column given by \code{batch_id}.}
 
-\item{batch}{Logical; whether batch correction should be applied where supported. Default is FALSE.}
+\item{batch}{Logical; whether to run the multi-cohort mode: TF activity is computed per cohort, TF modules are
+built with consensus WGCNA across cohorts, and the cohort is controlled for in the deconvolution analysis
+and cell group construction. Requires \code{coldata} and \code{batch_id}. Default is FALSE.}
 
-\item{batch_id}{Optional character indicating the column name in coldata containing batch identifiers.}
+\item{batch_id}{Optional character indicating the column name in coldata containing batch identifiers.
+Required when \code{batch = TRUE}.}
 
 \item{deconv_methods}{A character vector of deconvolution methods to apply. Default is
 \code{c("Quantiseq", "Epidish", "DeconRNASeq", "DWLS")}. Add \code{"CBSX"} to also run CIBERSORTx
@@ -80,7 +87,7 @@ If supplied, pathway activity inference is skipped.}
 
 \item{TF.collection}{Character. The source of the TF-target network. Options are \code{"CollecTRI"} (default), \code{"Dorothea"}, or \code{"ARACNE"}.
 \itemize{
-\item \code{"CollecTRI"} and \code{"Dorothea"} use prebuilt collections from OmnipathR.
+\item \code{"CollecTRI"} uses the prebuilt collection from OmnipathR and \code{"Dorothea"} the one from the \code{dorothea} package.
 \item \code{"ARACNE"} reads a network file (tab-separated with \code{Regulator} and \code{Target} columns) from
 \code{input/ARACNE/<cancer_type>/network/network.txt}.
 }}
@@ -99,14 +106,16 @@ If supplied, pathway activity inference is skipped.}
 
 \item{corr_mod}{Numeric; correlation threshold for merging TF modules. Default is 0.9.}
 
-\item{corr}{Numeric; correlation threshold used in the deconvolution analysis.}
+\item{corr}{Numeric; correlation threshold used in the deconvolution analysis. Default is 0.7.}
 
 \item{corr_type}{Correlation type used in deconvolution analysis. Default is \code{"spearman"}.}
 
-\item{cells_extra}{A string specifying the cells names to consider and that are not including in the nomenclature of multideconv (see R package)}
+\item{cells_extra}{(Optional) A character vector with the cell names to consider that are not included in the nomenclature of multideconv (see R package).
+This includes the group names created with \code{multideconv::aggregate_cell_groups()} on \code{deconv} (e.g. \code{"Lymphocytes"}):
+if they are not listed here they are discarded.}
 
 \item{pval}{Numeric; p-value threshold used when building cell groups (TF module-deconvolution
-correlations and the CCA permutation test).}
+correlations and the CCA permutation test). Default is 0.05.}
 
 \item{enrich_thresh}{Numeric. Minimum enrichment ratio (foreground/background cell-type frequency)
 required to include a cell type in a latent factor's niche. Default is 1.5.}
@@ -123,12 +132,12 @@ the network is auto-detected when only one exists under \code{input/ARACNE/}.}
 
 \item{return}{Logical; if TRUE, intermediate matrices and plots are written to the "Results/" folder. Default is TRUE.}
 
-\item{verbose}{Boolen value to whether print or no the function messages}
+\item{verbose}{Logical; whether to print the function messages. Default is TRUE.}
 }
 \value{
 A list containing:
 \describe{
-\item{Deconvolution}{A matrix with cell-type proportions (samples as rows, cell types as columns); \code{NULL} if \code{dt} was supplied.}
+\item{Deconvolution}{A matrix with cell-type proportions (samples as rows, cell types as columns); \code{NULL} if \code{dt} was supplied without \code{deconv}.}
 \item{TFs_matrix}{A matrix with TF activity scores (samples as rows, TFs as columns), or a list of matrices (one per cohort) when \code{batch = TRUE}.}
 \item{TF_network}{The TF module network returned by \code{compute.WTCNA()}.}
 \item{Pathways_scores}{Pathway activity scores returned by \code{compute.pathway.activity()}.}
@@ -141,7 +150,9 @@ A list containing:
 }
 }
 \description{
-Compute one-step CellTFusion
+Runs the full CellTFusion pipeline in a single call: cell-type deconvolution, TF activity inference,
+TF module construction, pathway activity, cell group construction, NMF latent factors, cell niches and
+TME state characterization (Hallmark GSEA per factor and mapping to TCGA meta-programs).
 }
 \details{
 The pipeline runs with a fixed random seed (123) so results are reproducible; the caller's random

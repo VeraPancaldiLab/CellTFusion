@@ -5,7 +5,7 @@
 \alias{tfs.tuto}
 \title{TFs data}
 \format{
-Matrix with samples as rows and TFs as columns
+A data frame with 192 samples as rows and 770 TFs as columns
 }
 \usage{
 tfs.tuto

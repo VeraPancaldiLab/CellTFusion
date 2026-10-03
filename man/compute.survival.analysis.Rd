@@ -52,8 +52,9 @@ If \code{features} is provided, a named list of significant \code{Surv() ~ featu
 (one per feature with log-rank p-value below \code{p.value}); \code{NULL} (with a message)
 if none are significant.
 
-A Kaplan-Meier plot (with risk table) is saved as an SVG file per significant result to
-\code{Results/SurvPlot_<group-or-feature>_<file_name>.svg}.
+A Kaplan-Meier plot (with risk table) is saved as an SVG file to
+\code{Results/SurvPlot_<group-or-feature>_<file_name>.svg}: always for \code{group_column},
+and one per significant feature for \code{features}.
 }
 \description{
 Performs Kaplan-Meier survival analysis and log-rank testing, either on a predefined

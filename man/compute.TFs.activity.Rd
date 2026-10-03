@@ -20,8 +20,9 @@ compute.TFs.activity(
 
 \item{TF.collection}{Character. The source of the TF-target network. Options are \code{"CollecTRI"} (default), \code{"Dorothea"}, or \code{"ARACNE"}.
 \itemize{
-\item \code{"CollecTRI"} and \code{"Dorothea"} (confidence A and B) use prebuilt collections from OmnipathR. Each collection is
-cached in its own file, \verb{Results/TF_target_collection_<TF.collection>.csv}, and reused on later calls.
+\item \code{"CollecTRI"} uses the prebuilt collection from OmnipathR and \code{"Dorothea"} (confidence A and B) the one from the
+\code{dorothea} package. Each collection is cached in its own file,
+\verb{Results/TF_target_collection_<TF.collection>.csv}, and reused on later calls.
 \item \code{"ARACNE"} reads a tab-separated network file with \code{Regulator} and \code{Target} columns from
 \verb{input/ARACNE/<cancer.type>/network/network.txt} (relative to the working directory). The mode of
 regulation of each edge is the sign of the Spearman correlation between TF and target expression.
@@ -51,8 +52,8 @@ and TFs as columns. Column names are made syntactically valid with \code{make.na
 \description{
 Infers transcription factor (TF) activity from a gene expression matrix with \code{decoupleR::decouple()},
 keeping the \code{consensus} score (ensemble of the decoupleR statistics; Badia-i-Mompel et al., 2022).
-The TF-target network can be provided by the user, obtained from OmnipathR resources (CollecTRI or
-Dorothea), or read from an ARACNe-inferred network.
+The TF-target network can be provided by the user, obtained from prebuilt collections (CollecTRI from
+OmnipathR or Dorothea from the \code{dorothea} package), or read from an ARACNe-inferred network.
 }
 \examples{
 \dontrun{

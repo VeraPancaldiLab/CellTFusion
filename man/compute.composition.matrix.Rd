@@ -11,14 +11,20 @@ compute.composition.matrix(
 )
 }
 \arguments{
-\item{deconvolution.subgroupped}{A list containing "Deconvolution subgroups composition" per model.}
+\item{deconvolution.subgroupped}{Deconvolution subgroups as returned by
+\code{multideconv::compute.deconvolution.analysis()} (the elements \code{Deconvolution matrix} and
+\code{Deconvolution subgroups composition} are used).}
 
-\item{cell.groups}{A list containing cell group definitions, where the second element holds the groupings.}
+\item{cell.groups}{A list containing cell group definitions, where the second element holds the groupings
+(e.g. the output of \code{construct_cell_groups()}).}
 
 \item{cells_extra}{Optional vector of additional cell identifiers to consider during extraction.}
 }
 \value{
 A binary matrix (data.frame) where rows are cell groups and columns are cell types (1 = present, 0 = absent).
+Each cell group appears twice, as \code{<group>_pos} and \code{<group>_neg} (same composition), to match the
+feature names used by \code{compute.latent_factors()}. Cell types not present in any cell group are dropped
+(with a warning).
 }
 \description{
 Builds a binary presence matrix indicating which original cell types are present in higher-level cell groups.

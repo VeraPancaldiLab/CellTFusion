@@ -18,14 +18,16 @@ compute.metadata.association.boxplot_summary(
 }
 \arguments{
 \item{tfs.modules}{A numeric matrix or data frame of TF module scores
-(samples x modules), typically from \code{compute.WTCNA()}.}
+(samples x modules), typically the first element (\code{TFs module matrix}) of the
+output from \code{compute.WTCNA()}.}
 
 \item{coldata}{A data frame of sample metadata. Only character and factor
 columns are used as traits.}
 
 \item{pval}{Numeric. ANOVA p-value threshold for significance. Default 0.05.}
 
-\item{file.name}{Character. Base name appended to output SVG file names.}
+\item{file.name}{Character. Base name appended to output SVG file names
+(\code{Results/ANOVA_boxplot_summary_<file.name>_<trait>.svg}).}
 
 \item{ncol}{Integer. Number of columns in the boxplot facet grid. Default 5.}
 
@@ -38,8 +40,9 @@ columns are used as traits.}
 \item{height}{Numeric. Height of the SVG output in inches. Default 10.}
 }
 \value{
-Called for its side effect (saves SVG files); returns \code{NULL}
-invisibly when no significant traits are found.
+Called for its side effect (saves one SVG file per categorical trait with at
+least one significant module); returns \code{NULL} invisibly when \code{coldata} has no
+categorical traits.
 }
 \description{
 For each categorical trait in \code{coldata}, runs a one-way ANOVA for each

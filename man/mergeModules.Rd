@@ -7,11 +7,11 @@
 mergeModules(data, colors, corr)
 }
 \arguments{
-\item{data}{A numeric matrix or data frame of TF module eigengenes (samples x modules).}
+\item{data}{A data frame of TF module eigengenes (samples x modules), with columns named \code{ME<color>}.}
 
-\item{colors}{A character vector of module color labels aligned with the columns of \code{data}.}
+\item{colors}{A character vector with the module color label of each TF.}
 
-\item{corr}{Numeric. Spearman correlation threshold above which two modules are merged. Default 0.9.}
+\item{corr}{Numeric. Spearman correlation threshold above which two modules are merged.}
 }
 \value{
 A list of two elements:

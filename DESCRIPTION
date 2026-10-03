@@ -31,7 +31,7 @@ Imports:
     matrixStats,
     org.Hs.eg.db,
     ReactomePA,
-    multideconv,
+    multideconv (>= 0.2.0),
     rstatix,
     stats,
     tibble,

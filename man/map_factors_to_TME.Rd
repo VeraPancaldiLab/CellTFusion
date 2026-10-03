@@ -15,7 +15,7 @@ e.g. \code{"skcm"}).}
 TCGA barcodes).}
 
 \item{plot}{Logical. If TRUE (default), saves violin/boxplots of factor scores by MFP group
-to \code{Results/TME_factors_MFP_<cancer_name>_<file_name>.pdf}.}
+to \code{Results/TME_factors_MFP_<cancer_name>_<file_name>.pdf} (\code{cancer_name} in lower case).}
 
 \item{file_name}{Optional character suffix for saving output plots.}
 }

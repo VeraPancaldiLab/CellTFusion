@@ -25,7 +25,8 @@ RData file containing such an object named \code{meta_programs}. If NULL, the pr
 reference for \code{cancer_type} is used.}
 
 \item{plot}{Logical. If TRUE (default), saves a barplot of factor-to-meta-program scores
-to \code{Results/Factor_MP_mapping_<file_name>.pdf}.}
+to \code{Results/Factor_MP_mapping_<file_name>.pdf} (\code{Results/Factor_MP_mapping.pdf} if
+\code{file_name} is \code{NULL}).}
 
 \item{file_name}{Optional character suffix for saving output plots.}
 }
@@ -41,7 +42,8 @@ scores as \code{"MP:score"} pairs) and, if available, \code{TME_subtype}.
 \description{
 For each study NMF factor, scores it against each TCGA meta-program
 by computing the mean NES of the meta-program's Hallmarks in that factor.
-The meta-program with the highest positive mean NES is the best match. If the
+The meta-program with the highest positive mean NES is the best match (\code{NA} if no
+meta-program has a positive score). If the
 meta-program reference has a \code{TME_subtype} column (see
 \code{annotate_metaprograms_TME()}), it is appended to the output.
 }

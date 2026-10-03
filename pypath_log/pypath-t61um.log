@@ -1,0 +1,5 @@
+[2026-10-02 02:37:32] Welcome!
+[2026-10-02 02:37:32] Logger started, logging into `/home/marcelo.hurtado/Documents/CellTFusion/pypath_log/pypath-t61um.log`.
+[2026-10-02 02:37:32] Session `t61um` started.
+[2026-10-02 02:37:32] Config has been read from the following files:
+[2026-10-02 02:37:32]   - /home/marcelo.hurtado/.cache/uv/archive-v0/qFsf_ESACW8FT8hs/lib/python3.10/site-packages/pypath_common/data/settings.yaml

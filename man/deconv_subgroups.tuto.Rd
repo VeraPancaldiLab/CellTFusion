@@ -5,13 +5,16 @@
 \alias{deconv_subgroups.tuto}
 \title{Cell subgroups}
 \format{
-A list with the cell subgroups
+A list of 6 elements; the first one (\code{Deconvolution matrix}) is the processed
+deconvolution matrix (192 samples x 184 features) and the third one
+(\code{Deconvolution subgroups composition}) the composition of the cell subgroups
 }
 \usage{
 deconv_subgroups.tuto
 }
 \description{
-Cell subgroups composition
+Cell subgroups composition, as returned by \code{multideconv::compute.deconvolution.analysis()}
+(multideconv >= 0.2.0, \code{corr = 0.7}) on \code{deconv.tuto}
 }
 \examples{
 data(deconv_subgroups.tuto)

@@ -2,14 +2,14 @@
 % Please edit documentation in R/CellTFusion.R
 \name{remove_single_groups}
 \alias{remove_single_groups}
-\title{Remove cell groups composed of a single cell type}
+\title{Remove cell groups composed of a single feature}
 \usage{
 remove_single_groups(cell.values, cell.composition, cell.loadings)
 }
 \arguments{
 \item{cell.values}{A list of numeric vectors of cell group scores.}
 
-\item{cell.composition}{A list of character vectors describing cell-type membership per group.}
+\item{cell.composition}{A list of character vectors with the deconvolution features of each group.}
 
 \item{cell.loadings}{A list of loading vectors corresponding to each cell group.}
 }
@@ -18,7 +18,7 @@ A list of three elements (scores, compositions, loadings) with singleton groups
 removed, or \code{NULL} if all groups are removed.
 }
 \description{
-Filters out cell groups whose composition contains only one cell type, as these
+Filters out cell groups whose composition contains only one deconvolution feature, as these
 groups lack multi-cellular context.
 }
 \keyword{internal}

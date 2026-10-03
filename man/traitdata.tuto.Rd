@@ -5,7 +5,8 @@
 \alias{traitdata.tuto}
 \title{Clinical data}
 \format{
-Matrix with samples as rows and traits as columns
+A data frame with 192 samples as rows and 3 traits as columns
+(\code{Best.Confirmed.Overall.Response}, \code{binaryResponse} and \code{Enrollment.IC})
 }
 \source{
 Mariathasan et al. (2018), doi: https://doi.org/10.1038/nature25501

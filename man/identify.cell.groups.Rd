@@ -13,22 +13,24 @@
 )
 }
 \arguments{
-\item{features}{A list with two named elements:
-\describe{
-\item{correlations}{A matrix of correlations between TF modules and cell type features.}
-\item{significant}{A named list of significant features per TF module (e.g., p-value < 0.05).}
+\item{features}{A list of two elements (accessed by position), as returned by
+\code{compute.modules.relationship()} with \code{return = TRUE}:
+\itemize{
+\item \code{[[1]]}: A matrix of correlations between TF modules (rows) and cell type features (columns).
+\item \code{[[2]]}: A named list of significant features per TF module (e.g., p-value < 0.05).
 }}
 
 \item{clustering.method}{Clustering method used in hclust. Default: "ward.D2".}
 
-\item{width}{Width of the saved PDF plots.}
+\item{width}{Width (in inches) of the saved PDF plots. Default: 12.}
 
-\item{height}{Height of the saved PDF plots.}
+\item{height}{Height (in inches) of the saved PDF plots. Default: 18.}
 
-\item{return}{Logical; whether to save dendrogram plots to the "Results/" folder.}
+\item{return}{Logical; whether to save dendrogram plots to the "Results/" folder. Default: TRUE.}
 }
 \value{
-A named list of dendrograms for each TF module.
+A named list of dendrograms (\code{hclust} objects), one per TF module. Modules with fewer than two
+significant features are discarded; \code{NULL} is returned if no module remains.
 }
 \description{
 Identifies cell dendrograms corresponding to each TF module group based on correlation with deconvolution features.

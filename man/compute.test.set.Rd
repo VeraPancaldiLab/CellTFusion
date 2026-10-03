@@ -7,15 +7,17 @@
 compute.test.set(deconv_res, cell_groups, features, deconvolution_test)
 }
 \arguments{
-\item{deconv_res}{A list containing deconvolution results, including
-subgroup compositions (list of data frames or matrices).}
+\item{deconv_res}{Deconvolution subgroups of the training set, as returned by
+\code{multideconv::compute.deconvolution.analysis()} (the elements \code{Deconvolution matrix} and
+\code{Deconvolution subgroups composition} are used).}
 
-\item{cell_groups}{A list with three elements:
+\item{cell_groups}{A list with three elements, as returned by \code{construct_cell_groups()} on the training set:
 \itemize{
 \item cell groups scores
 \item composition: A named list of character vectors where each element represents
 cells belonging to a specific group.
-\item loadings: A corresponding list of numeric vectors (loadings) for each cell group.
+\item loadings: A corresponding list of CCA projection parameters (\code{xcoef}, \code{train_means},
+\code{train_sds}) for each cell group.
 }}
 
 \item{features}{A character vector of feature names to select relevant cell groups. An error is
@@ -37,8 +39,9 @@ coming from a training set into an independent set.
 The composite scores represent summarized information from cell subgroup profiles.
 }
 \details{
-The function first simulates cell subgroups by computing median values across
-specified iterations and joins them with the original test deconvolution data.
+The function first replicates the training cell subgroups in the test deconvolution data with
+\code{multideconv::replicate_deconvolution_subgroups()} (each subgroup is the median of its member
+features; subgroups or features missing in the test set are \code{NA} and are skipped).
 Then it extracts the relevant cells for each feature and calculates composite
 scores. If the cell groups were built with batch correction, the test samples are centred on
 their own means (as each training cohort was), so \code{deconvolution_test} should contain a

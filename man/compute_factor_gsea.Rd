@@ -27,7 +27,8 @@ enriched Hallmark pathways for each feature. Default is TRUE.}
 
 \item{top_n}{Integer; number of top pathways to display in the dotplot. Default is 10.}
 
-\item{file_name}{Character; optional suffix for saved PDF files. Default is NULL.}
+\item{file_name}{Character; optional suffix for saved PDF files
+(\code{Results/GSEA_<feature>_<file_name>.pdf}). Default is NULL.}
 
 \item{width}{Numeric; width of the PDF plot in inches. Default is 8.}
 

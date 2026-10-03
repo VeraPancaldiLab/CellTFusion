@@ -20,37 +20,40 @@ cell.groups.computation(
 \item{deconvolution}{A data frame with deconvolution features (samples as rows, cell-type features as columns).
 This is usually the first element returned by \code{multideconv::compute.deconvolution.analysis()}.}
 
-\item{cell.dendrograms}{A named list of dendrogram objects, each corresponding to a TF module, typically
+\item{cell.dendrograms}{A named list of dendrogram (\code{hclust}) objects, each corresponding to a TF module, typically
 returned by \code{identify.cell.groups()}.}
 
 \item{tfs.module.network}{A list containing network information of transcription factor (TF) modules, as
-obtained from \code{compute.WTCNA()}. It should contain at least one element with TF module membership or connectivity.}
+obtained from \code{compute.WTCNA()} (the elements \code{TFs module matrix}, \code{TFs per module} and
+\code{TFs_matrix} are used).}
 
 \item{batch}{Optional vector indicating batch assignment for samples.}
 
 \item{return}{Logical; if TRUE (default), writes CSV files with cell group compositions and scores
 to the "Results/" folder.}
 
-\item{pval}{Numeric. P-value threshold for statistical tests. Default is 0.05.}
+\item{pval}{Numeric. Significance threshold for the CCA permutation test of each cell group. Default is 0.05.}
 
 \item{n_perm}{Integer. Number of permutations for significance testing. Default is 999.}
 
-\item{dendrogram_file}{Optional character. File path to save dendrogram plot.}
+\item{dendrogram_file}{Optional character. Suffix of the dendrogram PDF file name (see \code{return_dendrogram}).}
 
 \item{return_dendrogram}{Logical. If TRUE, saves a PDF of the colored cell-group dendrograms to
 \code{Results/Dendrogram_color_clusters_<dendrogram_file>.pdf} (only when \code{dendrogram_file} is set). Default FALSE.}
 }
 \value{
-A list of three elements:
-\describe{
-\item{scores}{A data frame with the composite scores of all identified cell groups across samples.}
-\item{composition}{A list of vectors indicating the composition (original features) of each cell group.}
-\item{loadings}{A list of CCA projection parameters (\code{xcoef}, \code{train_means}, \code{train_sds}) for each cell group.}
+An unnamed list of three elements:
+\itemize{
+\item \code{[[1]]}: A data frame with the composite scores of all identified cell groups across samples.
+\item \code{[[2]]}: A list of vectors indicating the composition (original features) of each cell group.
+\item \code{[[3]]}: A list of CCA projection parameters (\code{xcoef}, \code{train_means}, \code{train_sds}) for each cell group.
 }
+Cell groups made of a single feature, or that do not pass the CCA permutation test, are discarded; an error
+is raised if no cell group remains.
 If \code{return=TRUE}, two CSV files will be created:
 \itemize{
-\item{\code{Results/Cell.groups.composition.csv}: A table showing the composition of each cell group.}
-\item{\code{Results/Cell.groups.scores.csv}: A matrix of cell group scores across samples.}
+\item \code{Results/Cell.groups.composition.csv}: A table showing the composition of each cell group.
+\item \code{Results/Cell.groups.scores.csv}: A matrix of cell group scores across samples.
 }
 }
 \description{

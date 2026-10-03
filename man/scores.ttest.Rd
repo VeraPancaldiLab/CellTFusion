@@ -2,7 +2,7 @@
 % Please edit documentation in R/CellTFusion.R
 \name{scores.ttest}
 \alias{scores.ttest}
-\title{Student's t-test for cell group comparisons}
+\title{T-test for cell group comparisons}
 \usage{
 scores.ttest(scores, coldata, trait, pval = 0.05)
 }
@@ -22,6 +22,7 @@ A list containing only significant cell groups after the t-test.
 Returns \code{NULL} if no significant groups are found.
 }
 \description{
-Performs a Student's t-test comparing cell group scores between two groups of a binary trait.
+Performs a two-sample t-test (Welch's, unequal variances) comparing cell group scores between two groups
+of a binary trait.
 Significant features are plotted as boxplots and saved as PDF files in the "Results/" directory.
 }
