@@ -46,7 +46,8 @@ compute_factor_gsea(
 
 - file_name:
 
-  Character; optional suffix for saved PDF files. Default is NULL.
+  Character; optional suffix for saved PDF files
+  (`Results/GSEA_<feature>_<file_name>.pdf`). Default is NULL.
 
 - width:
 

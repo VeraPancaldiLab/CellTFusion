@@ -10,7 +10,7 @@ counts.norm.tuto
 
 ## Format
 
-Matrix with genes as rows and samples as columns
+A matrix with 23205 genes as rows and 192 samples as columns
 
 ## Examples
 

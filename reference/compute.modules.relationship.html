@@ -126,23 +126,25 @@ Otherwise (default), the <code>matB</code> features are on the x-axis and module
 
 
 <dt id="arg-plot">plot<a class="anchor" aria-label="anchor" href="#arg-plot"></a></dt>
-<dd><p>Logical; if TRUE, saves the heatmap plot as a PDF. Default is TRUE.</p></dd>
+<dd><p>Logical; if TRUE, saves the heatmap plot as a PDF (only when <code>return = FALSE</code>). Default is TRUE.</p></dd>
 
 
 <dt id="arg-plot-grid">plot.grid<a class="anchor" aria-label="anchor" href="#arg-plot-grid"></a></dt>
-<dd><p>Logical; if TRUE, generates per-pair scatter grid plots for significant associations.</p></dd>
+<dd><p>Logical; if TRUE, generates per-pair scatter grid plots for significant associations, saved to
+"Results/&lt;file_name&gt;_scatter_grid.svg". Default is FALSE.</p></dd>
 
 
 <dt id="arg-width-grid">width.grid<a class="anchor" aria-label="anchor" href="#arg-width-grid"></a></dt>
-<dd><p>Numeric width of the scatter grid output (increased if needed to fit all panels).</p></dd>
+<dd><p>Numeric width of the scatter grid output (increased if needed to fit all panels). Default is 12.</p></dd>
 
 
 <dt id="arg-height-grid">height.grid<a class="anchor" aria-label="anchor" href="#arg-height-grid"></a></dt>
-<dd><p>Numeric height of the scatter grid output (increased if needed to fit all panels).</p></dd>
+<dd><p>Numeric height of the scatter grid output (increased if needed to fit all panels). Default is 10.</p></dd>
 
 
 <dt id="arg-ncol-grid">ncol.grid<a class="anchor" aria-label="anchor" href="#arg-ncol-grid"></a></dt>
-<dd><p>Integer number of columns used in scatter grid layout.</p></dd>
+<dd><p>Integer number of columns used in scatter grid layout. If NULL (default), it is set to
+the ceiling of the square root of the number of panels.</p></dd>
 
 </dl></div>
     <div class="section level2">

@@ -13,18 +13,17 @@ mergeModules(data, colors, corr)
 
 - data:
 
-  A numeric matrix or data frame of TF module eigengenes (samples x
-  modules).
+  A data frame of TF module eigengenes (samples x modules), with columns
+  named `ME<color>`.
 
 - colors:
 
-  A character vector of module color labels aligned with the columns of
-  `data`.
+  A character vector with the module color label of each TF.
 
 - corr:
 
   Numeric. Spearman correlation threshold above which two modules are
-  merged. Default 0.9.
+  merged.
 
 ## Value
 

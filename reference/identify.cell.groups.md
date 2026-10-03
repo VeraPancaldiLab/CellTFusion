@@ -20,17 +20,15 @@ identify(
 
 - features:
 
-  A list with two named elements:
+  A list of two elements (accessed by position), as returned by
+  [`compute.modules.relationship()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.modules.relationship.md)
+  with `return = TRUE`:
 
-  correlations
+  - `[[1]]`: A matrix of correlations between TF modules (rows) and cell
+    type features (columns).
 
-  :   A matrix of correlations between TF modules and cell type
-      features.
-
-  significant
-
-  :   A named list of significant features per TF module (e.g., p-value
-      \< 0.05).
+  - `[[2]]`: A named list of significant features per TF module (e.g.,
+    p-value \< 0.05).
 
 - clustering.method:
 
@@ -38,16 +36,19 @@ identify(
 
 - width:
 
-  Width of the saved PDF plots.
+  Width (in inches) of the saved PDF plots. Default: 12.
 
 - height:
 
-  Height of the saved PDF plots.
+  Height (in inches) of the saved PDF plots. Default: 18.
 
 - return:
 
   Logical; whether to save dendrogram plots to the "Results/" folder.
+  Default: TRUE.
 
 ## Value
 
-A named list of dendrograms for each TF module.
+A named list of dendrograms (`hclust` objects), one per TF module.
+Modules with fewer than two significant features are discarded; `NULL`
+is returned if no module remains.

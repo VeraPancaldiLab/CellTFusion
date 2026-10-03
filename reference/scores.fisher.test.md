@@ -1,6 +1,8 @@
 # Fisher's exact test for score-trait association
 
-Fisher's exact test for score-trait association
+Performs a Fisher's exact test between each score, binarised at its
+median into High/Low groups, and a categorical trait. Significant
+features are plotted as barplots and saved to the "Results/" folder.
 
 ## Usage
 
@@ -36,6 +38,6 @@ scores.fisher.test(scores, coldata, trait, pval = 0.05)
 
 ## Value
 
-A list containing the significant features after Fisher test.
-Additionally, it saves corresponding barplot visualizations in the
-"Results/" folder.
+A list containing the significant features after Fisher test, or `NULL`
+if none are significant. Additionally, it saves corresponding barplot
+visualizations in the "Results/" folder.

@@ -42,7 +42,6 @@
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/derive_meta_programs.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/extract_cells.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/extract_contributing_features.html</loc></url>
-<url><loc>https://verapancaldilab.github.io/CellTFusion/reference/find.maximum.iteration.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/get_all_cells.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/identify.cell.groups.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/identify_hub_TFs.html</loc></url>
@@ -53,6 +52,7 @@
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/module_enrich.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/network.tuto.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/permutation_cca_test.html</loc></url>
+<url><loc>https://verapancaldilab.github.io/CellTFusion/reference/plot_dendrogram_clusters.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/plot_module_scatter_grid.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/prepare_celltfusion_folds.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/project_factors.html</loc></url>

@@ -1,7 +1,9 @@
 # Annotate meta-programs with Bagaev TME subtypes
 
-Assigns each meta-program a TME subtype (IE, IE/F, F, D) by majority
-vote across the TCGA factors that were mapped to it.
+Assigns each meta-program a TME subtype (IE, IE/F, F, D) by weighted
+majority vote across the TCGA factors with a positive score for it: the
+scores of the factors are summed per MFP subtype and the subtype with
+the highest total is assigned.
 
 ## Usage
 
@@ -25,11 +27,14 @@ annotate_metaprograms_TME(meta_programs_df, factor_tme_df, factors_mp_df)
 
 - factors_mp_df:
 
-  Data frame output of
+  The `factor_mapping` data frame returned by
   [`map_factors_to_metaprograms()`](https://verapancaldilab.github.io/CellTFusion/reference/map_factors_to_metaprograms.md)
   run on the TCGA factors themselves, with columns `factor` and
-  `best_MP`.
+  `all_scores`.
 
 ## Value
 
-`meta_programs_df` with an additional `TME_subtype` column.
+`meta_programs_df` with an additional `TME_subtype` column (`"IE"`,
+`"IE/F"`, `"F"`, `"D"`, or `"uncharacterized"` when no factor has a
+positive score for the meta-program, the vote is tied, or the winning
+label is `"uncharacterized"`).

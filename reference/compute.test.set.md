@@ -16,20 +16,24 @@ compute.test.set(deconv_res, cell_groups, features, deconvolution_test)
 
 - deconv_res:
 
-  A list containing deconvolution results, including subgroup
-  compositions (list of data frames or matrices).
+  Deconvolution subgroups of the training set, as returned by
+  [`multideconv::compute.deconvolution.analysis()`](https://verapancaldilab.github.io/multideconv/reference/compute.deconvolution.analysis.html)
+  (the elements `Deconvolution matrix` and
+  `Deconvolution subgroups composition` are used).
 
 - cell_groups:
 
-  A list with three elements:
+  A list with three elements, as returned by
+  [`construct_cell_groups()`](https://verapancaldilab.github.io/CellTFusion/reference/construct_cell_groups.md)
+  on the training set:
 
   - cell groups scores
 
   - composition: A named list of character vectors where each element
     represents cells belonging to a specific group.
 
-  - loadings: A corresponding list of numeric vectors (loadings) for
-    each cell group.
+  - loadings: A corresponding list of CCA projection parameters
+    (`xcoef`, `train_means`, `train_sds`) for each cell group.
 
 - features:
 
@@ -50,10 +54,12 @@ with a printed message.
 
 ## Details
 
-The function first simulates cell subgroups by computing median values
-across specified iterations and joins them with the original test
-deconvolution data. Then it extracts the relevant cells for each feature
-and calculates composite scores. If the cell groups were built with
-batch correction, the test samples are centred on their own means (as
-each training cohort was), so `deconvolution_test` should contain a
-single cohort.
+The function first replicates the training cell subgroups in the test
+deconvolution data with
+[`multideconv::replicate_deconvolution_subgroups()`](https://verapancaldilab.github.io/multideconv/reference/replicate_deconvolution_subgroups.html)
+(each subgroup is the median of its member features; subgroups or
+features missing in the test set are `NA` and are skipped). Then it
+extracts the relevant cells for each feature and calculates composite
+scores. If the cell groups were built with batch correction, the test
+samples are centred on their own means (as each training cohort was), so
+`deconvolution_test` should contain a single cohort.

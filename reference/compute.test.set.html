@@ -63,15 +63,17 @@ The composite scores represent summarized information from cell subgroup profile
 
 
 <dl><dt id="arg-deconv-res">deconv_res<a class="anchor" aria-label="anchor" href="#arg-deconv-res"></a></dt>
-<dd><p>A list containing deconvolution results, including
-subgroup compositions (list of data frames or matrices).</p></dd>
+<dd><p>Deconvolution subgroups of the training set, as returned by
+<code><a href="https://verapancaldilab.github.io/multideconv/reference/compute.deconvolution.analysis.html" class="external-link">multideconv::compute.deconvolution.analysis()</a></code> (the elements <code>Deconvolution matrix</code> and
+<code>Deconvolution subgroups composition</code> are used).</p></dd>
 
 
 <dt id="arg-cell-groups">cell_groups<a class="anchor" aria-label="anchor" href="#arg-cell-groups"></a></dt>
-<dd><p>A list with three elements:</p><ul><li><p>cell groups scores</p></li>
+<dd><p>A list with three elements, as returned by <code><a href="construct_cell_groups.html">construct_cell_groups()</a></code> on the training set:</p><ul><li><p>cell groups scores</p></li>
 <li><p>composition: A named list of character vectors where each element represents
 cells belonging to a specific group.</p></li>
-<li><p>loadings: A corresponding list of numeric vectors (loadings) for each cell group.</p></li>
+<li><p>loadings: A corresponding list of CCA projection parameters (<code>xcoef</code>, <code>train_means</code>,
+<code>train_sds</code>) for each cell group.</p></li>
 </ul></dd>
 
 
@@ -94,8 +96,9 @@ returns an empty data frame with a printed message.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>The function first simulates cell subgroups by computing median values across
-specified iterations and joins them with the original test deconvolution data.
+    <p>The function first replicates the training cell subgroups in the test deconvolution data with
+<code><a href="https://verapancaldilab.github.io/multideconv/reference/replicate_deconvolution_subgroups.html" class="external-link">multideconv::replicate_deconvolution_subgroups()</a></code> (each subgroup is the median of its member
+features; subgroups or features missing in the test set are <code>NA</code> and are skipped).
 Then it extracts the relevant cells for each feature and calculates composite
 scores. If the cell groups were built with batch correction, the test samples are centred on
 their own means (as each training cohort was), so <code>deconvolution_test</code> should contain a

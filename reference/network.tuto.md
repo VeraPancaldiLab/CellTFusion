@@ -10,7 +10,10 @@ network.tuto
 
 ## Format
 
-List where first element corresponds to the TF modules scores per sample
+A list of 5 elements (`TFs module matrix`, `TFs colors`,
+`TFs per module`, `Proportion of variance` and `TFs_matrix`), where the
+first element corresponds to the TF modules scores per sample (192
+samples x 10 modules)
 
 ## Examples
 

@@ -25,7 +25,8 @@ compute.metadata.association.boxplot_summary(
 - tfs.modules:
 
   A numeric matrix or data frame of TF module scores (samples x
-  modules), typically from
+  modules), typically the first element (`TFs module matrix`) of the
+  output from
   [`compute.WTCNA()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.WTCNA.md).
 
 - coldata:
@@ -39,7 +40,8 @@ compute.metadata.association.boxplot_summary(
 
 - file.name:
 
-  Character. Base name appended to output SVG file names.
+  Character. Base name appended to output SVG file names
+  (`Results/ANOVA_boxplot_summary_<file.name>_<trait>.svg`).
 
 - ncol:
 
@@ -63,5 +65,6 @@ compute.metadata.association.boxplot_summary(
 
 ## Value
 
-Called for its side effect (saves SVG files); returns `NULL` invisibly
-when no significant traits are found.
+Called for its side effect (saves one SVG file per categorical trait
+with at least one significant module); returns `NULL` invisibly when
+`coldata` has no categorical traits.

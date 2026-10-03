@@ -5,8 +5,9 @@ with
 [`decoupleR::decouple()`](https://saezlab.github.io/decoupleR/reference/decouple.html),
 keeping the `consensus` score (ensemble of the decoupleR statistics;
 Badia-i-Mompel et al., 2022). The TF-target network can be provided by
-the user, obtained from OmnipathR resources (CollecTRI or Dorothea), or
-read from an ARACNe-inferred network.
+the user, obtained from prebuilt collections (CollecTRI from OmnipathR
+or Dorothea from the `dorothea` package), or read from an
+ARACNe-inferred network.
 
 ## Usage
 
@@ -35,10 +36,11 @@ compute.TFs.activity(
   Character. The source of the TF-target network. Options are
   `"CollecTRI"` (default), `"Dorothea"`, or `"ARACNE"`.
 
-  - `"CollecTRI"` and `"Dorothea"` (confidence A and B) use prebuilt
-    collections from OmnipathR. Each collection is cached in its own
-    file, `Results/TF_target_collection_<TF.collection>.csv`, and reused
-    on later calls.
+  - `"CollecTRI"` uses the prebuilt collection from OmnipathR and
+    `"Dorothea"` (confidence A and B) the one from the `dorothea`
+    package. Each collection is cached in its own file,
+    `Results/TF_target_collection_<TF.collection>.csv`, and reused on
+    later calls.
 
   - `"ARACNE"` reads a tab-separated network file with `Regulator` and
     `Target` columns from

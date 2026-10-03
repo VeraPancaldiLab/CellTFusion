@@ -52,7 +52,8 @@ construct_cell_groups(
 
 - dendrogram_file:
 
-  Optional character. File path to save dendrogram plot output.
+  Optional character. Suffix of the dendrogram PDF file name (see
+  `return_dendrogram`).
 
 - return_dendrogram:
 

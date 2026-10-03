@@ -1,7 +1,7 @@
-# Remove cell groups composed of a single cell type
+# Remove cell groups composed of a single feature
 
-Filters out cell groups whose composition contains only one cell type,
-as these groups lack multi-cellular context.
+Filters out cell groups whose composition contains only one
+deconvolution feature, as these groups lack multi-cellular context.
 
 ## Usage
 
@@ -17,7 +17,8 @@ remove_single_groups(cell.values, cell.composition, cell.loadings)
 
 - cell.composition:
 
-  A list of character vectors describing cell-type membership per group.
+  A list of character vectors with the deconvolution features of each
+  group.
 
 - cell.loadings:
 

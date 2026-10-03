@@ -101,9 +101,9 @@ If `features` is provided, a named list of significant
 `Surv() ~ feature` formulas (one per feature with log-rank p-value below
 `p.value`); `NULL` (with a message) if none are significant.
 
-A Kaplan-Meier plot (with risk table) is saved as an SVG file per
-significant result to
-`Results/SurvPlot_<group-or-feature>_<file_name>.svg`.
+A Kaplan-Meier plot (with risk table) is saved as an SVG file to
+`Results/SurvPlot_<group-or-feature>_<file_name>.svg`: always for
+`group_column`, and one per significant feature for `features`.
 
 ## Details
 

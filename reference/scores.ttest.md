@@ -1,8 +1,9 @@
-# Student's t-test for cell group comparisons
+# T-test for cell group comparisons
 
-Performs a Student's t-test comparing cell group scores between two
-groups of a binary trait. Significant features are plotted as boxplots
-and saved as PDF files in the "Results/" directory.
+Performs a two-sample t-test (Welch's, unequal variances) comparing cell
+group scores between two groups of a binary trait. Significant features
+are plotted as boxplots and saved as PDF files in the "Results/"
+directory.
 
 ## Usage
 

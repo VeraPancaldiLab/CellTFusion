@@ -228,7 +228,6 @@ Key arguments:
 dt <- multideconv::compute.deconvolution.analysis(
   deconvolution = deconv,
   corr          = 0.7,
-  seed          = 123,
   return        = FALSE
 )
 ```

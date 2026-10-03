@@ -99,26 +99,30 @@ compute.modules.relationship(
 
 - plot:
 
-  Logical; if TRUE, saves the heatmap plot as a PDF. Default is TRUE.
+  Logical; if TRUE, saves the heatmap plot as a PDF (only when
+  `return = FALSE`). Default is TRUE.
 
 - plot.grid:
 
   Logical; if TRUE, generates per-pair scatter grid plots for
-  significant associations.
+  significant associations, saved to
+  "Results/\<file_name\>\_scatter_grid.svg". Default is FALSE.
 
 - width.grid:
 
   Numeric width of the scatter grid output (increased if needed to fit
-  all panels).
+  all panels). Default is 12.
 
 - height.grid:
 
   Numeric height of the scatter grid output (increased if needed to fit
-  all panels).
+  all panels). Default is 10.
 
 - ncol.grid:
 
-  Integer number of columns used in scatter grid layout.
+  Integer number of columns used in scatter grid layout. If NULL
+  (default), it is set to the ceiling of the square root of the number
+  of panels.
 
 ## Value
 

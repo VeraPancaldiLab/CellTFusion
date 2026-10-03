@@ -86,7 +86,8 @@ state is restored when the function returns.</p></dd>
 
 <dt id="arg-return">return<a class="anchor" aria-label="anchor" href="#arg-return"></a></dt>
 <dd><p>Logical. If TRUE (default), saves the patient-mixture barplot to
-<code>Results/NMF_patient_mixture_&lt;file_name&gt;.pdf</code>.</p></dd>
+<code>Results/NMF_patient_mixture_&lt;file_name&gt;.pdf</code> (<code>Results/NMF_patient_mixture.pdf</code> if
+<code>file_name</code> is <code>NULL</code>).</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -110,10 +111,9 @@ state is restored when the function returns.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>Signed CCA scores are decomposed as:
-score_pos = max(score, 0) – patient aligned with TF program
-score_neg = max(-score, 0) – patient anti-aligned with TF program
-Both are concatenated column-wise before NMF. Column names are suffixed
+    <p>Signed CCA scores are decomposed as:</p><ul><li><p><code>score_pos = max(score, 0)</code>: patient aligned with TF program</p></li>
+<li><p><code>score_neg = max(-score, 0)</code>: patient anti-aligned with TF program</p></li>
+</ul><p>Both are concatenated column-wise before NMF. Column names are suffixed
 with "_pos" and "_neg" to track direction.</p>
     </div>
 

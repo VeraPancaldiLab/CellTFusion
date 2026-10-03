@@ -2,7 +2,8 @@
 
 A toy dataset included with the package to illustrate usage of functions
 in **CellTFusion**. This dataset contains the output of a deconvolution
-run for a small subset of genes.
+run (cell-type proportions estimated with different methods and
+signatures) on the tutorial samples.
 
 ## Usage
 
@@ -12,7 +13,10 @@ deconv.tuto
 
 ## Format
 
-A data frame with X rows and Y variables:
+A data frame with 192 samples as rows and 399 deconvolution features as
+columns (named `<method>_<signature>_<cell type>`, or
+`<method>_<cell type>` for methods with a single signature such as
+Quantiseq)
 
 ## Examples
 

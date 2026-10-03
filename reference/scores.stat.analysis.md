@@ -51,9 +51,9 @@ scores.stat.analysis(
 
   - `"kruskal"` - Kruskal-Wallis test (non-parametric, \>2 groups)
 
-  - `"ttest"` - Student's t-test (parametric, binary traits)
+  - `"ttest"` - Welch's t-test (parametric, binary traits)
 
-  Defaults to all available options, but only one can be used per call.
+  Only one can be used per call; defaults to the first one (`"fisher"`).
 
 - pval:
 

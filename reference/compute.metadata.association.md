@@ -32,7 +32,7 @@ compute.metadata.association(
 - tfs.modules:
 
   A numeric matrix or data frame of TF module scores across samples.
-  Typically the output from
+  Typically the first element (`TFs module matrix`) of the output from
   [`compute.WTCNA()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.WTCNA.md).
   Rows represent samples, columns represent TF modules.
 
@@ -71,27 +71,28 @@ compute.metadata.association(
 - ncol:
 
   Integer. Number of columns in the grid of association boxplots.
+  Default is 5.
 
 - y_min:
 
-  Numeric. Lower y-axis limit for grid boxplots.
+  Numeric. Lower y-axis limit for grid boxplots. Default is 0.
 
 - y_max:
 
-  Numeric. Upper y-axis limit for grid boxplots.
+  Numeric. Upper y-axis limit for grid boxplots. Default is 0.5.
 
 - plot_grid:
 
   Logical; if TRUE, tests categorical traits with ANOVA and saves
-  boxplot grids.
+  boxplot grids. Default is FALSE.
 
 - width_grid:
 
-  Numeric width of the grid plot output.
+  Numeric width (in inches) of the grid plot output. Default is 18.
 
 - height_grid:
 
-  Numeric height of the grid plot output.
+  Numeric height (in inches) of the grid plot output. Default is 10.
 
 ## Value
 

@@ -58,11 +58,14 @@
 
 
 <dl><dt id="arg-deconvolution-subgroupped">deconvolution.subgroupped<a class="anchor" aria-label="anchor" href="#arg-deconvolution-subgroupped"></a></dt>
-<dd><p>A list containing "Deconvolution subgroups composition" per model.</p></dd>
+<dd><p>Deconvolution subgroups as returned by
+<code><a href="https://verapancaldilab.github.io/multideconv/reference/compute.deconvolution.analysis.html" class="external-link">multideconv::compute.deconvolution.analysis()</a></code> (the elements <code>Deconvolution matrix</code> and
+<code>Deconvolution subgroups composition</code> are used).</p></dd>
 
 
 <dt id="arg-cell-groups">cell.groups<a class="anchor" aria-label="anchor" href="#arg-cell-groups"></a></dt>
-<dd><p>A list containing cell group definitions, where the second element holds the groupings.</p></dd>
+<dd><p>A list containing cell group definitions, where the second element holds the groupings
+(e.g. the output of <code><a href="construct_cell_groups.html">construct_cell_groups()</a></code>).</p></dd>
 
 
 <dt id="arg-cells-extra">cells_extra<a class="anchor" aria-label="anchor" href="#arg-cells-extra"></a></dt>
@@ -71,7 +74,10 @@
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A binary matrix (data.frame) where rows are cell groups and columns are cell types (1 = present, 0 = absent).</p>
+    <p>A binary matrix (data.frame) where rows are cell groups and columns are cell types (1 = present, 0 = absent).
+Each cell group appears twice, as <code>&lt;group&gt;_pos</code> and <code>&lt;group&gt;_neg</code> (same composition), to match the
+feature names used by <code><a href="compute.latent_factors.html">compute.latent_factors()</a></code>. Cell types not present in any cell group are dropped
+(with a warning).</p>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

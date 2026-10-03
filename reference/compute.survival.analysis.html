@@ -138,8 +138,9 @@ Mutually exclusive with <code>features</code>.</p></dd>
 </dl><p>If <code>features</code> is provided, a named list of significant <code>Surv() ~ feature</code> formulas
 (one per feature with log-rank p-value below <code>p.value</code>); <code>NULL</code> (with a message)
 if none are significant.</p>
-<p>A Kaplan-Meier plot (with risk table) is saved as an SVG file per significant result to
-<code>Results/SurvPlot_&lt;group-or-feature&gt;_&lt;file_name&gt;.svg</code>.</p>
+<p>A Kaplan-Meier plot (with risk table) is saved as an SVG file to
+<code>Results/SurvPlot_&lt;group-or-feature&gt;_&lt;file_name&gt;.svg</code>: always for <code>group_column</code>,
+and one per significant feature for <code>features</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>

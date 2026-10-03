@@ -10,7 +10,7 @@ raw.counts.tuto
 
 ## Format
 
-Matrix with genes as rows and samples as columns
+A data frame with 31086 genes as rows and 192 samples as columns
 
 ## Source
 

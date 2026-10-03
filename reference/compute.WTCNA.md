@@ -3,7 +3,7 @@
 Construct a weighted signed or unsigned network using TF activity to
 cluster protein regulators into modules that share similar activity
 patterns. Each TF module will have a sample-level score represented by
-the eigenvalue of the module.
+the eigengene of the module.
 
 ## Usage
 
@@ -27,7 +27,8 @@ compute.WTCNA(
 
 - TFs.matrix:
 
-  Matrix of TF activity (samples x TFs).
+  Matrix of TF activity (samples x TFs). When `batch = TRUE`, a list of
+  such matrices, one per cohort.
 
 - batch:
 
@@ -66,7 +67,7 @@ compute.WTCNA(
 
 - verbose:
 
-  Boolen value to whether print or no the function messages
+  Logical; whether to print the function messages. Default is FALSE.
 
 - file.name:
 

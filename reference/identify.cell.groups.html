@@ -61,14 +61,10 @@
 
 
 <dl><dt id="arg-features">features<a class="anchor" aria-label="anchor" href="#arg-features"></a></dt>
-<dd><p>A list with two named elements:</p><dl><dt>correlations</dt>
-<dd><p>A matrix of correlations between TF modules and cell type features.</p></dd>
-
-<dt>significant</dt>
-<dd><p>A named list of significant features per TF module (e.g., p-value &lt; 0.05).</p></dd>
-
-
-</dl></dd>
+<dd><p>A list of two elements (accessed by position), as returned by
+<code><a href="compute.modules.relationship.html">compute.modules.relationship()</a></code> with <code>return = TRUE</code>:</p><ul><li><p><code>[[1]]</code>: A matrix of correlations between TF modules (rows) and cell type features (columns).</p></li>
+<li><p><code>[[2]]</code>: A named list of significant features per TF module (e.g., p-value &lt; 0.05).</p></li>
+</ul></dd>
 
 
 <dt id="arg-clustering-method">clustering.method<a class="anchor" aria-label="anchor" href="#arg-clustering-method"></a></dt>
@@ -76,20 +72,21 @@
 
 
 <dt id="arg-width">width<a class="anchor" aria-label="anchor" href="#arg-width"></a></dt>
-<dd><p>Width of the saved PDF plots.</p></dd>
+<dd><p>Width (in inches) of the saved PDF plots. Default: 12.</p></dd>
 
 
 <dt id="arg-height">height<a class="anchor" aria-label="anchor" href="#arg-height"></a></dt>
-<dd><p>Height of the saved PDF plots.</p></dd>
+<dd><p>Height (in inches) of the saved PDF plots. Default: 18.</p></dd>
 
 
 <dt id="arg-return">return<a class="anchor" aria-label="anchor" href="#arg-return"></a></dt>
-<dd><p>Logical; whether to save dendrogram plots to the "Results/" folder.</p></dd>
+<dd><p>Logical; whether to save dendrogram plots to the "Results/" folder. Default: TRUE.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A named list of dendrograms for each TF module.</p>
+    <p>A named list of dendrograms (<code>hclust</code> objects), one per TF module. Modules with fewer than two
+significant features are discarded; <code>NULL</code> is returned if no module remains.</p>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

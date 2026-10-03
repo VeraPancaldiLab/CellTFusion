@@ -28,7 +28,8 @@ map_factors_to_TME(cancer_name, Z, plot = TRUE, file_name = NULL)
 - plot:
 
   Logical. If TRUE (default), saves violin/boxplots of factor scores by
-  MFP group to `Results/TME_factors_MFP_<cancer_name>_<file_name>.pdf`.
+  MFP group to `Results/TME_factors_MFP_<cancer_name>_<file_name>.pdf`
+  (`cancer_name` in lower case).
 
 - file_name:
 

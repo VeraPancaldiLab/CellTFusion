@@ -87,8 +87,8 @@ or experimental trait to test against (e.g., response, subtype, etc.).</p></dd>
 <li><p><code>"wilcox"</code> - Wilcoxon rank-sum test (non-parametric, binary traits)</p></li>
 <li><p><code>"anova"</code> - One-way ANOVA (parametric, &gt;2 groups)</p></li>
 <li><p><code>"kruskal"</code> - Kruskal-Wallis test (non-parametric, &gt;2 groups)</p></li>
-<li><p><code>"ttest"</code> - Student's t-test (parametric, binary traits)</p></li>
-</ul><p>Defaults to all available options, but only one can be used per call.</p></dd>
+<li><p><code>"ttest"</code> - Welch's t-test (parametric, binary traits)</p></li>
+</ul><p>Only one can be used per call; defaults to the first one (<code>"fisher"</code>).</p></dd>
 
 
 <dt id="arg-pval">pval<a class="anchor" aria-label="anchor" href="#arg-pval"></a></dt>

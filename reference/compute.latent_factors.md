@@ -42,7 +42,8 @@ compute.latent_factors(
 - return:
 
   Logical. If TRUE (default), saves the patient-mixture barplot to
-  `Results/NMF_patient_mixture_<file_name>.pdf`.
+  `Results/NMF_patient_mixture_<file_name>.pdf`
+  (`Results/NMF_patient_mixture.pdf` if `file_name` is `NULL`).
 
 ## Value
 
@@ -72,8 +73,11 @@ A named list with:
 
 ## Details
 
-Signed CCA scores are decomposed as: score_pos = max(score, 0) – patient
-aligned with TF program score_neg = max(-score, 0) – patient
-anti-aligned with TF program Both are concatenated column-wise before
-NMF. Column names are suffixed with "\_pos" and "\_neg" to track
-direction.
+Signed CCA scores are decomposed as:
+
+- `score_pos = max(score, 0)`: patient aligned with TF program
+
+- `score_neg = max(-score, 0)`: patient anti-aligned with TF program
+
+Both are concatenated column-wise before NMF. Column names are suffixed
+with "\_pos" and "\_neg" to track direction.

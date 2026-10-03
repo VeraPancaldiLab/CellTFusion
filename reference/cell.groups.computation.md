@@ -30,17 +30,17 @@ cell.groups.computation(
 
 - cell.dendrograms:
 
-  A named list of dendrogram objects, each corresponding to a TF module,
-  typically returned by
+  A named list of dendrogram (`hclust`) objects, each corresponding to a
+  TF module, typically returned by
   [`identify.cell.groups()`](https://verapancaldilab.github.io/CellTFusion/reference/identify.cell.groups.md).
 
 - tfs.module.network:
 
   A list containing network information of transcription factor (TF)
   modules, as obtained from
-  [`compute.WTCNA()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.WTCNA.md).
-  It should contain at least one element with TF module membership or
-  connectivity.
+  [`compute.WTCNA()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.WTCNA.md)
+  (the elements `TFs module matrix`, `TFs per module` and `TFs_matrix`
+  are used).
 
 - batch:
 
@@ -53,7 +53,8 @@ cell.groups.computation(
 
 - pval:
 
-  Numeric. P-value threshold for statistical tests. Default is 0.05.
+  Numeric. Significance threshold for the CCA permutation test of each
+  cell group. Default is 0.05.
 
 - n_perm:
 
@@ -62,7 +63,8 @@ cell.groups.computation(
 
 - dendrogram_file:
 
-  Optional character. File path to save dendrogram plot.
+  Optional character. Suffix of the dendrogram PDF file name (see
+  `return_dendrogram`).
 
 - return_dendrogram:
 
@@ -72,24 +74,20 @@ cell.groups.computation(
 
 ## Value
 
-A list of three elements:
+An unnamed list of three elements:
 
-- scores:
+- `[[1]]`: A data frame with the composite scores of all identified cell
+  groups across samples.
 
-  A data frame with the composite scores of all identified cell groups
-  across samples.
+- `[[2]]`: A list of vectors indicating the composition (original
+  features) of each cell group.
 
-- composition:
-
-  A list of vectors indicating the composition (original features) of
-  each cell group.
-
-- loadings:
-
-  A list of CCA projection parameters (`xcoef`, `train_means`,
+- `[[3]]`: A list of CCA projection parameters (`xcoef`, `train_means`,
   `train_sds`) for each cell group.
 
-If `return=TRUE`, two CSV files will be created:
+Cell groups made of a single feature, or that do not pass the CCA
+permutation test, are discarded; an error is raised if no cell group
+remains. If `return=TRUE`, two CSV files will be created:
 
 - `Results/Cell.groups.composition.csv`: A table showing the composition
   of each cell group.

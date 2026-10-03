@@ -1,6 +1,10 @@
 # Compute one-step CellTFusion
 
-Compute one-step CellTFusion
+Runs the full CellTFusion pipeline in a single call: cell-type
+deconvolution, TF activity inference, TF module construction, pathway
+activity, cell group construction, NMF latent factors, cell niches and
+TME state characterization (Hallmark GSEA per factor and mapping to TCGA
+meta-programs).
 
 ## Usage
 
@@ -49,8 +53,11 @@ CellTFusion(
 
 - deconv:
 
-  A data frame with deconvolution features (cell-type proportions as
-  columns x samples as rows). Ignored if `dt` is supplied.
+  (Optional) A data frame with deconvolution features (cell-type
+  proportions as columns x samples as rows). If `NULL` (default), it is
+  computed with
+  [`multideconv::compute.deconvolution()`](https://verapancaldilab.github.io/multideconv/reference/compute.deconvolution.html)
+  using `deconv_methods`. Ignored if `dt` is supplied.
 
 - dt:
 
@@ -67,6 +74,7 @@ CellTFusion(
   columns), typically the `TFs_matrix` element returned by a previous
   `CellTFusion()` run or by
   [`compute.TFs.activity()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.TFs.activity.md).
+  When `batch = TRUE`, a named list of such matrices (one per cohort).
   If supplied, TF activity inference is skipped.
 
 - pathways:
@@ -79,9 +87,10 @@ CellTFusion(
 
 - normalized:
 
-  Logical; if TRUE, normalize raw counts to log-transformed TPM for TF
-  computation. For deconvolution they are going to be normalize just as
-  TPM. Default is TRUE.
+  Logical; if TRUE (default), `raw.counts` are normalized to
+  log-transformed TPM for the TF activity, pathway activity and GSEA
+  steps (for deconvolution they are normalized to TPM only). If FALSE,
+  `raw.counts` is assumed to be already normalized and is used as is.
 
 - coldata:
 
@@ -91,13 +100,16 @@ CellTFusion(
 
 - batch:
 
-  Logical; whether batch correction should be applied where supported.
-  Default is FALSE.
+  Logical; whether to run the multi-cohort mode: TF activity is computed
+  per cohort, TF modules are built with consensus WGCNA across cohorts,
+  and the cohort is controlled for in the deconvolution analysis and
+  cell group construction. Requires `coldata` and `batch_id`. Default is
+  FALSE.
 
 - batch_id:
 
   Optional character indicating the column name in coldata containing
-  batch identifiers.
+  batch identifiers. Required when `batch = TRUE`.
 
 - deconv_methods:
 
@@ -124,8 +136,8 @@ CellTFusion(
   Character. The source of the TF-target network. Options are
   `"CollecTRI"` (default), `"Dorothea"`, or `"ARACNE"`.
 
-  - `"CollecTRI"` and `"Dorothea"` use prebuilt collections from
-    OmnipathR.
+  - `"CollecTRI"` uses the prebuilt collection from OmnipathR and
+    `"Dorothea"` the one from the `dorothea` package.
 
   - `"ARACNE"` reads a network file (tab-separated with `Regulator` and
     `Target` columns) from
@@ -168,6 +180,7 @@ CellTFusion(
 - corr:
 
   Numeric; correlation threshold used in the deconvolution analysis.
+  Default is 0.7.
 
 - corr_type:
 
@@ -176,13 +189,18 @@ CellTFusion(
 
 - cells_extra:
 
-  A string specifying the cells names to consider and that are not
-  including in the nomenclature of multideconv (see R package)
+  (Optional) A character vector with the cell names to consider that are
+  not included in the nomenclature of multideconv (see R package). This
+  includes the group names created with
+  [`multideconv::aggregate_cell_groups()`](https://verapancaldilab.github.io/multideconv/reference/aggregate_cell_groups.html)
+  on `deconv` (e.g. `"Lymphocytes"`): if they are not listed here they
+  are discarded.
 
 - pval:
 
   Numeric; p-value threshold used when building cell groups (TF
   module-deconvolution correlations and the CCA permutation test).
+  Default is 0.05.
 
 - enrich_thresh:
 
@@ -213,7 +231,7 @@ CellTFusion(
 
 - verbose:
 
-  Boolen value to whether print or no the function messages
+  Logical; whether to print the function messages. Default is TRUE.
 
 ## Value
 
@@ -222,7 +240,7 @@ A list containing:
 - Deconvolution:
 
   A matrix with cell-type proportions (samples as rows, cell types as
-  columns); `NULL` if `dt` was supplied.
+  columns); `NULL` if `dt` was supplied without `deconv`.
 
 - TFs_matrix:
 

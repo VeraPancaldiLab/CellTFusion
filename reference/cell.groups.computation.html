@@ -72,13 +72,14 @@ This is usually the first element returned by <code><a href="https://verapancald
 
 
 <dt id="arg-cell-dendrograms">cell.dendrograms<a class="anchor" aria-label="anchor" href="#arg-cell-dendrograms"></a></dt>
-<dd><p>A named list of dendrogram objects, each corresponding to a TF module, typically
+<dd><p>A named list of dendrogram (<code>hclust</code>) objects, each corresponding to a TF module, typically
 returned by <code><a href="identify.cell.groups.html">identify.cell.groups()</a></code>.</p></dd>
 
 
 <dt id="arg-tfs-module-network">tfs.module.network<a class="anchor" aria-label="anchor" href="#arg-tfs-module-network"></a></dt>
 <dd><p>A list containing network information of transcription factor (TF) modules, as
-obtained from <code><a href="compute.WTCNA.html">compute.WTCNA()</a></code>. It should contain at least one element with TF module membership or connectivity.</p></dd>
+obtained from <code><a href="compute.WTCNA.html">compute.WTCNA()</a></code> (the elements <code>TFs module matrix</code>, <code>TFs per module</code> and
+<code>TFs_matrix</code> are used).</p></dd>
 
 
 <dt id="arg-batch">batch<a class="anchor" aria-label="anchor" href="#arg-batch"></a></dt>
@@ -91,7 +92,7 @@ to the "Results/" folder.</p></dd>
 
 
 <dt id="arg-pval">pval<a class="anchor" aria-label="anchor" href="#arg-pval"></a></dt>
-<dd><p>Numeric. P-value threshold for statistical tests. Default is 0.05.</p></dd>
+<dd><p>Numeric. Significance threshold for the CCA permutation test of each cell group. Default is 0.05.</p></dd>
 
 
 <dt id="arg-n-perm">n_perm<a class="anchor" aria-label="anchor" href="#arg-n-perm"></a></dt>
@@ -99,7 +100,7 @@ to the "Results/" folder.</p></dd>
 
 
 <dt id="arg-dendrogram-file">dendrogram_file<a class="anchor" aria-label="anchor" href="#arg-dendrogram-file"></a></dt>
-<dd><p>Optional character. File path to save dendrogram plot.</p></dd>
+<dd><p>Optional character. Suffix of the dendrogram PDF file name (see <code>return_dendrogram</code>).</p></dd>
 
 
 <dt id="arg-return-dendrogram">return_dendrogram<a class="anchor" aria-label="anchor" href="#arg-return-dendrogram"></a></dt>
@@ -109,17 +110,12 @@ to the "Results/" folder.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A list of three elements:</p><dl><dt>scores</dt>
-<dd><p>A data frame with the composite scores of all identified cell groups across samples.</p></dd>
-
-<dt>composition</dt>
-<dd><p>A list of vectors indicating the composition (original features) of each cell group.</p></dd>
-
-<dt>loadings</dt>
-<dd><p>A list of CCA projection parameters (<code>xcoef</code>, <code>train_means</code>, <code>train_sds</code>) for each cell group.</p></dd>
-
-
-</dl><p>If <code>return=TRUE</code>, two CSV files will be created:</p><ul><li><p><code>Results/Cell.groups.composition.csv</code>: A table showing the composition of each cell group.</p></li>
+    <p>An unnamed list of three elements:</p><ul><li><p><code>[[1]]</code>: A data frame with the composite scores of all identified cell groups across samples.</p></li>
+<li><p><code>[[2]]</code>: A list of vectors indicating the composition (original features) of each cell group.</p></li>
+<li><p><code>[[3]]</code>: A list of CCA projection parameters (<code>xcoef</code>, <code>train_means</code>, <code>train_sds</code>) for each cell group.</p></li>
+</ul><p>Cell groups made of a single feature, or that do not pass the CCA permutation test, are discarded; an error
+is raised if no cell group remains.
+If <code>return=TRUE</code>, two CSV files will be created:</p><ul><li><p><code>Results/Cell.groups.composition.csv</code>: A table showing the composition of each cell group.</p></li>
 <li><p><code>Results/Cell.groups.scores.csv</code>: A matrix of cell group scores across samples.</p></li>
 </ul></div>
 

@@ -81,7 +81,7 @@ All plots are saved in the <code>Results/</code> directory.</p>
 
 <dl><dt id="arg-tfs-modules">tfs.modules<a class="anchor" aria-label="anchor" href="#arg-tfs-modules"></a></dt>
 <dd><p>A numeric matrix or data frame of TF module scores across samples.
-Typically the output from <code><a href="compute.WTCNA.html">compute.WTCNA()</a></code>. Rows represent samples, columns represent TF modules.</p></dd>
+Typically the first element (<code>TFs module matrix</code>) of the output from <code><a href="compute.WTCNA.html">compute.WTCNA()</a></code>. Rows represent samples, columns represent TF modules.</p></dd>
 
 
 <dt id="arg-coldata">coldata<a class="anchor" aria-label="anchor" href="#arg-coldata"></a></dt>
@@ -112,27 +112,27 @@ Options are <code>"p"</code> for pearson and <code>"s"</code> for spearman. Defa
 
 
 <dt id="arg-ncol">ncol<a class="anchor" aria-label="anchor" href="#arg-ncol"></a></dt>
-<dd><p>Integer. Number of columns in the grid of association boxplots.</p></dd>
+<dd><p>Integer. Number of columns in the grid of association boxplots. Default is 5.</p></dd>
 
 
 <dt id="arg-y-min">y_min<a class="anchor" aria-label="anchor" href="#arg-y-min"></a></dt>
-<dd><p>Numeric. Lower y-axis limit for grid boxplots.</p></dd>
+<dd><p>Numeric. Lower y-axis limit for grid boxplots. Default is 0.</p></dd>
 
 
 <dt id="arg-y-max">y_max<a class="anchor" aria-label="anchor" href="#arg-y-max"></a></dt>
-<dd><p>Numeric. Upper y-axis limit for grid boxplots.</p></dd>
+<dd><p>Numeric. Upper y-axis limit for grid boxplots. Default is 0.5.</p></dd>
 
 
 <dt id="arg-plot-grid">plot_grid<a class="anchor" aria-label="anchor" href="#arg-plot-grid"></a></dt>
-<dd><p>Logical; if TRUE, tests categorical traits with ANOVA and saves boxplot grids.</p></dd>
+<dd><p>Logical; if TRUE, tests categorical traits with ANOVA and saves boxplot grids. Default is FALSE.</p></dd>
 
 
 <dt id="arg-width-grid">width_grid<a class="anchor" aria-label="anchor" href="#arg-width-grid"></a></dt>
-<dd><p>Numeric width of the grid plot output.</p></dd>
+<dd><p>Numeric width (in inches) of the grid plot output. Default is 18.</p></dd>
 
 
 <dt id="arg-height-grid">height_grid<a class="anchor" aria-label="anchor" href="#arg-height-grid"></a></dt>
-<dd><p>Numeric height of the grid plot output.</p></dd>
+<dd><p>Numeric height (in inches) of the grid plot output. Default is 10.</p></dd>
 
 </dl></div>
     <div class="section level2">

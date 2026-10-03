@@ -71,7 +71,8 @@ saves a multi-panel SVG boxplot grid to <code>Results/</code>.</p>
 
 <dl><dt id="arg-tfs-modules">tfs.modules<a class="anchor" aria-label="anchor" href="#arg-tfs-modules"></a></dt>
 <dd><p>A numeric matrix or data frame of TF module scores
-(samples x modules), typically from <code><a href="compute.WTCNA.html">compute.WTCNA()</a></code>.</p></dd>
+(samples x modules), typically the first element (<code>TFs module matrix</code>) of the
+output from <code><a href="compute.WTCNA.html">compute.WTCNA()</a></code>.</p></dd>
 
 
 <dt id="arg-coldata">coldata<a class="anchor" aria-label="anchor" href="#arg-coldata"></a></dt>
@@ -84,7 +85,8 @@ columns are used as traits.</p></dd>
 
 
 <dt id="arg-file-name">file.name<a class="anchor" aria-label="anchor" href="#arg-file-name"></a></dt>
-<dd><p>Character. Base name appended to output SVG file names.</p></dd>
+<dd><p>Character. Base name appended to output SVG file names
+(<code>Results/ANOVA_boxplot_summary_&lt;file.name&gt;_&lt;trait&gt;.svg</code>).</p></dd>
 
 
 <dt id="arg-ncol">ncol<a class="anchor" aria-label="anchor" href="#arg-ncol"></a></dt>
@@ -109,8 +111,9 @@ columns are used as traits.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>Called for its side effect (saves SVG files); returns <code>NULL</code>
-invisibly when no significant traits are found.</p>
+    <p>Called for its side effect (saves one SVG file per categorical trait with at
+least one significant module); returns <code>NULL</code> invisibly when <code>coldata</code> has no
+categorical traits.</p>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

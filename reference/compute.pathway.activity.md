@@ -1,4 +1,4 @@
-# Computes TF-modules pathway activities scores
+# Compute pathway activity scores
 
 This function computes pathway activity scores from normalized gene
 expression data using a multivariate linear model (MLM) based on the

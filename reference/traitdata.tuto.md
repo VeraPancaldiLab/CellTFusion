@@ -10,7 +10,9 @@ traitdata.tuto
 
 ## Format
 
-Matrix with samples as rows and traits as columns
+A data frame with 192 samples as rows and 3 traits as columns
+(`Best.Confirmed.Overall.Response`, `binaryResponse` and
+`Enrollment.IC`)
 
 ## Source
 

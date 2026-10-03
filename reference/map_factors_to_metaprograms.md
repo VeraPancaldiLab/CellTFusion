@@ -2,8 +2,9 @@
 
 For each study NMF factor, scores it against each TCGA meta-program by
 computing the mean NES of the meta-program's Hallmarks in that factor.
-The meta-program with the highest positive mean NES is the best match.
-If the meta-program reference has a `TME_subtype` column (see
+The meta-program with the highest positive mean NES is the best match
+(`NA` if no meta-program has a positive score). If the meta-program
+reference has a `TME_subtype` column (see
 [`annotate_metaprograms_TME()`](https://verapancaldilab.github.io/CellTFusion/reference/annotate_metaprograms_TME.md)),
 it is appended to the output.
 
@@ -45,7 +46,8 @@ map_factors_to_metaprograms(
 - plot:
 
   Logical. If TRUE (default), saves a barplot of factor-to-meta-program
-  scores to `Results/Factor_MP_mapping_<file_name>.pdf`.
+  scores to `Results/Factor_MP_mapping_<file_name>.pdf`
+  (`Results/Factor_MP_mapping.pdf` if `file_name` is `NULL`).
 
 - file_name:
 
