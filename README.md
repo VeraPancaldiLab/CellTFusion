@@ -83,10 +83,9 @@ and pathway scoring — use the `CellTFusion()` wrapper function.
 res <- CellTFusion(
   raw.counts = raw.counts,
   normalized = TRUE,
-  coldata = traitdata, # Optional metadata
   deconv_methods = c("Quantiseq", "DeconRNASeq"), # Choose from Quantiseq, Epidish, DeconRNASeq, DWLS, CBSX
-  cbsx.mail = "your_email",       # Required if using CBSX (CIBERSORTx)
-  cbsx.token = "your_token",      # Required if using CBSX (CIBERSORTx)
+  cbsx.mail = "your_email",       # Needed to run CBSX (CIBERSORTx)
+  cbsx.token = "your_token",      # Needed to run CBSX (CIBERSORTx)
   TF.collection = "CollecTRI",    # "CollecTRI", "Dorothea", or "ARACNE"
   cancer_type = "skcm",           # TCGA cancer type, used for meta-program mapping
   file_name = "TestRun",
@@ -109,7 +108,6 @@ to cell group construction:
 res2 <- CellTFusion(
   raw.counts = raw.counts,
   normalized = TRUE,
-  coldata = traitdata,
   dt = res$Processed_deconvolution,
   tfs = res$TFs_matrix,
   pathways = res$Pathways_scores,
@@ -121,11 +119,12 @@ res2 <- CellTFusion(
 )
 ```
 
-**NOTE**: `CIBERSORTx` is included in the deconvolution methods, but
-it’s not an open-source program. To run it, request a token at
-[CIBERSORTx](https://cibersortx.stanford.edu/register.php), add `"CBSX"`
-to `deconv_methods` and provide your email and token with the
-`cbsx.mail` and `cbsx.token` parameters.
+**NOTE**: `CIBERSORTx` (`"CBSX"`) is one of the default deconvolution
+methods, but it is not an open-source program. It is only run when you
+provide your email and token with the `cbsx.mail` and `cbsx.token`
+parameters (request a token at
+[CIBERSORTx](https://cibersortx.stanford.edu/register.php)); without
+them it is skipped with a message.
 
 ## Output structure
 
@@ -158,10 +157,10 @@ article).
 
 ``` r
 test_scores <- compute.test.set(
-  deconv_res = deconv_res_test,
-  cell_groups = cell_groups,
-  features = selected_features,
-  deconvolution_test = deconv_matrix_test
+  deconv_res = res$Processed_deconvolution,        # deconvolution subgroups of the training set
+  cell_groups = res$Cell_groups,                   # trained cell groups
+  features = names(res$Cell_groups$Composition),   # cell groups to replicate
+  deconvolution_test = deconv_test                 # deconvolution matrix of the test set
 )
 ```
 

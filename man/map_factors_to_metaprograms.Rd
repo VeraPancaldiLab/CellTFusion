@@ -20,9 +20,9 @@ TCGA meta-program reference shipped with the package to use. Available: \code{"b
 \code{"luad"}, \code{"skcm"}. Ignored if \code{mp_file} is given.}
 
 \item{mp_file}{Optional. Either a meta-program data frame (as returned by
-\code{derive_meta_programs()} / \code{annotate_metaprograms_TME()}) or the path to an
-RData file containing such an object named \code{meta_programs}. If NULL, the pre-built
-reference for \code{cancer_type} is used.}
+\code{derive_meta_programs()} / \code{annotate_metaprograms_TME()}, with columns \code{meta_program} and
+\code{hallmarks}) or the path to an RData file containing such an object, which must be named
+\code{meta_programs}. If NULL, the pre-built reference for \code{cancer_type} is used.}
 
 \item{plot}{Logical. If TRUE (default), saves a barplot of factor-to-meta-program scores
 to \code{Results/Factor_MP_mapping_<file_name>.pdf} (\code{Results/Factor_MP_mapping.pdf} if
@@ -33,17 +33,26 @@ to \code{Results/Factor_MP_mapping_<file_name>.pdf} (\code{Results/Factor_MP_map
 \value{
 A list with:
 \itemize{
-\item \code{factor_mapping}: Data frame with one row per study factor and columns
-\code{best_MP}, \code{factor}, \code{best_score}, \code{all_scores} (all meta-program
-scores as \code{"MP:score"} pairs) and, if available, \code{TME_subtype}.
+\item \code{factor_mapping}: Data frame with one row per study factor, in the order of the factors, and columns
+\code{factor}, \code{best_MP} (\code{NA} if no meta-program has a positive score), \code{best_score},
+\code{all_scores} (all meta-program scores as \code{"MP:score"} pairs) and, if available, \code{TME_subtype}.
 \item \code{reference}: The meta-program reference data frame used.
 }
 }
 \description{
 For each study NMF factor, scores it against each TCGA meta-program
-by computing the mean NES of the meta-program's Hallmarks in that factor.
+by computing the mean NES of the meta-program's Hallmarks in that factor (NES read with
+\code{build_nes_matrix()}, as for the references: Hallmarks without a NES count as 0).
 The meta-program with the highest positive mean NES is the best match (\code{NA} if no
 meta-program has a positive score). If the
 meta-program reference has a \code{TME_subtype} column (see
 \code{annotate_metaprograms_TME()}), it is appended to the output.
+}
+\examples{
+\dontrun{
+gsea <- compute_factor_gsea(RNA.tpm = counts.norm, features_df = res$Latent_spaces$Z, plot_dot = FALSE)
+mapping <- map_factors_to_metaprograms(gsea, cancer_type = "blca")
+mapping$factor_mapping
+}
+
 }

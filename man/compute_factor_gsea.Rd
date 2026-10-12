@@ -11,16 +11,19 @@ compute_factor_gsea(
   top_n = 10,
   file_name = NULL,
   width = 8,
-  height = 10
+  height = 10,
+  batch = NULL,
+  seed = 123
 )
 }
 \arguments{
-\item{RNA.tpm}{A numeric matrix or data frame of gene expression values
-(genes in rows, samples in columns).}
+\item{RNA.tpm}{A numeric matrix or data frame of log-normalized gene expression values (e.g. log2(TPM + 1);
+genes as rows, gene symbols as row names, samples as columns).}
 
 \item{features_df}{A data frame of continuous features (samples in rows,
 features in columns) to be modeled as covariates. Rows must be the same samples,
-in the same order, as the columns of \code{RNA.tpm} (checked by name; an error is raised otherwise).}
+in the same order, as the columns of \code{RNA.tpm} (checked by name; an error is raised otherwise). Features
+without variation are left out with a message.}
 
 \item{plot_dot}{Logical; if TRUE, generates and saves dotplots of top
 enriched Hallmark pathways for each feature. Default is TRUE.}
@@ -28,34 +31,44 @@ enriched Hallmark pathways for each feature. Default is TRUE.}
 \item{top_n}{Integer; number of top pathways to display in the dotplot. Default is 10.}
 
 \item{file_name}{Character; optional suffix for saved PDF files
-(\code{Results/GSEA_<feature>_<file_name>.pdf}). Default is NULL.}
+(\code{Results/GSEA_<feature>_<file_name>.pdf}, or \code{Results/GSEA_<feature>.pdf} without it). Default is NULL.}
 
 \item{width}{Numeric; width of the PDF plot in inches. Default is 8.}
 
 \item{height}{Numeric; height of the PDF plot in inches. Default is 10.}
+
+\item{batch}{Optional vector with the cohort of each sample (in the row order of \code{features_df}, or named by
+sample). With two or more cohorts, the cohort is added to the model as a categorical covariate, so that expression
+differences between cohorts are not attributed to the features. Default \code{NULL}.}
+
+\item{seed}{Integer. Random seed used by \code{fgsea::fgsea()} (its p-values come from random permutations), so that
+the results are reproducible. Default 123. The caller's random number generator state is not changed.}
 }
 \value{
 A list containing:
 \describe{
 \item{DE_results}{A named list of \code{topTable} results for each feature,
-including logFC, moderated t-statistics, p-values, and adjusted p-values.}
+including logFC (change in expression per standard deviation of the feature), moderated t-statistics,
+p-values, and adjusted p-values.}
 \item{GSEA_results}{A named list of \code{fgsea::fgsea()} result tables
 (columns include \code{pathway}, \code{pval}, \code{padj}, \code{NES}) for each feature,
-ordered by p-value.}
+ordered by p-value. fgsea may not be able to estimate the p-value of some pathways: their \code{pval},
+\code{padj} and \code{NES} are then \code{NA} (their \code{ES} is kept).}
 }
 }
 \description{
 This function fits a multivariate linear model for each gene using all features
-in \code{features_df} as continuous covariates. For each feature, it extracts
-the moderated t-statistics and p-values, ranks genes, and performs GSEA (\code{fgsea})
-using the Hallmark gene sets from MSigDB. Optional dotplots for the top enriched
+in \code{features_df} as continuous covariates (each feature standardized, and the cohort added when \code{batch}
+is given). For each feature, it extracts the moderated t-statistics and p-values, ranks genes, and performs GSEA
+(\code{fgsea}) using the human Hallmark gene sets from MSigDB. Optional dotplots for the top enriched
 pathways can be saved as PDFs.
 }
 \details{
 The function works as follows:
 \enumerate{
 \item Hallmark gene sets are retrieved from MSigDB using \code{msigdbr}.
-\item A multivariate linear model is fitted for each gene using \code{limma::lmFit}.
+\item A multivariate linear model is fitted for each gene using \code{limma::lmFit}: all the features are in
+the same model, so the effect of each feature is adjusted for the others (and for the cohort with \code{batch}).
 \item Empirical Bayes moderation is applied via \code{limma::eBayes}.
 \item For each feature:
 \enumerate{

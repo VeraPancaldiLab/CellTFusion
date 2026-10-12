@@ -27,7 +27,6 @@ Imports:
     graphics,
     grDevices,
     GSVA (>= 1.50.0),
-    Hmisc,
     matrixStats,
     org.Hs.eg.db,
     ReactomePA,

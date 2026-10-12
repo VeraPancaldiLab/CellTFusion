@@ -10,48 +10,68 @@ compute.TFs.activity(
   min_targets_size = 5,
   universe = NULL,
   cancer.type = NULL,
+  method = "ulm",
   scale = TRUE,
   return = TRUE,
   file.name = NULL
 )
 }
 \arguments{
-\item{RNA.counts}{A gene expression matrix with genes as rows and samples as columns. The matrix should be normalized (e.g., TPM, log2CPM, etc.).}
+\item{RNA.counts}{A gene expression matrix with genes (symbols) as rows and samples as columns, with unique sample
+names. The matrix should be log-normalized (e.g., log2(TPM + 1), log2CPM, etc.). A warning is given if it has
+values above 20, which log2(TPM + 1) cannot reach.}
 
 \item{TF.collection}{Character. The source of the TF-target network. Options are \code{"CollecTRI"} (default), \code{"Dorothea"}, or \code{"ARACNE"}.
 \itemize{
 \item \code{"CollecTRI"} uses the prebuilt collection from OmnipathR and \code{"Dorothea"} (confidence A and B) the one from the
 \code{dorothea} package. Each collection is cached in its own file,
-\verb{Results/TF_target_collection_<TF.collection>.csv}, and reused on later calls.
+\verb{Results/TF_target_collection_<TF.collection>.csv}, and reused on later calls: a message gives the number of
+TFs and interactions of the cached file and the date it was saved. A cached file that is empty or lacks the
+columns \code{source}, \code{target} and \code{mor} is not used (the collection is obtained again, with a warning). Delete the
+file to obtain the collection again.
 \item \code{"ARACNE"} reads a tab-separated network file with \code{Regulator} and \code{Target} columns from
 \verb{input/ARACNE/<cancer.type>/network/network.txt} (relative to the working directory). The mode of
-regulation of each edge is the sign of the Spearman correlation between TF and target expression.
+regulation of each edge is read from a \code{mor} column of the file (1 activation, -1 repression), which should be
+the sign of the Spearman correlation between TF and target computed on the cohort used to build the network.
+If the file has no \code{mor} column, a warning is given and the signs are computed as the sign of the Spearman
+correlation between TF and target in the samples of \code{RNA.counts}; they then depend on the samples given (e.g.
+they can differ between cohorts, or between a training and a test set).
 }}
 
 \item{min_targets_size}{Integer. Minimum number of target genes per regulon (passed to
 \code{decoupleR::decouple()} as \code{minsize}). Default is 5.}
 
 \item{universe}{Optional. A user-specified data frame of TF-target interactions (columns \code{source},
-\code{target}, \code{mor}). If not provided, the network is fetched based on \code{TF.collection}. Ignored when
-\code{TF.collection = "ARACNE"}.}
+\code{target}, \code{mor}). The three columns are required: \code{mor} is the mode of regulation
+(1 activation, -1 repression; use 1 for every edge if the network has no sign). If not provided, the
+network is fetched based on \code{TF.collection}. Ignored when \code{TF.collection = "ARACNE"}.}
 
 \item{cancer.type}{Optional character. TCGA cancer type abbreviation used to locate the ARACNe network
 (only used when \code{TF.collection = "ARACNE"}). If \code{NULL}, the network is auto-detected when only one
 \code{network.txt} exists under \code{input/ARACNE/}.}
 
-\item{scale}{Logical. If TRUE (default), z-score scales the TF activity matrix across samples.}
+\item{method}{Character. The \code{decoupleR} statistic used to score the TFs: \code{"ulm"} (univariate linear
+model, default), \code{"mlm"} (multivariate linear model), \code{"wsum"} (weighted sum) or \code{"consensus"}
+(consensus of the three).}
+
+\item{scale}{Logical. If TRUE (default), z-score scales the TF activity matrix across samples. The scaled scores
+of a sample then depend on the other samples given in the same call; use \code{scale = FALSE} to get scores that
+can be compared between separate calls (e.g. a training and a test set). With fewer than three samples the
+scores are not scaled (a message is given).}
 
 \item{return}{Logical; if TRUE, saves matrix in Results/ folder. Default is TRUE.}
 
-\item{file.name}{Optional character suffix used when writing the TF activity matrix to disk.}
+\item{file.name}{Optional character suffix used when writing the TF activity matrix to disk
+(\code{Results/TF_matrix_<file.name>.csv}; without it, \code{Results/TF_matrix.csv}).}
 }
 \value{
 A data frame of inferred (and, if \code{scale = TRUE}, scaled) TF activity scores, with samples as rows
-and TFs as columns. Column names are made syntactically valid with \code{make.names()}.
+and TFs as columns. Column names are made syntactically valid with \code{make.names()} (e.g. \code{NKX2.1}),
+in the returned table and in the saved file.
 }
 \description{
-Infers transcription factor (TF) activity from a gene expression matrix with \code{decoupleR::decouple()},
-keeping the \code{consensus} score (ensemble of the decoupleR statistics; Badia-i-Mompel et al., 2022).
+Infers transcription factor (TF) activity from a gene expression matrix with \code{decoupleR::decouple()}
+(Badia-i-Mompel et al., 2022). By default the univariate linear model (\code{"ulm"}) is used.
 The TF-target network can be provided by the user, obtained from prebuilt collections (CollecTRI from
 OmnipathR or Dorothea from the \code{dorothea} package), or read from an ARACNe-inferred network.
 }

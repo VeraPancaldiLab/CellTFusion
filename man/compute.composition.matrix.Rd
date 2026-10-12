@@ -15,17 +15,32 @@ compute.composition.matrix(
 \code{multideconv::compute.deconvolution.analysis()} (the elements \code{Deconvolution matrix} and
 \code{Deconvolution subgroups composition} are used).}
 
-\item{cell.groups}{A list containing cell group definitions, where the second element holds the groupings
-(e.g. the output of \code{construct_cell_groups()}).}
+\item{cell.groups}{The cell groups returned by \code{construct_cell_groups()}: its element \code{Composition} (the
+features of each cell group) is used. An unnamed list whose second element holds the composition is also accepted.}
 
-\item{cells_extra}{Optional vector of additional cell identifiers to consider during extraction.}
+\item{cells_extra}{Optional character vector of additional cell type names, added to the vocabulary used to
+recognise cell types in the feature names.}
 }
 \value{
 A binary matrix (data.frame) where rows are cell groups and columns are cell types (1 = present, 0 = absent).
-Each cell group appears twice, as \code{<group>_pos} and \code{<group>_neg} (same composition), to match the
-feature names used by \code{compute.latent_factors()}. Cell types not present in any cell group are dropped
-(with a warning).
+Each cell group appears twice, as \code{<group>_pos} and \code{<group>_neg}, to match the feature names used by
+\code{compute.latent_factors()}; both rows have the same composition (the direction of the relation with the TF
+module is not represented). Cell types not present in any cell group are dropped, and cell groups whose cell types
+are not recognised (their row is all zeros) are listed, each with a message.
 }
 \description{
-Builds a binary presence matrix indicating which original cell types are present in higher-level cell groups.
+Builds a binary presence matrix indicating which original cell types are present in each cell group. Each feature
+of a cell group is opened down to its original deconvolution features (a subgroup is replaced by its members), and
+the cell type of each feature is read from its name with the cell type vocabulary of multideconv
+(\code{multideconv::get_cell_type_nomenclature()}). Cell types are therefore named as in that vocabulary: for example
+the LM22 features \code{Plasma.cells} and \code{T.cells.CD4.memory.activated} are counted as \code{Plasma} and
+\code{CD4.memory.activated}, as in the names of the deconvolution subgroups.
+}
+\examples{
+data("network.tuto")
+data("deconv_subgroups.tuto")
+cell_groups <- construct_cell_groups(network.tuto, deconv_subgroups.tuto)
+composition <- compute.composition.matrix(deconv_subgroups.tuto, cell_groups)
+composition[1:4, 1:5]
+
 }

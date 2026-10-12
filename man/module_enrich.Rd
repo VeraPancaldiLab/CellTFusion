@@ -4,10 +4,10 @@
 \alias{module_enrich}
 \title{Run Reactome pathway enrichment for a single TF module}
 \usage{
-module_enrich(tpm.counts, module_color, hub_genes, tfs_universe)
+module_enrich(tpm.counts, module_color, hub_genes, tfs_universe, min_genes = 5)
 }
 \arguments{
-\item{tpm.counts}{A numeric matrix of normalized expression values (genes x samples).}
+\item{tpm.counts}{A numeric matrix of normalized expression values (genes x samples), with gene symbols as row names.}
 
 \item{module_color}{Character. Name of the TF module (color label) to analyze.}
 
@@ -16,14 +16,27 @@ element maps module names to vectors of hub TF gene symbols.}
 
 \item{tfs_universe}{A data frame of TF-target interactions with at minimum columns
 \code{source} (TF) and \code{target} (gene).}
+
+\item{min_genes}{Integer. Minimum number of genes to test (20\% most variable targets); with fewer, no enrichment is
+computed and a message is given. Default is 5.}
 }
 \value{
 A \code{ReactomePA} enrichResult object restricted to pathways with
-adjusted p-value < 0.05, or \code{NULL} if no enrichment is found.
+adjusted p-value < 0.05, or \code{NULL} if no enrichment is found, if none of the
+targets is in the row names of \code{tpm.counts}, or if fewer than \code{min_genes} genes would be tested.
 }
 \description{
 Given the hub TFs of a module, extracts their target genes from the TF-gene
-universe, keeps the most variable targets, and runs Reactome over-representation
-analysis using the full gene expression matrix as the background universe.
+universe, keeps the 20\% most variable targets, and runs Reactome over-representation
+analysis (\code{ReactomePA::enrichPathway()}, human) using all the genes of the expression matrix as the
+background universe. Gene symbols are converted to Entrez IDs with \code{org.Hs.eg.db}; symbols without an Entrez ID
+are left out (a message gives how many). Pathways with a Benjamini-Hochberg adjusted p-value < 0.05 are kept.
+TF names are matched after \code{make.names()} on both sides, so the syntactic names returned by
+\code{compute.TFs.activity()} (e.g. \code{NKX2.1}) match the names of the network (\code{NKX2-1}).
+}
+\details{
+The result describes the genes regulated by the hub TFs of the module: any set of TFs has hundreds of targets that
+carry the pathways those TFs regulate, so random sets of TFs also give enriched pathways. It should be read as what
+the hub TFs of the module regulate, not as evidence that the module itself is special.
 }
 \keyword{internal}

@@ -4,24 +4,39 @@
 \alias{scores.kruskal.test}
 \title{Kruskal-Wallis test for multi-group comparisons}
 \usage{
-scores.kruskal.test(scores, coldata, trait, pval = 0.05)
+scores.kruskal.test(scores, coldata, trait, pval = 0.05, p_adjust = "none")
 }
 \arguments{
-\item{scores}{A list whose first element is a samples x features score matrix, e.g. the output of
-\code{construct_cell_groups()} or \code{compute.latent_factors()}. To test a plain matrix, use
-\code{scores.stat.analysis()}.}
+\item{scores}{A samples x features score matrix, a list whose first element is that matrix (e.g. the output of
+\code{construct_cell_groups()}), or the output of \code{compute.latent_factors()} (its factor scores \code{Z} are
+tested).}
 
-\item{coldata}{A data frame containing sample annotations, including the grouping trait.}
+\item{coldata}{A data frame (or tibble) containing sample-level annotations including the trait to test. Its rows
+are matched to the samples of the scores by row name; without sample names, they must be in the order of the
+scores. Samples with a missing trait are left out (with a message).}
 
-\item{trait}{Character. Name of the column in \code{coldata} used as the grouping variable.}
+\item{trait}{Character. Name of the column in \code{coldata} used as the grouping variable (categorical, two or more groups).}
 
-\item{pval}{Numeric. P-value threshold for significance (default = 0.05).}
+\item{pval}{Numeric. Threshold for significance: a feature is significant if its (adjusted) p-value is
+\code{<= pval} (default = 0.05).}
+
+\item{p_adjust}{Character. Method to correct the p-values for multiple testing across the features (see
+\code{stats::p.adjust()}, e.g. \code{"BH"}). Default \code{"none"}.}
 }
 \value{
-A list containing only significant features after Kruskal-Wallis test.
-Returns \code{NULL} if no significant features are found.
+See \code{scores.ttest()}.
 }
 \description{
 Performs a Kruskal-Wallis test to compare scores across multiple trait levels.
-Significant results are visualized as annotated boxplots with Dunn post-hoc tests.
+Significant results are visualized as annotated boxplots with Dunn post-hoc tests (BH-adjusted), saved as
+\code{Results/Kruskal_<trait>_<feature>.pdf}.
+}
+\examples{
+data("network.tuto")
+data("deconv_subgroups.tuto")
+data("traitdata.tuto")
+cell_groups <- construct_cell_groups(network.tuto, deconv_subgroups.tuto)
+res <- scores.kruskal.test(cell_groups$Cell_groups[, 1:5], traitdata.tuto, "Enrollment.IC")
+res$Statistics
+
 }

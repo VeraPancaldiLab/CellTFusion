@@ -22,10 +22,22 @@ projected NMF factor scores for the test cohort.
 \description{
 Applies the positive-negative split to new samples and projects them
 onto the latent space learned during training using the Moore-Penrose
-pseudoinverse of the scaled basis matrix W.
+pseudoinverse of the scaled basis matrix W. Negative values of the projection are set to 0 (on the tutorial data
+the result is the same as an exact non-negative projection). Cell groups missing in \code{scores_test} are
+tolerated with a warning naming them: the projection uses the other cell groups (on the tutorial data, with 20 of
+144 cell groups missing, the factors still correlate 0.999 with the full projection).
 }
 \details{
 The RcppML NMF decomposition is A = W \%\emph{\% diag(d) \%}\% H, not A = W \%*\% H.
 The diagonal scaling vector d must be absorbed into W before computing
 the pseudoinverse, otherwise the projected scores are on the wrong scale.
+}
+\examples{
+data("network.tuto")
+data("deconv_subgroups.tuto")
+cell_groups <- construct_cell_groups(network.tuto, deconv_subgroups.tuto)
+latent <- compute.latent_factors(cell_groups$Cell_groups, return = FALSE)
+projected <- project_factors(latent, cell_groups$Cell_groups[1:10, ])
+head(projected)
+
 }

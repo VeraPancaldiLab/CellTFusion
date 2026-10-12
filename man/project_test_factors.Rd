@@ -11,14 +11,15 @@ project_test_factors(train_processed, test_deconv)
 at minimum \code{Processed_deconvolution}, \code{Cell_groups}, and
 \code{Latent_spaces}.}
 
-\item{test_deconv}{A numeric matrix or data frame of deconvolution features
-for the test samples (samples x cell types). Column names must match those
-used during training. If the model was trained with batch correction, the test samples are
+\item{test_deconv}{A numeric matrix or data frame of the deconvolution features of the test samples before
+subgrouping (samples x features; the same kind of matrix as given to \code{CellTFusion()} as \code{deconv}),
+with the column names used during training. If the model was trained with batch correction, the test samples are
 centred on their own means (as each training cohort was), so they should come from a single cohort.}
 }
 \value{
 A numeric matrix (test samples x NMF factors) of non-negative
-projected factor scores.
+projected factor scores. Cell groups with features missing in \code{test_deconv} are skipped by
+\code{compute.test.set()} (with a warning), and the projection uses the other cell groups.
 }
 \description{
 Convenience wrapper that combines \code{compute.test.set()} and
@@ -27,4 +28,11 @@ Convenience wrapper that combines \code{compute.test.set()} and
 (1) reconstructs cell group composite scores for the test samples using
 the training CCA loadings, and (2) projects those scores onto the trained
 NMF latent space.
+}
+\examples{
+\dontrun{
+res <- CellTFusion(raw.counts_train, deconv = deconv_train)
+test_factors <- project_test_factors(res, deconv_test)
+}
+
 }

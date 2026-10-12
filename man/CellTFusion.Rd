@@ -11,24 +11,27 @@ CellTFusion(
   tfs = NULL,
   pathways = NULL,
   normalized = T,
-  coldata = NULL,
-  batch = F,
-  batch_id = NULL,
-  deconv_methods = c("Quantiseq", "Epidish", "DeconRNASeq", "DWLS"),
+  batch = NULL,
+  deconv_methods = c("Quantiseq", "CBSX", "Epidish", "DeconRNASeq", "DWLS"),
   cbsx.mail = NULL,
   cbsx.token = NULL,
+  doParallel = F,
+  workers = NULL,
   file_name = NULL,
   TF.collection = "CollecTRI",
-  min_targets_size = 3,
+  min_targets_size = 5,
   universe = NULL,
   paths = NULL,
   gene_sets = NULL,
-  minMod = 3,
+  minMod = 5,
   corr_mod = 0.9,
+  softPower = NULL,
   corr = 0.7,
   corr_type = "spearman",
   cells_extra = NULL,
   pval = 0.05,
+  min_cluster_size = 3,
+  deep_split = T,
   enrich_thresh = 1.5,
   quantile_cutoff = 0.7,
   cancer_type = NULL,
@@ -37,7 +40,8 @@ CellTFusion(
 )
 }
 \arguments{
-\item{raw.counts}{A matrix of raw gene expression counts (genes as rows, samples as columns).
+\item{raw.counts}{A matrix of raw gene expression counts (genes as rows, samples as columns). If
+\code{normalized = FALSE}, a matrix of TPM-normalized values instead (not log-transformed).
 Always required: even when \code{dt}, \code{tfs} and \code{pathways} are all supplied precomputed,
 the (normalized) expression matrix is still needed for the downstream GSEA-based TME state
 characterization step.}
@@ -54,57 +58,70 @@ construction using this object.}
 
 \item{tfs}{(Optional) A precomputed TF activity matrix (samples as rows, TFs as columns), typically
 the \code{TFs_matrix} element returned by a previous \code{CellTFusion()} run or by
-\code{compute.TFs.activity()}. When \code{batch = TRUE}, a named list of such matrices (one per cohort).
+\code{compute.TFs.activity()}. When \code{batch} is given, a named list of such matrices (one per cohort).
 If supplied, TF activity inference is skipped.}
 
 \item{pathways}{(Optional) A precomputed pathway activity matrix, typically the \code{Pathways_scores}
 element returned by a previous \code{CellTFusion()} run or by \code{compute.pathway.activity()}.
 If supplied, pathway activity inference is skipped.}
 
-\item{normalized}{Logical; if TRUE (default), \code{raw.counts} are normalized to log-transformed TPM for the
-TF activity, pathway activity and GSEA steps (for deconvolution they are normalized to TPM only). If FALSE,
-\code{raw.counts} is assumed to be already normalized and is used as is.}
+\item{normalized}{Logical; if TRUE (default), \code{raw.counts} are raw counts and are normalized to
+log2(TPM + 1) for the TF activity, pathway activity and GSEA steps (for deconvolution they are normalized to
+TPM only). If FALSE, \code{raw.counts} must already be TPM-normalized and \strong{not} log-transformed: the
+TPM values are used as they are for deconvolution and log2(TPM + 1) is computed internally for the other
+steps. Do not pass log-transformed values, as they would be log-transformed a second time (a warning is
+given when the values do not look like TPM, i.e. no value above 20 or negative values).}
 
-\item{coldata}{(Optional) A data frame of sample metadata (samples as rows). Only used when
-\code{batch = TRUE}, to read the batch column given by \code{batch_id}.}
-
-\item{batch}{Logical; whether to run the multi-cohort mode: TF activity is computed per cohort, TF modules are
-built with consensus WGCNA across cohorts, and the cohort is controlled for in the deconvolution analysis
-and cell group construction. Requires \code{coldata} and \code{batch_id}. Default is FALSE.}
-
-\item{batch_id}{Optional character indicating the column name in coldata containing batch identifiers.
-Required when \code{batch = TRUE}.}
+\item{batch}{(Optional) A vector with the cohort of each sample (e.g. \code{coldata$Cohort}), in the same order
+as the columns of \code{raw.counts}; if it is named, it is matched to the samples by name instead. It is
+always treated as categorical. If given, the multi-cohort mode is run: TF activity is computed per cohort,
+TF modules are built with consensus WGCNA across cohorts, and the cohort is controlled for in the
+deconvolution analysis and cell group construction. Default is \code{NULL} (single cohort); a vector with
+only one cohort is treated the same way.}
 
 \item{deconv_methods}{A character vector of deconvolution methods to apply. Default is
-\code{c("Quantiseq", "Epidish", "DeconRNASeq", "DWLS")}. Add \code{"CBSX"} to also run CIBERSORTx
-(requires \code{cbsx.mail} and \code{cbsx.token}).}
+\code{c("Quantiseq", "CBSX", "Epidish", "DeconRNASeq", "DWLS")}. \code{"CBSX"} (CIBERSORTx) is only run
+when \code{cbsx.mail} and \code{cbsx.token} are given; otherwise it is skipped with a message.}
 
-\item{cbsx.mail}{(Optional) Email credential for CIBERSORTx. Required if "CBSX" is among deconv_methods.}
+\item{cbsx.mail}{(Optional) Email credential for CIBERSORTx. Needed to run "CBSX"; without it, CIBERSORTx is skipped.}
 
-\item{cbsx.token}{(Optional) Token credential for CIBERSORTx. Required if "CBSX" is among deconv_methods.}
+\item{cbsx.token}{(Optional) Token credential for CIBERSORTx. Needed to run "CBSX"; without it, CIBERSORTx is skipped.}
 
-\item{file_name}{(Optional) Prefix for output files saved in the "Results/" directory.}
+\item{doParallel}{Logical; whether to run the deconvolution methods that support it (CIBERSORTx and DWLS) in
+parallel, one signature per worker (passed to \code{multideconv::compute.deconvolution()}). Default is FALSE.}
+
+\item{workers}{(Optional) Number of parallel workers when \code{doParallel = TRUE}. If \code{NULL} (default),
+the number of available cores minus one is used.}
+
+\item{file_name}{(Optional) Name used in the output files saved in the "Results/" directory. If \code{NULL}
+and \code{return = TRUE}, \code{"CellTFusion"} is used.}
 
 \item{TF.collection}{Character. The source of the TF-target network. Options are \code{"CollecTRI"} (default), \code{"Dorothea"}, or \code{"ARACNE"}.
 \itemize{
 \item \code{"CollecTRI"} uses the prebuilt collection from OmnipathR and \code{"Dorothea"} the one from the \code{dorothea} package.
-\item \code{"ARACNE"} reads a network file (tab-separated with \code{Regulator} and \code{Target} columns) from
+\item \code{"ARACNE"} reads a network file (tab-separated with \code{Regulator} and \code{Target} columns, and a \code{mor} column with
+the sign of each interaction; see \code{compute.TFs.activity()}) from
 \code{input/ARACNE/<cancer_type>/network/network.txt}.
 }}
 
 \item{min_targets_size}{Integer. Minimum number of target genes per regulon, passed to
-\code{compute.TFs.activity()}. Default is 3.}
+\code{compute.TFs.activity()}. Default is 5.}
 
-\item{universe}{Optional. A user-specified data frame of TF-target interactions. If not provided, the function will fetch the relevant network based on the \code{TF.collection} argument.}
+\item{universe}{Optional. A user-specified data frame of TF-target interactions (columns \code{source}, \code{target} and
+\code{mor}, the mode of regulation: 1 activation, -1 repression). If not provided, the function will fetch the relevant network based on the \code{TF.collection} argument.}
 
 \item{paths}{Optional. A user-specified data frame of pathways gene sets. If not provided, the function will fetch the relevant pathways based on \code{PROGENy}.}
 
 \item{gene_sets}{Optional. A named list of custom gene sets (character vectors of gene symbols) passed to
 \code{compute.pathway.activity()}'s \code{gene_sets} argument for GSVA-based scoring. If \code{NULL}, only PROGENy is used.}
 
-\item{minMod}{Integer; minimum module size for WGCNA module detection. Default is 3.}
+\item{minMod}{Integer; minimum module size for WGCNA module detection. Default is 5.}
 
 \item{corr_mod}{Numeric; correlation threshold for merging TF modules. Default is 0.9.}
+
+\item{softPower}{(Optional) Soft-thresholding power used to build the TF network, passed to
+\code{compute.WTCNA()}: one value, or one value per cohort (in the order the cohorts first appear in
+\code{batch}) in multi-cohort mode. If \code{NULL} (default), it is chosen automatically.}
 
 \item{corr}{Numeric; correlation threshold used in the deconvolution analysis. Default is 0.7.}
 
@@ -114,8 +131,14 @@ Required when \code{batch = TRUE}.}
 This includes the group names created with \code{multideconv::aggregate_cell_groups()} on \code{deconv} (e.g. \code{"Lymphocytes"}):
 if they are not listed here they are discarded.}
 
-\item{pval}{Numeric; p-value threshold used when building cell groups (TF module-deconvolution
-correlations and the CCA permutation test). Default is 0.05.}
+\item{pval}{Numeric; p-value threshold used when building cell groups (selection of the deconvolution
+features significantly correlated with each TF module). Default is 0.05.}
+
+\item{min_cluster_size}{Integer; minimum number of features of a cell group (minimum cluster size of the
+dynamic tree cut), passed to \code{construct_cell_groups()}. Default is 3.}
+
+\item{deep_split}{Logical; if TRUE (default), the dynamic tree cut that defines the cell groups splits the
+clusters more finely. Passed to \code{construct_cell_groups()}.}
 
 \item{enrich_thresh}{Numeric. Minimum enrichment ratio (foreground/background cell-type frequency)
 required to include a cell type in a latent factor's niche. Default is 1.5.}
@@ -126,27 +149,31 @@ cell groups per NMF factor. Default is 0.7.}
 \item{cancer_type}{Character. TCGA cancer type abbreviation (one of \code{"blca"}, \code{"luad"}, \code{"skcm"}).
 Used for two purposes: (1) loading TCGA meta-programs for TME state mapping, and (2) when
 \code{TF.collection = "ARACNE"}, locating the ARACNe network at
-\code{input/ARACNE/<cancer_type>/network/network.txt}. If \code{NULL}, the meta-program mapping
-step is skipped (\code{TME_states} and \code{Metaprograms_reference} are \code{NULL}) and, for ARACNE,
-the network is auto-detected when only one exists under \code{input/ARACNE/}.}
+\code{input/ARACNE/<cancer_type>/network/network.txt}. If \code{NULL}, or if no TCGA meta-programs
+exist for that cancer type (a warning is given), the meta-program mapping step is skipped
+(\code{TME_states} and \code{Metaprograms_reference} are \code{NULL}). For ARACNE, if \code{NULL}, the
+network is auto-detected when only one exists under \code{input/ARACNE/}.}
 
 \item{return}{Logical; if TRUE, intermediate matrices and plots are written to the "Results/" folder. Default is TRUE.}
 
-\item{verbose}{Logical; whether to print the function messages. Default is TRUE.}
+\item{verbose}{Logical; whether to print the progress and the console output and messages of every step
+(warnings are always shown). Default is TRUE.}
 }
 \value{
 A list containing:
 \describe{
 \item{Deconvolution}{A matrix with cell-type proportions (samples as rows, cell types as columns); \code{NULL} if \code{dt} was supplied without \code{deconv}.}
-\item{TFs_matrix}{A matrix with TF activity scores (samples as rows, TFs as columns), or a list of matrices (one per cohort) when \code{batch = TRUE}.}
-\item{TF_network}{The TF module network returned by \code{compute.WTCNA()}.}
+\item{TFs_matrix}{A matrix with TF activity scores (samples as rows, TFs as columns), or a list of matrices (one per cohort) when \code{batch} is given.}
+\item{TF_network}{The TF module network returned by \code{compute.WTCNA()}. Its module matrix is always
+in the sample order of \code{raw.counts} (also in multi-cohort mode).}
 \item{Pathways_scores}{Pathway activity scores returned by \code{compute.pathway.activity()}.}
 \item{Processed_deconvolution}{The processed deconvolution subgroups (output of \code{multideconv::compute.deconvolution.analysis()}).}
-\item{Cell_groups}{Output of \code{construct_cell_groups()}: cell group scores, compositions and projection weights.}
+\item{Cell_groups}{Output of \code{construct_cell_groups()}: cell group scores, compositions, projection weights
+and the relation of each cell group to its TF module.}
 \item{Latent_spaces}{NMF latent factors returned by \code{compute.latent_factors()}.}
 \item{Cells_niches}{Enriched cell types per latent factor (see \code{compute_cells_niches()}).}
-\item{TME_states}{Factor-to-meta-program mapping (\code{factor_mapping} from \code{map_factors_to_metaprograms()}), or \code{NULL} if \code{cancer_type} is \code{NULL}.}
-\item{Metaprograms_reference}{The TCGA meta-program reference used for mapping, or \code{NULL} if \code{cancer_type} is \code{NULL}.}
+\item{TME_states}{Factor-to-meta-program mapping (\code{factor_mapping} from \code{map_factors_to_metaprograms()}), or \code{NULL} if the mapping was skipped (see \code{cancer_type}).}
+\item{Metaprograms_reference}{The TCGA meta-program reference used for mapping, or \code{NULL} if the mapping was skipped.}
 }
 }
 \description{
@@ -165,12 +192,10 @@ in either form.
 
 \dontrun{
 data("raw.counts.tuto")
-data("traitdata.tuto")
 
 res <- CellTFusion(
   raw.counts = raw.counts.tuto,
   normalized = TRUE,
-  coldata = traitdata.tuto,
   deconv_methods = c("Quantiseq", "DeconRNASeq"),
   file_name = "TestRun",
   min_targets_size = 15,
@@ -187,7 +212,6 @@ res2 <- CellTFusion(
   tfs = res$TFs_matrix,
   pathways = res$Pathways_scores,
   normalized = TRUE,
-  coldata = traitdata.tuto,
   file_name = "TestRun_rerun",
   minMod = 20,
   corr_mod = 0.25,

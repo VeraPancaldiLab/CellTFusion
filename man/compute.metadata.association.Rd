@@ -10,14 +10,9 @@ compute.metadata.association(
   pval = 0.05,
   corr_method = "p",
   file.name,
-  width = 20,
-  height = 8,
   ncol = 5,
-  y_min = 0,
-  y_max = 0.5,
   plot_grid = F,
-  width_grid = 18,
-  height_grid = 10
+  p_adjust = "none"
 )
 }
 \arguments{
@@ -25,37 +20,40 @@ compute.metadata.association(
 Typically the first element (\verb{TFs module matrix}) of the output from \code{compute.WTCNA()}. Rows represent samples, columns represent TF modules.}
 
 \item{coldata}{A data frame containing clinical traits (both categorical and numerical) for the same samples.
-Row names should match those of \code{tfs.modules}.}
+Rows must be the same samples, in the same order, as the rows of \code{tfs.modules} (checked by name; an
+error is raised otherwise). Numeric columns are treated as continuous: convert number-coded categories
+(e.g. a stage coded 1 to 4) to factor to test them as groups.}
 
-\item{pval}{A numeric threshold (default = 0.05) to determine statistical significance.
-Only associations with p-values below this threshold are considered significant in the heatmap.}
+\item{pval}{A numeric threshold (default = 0.05) to determine statistical significance (p-value, or adjusted p-value,
+\code{<= pval}).
+Only associations with (adjusted) p-values below this threshold are annotated in the heatmap or drawn as boxplots.}
 
 \item{corr_method}{Character string specifying the correlation method to use for continuous variables.
 Options are \code{"p"} for pearson and \code{"s"} for spearman. Default is \code{"p"}.}
 
 \item{file.name}{Character. Base file name for saving plots of results.}
 
-\item{width}{A numeric value indicating the width (in inches) of the output heatmap plot (default = 20).}
-
-\item{height}{A numeric value indicating the height (in inches) of the output heatmap plot (default = 8).}
-
 \item{ncol}{Integer. Number of columns in the grid of association boxplots. Default is 5.}
-
-\item{y_min}{Numeric. Lower y-axis limit for grid boxplots. Default is 0.}
-
-\item{y_max}{Numeric. Upper y-axis limit for grid boxplots. Default is 0.5.}
 
 \item{plot_grid}{Logical; if TRUE, tests categorical traits with ANOVA and saves boxplot grids. Default is FALSE.}
 
-\item{width_grid}{Numeric width (in inches) of the grid plot output. Default is 18.}
-
-\item{height_grid}{Numeric height (in inches) of the grid plot output. Default is 10.}
+\item{p_adjust}{Character. Method to correct the p-values for multiple testing, applied across the modules for
+each trait (any method of \code{stats::p.adjust()}, e.g. \code{"BH"} or \code{"bonferroni"}). Default is \code{"none"}.}
 }
 \value{
-Called for its side effects. Saves to the \verb{Results/} directory:
+Invisibly, a list with the results:
 \itemize{
-\item \code{TF.modules_metadata_<file.name>.pdf}: a labeled heatmap of module-trait correlations
-for numeric traits (only associations with p-value < \code{pval} are annotated).
+\item \code{correlation}: matrix of module-trait correlations for the numeric traits (modules x traits).
+\item \code{p_value}: matrix of their p-values.
+\item \code{p_adjusted}: matrix of their p-values adjusted with \code{p_adjust} (equal to \code{p_value} with \code{"none"}).
+\item \code{anova}: data frame with the ANOVA of every module for every categorical trait (\code{trait},
+\code{module}, \code{F}, \code{p}, \code{p_adjusted}); \code{NULL} if \code{plot_grid = FALSE}.
+}
+The elements are \code{NULL} when there is no trait of that type. The following files are saved to the \verb{Results/} directory:
+\itemize{
+\item \code{TF.modules_metadata_<file.name>.pdf}: a heatmap of module-trait correlations
+for numeric traits (only associations with p-value <= \code{pval} are annotated, with the correlation and
+its significance: * < 0.05, ** < 0.01, *** < 0.001, **** < 0.0001).
 \item \code{ANOVA_boxplot_summary_<file.name>_<trait>.svg} (if \code{plot_grid = TRUE}): one boxplot
 grid per categorical trait with the significant modules.
 }
@@ -63,22 +61,31 @@ grid per categorical trait with the significant modules.
 \description{
 This function tests for associations between transcription factor (TF) module scores
 and available clinical traits. Numeric traits are correlated with each module (Pearson or
-Spearman) and shown as a labeled heatmap. If \code{plot_grid = TRUE}, categorical traits are
-additionally tested with one-way ANOVA (Tukey HSD post-hoc) and shown as boxplot grids.
-All plots are saved in the \verb{Results/} directory.
+Spearman) and shown as a heatmap. If \code{plot_grid = TRUE}, categorical traits (text, factor and
+TRUE/FALSE columns) are additionally tested with one-way ANOVA (Tukey HSD post-hoc) and shown as
+boxplot grids. All plots are saved in the \verb{Results/} directory, and the tables with the results are returned.
+}
+\details{
+Traits that cannot be tested are skipped with a message: numeric traits without variation, and categorical
+traits with a single level or with as many levels as samples (e.g. a sample identifier). Categorical traits are
+only analysed when \code{plot_grid = TRUE}; a message lists them otherwise.
+
+The size of the figures is computed from their content (number of modules and traits for the heatmap, number of
+panels for the boxplot grids), and the y-axis of each boxplot panel from its data.
 }
 \examples{
 
 data("network.tuto")
 data("traitdata.tuto")
 
-compute.metadata.association(
+# The clinical traits of the tutorial data are categorical: they are tested with plot_grid = TRUE
+res <- compute.metadata.association(
   tfs.modules = network.tuto[[1]],
   coldata = traitdata.tuto,
   pval = 0.05,
   file.name = 'Tutorial',
-  width = 15,
-  height = 10
+  plot_grid = TRUE
 )
+head(res$anova)
 
 }

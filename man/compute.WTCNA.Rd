@@ -8,7 +8,7 @@ compute.WTCNA(
   TFs.matrix,
   batch = FALSE,
   network.type = "signed",
-  clustering.method = "ward.D2",
+  clustering.method = "average",
   minMod = 15,
   corr_mod = 0.9,
   cor_type = "p",
@@ -23,40 +23,52 @@ compute.WTCNA(
 one per cohort.}
 
 \item{batch}{Logical; if TRUE, performs consensus WGCNA (\code{WGCNA::blockwiseConsensusModules()}) across cohorts
-provided as a list of matrices. In this mode \code{clustering.method} and \code{corr_mod} are not used
-(modules are merged with a fixed \code{mergeCutHeight = 0.25}), and module eigengenes are scaled within each cohort.}
+provided as a list of matrices. In this mode \code{clustering.method} is not used (WGCNA builds the consensus tree
+itself), modules are merged by WGCNA with \code{mergeCutHeight = 1 - corr_mod}, and module eigengenes are scaled
+within each cohort.}
 
-\item{network.type}{Network type: "signed", "unsigned", "signed hybrid", or "distance". Default is "signed".}
+\item{network.type}{Network type: "signed" (default) or "unsigned".}
 
-\item{clustering.method}{Clustering method for hierarchical clustering (single-cohort mode only). Default is "ward.D2".}
+\item{clustering.method}{Linkage method of the hierarchical clustering of the TFs (\code{stats::hclust()}), applied to the
+TOM dissimilarity (1 - topological overlap) between TFs (single-cohort mode only). Default is "average", as in WGCNA:
+two groups of TFs are joined according to the average dissimilarity between their TFs.}
 
 \item{minMod}{Minimum number of TFs per module. Default is 15.}
 
-\item{corr_mod}{Correlation threshold (0-1) above which module eigengenes are merged (single-cohort mode only). Default is 0.9.}
+\item{corr_mod}{Correlation threshold (0-1): modules whose eigengenes have a correlation (of type \code{cor_type})
+above it are merged. Default is 0.9.}
 
-\item{cor_type}{Correlation used to pick the soft-threshold power and build the adjacency matrix:
-"p" (Pearson) or "s" (Spearman). Spearman is only available when \code{batch = FALSE}, because WGCNA
+\item{cor_type}{Correlation used to pick the soft-threshold power, build the adjacency matrix, merge modules and
+compute the proportion of variance explained: "p" (Pearson) or "s" (Spearman). The module eigengene is always the
+first principal component of the module's TF activities. Spearman is only available when \code{batch = FALSE}, because WGCNA
 consensus modules only support Pearson correlation. Default is "p".}
 
 \item{verbose}{Logical; whether to print the function messages. Default is FALSE.}
 
-\item{file.name}{Optional character suffix used when writing WTCNA outputs.}
+\item{file.name}{Optional character suffix used when writing WTCNA outputs (CSV files and, in single-cohort
+mode, the diagnostic plots \code{Soft_Threshold_<file.name>.pdf},
+\code{Gene_dendrogram_and_module_colors_<file.name>.pdf} and
+\code{Gene_dendrogram_and_module_colors_after_merging_<file.name>.pdf}).}
 
 \item{softPower}{Optional numeric value specifying the soft-thresholding power used to build the adjacency
-matrix (one value per cohort when \code{batch = TRUE}). If \code{NULL}, the power whose scale-free fit
-\eqn{R^2} is closest to 0.9 is chosen automatically.}
+matrix (one value per cohort when \code{batch = TRUE}). If \code{NULL}, the lowest power whose scale-free fit
+\eqn{R^2} reaches 0.9 is chosen automatically (the power with the best fit if none reaches 0.9, with a message).}
 
-\item{return}{Logical, whether to save output plots and module list to "Results/". Default is TRUE.}
+\item{return}{Logical, whether to save output plots, the module list (\code{Results/TFs_modules_<file.name>.csv})
+and the module matrix (\code{Results/TF_module_matrix_<file.name>.csv}, with the sample names as row names)
+to "Results/" (without \code{file.name}, \code{TFs_modules.csv} and \code{TF_module_matrix.csv}). Default is TRUE.}
 }
 \value{
 A named list with:
 \itemize{
 \item \code{TFs module matrix}: Scaled module eigengenes (samples x modules). In batch mode, samples are
-concatenated in cohort order.
-\item \code{TFs colors}: Vector of module colors assigned to each TF.
+concatenated in cohort order (use the row names to match them to other tables).
+\item \code{TFs colors}: Vector of module colors assigned to each TF (\code{"grey"} for TFs not assigned to any module).
 \item \code{TFs per module}: List of TF names in each module.
 \item \code{Proportion of variance}: Variance explained per module (single-cohort mode only).
 \item \code{TFs_matrix}: The TF activity matrix used (a list of per-cohort matrices restricted to shared TFs in batch mode).
+\item \code{Network parameters}: A list with the soft-thresholding power(s) used (\code{softPower}, one per cohort in
+batch mode), \code{network.type} and \code{cor_type}, used by \code{identify_hub_TFs()}.
 }
 }
 \description{
@@ -64,10 +76,25 @@ Construct a weighted signed or unsigned network using TF activity to cluster pro
 into modules that share similar activity patterns. Each TF module will have a sample-level score
 represented by the eigengene of the module.
 }
+\details{
+TFs that WGCNA does not assign to any module (color \code{"grey"}) are not a module: they are left out of the
+module matrix and of \code{TFs per module}, with a message.
+
+In batch mode, the soft-thresholding powers are chosen on the TFs shared by all cohorts, the ones used to build
+the network.
+
+In batch mode, \code{WGCNA::blockwiseConsensusModules()} can fail with
+\code{"dim(X) must have a positive length"} when a consensus module has exactly one TF to reassign to
+another module (a known WGCNA issue). The problem goes away when the modules change. If the powers were
+chosen automatically (\code{softPower = NULL}), \code{compute.WTCNA()} retries moving the power of one cohort
+one step down or up, and gives a warning with the powers that were finally used. If \code{softPower} was
+given, or no neighbouring power works, it stops with a message reporting the powers: set \code{softPower}
+to slightly different values or change \code{minMod} (a small change may not be enough).
+}
 \examples{
 
 data("tfs.tuto")
-network <- compute.WTCNA(tfs.tuto, corr_mod = 0.9, clustering.method = "ward.D2", return = FALSE)
+network <- compute.WTCNA(tfs.tuto, corr_mod = 0.9, return = FALSE)
 }
 \references{
 Langfelder, P., & Horvath, S. (2008). WGCNA: an R package for weighted correlation network analysis.

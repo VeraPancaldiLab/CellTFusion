@@ -10,9 +10,7 @@ prepare_celltfusion_folds(
   bestune = NULL,
   deconv,
   raw.counts = NULL,
-  coldata = NULL,
-  batch = FALSE,
-  batch_id = NULL,
+  batch = NULL,
   ncores = 1,
   return = FALSE,
   verbose = FALSE,
@@ -34,19 +32,19 @@ running the folds.}
 computed independently for each sample, so computing it once for all samples does not leak information
 between folds.}
 
-\item{raw.counts}{Optional count matrix (genes x samples) with the samples in the same order as \code{data}.
+\item{raw.counts}{Optional count matrix (genes x samples; TPM values if \code{normalized = FALSE} is passed
+to \code{CellTFusion()}) with the samples of \code{data}. Its columns are matched to the samples of
+\code{deconv} by name (an error is raised if they are not the same samples); without column names, they must be
+in the same order as \code{data}.
 \code{pipeML} converts the column names of \code{features_train} with \code{make.names()} (e.g.
 \code{"HLA-A"} becomes \code{"HLA.A"}), so gene symbols in \code{data} may no longer match TF regulons and
 gene sets; passing \code{raw.counts} keeps the original gene symbols. If \code{NULL} (default),
 \code{t(data)} is used.}
 
-\item{coldata}{Optional data frame of sample metadata with rows in the same order as \code{data}. Required
-when \code{batch = TRUE}.}
-
-\item{batch}{Logical; whether to run \code{CellTFusion()} in multi-cohort mode (see \code{CellTFusion()}).
-The test samples of each cohort are then projected separately, centered on their own means. Default FALSE.}
-
-\item{batch_id}{Column of \code{coldata} with the cohort of each sample. Required when \code{batch = TRUE}.}
+\item{batch}{Optional vector with the cohort of each sample, in the same order as \code{data} (e.g.
+\code{coldata$Cohort}). If given, \code{CellTFusion()} runs in multi-cohort mode (see \code{CellTFusion()})
+and the test samples of each cohort are projected separately, centered on their own means. Default
+\code{NULL} (single cohort).}
 
 \item{ncores}{Integer. Number of folds computed in parallel. Default 1 (sequential).}
 
@@ -65,7 +63,9 @@ The test samples of each cohort are then projected separately, centered on their
 \code{pipeML} reads back, as a list with \code{train_data} (latent factors of the training samples plus
 the outcome columns), \code{test_data} (latent factors of the test samples, plus \code{time} and
 \code{event} for survival), \code{obs_test} (observed outcome of the test samples), \code{rowIndex} (rows
-of the test samples) and \code{fold_name}. The list of folds is returned invisibly.
+of the test samples) and \code{fold_name}. The list of folds is returned invisibly. If \code{CellTFusion()}
+fails in a fold (e.g. no cell groups are found on its training samples), that fold is skipped with a
+warning and is not saved; an error is raised only if all the folds fail.
 \item In final mode (\code{bestune} provided): a list with (1) the latent factors of all the samples plus
 the outcome columns, (2) the \code{CellTFusion()} result on all the samples, available as
 \code{Custom_output} in the \code{pipeML} result and used to compute the features of new samples with
@@ -80,8 +80,8 @@ cross-validation fold, without information leakage: cell groups and latent facto
 projected onto them with \code{project_test_factors()}. It works for classification and survival tasks.
 }
 \details{
-Pass the fixed arguments (\code{deconv}, and optionally \code{raw.counts}, \code{coldata}, \code{batch},
-\code{batch_id} and any \code{CellTFusion()} argument) through \code{fold_construction_args_fixed}. Tunable
+Pass the fixed arguments (\code{deconv}, and optionally \code{raw.counts}, \code{batch}
+and any \code{CellTFusion()} argument) through \code{fold_construction_args_fixed}. Tunable
 arguments (\code{fold_construction_args_tunable}) are not supported. With \code{ncores > 1}, the first fold is
 computed before the others start in parallel, so that the TF and pathway collections cached in
 \code{Results/} are downloaded only once; the package must be installed for the parallel workers.

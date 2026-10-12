@@ -17,7 +17,9 @@ compute.latent_factors(
 
 \item{rank}{Integer; number of NMF factors. If NULL, estimated automatically
 at the elbow of the reconstruction MSE across ranks 2:8 (the rank with the largest
-second difference of the MSE curve).}
+second difference of the MSE curve). Ranks are limited to the number of cell groups (no more factors than cell
+groups); with fewer than 4 cell groups there are too few candidate ranks for an elbow, and rank = 2 is used
+(rank = 1 with a single cell group).}
 
 \item{seed}{Random seed used for the NMF fits. Default 123. The caller's random number generator
 state is restored when the function returns.}
@@ -31,11 +33,15 @@ state is restored when the function returns.}
 \value{
 A named list with:
 \describe{
-\item{Z}{Sample-level NMF factor scores (samples x rank). Non-negative.}
+\item{Z}{Sample-level NMF factor scores (samples x rank). Non-negative. Each factor (column) sums to 1 over the
+samples: the size of each factor is in \code{nmf_model$d} (the NMF is \code{W \%*\% diag(d) \%*\% t(Z)}). Tests
+on one factor at a time do not depend on this scale; to compare factors within a sample, multiply each column
+by its \code{d}, as done for \code{patient_mixture}.}
 \item{W}{Feature weights per factor ((2 x n_CGs) x rank). Non-negative.}
 \item{nmf_input}{The positive-negative split matrix fed to NMF (samples x (2 x n_CGs)).}
 \item{nmf_model}{The \code{RcppML::nmf()} model object (includes the scaling vector \code{d}).}
-\item{patient_mixture}{Long-format data frame of per-sample factor proportions used for the mixture plot.}
+\item{patient_mixture}{Long-format data frame of per-sample factor proportions used for the mixture plot: the
+factor scores multiplied by the size of each factor (\code{nmf_model$d}), divided by their sum in each sample.}
 }
 }
 \description{
@@ -46,9 +52,19 @@ then applying Non-negative Matrix Factorization via RcppML (fast C++ backend).
 \details{
 Signed CCA scores are decomposed as:
 \itemize{
-\item \code{score_pos = max(score, 0)}: patient aligned with TF program
-\item \code{score_neg = max(-score, 0)}: patient anti-aligned with TF program
+\item \code{score_pos = max(score, 0)}: how far the sample is on the active side of the TF module of that
+cell group (aligned with the TF program)
+\item \code{score_neg = max(-score, 0)}: how far the sample is on the inactive side (anti-aligned)
 }
 Both are concatenated column-wise before NMF. Column names are suffixed
-with "_pos" and "_neg" to track direction.
+with "_pos" and "_neg" to track direction. The scores must not contain missing values.
+}
+\examples{
+data("network.tuto")
+data("deconv_subgroups.tuto")
+cell_groups <- construct_cell_groups(network.tuto, deconv_subgroups.tuto)
+latent <- compute.latent_factors(cell_groups$Cell_groups, return = FALSE)
+head(latent$Z)
+latent$nmf_model$d # size of each factor
+
 }

@@ -8,16 +8,20 @@ derive_meta_programs(gsea_results, k = NULL, file_name = NULL, plot = TRUE)
 }
 \arguments{
 \item{gsea_results}{Output of \code{compute_factor_gsea()} (a list with a
-\code{GSEA_results} element, one table per NMF factor).}
+\code{GSEA_results} element, one table per NMF factor). To derive meta-programs from several cohorts, put the
+\code{GSEA_results} lists of the runs together first, with distinct factor names, e.g.
+\code{list(GSEA_results = c(setNames(gsea_A$GSEA_results, paste0("A_", names(gsea_A$GSEA_results))),
+  setNames(gsea_B$GSEA_results, paste0("B_", names(gsea_B$GSEA_results)))))}.}
 
 \item{k}{Integer. Number of meta-programs (clusters) to extract. If
 \code{NULL} (default), chosen at the elbow of the within-cluster sum of squares
 (the k with the largest second difference) for k = 2 to min(10, n_hallmarks - 1).}
 
 \item{file_name}{Optional character suffix for the saved heatmap
-(\code{Results/TCGA_meta_programs_<file_name>.pdf}).}
+(\code{Results/TCGA_meta_programs_<file_name>.pdf}, or \code{Results/TCGA_meta_programs.pdf} without it).}
 
-\item{plot}{Logical. If \code{TRUE} (default), saves a clustering heatmap.}
+\item{plot}{Logical. If \code{TRUE} (default), saves a clustering heatmap of the NES (Hallmarks x factors); NES
+beyond -3 and 3 are shown with the extreme colours. With a single factor, the factor columns are not clustered.}
 }
 \value{
 A data frame with one row per meta-program and columns
@@ -28,5 +32,13 @@ A data frame with one row per meta-program and columns
 Hierarchically clusters (Ward.D2 on Euclidean distance) Hallmark gene sets by
 their NES profile across NMF factors to identify recurrent transcriptional
 programs in the TME. Use \code{annotate_metaprograms_TME()} afterwards to label
-each meta-program with a Bagaev et al. (2021) MFP subtype.
+each meta-program with a Bagaev et al. (2021) MFP subtype. The meta-program numbers (\code{MP1}, \code{MP2}, ...)
+follow the order of the clusters and have no meaning of their own.
+}
+\examples{
+\dontrun{
+gsea <- compute_factor_gsea(RNA.tpm = counts.norm, features_df = res$Latent_spaces$Z, plot_dot = FALSE)
+meta_programs <- derive_meta_programs(gsea, file_name = "my_cohort")
+}
+
 }

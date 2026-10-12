@@ -4,34 +4,46 @@
 \alias{identify.cell.groups}
 \title{Identify cell groups}
 \usage{
-\method{identify}{cell.groups}(
-  features,
-  clustering.method = "ward.D2",
-  width = 12,
-  height = 18,
-  return = T
-)
+\method{identify}{cell.groups}(features, clustering.method = "ward.D2", file_name = NULL, return = T)
 }
 \arguments{
-\item{features}{A list of two elements (accessed by position), as returned by
-\code{compute.modules.relationship()} with \code{return = TRUE}:
+\item{features}{The list returned by \code{compute.modules.relationship()}. Its first two elements are used
+(accessed by position):
 \itemize{
-\item \code{[[1]]}: A matrix of correlations between TF modules (rows) and cell type features (columns).
-\item \code{[[2]]}: A named list of significant features per TF module (e.g., p-value < 0.05).
-}}
+\item \code{[[1]]} (\code{correlation}): A matrix of correlations between TF modules (rows, named) and deconvolution features (columns).
+\item \code{[[2]]} (\code{significant}): A list, named by TF module, of the features significantly correlated with each module
+(p-value <= the \code{pval} given to \code{compute.modules.relationship()}).
+}
+The correlations of each module are taken from the row with its name.}
 
-\item{clustering.method}{Clustering method used in hclust. Default: "ward.D2".}
+\item{clustering.method}{Linkage method of the hierarchical clustering (\code{stats::hclust()}) of the features
+on the distance described above. Default: "ward.D2".}
 
-\item{width}{Width (in inches) of the saved PDF plots. Default: 12.}
+\item{file_name}{Optional character suffix for the names of the saved plots.}
 
-\item{height}{Height (in inches) of the saved PDF plots. Default: 18.}
-
-\item{return}{Logical; whether to save dendrogram plots to the "Results/" folder. Default: TRUE.}
+\item{return}{Logical; whether to save one dendrogram plot per module to
+\code{Results/Dendrogram_cell_types_<module>_<file_name>.pdf} (\code{Results/Dendrogram_cell_types_<module>.pdf}
+without \code{file_name}). Each plot shows the correlation of every feature with the module next to its name, and
+its size follows the number of features. Default: TRUE.}
 }
 \value{
-A named list of dendrograms (\code{hclust} objects), one per TF module. Modules with fewer than two
-significant features are discarded; \code{NULL} is returned if no module remains.
+A named list of dendrograms (\code{hclust} objects, labelled with the feature names), one per TF module. Each
+one also stores the correlation of its features with the module (element \code{correlation}, used by
+\code{calculate_dendrogram_cuts()}). Modules with fewer than two significant features are discarded; \code{NULL} is
+returned if no module remains.
 }
 \description{
-Identifies cell dendrograms corresponding to each TF module group based on correlation with deconvolution features.
+Builds, for each TF module, a dendrogram of the deconvolution features significantly correlated with it.
+The features are clustered on the value of that correlation: the distance between two features is the absolute
+difference between their correlations with the module (e.g. 0.62 and 0.58 are at distance 0.04). Two features are
+therefore similar when they are related to the module to the same degree (similar biological activity), not when
+they vary together across samples. The dendrograms are cut into cell groups by \code{cell.groups.computation()}.
+}
+\examples{
+data("network.tuto")
+data("deconv_subgroups.tuto")
+rel <- compute.modules.relationship(network.tuto[[1]], deconv_subgroups.tuto[[1]], plot = FALSE)
+dendrograms <- identify.cell.groups(rel, return = FALSE)
+names(dendrograms)
+
 }

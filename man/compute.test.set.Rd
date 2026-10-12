@@ -4,46 +4,57 @@
 \alias{compute.test.set}
 \title{Compute composite scores on test set based on previous cell groups}
 \usage{
-compute.test.set(deconv_res, cell_groups, features, deconvolution_test)
+compute.test.set(deconv_res, cell_groups, features = NULL, deconvolution_test)
 }
 \arguments{
 \item{deconv_res}{Deconvolution subgroups of the training set, as returned by
 \code{multideconv::compute.deconvolution.analysis()} (the elements \code{Deconvolution matrix} and
 \code{Deconvolution subgroups composition} are used).}
 
-\item{cell_groups}{A list with three elements, as returned by \code{construct_cell_groups()} on the training set:
-\itemize{
-\item cell groups scores
-\item composition: A named list of character vectors where each element represents
-cells belonging to a specific group.
-\item loadings: A corresponding list of CCA projection parameters (\code{xcoef}, \code{train_means},
-\code{train_sds}) for each cell group.
-}}
+\item{cell_groups}{The cell groups of the training set, as returned by \code{construct_cell_groups()}: its elements
+\code{Composition} (features of each cell group) and \code{Weights} (CCA projection parameters \code{xcoef},
+\code{train_means}, \code{train_sds} of each cell group) are used. Older unnamed lists, with these as second and
+third elements, are also accepted.}
 
-\item{features}{A character vector of feature names to select relevant cell groups. An error is
-raised if none of them match a cell group name.}
+\item{features}{Optional character vector with the names of the cell groups to score. If \code{NULL} (default), all
+cell groups are scored. Names that are not cell groups are ignored with a message; an error is raised if none
+of them is a cell group.}
 
-\item{deconvolution_test}{A data frame or matrix of deconvolution features for the test set,
-with cells as columns and samples as rows.}
+\item{deconvolution_test}{A data frame or matrix with the deconvolution features of the test set before
+subgrouping (the same kind of matrix as given to \code{multideconv::compute.deconvolution.analysis()} for the
+training set, with the same column names), samples as rows.}
 }
 \value{
-A data frame where each column corresponds to a composite score
-calculated for each feature group in the test set.
-If no composite scores can be computed due to zero variance,
-returns an empty data frame with a printed message.
+A data frame with one row per test sample (sample names as row names) and one column per scored cell group,
+on the scale of the training scores. A cell group is scored only if all its features are in the test set without
+missing values: a score computed from part of them can be very different from the training score (even
+reversed), so the other cell groups are skipped, with a warning listing them. An error is raised if no cell group
+can be scored.
 }
 \description{
-This function simulates cell subgroups compositions from deconvolution results in the test deconvolution data,
-and calculates composite scores using provided cell groups and features in order to replicate cell groups
-coming from a training set into an independent set.
-The composite scores represent summarized information from cell subgroup profiles.
+Scores the cell groups learned on a training set in an independent (test) set, on the same scale as the training
+scores. Three steps:
+\enumerate{
+\item the training deconvolution subgroups are rebuilt in the test data with
+\code{multideconv::replicate_deconvolution_subgroups()} (each subgroup is the median of its member features);
+\item for each cell group, its features are scaled with the training means and standard deviations;
+\item they are projected with the training CCA weights of the cell group, giving one score per test sample.
+}
+Scoring the training samples themselves reproduces their training scores. Each test sample is scored on its own,
+so a single sample can be scored (except for cell groups built with \code{batch}, see Details).
 }
 \details{
-The function first replicates the training cell subgroups in the test deconvolution data with
-\code{multideconv::replicate_deconvolution_subgroups()} (each subgroup is the median of its member
-features; subgroups or features missing in the test set are \code{NA} and are skipped).
-Then it extracts the relevant cells for each feature and calculates composite
-scores. If the cell groups were built with batch correction, the test samples are centred on
-their own means (as each training cohort was), so \code{deconvolution_test} should contain a
-single cohort.
+If the cell groups were built with batch correction (\code{batch} in \code{construct_cell_groups()}), the test
+samples are centred on their own means (as each training cohort was), so \code{deconvolution_test} should contain a
+single cohort with several samples: the scores then describe each sample relative to the other test samples.
+A warning is given when such cell groups are scored with fewer than 10 test samples.
+}
+\examples{
+data("network.tuto")
+data("deconv_subgroups.tuto")
+data("deconv.tuto")
+cell_groups <- construct_cell_groups(network.tuto, deconv_subgroups.tuto)
+test_scores <- compute.test.set(deconv_subgroups.tuto, cell_groups, deconvolution_test = deconv.tuto[1:20, ])
+test_scores[1:3, 1:3]
+
 }

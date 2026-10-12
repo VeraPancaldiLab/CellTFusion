@@ -21,7 +21,7 @@ to \code{Results/TME_factors_MFP_<cancer_name>_<file_name>.pdf} (\code{cancer_na
 }
 \value{
 A data frame with columns \code{factor}, \code{best_MFP},
-\code{kw_pval}, \code{median_IE}, \code{median_IEF}, \code{median_F},
+\code{kw_pval} (3 significant digits), \code{median_IE}, \code{median_IEF}, \code{median_F},
 \code{median_D}, \code{n_samples}, or \code{NULL} (with a warning) if the
 cancer type is not annotated or fewer than 10 patients are matched.
 }
@@ -29,7 +29,20 @@ cancer type is not annotated or fewer than 10 patients are matched.
 For a single cancer type, matches TCGA patients present in the NMF factor
 score matrix \code{Z} to the Bagaev et al. (2021) MFP annotation shipped with the
 package, then tests each factor across the four MFP subtypes (IE, IE/F, F, D)
-with a Kruskal-Wallis test. Factors with p < 0.05 are labelled with the subtype
-that has the highest median factor score; the others are labelled
+with a Kruskal-Wallis test. Factors with p < 0.05 (fixed threshold, not corrected for the number of factors) are
+labelled with the subtype that has the highest median factor score; the others are labelled
 \code{"uncharacterized"}.
+}
+\details{
+Samples are matched to patients by the first three parts of their barcode (\code{TCGA-XX-XXXX}; barcodes written
+with "." instead of "-" are accepted). When a patient has several samples, a tumour sample (sample type code 01 to 09,
+e.g. \code{-01A}) is kept rather than a normal one (e.g. \code{-11A}), and a message gives how many samples were
+left out.
+}
+\examples{
+\dontrun{
+# Z: latent factors of a TCGA cohort, samples named by their TCGA barcodes
+tme <- map_factors_to_TME(cancer_name = "BLCA", Z = res$Latent_spaces$Z)
+}
+
 }

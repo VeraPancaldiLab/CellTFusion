@@ -25,28 +25,50 @@ the cell-group composition matrix via \code{compute.composition.matrix()}.}
 \item{cell.groups}{A list of cell group definitions as returned by
 \code{construct_cell_groups()}.}
 
-\item{enrich_thresh}{Numeric. Minimum enrichment ratio (foreground / background
-frequency) for a cell type to be retained per factor. Default 1.5.}
+\item{enrich_thresh}{Numeric. Minimum enrichment ratio (see above) for a cell type to be retained per factor.
+Default 1.5.}
 
 \item{quantile_cutoff}{Numeric between 0 and 1. Quantile threshold for
-selecting top-contributing cell groups per factor. Default 0.7.}
+selecting top-contributing cell group parts per factor (see \code{extract_contributing_features()}). Default 0.7.}
 
-\item{cells_extra}{Optional character vector of additional cell-type columns
-to include in the composition matrix.}
+\item{cells_extra}{Optional character vector of additional cell type names, added to the vocabulary used to recognise
+cell types in the feature names (see \code{compute.composition.matrix()}).}
 
 \item{return}{Logical. If \code{TRUE}, saves network PDF plots to
-\code{Results/}. Default \code{TRUE}.}
+\code{Results/Network_<factor>_<file_name>.pdf} (\code{Results/Network_<factor>.pdf} without \code{file_name}).
+Default \code{TRUE}.}
 
 \item{file_name}{Character. Suffix appended to output file names.}
 }
 \value{
-A named list (one element per factor) of named numeric vectors giving
-the enriched cell types and their cumulative NMF edge weights, sorted
-descending.
+A named list (one element per factor with at least one enriched cell type) of named numeric vectors giving
+the enriched cell types and their weights, sorted descending.
 }
 \description{
-For each NMF factor, extracts the top-contributing cell groups (by basis
-weight), maps them to their constituent cell types, and keeps only cell
-types enriched relative to the background composition. Saves a star-network
-PDF per factor and returns the weighted cell-type associations.
+For each NMF factor, extracts the top-contributing cell group parts (\code{<group>_pos} / \code{<group>_neg}, by
+basis weight, see \code{extract_contributing_features()}), maps them to their constituent cell types
+(\code{compute.composition.matrix()}), and keeps only cell types enriched relative to the background composition.
+Saves a star-network PDF per factor and returns the weighted cell-type associations.
+}
+\details{
+For each factor and cell type:
+\itemize{
+\item the weight is the sum of the NMF weights of the selected parts whose cell group contains the cell type;
+\item the enrichment is the fraction of selected parts containing the cell type divided by the fraction of all
+cell groups containing it. It is a ratio, not a statistical test: with few selected parts, a cell type
+present in only one of them can pass the threshold.
+}
+The direction is not taken into account: a selected part can mean more or fewer cells of its group (depending on
+\code{_pos} / \code{_neg} and on the relation of the group to its TF module, see \code{Module_relation} in
+\code{construct_cell_groups()}), and both are added together. A cell type of a niche is therefore associated with
+the factor, without saying whether the factor has more or fewer of it.
+}
+\examples{
+data("network.tuto")
+data("deconv_subgroups.tuto")
+cell_groups <- construct_cell_groups(network.tuto, deconv_subgroups.tuto)
+latent <- compute.latent_factors(cell_groups$Cell_groups, return = FALSE)
+niches <- compute_cells_niches(latent, deconv_subgroups.tuto, cell_groups, return = FALSE)
+niches
+
 }

@@ -9,7 +9,7 @@ build_nes_matrix(gsea_results)
 \arguments{
 \item{gsea_results}{Output list from \code{compute_factor_gsea()}, containing
 a \code{GSEA_results} element (named list of \code{fgsea} result tables,
-one per factor).}
+one per factor), or that \code{GSEA_results} list itself. The factors must be named.}
 }
 \value{
 A numeric matrix of NES values with Hallmarks as rows and NMF factors
@@ -18,5 +18,13 @@ as columns. Missing Hallmark-factor combinations are set to 0.
 \description{
 Combines the per-factor GSEA outputs from \code{compute_factor_gsea()} into
 a single matrix. All tested Hallmarks are kept regardless of significance;
-Hallmarks absent from a factor's results, or whose NES could not be computed, are filled with 0.
+Hallmarks absent from a factor's results, or whose NES could not be computed (fgsea may fail to estimate some
+pathways, which then have an \code{NA} NES), are filled with 0, i.e. treated as not enriched.
+}
+\examples{
+\dontrun{
+gsea <- compute_factor_gsea(RNA.tpm = counts.norm, features_df = res$Latent_spaces$Z, plot_dot = FALSE)
+nes <- build_nes_matrix(gsea)
+}
+
 }

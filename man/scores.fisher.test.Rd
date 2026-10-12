@@ -4,25 +4,40 @@
 \alias{scores.fisher.test}
 \title{Fisher's exact test for score-trait association}
 \usage{
-scores.fisher.test(scores, coldata, trait, pval = 0.05)
+scores.fisher.test(scores, coldata, trait, pval = 0.05, p_adjust = "none")
 }
 \arguments{
-\item{scores}{A list whose first element is a samples x features score matrix, e.g. the output of
-\code{construct_cell_groups()} or \code{compute.latent_factors()}. To test a plain matrix, use
-\code{scores.stat.analysis()}.
-Continuous scores are binarised at the median into High/Low groups.}
+\item{scores}{A samples x features score matrix, a list whose first element is that matrix (e.g. the output of
+\code{construct_cell_groups()}), or the output of \code{compute.latent_factors()} (its factor scores \code{Z} are
+tested).}
 
-\item{coldata}{A data frame containing the clinical or experimental traits.}
+\item{coldata}{A data frame (or tibble) containing sample-level annotations including the trait to test. Its rows
+are matched to the samples of the scores by row name; without sample names, they must be in the order of the
+scores. Samples with a missing trait are left out (with a message).}
 
-\item{trait}{Character. Name of the column in \code{coldata} to test with Fisher's exact test.}
+\item{trait}{Character. Name of the column in \code{coldata} to test (categorical, two or more groups).}
 
-\item{pval}{Numeric. P-value threshold for significance (default 0.05).}
+\item{pval}{Numeric. Threshold for significance: a feature is significant if its (adjusted) p-value is
+\code{<= pval} (default = 0.05).}
+
+\item{p_adjust}{Character. Method to correct the p-values for multiple testing across the features (see
+\code{stats::p.adjust()}, e.g. \code{"BH"}). Default \code{"none"}.}
 }
 \value{
-A list containing the significant features after Fisher test, or \code{NULL} if none
-are significant. Additionally, it saves corresponding barplot visualizations in the "Results/" folder.
+See \code{scores.ttest()}.
 }
 \description{
-Performs a Fisher's exact test between each score, binarised at its median into High/Low groups,
-and a categorical trait. Significant features are plotted as barplots and saved to the "Results/" folder.
+Performs a Fisher's exact test between each score, binarised at its median into High/Low groups
+(a score equal to the median is "Low"), and a categorical trait. Significant features are plotted as barplots and
+saved to the "Results/" folder (\code{Results/Fisher_<trait>_<feature>.pdf}). The statistic reported is the odds
+ratio for a two-group trait (\code{NA} otherwise).
+}
+\examples{
+data("network.tuto")
+data("deconv_subgroups.tuto")
+data("traitdata.tuto")
+cell_groups <- construct_cell_groups(network.tuto, deconv_subgroups.tuto)
+res <- scores.fisher.test(cell_groups$Cell_groups[, 1:5], traitdata.tuto, "binaryResponse")
+res$Statistics
+
 }

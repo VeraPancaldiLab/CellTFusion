@@ -4,7 +4,15 @@
 \alias{compute.modules.enrichment}
 \title{Compute TF module enrichment using directed target genes}
 \usage{
-compute.modules.enrichment(RNA.tpm, hub_tfs)
+compute.modules.enrichment(
+  RNA.tpm,
+  hub_tfs,
+  TF.collection = "CollecTRI",
+  universe = NULL,
+  cancer.type = NULL,
+  top_n = 10,
+  file.name = NULL
+)
 }
 \arguments{
 \item{RNA.tpm}{A numeric matrix of normalized gene expression values.
@@ -13,34 +21,62 @@ of genes used in enrichment and validate TF-target gene presence.}
 
 \item{hub_tfs}{A list of hub TFs per module, typically obtained using \code{identify_hub_TFs()}.
 This should be a list of two elements: one with named hub TFs per module, and another
-with their module membership or additional metadata.}
+with their module membership or additional metadata. Only the modules in this list (those
+with hub TFs) are analysed.}
+
+\item{TF.collection}{Character. The TF-target network from which the targets of the hub TFs are taken:
+\code{"CollecTRI"} (default), \code{"Dorothea"} (confidence A and B) or \code{"ARACNE"}, read as in
+\code{compute.TFs.activity()}. Use the collection the TF activity was computed with.}
+
+\item{universe}{Optional. A user-specified data frame of TF-target interactions (columns \code{source} and
+\code{target}), used instead of \code{TF.collection}.}
+
+\item{cancer.type}{Optional character. Cancer type used to locate the ARACNe network
+(\verb{input/ARACNE/<cancer.type>/network/network.txt}), only used when \code{TF.collection = "ARACNE"}. If \code{NULL},
+the network is auto-detected when only one exists under \verb{input/ARACNE/}.}
+
+\item{top_n}{Integer. Number of pathways shown in the dot plot of each module. Default is 10. All the
+pathways are in the returned tables.}
+
+\item{file.name}{Optional character suffix for the names of the saved plots.}
 }
 \value{
-No object is returned. For each module with significant enrichment (adjusted p-value < 0.05),
-a dot plot is saved in the \verb{Results/} directory as a PDF file named
-\verb{Enrichment_Reactome_Module_<color>.pdf}. If no enrichment is found for a module, a message is printed
-and no file is saved for that module.
+Invisibly, a list with two elements, each a named list with one table per module (the result table
+of \code{ReactomePA::enrichPathway()}, or \code{NULL} for a module without enrichment):
+\itemize{
+\item \code{enrichment}: the module-specific pathways (adjusted p-value < 0.05, and not significant in any other module).
+\item \code{enrichment_all}: all the significant pathways of each module, before removing those shared between modules.
+}
+For each module with module-specific pathways, a dot plot is also saved in the \verb{Results/} directory as a PDF file named
+\verb{Enrichment_Reactome_Module_<color>_<file.name>.pdf} (\verb{Enrichment_Reactome_Module_<color>.pdf} without \code{file.name}).
+If no enrichment is found for a module, a message is given and no file is saved for that module.
+An error is raised if none of the hub TFs is in the TF-target network, or if none of their targets is
+found in the row names of \code{RNA.tpm} (they must be gene symbols).
 }
 \description{
 This function performs enrichment analysis for transcription factor (TF) modules
 using known TF-target interactions. For each module, it takes the hub TFs and retrieves
-their known targets from the CollecTRI database. It then conducts an over-representation
+their known targets from the TF-target network (CollecTRI by default). It then conducts an over-representation
 analysis (ORA) against the Reactome pathway database. To reduce redundancy, only unique
 pathways per module are retained by filtering out overlaps between modules.
 }
 \details{
-The function uses the \code{decoupleR::get_collectri()} function to obtain TF-target relationships
-(cached in \code{Results/TF_target_collection_CollecTRI.csv}), and \code{ReactomePA::enrichPathway()} for ORA
-using the Reactome database. The ORA input is the 20\% most variable targets of the module's hub TFs
-(at least one gene).
+The targets of the hub TFs are taken from the TF-target network (for CollecTRI and Dorothea, cached in
+\verb{Results/TF_target_collection_<TF.collection>.csv}), and \code{ReactomePA::enrichPathway()} is used for ORA
+with the Reactome database. The ORA input is the 20\% most variable targets of the module's hub TFs; a module with
+fewer than 5 such genes is skipped with a message. The background is all the genes of \code{RNA.tpm}. Any set of TFs has
+targets enriched in the pathways those TFs regulate, so the results describe what the hub TFs of each module
+regulate, not evidence that the module itself is special.
 Pathways enriched in more than one module are removed, so only module-specific results are kept.
+TF names are matched in their syntactic form too (e.g. \code{NKX2.1}, as returned by \code{compute.TFs.activity()}, matches \code{NKX2-1}).
 }
 \examples{
 \dontrun{
-# Identify hub TFs from a TF activity matrix and WGCNA network
-hub_tfs <- identify_hub_TFs(t(tfs_activity), wgcna_network, MM_thresh = 0.8, degree_thresh = 0.9)
+# Identify the hub TFs of a TF network from compute.WTCNA()
+hub_tfs <- identify_hub_TFs(wgcna_network, MM_thresh = 0.8, degree_thresh = 0.9)
 
 # Perform module-level Reactome enrichment
-compute.modules.enrichment(counts.norm, hub_tfs)
+enr <- compute.modules.enrichment(counts.norm, hub_tfs)
+head(enr$enrichment[[1]])
 }
 }

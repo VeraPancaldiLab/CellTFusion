@@ -9,38 +9,45 @@ scores.stat.analysis(
   coldata,
   trait,
   method = c("fisher", "wilcox", "anova", "kruskal", "ttest"),
-  pval = 0.05
+  pval = 0.05,
+  p_adjust = "none"
 )
 }
 \arguments{
 \item{scores}{A list, NMF output from \code{compute.latent_factors()}, or a
 score matrix (samples x features). When a list, the first element must be
-the score matrix; optional second and third elements are passed through to
-the returned result unchanged.}
+the score matrix; optional second to fourth elements (e.g. the output of
+\code{construct_cell_groups()}) are subsetted to the significant features and returned with their names.}
 
-\item{coldata}{A data frame containing clinical or experimental metadata for samples.
-Must include the column specified in \code{trait}.}
+\item{coldata}{A data frame (or tibble) containing clinical or experimental metadata for samples.
+Must include the column specified in \code{trait}. Its rows are matched to the samples of the scores by row name;
+without sample names, they must be in the order of the scores. Samples with a missing trait are left out.}
 
 \item{trait}{Character. The name of the column in \code{coldata} representing the clinical
-or experimental trait to test against (e.g., response, subtype, etc.).}
+or experimental trait to test against (e.g., response, subtype, etc.). It must be categorical.}
 
 \item{method}{Character. Statistical test to perform. One of:
 \itemize{
 \item \code{"fisher"} - Fisher's exact test (scores binarised at median)
 \item \code{"wilcox"} - Wilcoxon rank-sum test (non-parametric, binary traits)
-\item \code{"anova"} - One-way ANOVA (parametric, >2 groups)
-\item \code{"kruskal"} - Kruskal-Wallis test (non-parametric, >2 groups)
+\item \code{"anova"} - One-way ANOVA (parametric, two or more groups)
+\item \code{"kruskal"} - Kruskal-Wallis test (non-parametric, two or more groups)
 \item \code{"ttest"} - Welch's t-test (parametric, binary traits)
 }
 Only one can be used per call; defaults to the first one (\code{"fisher"}).}
 
-\item{pval}{Numeric. P-value threshold for significance (default: 0.05).}
+\item{pval}{Numeric. Threshold for significance: a feature is significant if its (adjusted) p-value is
+\code{<= pval} (default: 0.05).}
+
+\item{p_adjust}{Character. Method to correct the p-values for multiple testing across the features (see
+\code{stats::p.adjust()}, e.g. \code{"BH"}). Default \code{"none"}.}
 }
 \value{
-A list of significant features, where the first element contains the
-subset of the original score matrix for significant features. Optional
-second and third elements (from the input list) are subsetted accordingly.
-Returns \code{NULL} if no significant features are found.
+A list whose first element is the score matrix restricted to the significant features (no column if none
+is significant). Optional second to fourth elements (from the input list, e.g. the composition, weights and
+\code{Module_relation} of the cell groups) are subsetted accordingly and keep their names. The last element,
+\code{Statistics}, is a data frame with the test of every feature (\code{feature}, \code{test},
+\code{statistic_name}, \code{statistic}, \code{p_value}, \code{p_adjusted}, \code{significant}).
 }
 \description{
 Unified interface for testing associations between any score matrix and a
@@ -59,18 +66,17 @@ based on the \code{method} argument:
 }
 
 Each test produces both a statistical result and visual outputs (PDF plots)
-stored in the \code{"Results/"} folder. These visualizations include the relevant
+stored in the \code{"Results/"} folder for the significant features. These visualizations include the relevant
 test results (p-values) annotated on the plots.
 }
 \examples{
-\dontrun{
-# Cell group scores
-sig <- scores.stat.analysis(cell.groups, coldata, trait = "response",
-                            method = "kruskal", pval = 0.05)
-
-# NMF latent factors
-nmf <- compute.latent_factors(cell.groups$Cell_groups)
-sig <- scores.stat.analysis(nmf, coldata, trait = "response", method = "anova")
-}
+data("network.tuto")
+data("deconv_subgroups.tuto")
+data("traitdata.tuto")
+cell_groups <- construct_cell_groups(network.tuto, deconv_subgroups.tuto)
+sig <- scores.stat.analysis(cell_groups, traitdata.tuto, trait = "Enrollment.IC",
+                            method = "kruskal", pval = 0.05, p_adjust = "BH")
+head(sig$Statistics)
+names(sig$Composition)
 
 }

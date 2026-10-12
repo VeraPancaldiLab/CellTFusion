@@ -2,22 +2,25 @@
 % Please edit documentation in R/CellTFusion.R
 \name{get_all_cells}
 \alias{get_all_cells}
-\title{Recursively retrieve all base cell types for a subgroup}
+\title{Recursively retrieve the original deconvolution features of a subgroup}
 \usage{
 get_all_cells(subgroup_name, cell_subgroups)
 }
 \arguments{
-\item{subgroup_name}{Character. Name of the subgroup or base cell type to resolve.}
+\item{subgroup_name}{Character. A single deconvolution feature name: a subgroup or an original feature.}
 
 \item{cell_subgroups}{A named list mapping subgroup names to vectors of member
-names (which can themselves be subgroup keys).}
+names (which can themselves be subgroup names), e.g. the flattened \code{Deconvolution subgroups composition}
+of \code{multideconv::compute.deconvolution.analysis()}.}
 }
 \value{
-A character vector of unique base cell type names belonging to
-\code{subgroup_name}.
+A character vector of the unique original deconvolution feature names contained in
+\code{subgroup_name} (the name itself if it is not a subgroup).
 }
 \description{
-Walks a nested subgroup hierarchy and returns the leaf-level cell type names
-that belong to the requested subgroup.
+Replaces a deconvolution subgroup by its member features, going down through nested subgroups, and returns the
+original deconvolution feature names (e.g. \code{B.cells_Subgroup.1} gives \code{CBSX_BPRNACan_B.cells},
+\code{CBSX_BPRNACan3DProMet_B.cells}, ...). A name that is not a subgroup is returned unchanged. The cell types are
+read from the returned names afterwards with \code{extract_cells()}.
 }
 \keyword{internal}

@@ -6,29 +6,40 @@
 \usage{
 calculate_dendrogram_cuts(
   cell.group.dendrogram,
-  deep_split = 4,
+  deep_split = TRUE,
   min_cluster_size = 3
 )
 }
 \arguments{
-\item{cell.group.dendrogram}{A list of \code{hclust}-convertible dendrogram objects,
+\item{cell.group.dendrogram}{A list of \code{hclust} objects (or objects convertible to \code{hclust}),
 one per TF module, as returned by \code{identify.cell.groups()}.}
 
-\item{deep_split}{Integer. Passed to \code{dynamicTreeCut::cutreeDynamic()}'s
-\code{deepSplit} argument; controls the sensitivity of cluster splitting.
-Default is 4.}
+\item{deep_split}{Logical. Passed to \code{dynamicTreeCut::cutreeDynamic()}'s
+\code{deepSplit} argument. With \code{method = "tree"} it is a switch, not a level: \code{TRUE}
+(default; any non-zero number has the same effect) splits clusters more finely than \code{FALSE}.}
 
-\item{min_cluster_size}{Integer. Passed to \code{dynamicTreeCut::cutreeDynamic()}'s
-\code{minClusterSize} argument; minimum number of elements per cluster.
-Default is 3.}
+\item{min_cluster_size}{Integer. Minimum number of features per cluster: passed to
+\code{dynamicTreeCut::cutreeDynamic()}'s \code{minClusterSize} argument, and used in step 2. Default is 3.}
 }
 \value{
 A list of integer cluster label vectors, one per dendrogram, in the
-same order as \code{cell.group.dendrogram} (label \code{0} marks unassigned
-elements).
+same order as \code{cell.group.dendrogram} and named like it, each in the order of the dendrogram labels
+(label \code{0} marks unassigned elements).
 }
 \description{
-Cuts each cell-type dendrogram into clusters using dynamic tree cutting
-(\code{dynamicTreeCut::cutreeDynamic()}, \code{method = "tree"}).
+Cuts each cell-type dendrogram into clusters (the cell groups of a TF module) in two steps:
+\enumerate{
+\item the dendrogram is cut with dynamic tree cutting (\code{dynamicTreeCut::cutreeDynamic()}, \code{method = "tree"});
+\item each cluster is made to cover a single range of correlation values with the module. With \code{method = "tree"},
+a cluster can be a branch from which smaller branches were split off as other clusters, so its features can lie in
+separated ranges of correlation (e.g. 0.14, 0.17-0.19 and 0.26-0.39, with other clusters in between). The assigned
+features are sorted by their correlation, and each run of consecutive features with the same cluster becomes a
+piece. A piece with fewer than \code{min_cluster_size} features is joined to the neighbouring piece (just below or
+just above in correlation) with the smallest gap between their correlations, the smallest gap first, until every
+piece has at least \code{min_cluster_size} features. The pieces are the final clusters, numbered from the lowest to
+the highest correlation.
+}
+Features left unassigned by the dynamic tree cut stay unassigned. Step 2 needs the correlations stored in the
+dendrograms by \code{identify.cell.groups()}; for dendrograms without them, only step 1 is done (with a message).
 }
 \keyword{internal}

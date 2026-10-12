@@ -72,7 +72,7 @@ res$TME_states             # mapping of each latent factor to a TCGA meta-progra
 | Survival analysis | `compute.survival.analysis()` | [Statistical analysis](a4_statistical_analysis.html) |
 | Cross-validation with `pipeML` | `prepare_celltfusion_folds()` | [Machine learning workflows](a5_machine_learning.html) |
 | Projection of new cohorts | `project_test_factors()` | [Machine learning workflows](a5_machine_learning.html) |
-| Multi-cohort analysis | `CellTFusion(batch = TRUE)` | [Multi-cohort analysis](a6_batch_analysis.html) |
+| Multi-cohort analysis | `CellTFusion(batch = ...)` | [Multi-cohort analysis](a6_batch_analysis.html) |
 
 ## Tutorials
 
@@ -83,7 +83,7 @@ Step-by-step tutorials are available in the **Articles** section of the navigati
 - **[TME state characterization](a3_tme_states.html)** — Hallmark GSEA, TCGA meta-programs and TME subtypes
 - **[Statistical analysis](a4_statistical_analysis.html)** — associations with clinical variables and survival
 - **[Machine learning workflows](a5_machine_learning.html)** — use latent factors as features and project independent cohorts
-- **[Multi-cohort analysis](a6_batch_analysis.html)** — correct for cohort effects with `batch = TRUE`
+- **[Multi-cohort analysis](a6_batch_analysis.html)** — correct for cohort effects with `batch`
 
 ## Shiny app
 

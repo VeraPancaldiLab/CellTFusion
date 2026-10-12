@@ -50,7 +50,6 @@
 #' @importFrom grDevices dev.off
 #' @importFrom grDevices pdf
 #' @importFrom GSVA gsva
-#' @importFrom Hmisc rcorr
 #' @importFrom org.Hs.eg.db org.Hs.eg.db
 #' @importFrom pheatmap pheatmap
 #' @importFrom purrr map

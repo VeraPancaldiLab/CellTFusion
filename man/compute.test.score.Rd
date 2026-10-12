@@ -8,7 +8,8 @@ compute.test.score(cell_group, projection_params)
 }
 \arguments{
 \item{cell_group}{A numeric matrix of cell deconvolution features for test
-samples (samples x features). Column names must overlap with training features.}
+samples (samples x features). It must contain every feature of the cell group (the row names of \code{xcoef});
+other columns are ignored.}
 
 \item{projection_params}{A list containing:
 \describe{
@@ -20,11 +21,13 @@ batch correction, in which case the test data are centred on their own column me
 }
 \value{
 A numeric matrix (samples x 1) of projected canonical scores for the
-test cohort, or \code{NULL} if no features overlap.
+test cohort, or \code{NULL} (with a warning) if some features of the cell group are missing.
 }
 \description{
 Scales a test-set cell group matrix using the mean and standard deviation
 stored from training, then projects it onto the first canonical component
-learned during training.
+learned during training. All the features of the cell group are needed: a score computed from part of them
+(the others set to their training mean) can be very different from the training score, even reversed, because
+the CCA weights of correlated features can have opposite signs.
 }
 \keyword{internal}

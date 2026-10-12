@@ -11,16 +11,18 @@ plot_module_scatter_grid(
   p_mat,
   file_name,
   pval = 0.05,
-  width = 12,
-  height = 10,
   only_sig = TRUE,
-  ncol = NULL
+  ncol = NULL,
+  max_pairs = 100,
+  axis_suffix = ""
 )
 }
 \arguments{
-\item{matA}{A numeric matrix (samples x modules) for the y-axis of each panel.}
+\item{matA}{A numeric matrix or data frame (samples x modules) for the y-axis of each panel.
+\code{compute.modules.relationship()} passes the ranks for Spearman correlations, and the values
+corrected for batch when \code{batch} is used.}
 
-\item{matB}{A numeric matrix (samples x features) for the x-axis of each panel.}
+\item{matB}{A numeric matrix or data frame (samples x features) for the x-axis of each panel.}
 
 \item{cor_mat}{A numeric matrix of correlation coefficients between columns of
 \code{matA} (rows) and \code{matB} (columns).}
@@ -32,25 +34,28 @@ plot_module_scatter_grid(
 
 \item{pval}{Numeric. P-value cutoff for displaying a pair. Default 0.05.}
 
-\item{width}{Numeric. Width of the SVG output in inches. Default 12. Increased if needed so that
-each panel is at least 2 inches wide.}
-
-\item{height}{Numeric. Height of the SVG output in inches. Default 10. Increased if needed so that
-each panel is at least 2 inches high.}
-
 \item{only_sig}{Logical. If \code{TRUE} (default), only pairs with
 \code{p <= pval} are plotted.}
 
 \item{ncol}{Integer or \code{NULL}. Number of columns in the plot grid.
 If \code{NULL}, set to \code{ceiling(sqrt(n_pairs))}.}
+
+\item{max_pairs}{Integer. Maximum number of panels: if there are more pairs, only the strongest
+correlations are drawn (with a message). Default 100.}
+
+\item{axis_suffix}{Character added to the axis titles after the column names (e.g. \code{" (rank)"}). Default "".}
 }
 \value{
 Called for its side effect (saves SVG); returns \code{NULL} invisibly.
 }
 \description{
 For each pair of columns from \code{matA} and \code{matB} whose p-value in
-\code{p_mat} is below \code{pval}, draws a scatter plot with a regression
-line and annotates it with the correlation coefficient. The full grid is
-saved as an SVG file in \code{Results/}.
+\code{p_mat} is at or below \code{pval}, draws a scatter plot with a linear regression
+line and annotates it with the correlation coefficient and p-value taken from
+\code{cor_mat} and \code{p_mat}. The full grid is saved as an SVG file in \code{Results/}.
+The line is a linear fit of the values given in \code{matA} and \code{matB}.
+Each panel is 3.2 x 3.2 inches, so the size of the file follows from the number of panels. The column
+names are the axis titles; names longer than 30 characters are split over several lines at \code{"_"} or \code{"."},
+and the margins are set from the number of lines.
 }
 \keyword{internal}

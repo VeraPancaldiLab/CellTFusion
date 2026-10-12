@@ -100,7 +100,7 @@ pred$AUC$AUROC
 
 ## **Survival outcomes**
 
-The same function is used for survival models, with the follow-up time and event of each sample:
+The same function is used for survival models, with the follow-up time and event of each sample (the tutorial `traitdata` does not include them: the example assumes `PFS` and `PFS_event` columns in your clinical data):
 
 ```{r, eval = FALSE}
 surv_res <- pipeML::compute_features.training.ML(
@@ -130,7 +130,7 @@ surv_pred$c_index
 
 ## **Multi-cohort data**
 
-For samples from several cohorts, pass `batch = TRUE`, the metadata of the training samples (`coldata`, in the same order as `features_train`) and the cohort column (`batch_id`). `CellTFusion()` then corrects for cohort in each fold (see [Multi-cohort analysis](a6_batch_analysis.html)), and the test samples of each cohort are projected separately, centered on their own means. With `LODO = TRUE`, `pipeML` leaves one cohort out in each fold:
+For samples from several cohorts, pass `batch`: the cohort of each training sample, in the same order as `features_train`. `CellTFusion()` then corrects for cohort in each fold (see [Multi-cohort analysis](a6_batch_analysis.html)), and the test samples of each cohort are projected separately, centered on their own means. With `LODO = TRUE`, `pipeML` leaves one cohort out in each fold:
 
 ```{r, eval = FALSE}
 ml_res <- pipeML::compute_features.training.ML(
@@ -144,12 +144,10 @@ ml_res <- pipeML::compute_features.training.ML(
   fold_construction_fun        = prepare_celltfusion_folds,
   fold_construction_args_fixed = list(deconv     = deconv_train,
                                       raw.counts = raw.counts_train,
-                                      coldata    = coldata_train,
-                                      batch      = TRUE,
-                                      batch_id   = "Cohort")
+                                      batch      = coldata_train$Cohort)
 )
 ```
 
-For a model trained with `batch = TRUE`, project each new cohort separately with `project_test_factors()`, as its samples are centered on their own means.
+For a model trained with `batch`, project each new cohort separately with `project_test_factors()`, as its samples are centered on their own means.
 
 **Note:** `prepare_celltfusion_folds()` runs `CellTFusion()` in every fold. Use `ncores` in `fold_construction_args_fixed` to compute several folds in parallel (the package must be installed).

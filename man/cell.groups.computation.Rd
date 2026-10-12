@@ -10,15 +10,17 @@ cell.groups.computation(
   tfs.module.network,
   batch = NULL,
   return = T,
-  pval = 0.05,
-  n_perm = 999,
   dendrogram_file = NULL,
-  return_dendrogram = FALSE
+  return_dendrogram = FALSE,
+  cells_extra = NULL,
+  min_cluster_size = 3,
+  deep_split = TRUE
 )
 }
 \arguments{
 \item{deconvolution}{A data frame with deconvolution features (samples as rows, cell-type features as columns).
-This is usually the first element returned by \code{multideconv::compute.deconvolution.analysis()}.}
+This is usually the first element returned by \code{multideconv::compute.deconvolution.analysis()}. It must
+contain all the features of \code{cell.dendrograms}.}
 
 \item{cell.dendrograms}{A named list of dendrogram (\code{hclust}) objects, each corresponding to a TF module, typically
 returned by \code{identify.cell.groups()}.}
@@ -30,31 +32,43 @@ obtained from \code{compute.WTCNA()} (the elements \code{TFs module matrix}, \co
 \item{batch}{Optional vector indicating batch assignment for samples.}
 
 \item{return}{Logical; if TRUE (default), writes CSV files with cell group compositions and scores
-to the "Results/" folder.}
+to the "Results/" folder (named with \code{dendrogram_file}; the folder is created if needed).}
 
-\item{pval}{Numeric. Significance threshold for the CCA permutation test of each cell group. Default is 0.05.}
-
-\item{n_perm}{Integer. Number of permutations for significance testing. Default is 999.}
-
-\item{dendrogram_file}{Optional character. Suffix of the dendrogram PDF file name (see \code{return_dendrogram}).}
+\item{dendrogram_file}{Optional character. Suffix of the output file names: the dendrogram PDF (see
+\code{return_dendrogram}) and the CSV files (see \code{return}).}
 
 \item{return_dendrogram}{Logical. If TRUE, saves a PDF of the colored cell-group dendrograms to
 \code{Results/Dendrogram_color_clusters_<dendrogram_file>.pdf} (only when \code{dendrogram_file} is set). Default FALSE.}
+
+\item{cells_extra}{Optional character vector with the cell names that are not in the nomenclature of multideconv,
+used to list the cell types of each cell group.}
+
+\item{min_cluster_size}{Integer. Minimum number of features of a cell group (minimum cluster size of the
+dynamic tree cut of each dendrogram). Default is 3.}
+
+\item{deep_split}{Logical. If TRUE (default), the dynamic tree cut splits the clusters more finely.}
 }
 \value{
-An unnamed list of three elements:
+An unnamed list of four elements:
 \itemize{
-\item \code{[[1]]}: A data frame with the composite scores of all identified cell groups across samples.
-\item \code{[[2]]}: A list of vectors indicating the composition (original features) of each cell group.
-\item \code{[[3]]}: A list of CCA projection parameters (\code{xcoef}, \code{train_means}, \code{train_sds}) for each cell group.
+\item \code{[[1]]}: A data frame with the composite scores of all identified cell groups across samples. A
+positive score means that the sample is on the active side of the TF module of that cell group.
+\item \code{[[2]]}: A named list of vectors indicating the composition (original features) of each cell group.
+\item \code{[[3]]}: A named list of CCA projection parameters (\code{xcoef}, \code{train_means}, \code{train_sds}) for each cell group.
+\item \code{[[4]]}: A data frame with the relation of each cell group to its TF module (see
+\code{construct_cell_groups()}).
 }
-Cell groups made of a single feature, or that do not pass the CCA permutation test, are discarded; an error
-is raised if no cell group remains.
+Cell groups are named \code{Dendrogram_<module>_group_<n>}, where \code{n} is the cluster number of the
+dendrogram of that module (the number shown in the dendrogram PDF); the first three elements use the same names.
+An error is raised if no cluster is found in any module. Features that the tree cut does not assign to any cluster
+are not part of any cell group: a message reports how many there are per module.
 If \code{return=TRUE}, two CSV files will be created:
 \itemize{
-\item \code{Results/Cell.groups.composition.csv}: A table showing the composition of each cell group.
-\item \code{Results/Cell.groups.scores.csv}: A matrix of cell group scores across samples.
+\item \code{Results/Cell.groups.composition_<dendrogram_file>.csv}: A table showing the composition of each cell
+group, its TF module, its relation to it (positive or negative, and the correlation) and its cell types.
+\item \code{Results/Cell.groups.scores_<dendrogram_file>.csv}: A matrix of cell group scores across samples.
 }
+Without \code{dendrogram_file}, they are named \code{Cell.groups.composition.csv} and \code{Cell.groups.scores.csv}.
 }
 \description{
 This function identifies cell groups based on dendrogram cuts, computes composite scores for each group

@@ -12,11 +12,12 @@ compute.survival.analysis(
   features = NULL,
   p.value = 0.05,
   thres = 0.5,
-  group_column = NULL
+  group_column = NULL,
+  p_adjust = "none"
 )
 }
 \arguments{
-\item{survival.data}{A data frame of clinical/survival metadata, with samples as rows.}
+\item{survival.data}{A data frame (or tibble) of clinical/survival metadata, with samples as rows.}
 
 \item{PFS}{Character. Column name in \code{survival.data} with the survival/follow-up time.}
 
@@ -26,19 +27,22 @@ compute.survival.analysis(
 \item{file_name}{Optional character. Suffix used when saving Kaplan-Meier plots to \code{Results/}.}
 
 \item{features}{Optional. A samples x features numeric matrix or data frame (e.g.
-\code{latent_spaces$Z}). If provided (and \code{group_column} is \code{NULL}), each
-feature is tested individually. Rows must be the same samples, in the same order, as the rows of
+\code{latent_spaces$Z}). If provided (and \code{group_column} is
+\code{NULL}), each feature is tested individually. Rows must be the same samples, in the same order, as the rows of
 \code{survival.data} (checked by name). Mutually exclusive with \code{group_column}.}
 
-\item{p.value}{Numeric. Log-rank test p-value threshold used to keep a feature as
-significant when \code{features} is used. Default is 0.05.}
+\item{p.value}{Numeric. Log-rank test threshold used to keep a feature as significant when \code{features} is used:
+(adjusted) p-value \code{<= p.value}. Default is 0.05.}
 
 \item{thres}{Numeric between 0 and 1. Quantile cutoff used to split each feature into
-High/Low groups when \code{features} is used. Default is 0.5 (median split).}
+High/Low groups when \code{features} is used (High = at or above the cutoff). Default is 0.5 (median split).}
 
 \item{group_column}{Optional character. Column name in \code{survival.data} defining a
-predefined categorical grouping (e.g. cell group membership, cluster, or trait class).
-Mutually exclusive with \code{features}.}
+predefined categorical grouping (e.g. cell group membership, cluster, or trait class). Samples without a value
+are left out (with a message). Mutually exclusive with \code{features}.}
+
+\item{p_adjust}{Character. Method to correct the log-rank p-values for multiple testing across the features (see
+\code{stats::p.adjust()}, e.g. \code{"BH"}), when \code{features} is used. Default \code{"none"}.}
 }
 \value{
 If \code{group_column} is provided, a list with:
@@ -48,13 +52,15 @@ If \code{group_column} is provided, a list with:
 \item{p_value}{Log-rank test p-value across groups.}
 \item{median_follow_up}{Median follow-up time (reverse Kaplan-Meier).}
 }
-If \code{features} is provided, a named list of significant \code{Surv() ~ feature} formulas
-(one per feature with log-rank p-value below \code{p.value}); \code{NULL} (with a message)
-if none are significant.
+If \code{features} is provided, a named list with one \code{Surv() ~ feature} formula per significant feature,
+and a last element \code{Statistics}: a data frame with the test of every feature (\code{feature}, \code{cutoff},
+\code{n_high}, \code{n_low}, \code{p_value}, \code{p_adjusted}, \code{significant}). When no feature is significant,
+the list only contains \code{Statistics} (with a message).
 
 A Kaplan-Meier plot (with risk table) is saved as an SVG file to
-\code{Results/SurvPlot_<group-or-feature>_<file_name>.svg}: always for \code{group_column},
-and one per significant feature for \code{features}.
+\code{Results/SurvPlot_<group-or-feature>_<file_name>.svg} (\code{Results/SurvPlot_<group-or-feature>.svg} without
+\code{file_name}; characters not allowed in file names, e.g. "/", replaced by "_"): always for
+\code{group_column}, and one per significant feature for \code{features}.
 }
 \description{
 Performs Kaplan-Meier survival analysis and log-rank testing, either on a predefined
@@ -70,6 +76,9 @@ Requires the \code{survival}, \code{survminer}, and \code{gridExtra} packages (s
 }
 \examples{
 \dontrun{
+# traitdata: clinical data with the survival columns (here "PFS" and "PFS_event");
+# the tutorial data (traitdata.tuto) does not include them
+
 # Predefined clinical/cell groups
 compute.survival.analysis(
   survival.data = traitdata,

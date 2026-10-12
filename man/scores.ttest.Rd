@@ -4,25 +4,44 @@
 \alias{scores.ttest}
 \title{T-test for cell group comparisons}
 \usage{
-scores.ttest(scores, coldata, trait, pval = 0.05)
+scores.ttest(scores, coldata, trait, pval = 0.05, p_adjust = "none")
 }
 \arguments{
-\item{scores}{A list whose first element is a samples x features score matrix, e.g. the output of
-\code{construct_cell_groups()} or \code{compute.latent_factors()}. To test a plain matrix, use
-\code{scores.stat.analysis()}.}
+\item{scores}{A samples x features score matrix, a list whose first element is that matrix (e.g. the output of
+\code{construct_cell_groups()}), or the output of \code{compute.latent_factors()} (its factor scores \code{Z} are
+tested).}
 
-\item{coldata}{A data frame containing sample-level annotations including the trait to test.}
+\item{coldata}{A data frame (or tibble) containing sample-level annotations including the trait to test. Its rows
+are matched to the samples of the scores by row name; without sample names, they must be in the order of the
+scores. Samples with a missing trait are left out (with a message).}
 
-\item{trait}{Character. Name of the column in \code{coldata} used as the grouping variable.}
+\item{trait}{Character. Name of the column in \code{coldata} used as the grouping variable (categorical, two groups).}
 
-\item{pval}{Numeric. P-value threshold for significance (default = 0.05).}
+\item{pval}{Numeric. Threshold for significance: a feature is significant if its (adjusted) p-value is
+\code{<= pval} (default = 0.05).}
+
+\item{p_adjust}{Character. Method to correct the p-values for multiple testing across the features (see
+\code{stats::p.adjust()}, e.g. \code{"BH"}). Default \code{"none"}.}
 }
 \value{
-A list containing only significant cell groups after the t-test.
-Returns \code{NULL} if no significant groups are found.
+A list with the significant features: its first element is the score matrix restricted to them (no
+column if none is significant), followed by the matching parts of the other elements of \code{scores} (e.g.
+\code{Composition}, \code{Weights} and \code{Module_relation} of \code{construct_cell_groups()}), with their names.
+The last element, \code{Statistics}, is a data frame with the test of every feature (\code{feature}, \code{test},
+\code{statistic_name}, \code{statistic}, \code{p_value}, \code{p_adjusted}, \code{significant}).
 }
 \description{
 Performs a two-sample t-test (Welch's, unequal variances) comparing cell group scores between two groups
 of a binary trait.
-Significant features are plotted as boxplots and saved as PDF files in the "Results/" directory.
+Significant features are plotted as boxplots and saved as PDF files in the "Results/" directory
+(\code{Results/Ttest_<trait>_<feature>.pdf}).
+}
+\examples{
+data("network.tuto")
+data("deconv_subgroups.tuto")
+data("traitdata.tuto")
+cell_groups <- construct_cell_groups(network.tuto, deconv_subgroups.tuto)
+res <- scores.ttest(cell_groups$Cell_groups[, 1:5], traitdata.tuto, "binaryResponse")
+res$Statistics
+
 }

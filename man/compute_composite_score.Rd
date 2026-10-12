@@ -8,43 +8,62 @@ compute_composite_score(
   cell_group,
   module_group,
   tfs.module.network,
-  batch = NULL,
-  discard = T,
-  pval = 0.05,
-  n_perm = 999
+  batch = NULL
 )
 }
 \arguments{
-\item{cell_group}{A numeric matrix of cell deconvolution features for a cell group (samples x features).}
+\item{cell_group}{A numeric matrix of cell deconvolution features for a cell group (samples x features), with sample
+names as row names. The module score and TF activities of \code{tfs.module.network} are matched to these samples by
+name; every sample must be in the network.}
 
 \item{module_group}{Character. Name (color) of the TF module the cell group was built from; must match a
 column name of the module matrix in \code{tfs.module.network} exactly.}
 
-\item{tfs.module.network}{Output of compute.WTCNA().}
+\item{tfs.module.network}{Output of compute.WTCNA() (single- or multi-cohort).}
 
-\item{batch}{Optional vector indicating batch assignment for samples. It is treated as categorical: per-batch
-means are regressed out of the cell group features, the module eigengene and the module TFs before the CCA.}
-
-\item{discard}{Logical; whether to discard cell groups that do not pass the
-permutation test for the first canonical correlation (default TRUE).}
-
-\item{pval}{Numeric. Significance threshold for the permutation test (default 0.05).}
-
-\item{n_perm}{Integer. Number of permutations used to build the null distribution (default 999).}
+\item{batch}{Optional vector with the cohort of each sample, in the row order of \code{cell_group}. It is treated as
+categorical: per-batch means are regressed out of the cell group features, the module score and the module TFs
+before the CCA.}
 }
 \value{
-An unnamed list of two elements:
+An unnamed list of three elements:
 \itemize{
 \item \code{[[1]]}: Numeric matrix (samples x 1) with the composite score, i.e. the scaled cell group
-features projected onto the first canonical component.
+features projected onto the first canonical component, oriented to be aligned with the TF module.
 \item \code{[[2]]}: Projection parameters used to score new samples: \code{xcoef} (canonical weights of
 the first component), \code{train_means} and \code{train_sds} (column means/SDs used for scaling).
+The sign of \code{xcoef} follows the orientation of the score.
 \code{train_means} is \code{NULL} when batch correction was applied: new samples are then centred on
 their own means, as each training cohort was.
+\item \code{[[3]]}: Relation of the cell group to its TF module: the mean correlation of its features with
+the module score (positive or negative).
 }
-If the permutation test is not significant (and \code{discard = TRUE}), returns \code{list("NA", "NA")}.
 }
 \description{
 Computes a composite score by performing Canonical Correlation Analysis (CCA)
-between cell group features and corresponding TF module scores.
+between the deconvolution features of a cell group and the TFs of its module.
+The score is the weighted sum of the (scaled) features of the cell group, with the weights of the first
+canonical component. As the sign of CCA weights is arbitrary, the score is oriented so that it is aligned
+with the TF module: a positive score means that the sample is on the active side of the module for that cell
+group. The score therefore increases with the features of the cell group when they are positively related
+to the module, and decreases with them when they are negatively related. The relation of the cell group to
+its module (mean correlation of its features with the module score) is returned to translate the score
+into cell abundance.
+}
+\details{
+The CCA is reliable only when the number of variables (features of the cell group plus TFs of the module) is well
+below the number of samples. When it reaches the number of samples, the first canonical correlation is 1 whatever
+the data, the weights are not unique and the score is decided by numerical noise (it can change completely with
+the sample order or a tiny change in the data). Large modules with few samples (e.g. cross-validation folds) are the
+most affected.
+}
+\examples{
+data("network.tuto")
+data("deconv_subgroups.tuto")
+cell_groups <- construct_cell_groups(network.tuto, deconv_subgroups.tuto)
+group <- cell_groups$Module_relation[1, ]
+features <- deconv_subgroups.tuto[[1]][, cell_groups$Composition[[group$cell_group]], drop = FALSE]
+score <- compute_composite_score(features, group$module, network.tuto)
+head(score[[1]])
+
 }

@@ -41,18 +41,18 @@ The package implements a multi-step pipeline (see `vignettes/CellTFusion.Rmd` fo
 
 1. **Normalization** — log-TPM normalization of raw counts (`ADImpute::NormalizeTPM`)
 2. **Cell-type deconvolution** — multiple algorithms via `multideconv::compute.deconvolution()` (Quantiseq, Epidish, DeconRNASeq, DWLS, CIBERSORTx)
-3. **TF activity inference** — `compute.TFs.activity()`: CollecTRI/Dorothea/ARACNe regulons scored via `decoupleR` consensus methods
+3. **TF activity inference** — `compute.TFs.activity()`: CollecTRI/Dorothea/ARACNe regulons scored via `decoupleR` (`method = "ulm"` by default; `"mlm"`, `"wsum"`, `"consensus"`)
 4. **TF module construction** — `compute.WTCNA()`: WGCNA-based weighted co-expression networks
-5. **Pathway scoring** — `compute.pathway.activity()`: PROGENy-based pathway activities via `decoupleR::run_mlm()`
+5. **Pathway scoring** — `compute.pathway.activity()`: PROGENy-based pathway activities via `decoupleR` (`method = "ulm"` by default)
 6. **Cell group construction** — `construct_cell_groups()`: TF module–deconvolution correlation, dendrogram cutting and CCA composite scores
 7. **Latent factor extraction** — `compute.latent_factors()`: NMF-based latent factors; `compute_cells_niches()` for cell niche derivation
 8. **TME state characterisation** — Hallmark GSEA per factor (`compute_factor_gsea()`), meta-program derivation/mapping (`derive_meta_programs()`, `map_factors_to_metaprograms()`), and TME subtype annotation against Bagaev et al. (2021) MFP subtypes (`map_factors_to_TME()`, `annotate_metaprograms_TME()`)
 9. **Statistical analysis** — clinical trait association (`scores.stat.analysis()` and the `scores.*` family), survival analysis (`compute.survival.analysis()`)
-10. **Test-set / batch projection** — apply a trained model to new data (`compute.test.set()`, `project_test_factors()`), run leakage-aware cross-validation with `pipeML` (`prepare_celltfusion_folds()`), or run multi-cohort analysis via `batch = TRUE` in `CellTFusion()`
+10. **Test-set / batch projection** — apply a trained model to new data (`compute.test.set()`, `project_test_factors()`), run leakage-aware cross-validation with `pipeML` (`prepare_celltfusion_folds()`), or run multi-cohort analysis via `batch` (cohort of each sample) in `CellTFusion()`
 
 ### Key Source Files
 
-- `R/CellTFusion.R` — All core logic (~5,050 lines); single monolithic file containing every exported function
+- `R/CellTFusion.R` — All core logic (~4,700 lines); single monolithic file containing every exported function
 - `inst/shiny/server.R` / `ui.R` — Shiny app backend and frontend
 - `vignettes/CellTFusion.Rmd` — Getting-started overview (installation, quick start, pipeline step table, tutorial list)
 - `vignettes/a1_feature_computation.Rmd` … `a6_batch_analysis.Rmd` — In-depth tutorials (feature computation, cell groups, TME states, statistical analysis, machine learning, multi-cohort). They are package vignettes (same layout as `multideconv`); heavy code chunks use `eval = FALSE` and figures live in `vignettes/figures/`. The pkgdown article menu is defined in `_pkgdown.yml`.
@@ -75,7 +75,7 @@ The package implements a multi-step pipeline (see `vignettes/CellTFusion.Rmd` fo
 | `map_factors_to_TME()` / `annotate_metaprograms_TME()` | Annotate factors/meta-programs with Bagaev et al. (2021) TME (MFP) subtypes |
 | `compute.metadata.association()` | Clinical trait association + visualization |
 | `compute.survival.analysis()` | Kaplan-Meier / log-rank survival analysis (requires `survival`, `survminer`, `gridExtra`) |
-| `compute.modules.relationship()` | Correlate TF modules with pathways |
+| `compute.modules.relationship()` | Correlate TF modules with other continuous features (pathways, deconvolution features); returns correlations, p-values and significant pairs |
 | `compute.modules.enrichment()` | Pathway enrichment of TF modules |
 
 This is a curated subset — see `NAMESPACE` or the [pkgdown reference](https://verapancaldilab.github.io/CellTFusion/reference/index.html) for the full list, which also includes the `scores.*` statistical-test family and lower-level helpers (`cell.groups.computation()`, `compute_composite_score()`, `extract_cells()`, etc.).

@@ -183,13 +183,17 @@ server <- function(input, output, session) {
       coldata <- as.data.frame(coldata, check.names = FALSE)
     }
 
+    batch_id <- parse_nullable(input$batch_id)
+    if (isTRUE(input$batch) && (is.null(coldata) || is.null(batch_id) || !batch_id %in% colnames(coldata))) {
+      showNotification("Batch mode requires coldata and a valid batch column name.", type = "error")
+      return(NULL)
+    }
+
     args <- list(
       raw.counts = as.data.frame(rv$counts, check.names = FALSE),
       deconv = rv$deconv,
       normalized = isTRUE(input$normalized),
-      coldata = coldata,
-      batch = isTRUE(input$batch),
-      batch_id = parse_nullable(input$batch_id),
+      batch = if (isTRUE(input$batch)) stats::setNames(coldata[[batch_id]], rownames(coldata)),
       deconv_methods = methods,
       cbsx.mail = parse_nullable(input$cbsx_mail),
       cbsx.token = parse_nullable(input$cbsx_token),
@@ -202,15 +206,9 @@ server <- function(input, output, session) {
       corr_type = input$corr_type,
       cells_extra = parse_cells_extra(input$cells_extra),
       pval = input$pval,
-      high_corr_groups = input$high_corr_groups,
       return = TRUE,
       verbose = TRUE
     )
-
-    if (isTRUE(input$batch) && (is.null(args$batch_id) || is.null(args$coldata))) {
-      showNotification("Batch mode requires coldata and a valid batch column name.", type = "error")
-      return(NULL)
-    }
 
     rv$error <- NULL
     start_time <- Sys.time()
