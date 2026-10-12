@@ -20,8 +20,9 @@ at each step and how to use it.
 | `compute.WTCNA(batch = TRUE)` | Logical | Takes a **list** of per-cohort TF matrices, picks a soft-thresholding power per cohort and builds consensus modules with [`WGCNA::blockwiseConsensusModules()`](https://rdrr.io/pkg/WGCNA/man/blockwiseConsensusModules.html). |
 | `compute.deconvolution.analysis(batch = batch_vec)` | Cohort vector | Correlations used to build deconvolution subgroups control for cohort. |
 | `compute.modules.relationship(batch = batch_vec)` | Cohort vector | TF module-feature correlations are **partial correlations** controlling for cohort (one indicator variable per cohort beyond the first), Pearson or Spearman according to `cor_type`. |
-| `construct_cell_groups(batch = batch_vec)` | Cohort vector | Passes the cohort vector to the correlations and to the composite scores. |
+| `construct_cell_groups(batch = batch_vec)` | Cohort vector | Passes the cohort vector to the correlations and to the composite scores. Required for a network built with `compute.WTCNA(batch = TRUE)`; it can be named by sample. |
 | `compute_composite_score(batch = batch_vec)` | Cohort vector | Removes each cohort’s mean from the cell group features and TF activities before the CCA, so composite scores are **corrected for cohort**. |
+| `compute_factor_gsea(batch = batch_vec)` | Cohort vector | Adds the cohort to the `limma` model of each gene, so that expression differences between cohorts are not attributed to the latent factors in the Hallmark GSEA. |
 
 In short, only in
 [`compute.WTCNA()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.WTCNA.md)
@@ -56,8 +57,8 @@ shared TME biology.
   factors built from them.
 - **Projection of new cohorts.** For models trained with `batch`, new
   samples are centered on their own means (as each training cohort was),
-  so each new cohort should be projected separately (see [Machine
-  learning
+  so each new cohort should be projected separately, with enough
+  samples: a warning is given with fewer than 10 (see [Machine learning
   workflows](https://verapancaldilab.github.io/CellTFusion/articles/a5_machine_learning.md)).
 
 ## **Example: multi-cohort pipeline**
@@ -92,6 +93,9 @@ Internally, this:
     [`construct_cell_groups()`](https://verapancaldilab.github.io/CellTFusion/reference/construct_cell_groups.md),
     so subgroups, module-feature correlations and cell group scores are
     all cohort-corrected.
+4.  Passes it to
+    [`compute_factor_gsea()`](https://verapancaldilab.github.io/CellTFusion/reference/compute_factor_gsea.md),
+    so the Hallmark GSEA of each latent factor is corrected for cohort.
 
 ## **Example: running the steps individually**
 

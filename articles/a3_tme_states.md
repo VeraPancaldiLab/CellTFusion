@@ -19,7 +19,8 @@ each factor can be linked to known biological programs:
 
 These steps use:
 
-- `counts.norm` — normalized expression matrix (genes x samples).
+- `counts.norm` — log-normalized expression matrix, e.g. log2(TPM + 1)
+  (genes x samples).
 - `latent_spaces` — output of
   [`compute.latent_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.latent_factors.md);
   `latent_spaces$Z` is the samples x factors matrix.
@@ -35,7 +36,16 @@ and runs a pre-ranked GSEA with `fgsea` ([Korotkevich et al.
 summarizes about 50 well-defined biological processes (e.g. EMT,
 interferon response, hypoxia), a natural vocabulary to interpret
 data-driven factors. The samples of `features_df` must be in the same
-order as the columns of `RNA.tpm`.
+order as the columns of `RNA.tpm`. All factors are in the same model, so
+the effect of each factor is adjusted for the others; the factors are
+standardized, so `logFC` is the change in expression per standard
+deviation of the factor. With `batch` (the cohort of each sample, given
+by
+[`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md)
+in multi-cohort mode), the cohort is added to the model so that
+expression differences between cohorts are not attributed to the
+factors. The GSEA uses a fixed `seed` (123 by default), so results are
+reproducible.
 
 ``` r
 
@@ -48,9 +58,9 @@ gsea_results <- compute_factor_gsea(
 )
 ```
 
-| Element         | Description                                   |
-|-----------------|-----------------------------------------------|
-| `$DE_results`   | Named list of `limma` results, one per factor |
+| Element | Description |
+|----|----|
+| `$DE_results` | Named list of `limma` results, one per factor (logFC per standard deviation of the factor) |
 | `$GSEA_results` | Named list of `fgsea` results, one per factor |
 
 With `plot_dot = TRUE`, a dot plot of the top Hallmarks is saved per
@@ -159,7 +169,8 @@ To build your own reference, for example from several cohorts,
 [`derive_meta_programs()`](https://verapancaldilab.github.io/CellTFusion/reference/derive_meta_programs.md)
 clusters the Hallmarks by their NES profiles across factors. The number
 of meta-programs `k` is chosen at the elbow of the within-cluster sum of
-squares if `NULL`.
+squares if `NULL`. To combine several cohorts, put the `GSEA_results` of
+their runs together first, with distinct factor names:
 
 ``` r
 
@@ -169,6 +180,13 @@ meta_programs <- derive_meta_programs(
   file_name    = "Tutorial",
   plot         = TRUE
 )
+
+# Several cohorts (gsea_A, gsea_B: outputs of compute_factor_gsea())
+gsea_both <- list(GSEA_results = c(
+  setNames(gsea_A$GSEA_results, paste0("A_", names(gsea_A$GSEA_results))),
+  setNames(gsea_B$GSEA_results, paste0("B_", names(gsea_B$GSEA_results)))
+))
+meta_programs <- derive_meta_programs(gsea_both, file_name = "two_cohorts")
 ```
 
 ## **Running everything with `CellTFusion()`**
@@ -181,7 +199,7 @@ unsupported cancer type) and `res$TME_states` is `NULL`:
 
 ``` r
 
-res <- CellTFusion(raw.counts = raw.counts, cancer_type = "skcm")
+res <- CellTFusion(raw.counts = raw.counts, cancer_type = "blca")  # the example data are bladder cancer samples
 
 res$TME_states              # factor-to-meta-program mapping
 res$Metaprograms_reference  # meta-program reference used

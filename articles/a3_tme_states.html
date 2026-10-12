@@ -92,8 +92,8 @@ established TME subtypes.</li>
 <p>These steps use:</p>
 <ul>
 <li>
-<code>counts.norm</code> — normalized expression matrix (genes x
-samples).</li>
+<code>counts.norm</code> — log-normalized expression matrix,
+e.g. log2(TPM + 1) (genes x samples).</li>
 <li>
 <code>latent_spaces</code> — output of
 <code><a href="../reference/compute.latent_factors.html">compute.latent_factors()</a></code>; <code>latent_spaces$Z</code> is
@@ -111,7 +111,15 @@ the MSigDB Hallmark collection <span class="citation">(<a href="#ref-Liberzon201
 collection summarizes about 50 well-defined biological processes
 (e.g. EMT, interferon response, hypoxia), a natural vocabulary to
 interpret data-driven factors. The samples of <code>features_df</code>
-must be in the same order as the columns of <code>RNA.tpm</code>.</p>
+must be in the same order as the columns of <code>RNA.tpm</code>. All
+factors are in the same model, so the effect of each factor is adjusted
+for the others; the factors are standardized, so <code>logFC</code> is
+the change in expression per standard deviation of the factor. With
+<code>batch</code> (the cohort of each sample, given by
+<code><a href="../reference/CellTFusion.html">CellTFusion()</a></code> in multi-cohort mode), the cohort is added to
+the model so that expression differences between cohorts are not
+attributed to the factors. The GSEA uses a fixed <code>seed</code> (123
+by default), so results are reproducible.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">gsea_results</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute_factor_gsea.html">compute_factor_gsea</a></span><span class="op">(</span></span>
 <span>  RNA.tpm     <span class="op">=</span> <span class="va">counts.norm</span>,</span>
@@ -121,6 +129,10 @@ must be in the same order as the columns of <code>RNA.tpm</code>.</p>
 <span>  file_name   <span class="op">=</span> <span class="st">"Tutorial"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <table class="table">
+<colgroup>
+<col width="38%">
+<col width="61%">
+</colgroup>
 <thead><tr class="header">
 <th>Element</th>
 <th>Description</th>
@@ -128,7 +140,8 @@ must be in the same order as the columns of <code>RNA.tpm</code>.</p>
 <tbody>
 <tr class="odd">
 <td><code>$DE_results</code></td>
-<td>Named list of <code>limma</code> results, one per factor</td>
+<td>Named list of <code>limma</code> results, one per factor (logFC per
+standard deviation of the factor)</td>
 </tr>
 <tr class="even">
 <td><code>$GSEA_results</code></td>
@@ -271,14 +284,23 @@ meta-program references were assigned
 <code><a href="../reference/derive_meta_programs.html">derive_meta_programs()</a></code> clusters the Hallmarks by their NES
 profiles across factors. The number of meta-programs <code>k</code> is
 chosen at the elbow of the within-cluster sum of squares if
-<code>NULL</code>.</p>
+<code>NULL</code>. To combine several cohorts, put the
+<code>GSEA_results</code> of their runs together first, with distinct
+factor names:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">meta_programs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/derive_meta_programs.html">derive_meta_programs</a></span><span class="op">(</span></span>
 <span>  gsea_results <span class="op">=</span> <span class="va">gsea_results</span>,</span>
 <span>  k            <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  file_name    <span class="op">=</span> <span class="st">"Tutorial"</span>,</span>
 <span>  plot         <span class="op">=</span> <span class="cn">TRUE</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Several cohorts (gsea_A, gsea_B: outputs of compute_factor_gsea())</span></span>
+<span><span class="va">gsea_both</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>GSEA_results <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/stats/setNames.html" class="external-link">setNames</a></span><span class="op">(</span><span class="va">gsea_A</span><span class="op">$</span><span class="va">GSEA_results</span>, <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"A_"</span>, <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">gsea_A</span><span class="op">$</span><span class="va">GSEA_results</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/stats/setNames.html" class="external-link">setNames</a></span><span class="op">(</span><span class="va">gsea_B</span><span class="op">$</span><span class="va">GSEA_results</span>, <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"B_"</span>, <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">gsea_B</span><span class="op">$</span><span class="va">GSEA_results</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">meta_programs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/derive_meta_programs.html">derive_meta_programs</a></span><span class="op">(</span><span class="va">gsea_both</span>, file_name <span class="op">=</span> <span class="st">"two_cohorts"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="running-everything-with-celltfusion">
@@ -292,7 +314,7 @@ cancer types with a reference (<code>"blca"</code>, <code>"luad"</code>,
 unsupported cancer type) and <code>res$TME_states</code> is
 <code>NULL</code>:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/CellTFusion.html">CellTFusion</a></span><span class="op">(</span>raw.counts <span class="op">=</span> <span class="va">raw.counts</span>, cancer_type <span class="op">=</span> <span class="st">"skcm"</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/CellTFusion.html">CellTFusion</a></span><span class="op">(</span>raw.counts <span class="op">=</span> <span class="va">raw.counts</span>, cancer_type <span class="op">=</span> <span class="st">"blca"</span><span class="op">)</span>  <span class="co"># the example data are bladder cancer samples</span></span>
 <span></span>
 <span><span class="va">res</span><span class="op">$</span><span class="va">TME_states</span>              <span class="co"># factor-to-meta-program mapping</span></span>
 <span><span class="va">res</span><span class="op">$</span><span class="va">Metaprograms_reference</span>  <span class="co"># meta-program reference used</span></span></code></pre></div>

@@ -19,7 +19,7 @@ traitdata  <- CellTFusion::traitdata.tuto
 res <- CellTFusion(
   raw.counts  = raw.counts,
   normalized  = TRUE,
-  cancer_type = "skcm",
+  cancer_type = "blca",   # the example data are bladder cancer samples
   return      = TRUE
 )
 ```
@@ -89,10 +89,11 @@ the module matrix (an error is raised otherwise):
 
 - **Numeric traits** are correlated with each module (Pearson by
   default, `corr_method = "s"` for Spearman) and shown in a heatmap,
-  annotated for p-values below `pval`. For traits with missing values,
-  each p-value uses the number of samples with both values. Numeric
-  columns are treated as continuous: convert number-coded categories
-  (e.g. a stage coded 1 to 4) to factor to test them as groups.
+  annotated for p-values at or below `pval`. For traits with missing
+  values, each p-value uses the number of samples with both values.
+  Numeric columns are treated as continuous: convert number-coded
+  categories (e.g. a stage coded 1 to 4) to factor to test them as
+  groups.
 - **Categorical traits** (text, factor and TRUE/FALSE columns) are
   tested with one-way ANOVA and Tukey post-hoc tests when
   `plot_grid = TRUE`, and saved as boxplot grids with one panel per
@@ -195,4 +196,5 @@ surv_factors <- compute.survival.analysis(
 
 A Kaplan-Meier plot with a risk table is saved (always for predefined
 groups, and for every significant feature in feature screening) to
-`Results/SurvPlot_<group-or-feature>_<file_name>.svg`.
+`Results/SurvPlot_<group-or-feature>_<file_name>.svg`
+(`Results/SurvPlot_<group-or-feature>.svg` without `file_name`).

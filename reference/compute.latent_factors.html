@@ -132,19 +132,19 @@ with "_pos" and "_neg" to track direction. The scores must not contain missing v
 <span class="r-msg co"><span class="r-pr">#&gt;</span> 20 of 764 features were not assigned to any cluster by the tree cut and are not part of any cell group (blue: 6, pink: 2, red: 2, yellow: 8, black: 2)</span>
 <span class="r-in"><span><span class="va">latent</span> <span class="op">&lt;-</span> <span class="fu">compute.latent_factors</span><span class="op">(</span><span class="va">cell_groups</span><span class="op">$</span><span class="va">Cell_groups</span>, return <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Estimating optimal rank via elbow on reconstruction MSE (ranks 2:8)...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> MSE by rank: k2=0.00127  k3=0.000964  k4=0.000838  k5=0.000756  k6=0.00071  k7=0.000675  k8=0.000632</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> MSE by rank: k2=0.00127  k3=0.000964  k4=0.000837  k5=0.000754  k6=0.000708  k7=0.000666  k8=0.000635</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Selected rank (elbow): 3</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Running RcppML NMF with rank = 3...</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">latent</span><span class="op">$</span><span class="va">Z</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                     Factor1     Factor2     Factor3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> SAM7f0d9cc7f001 0.000000000 0.007002944 0.009283874</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> SAM4305ab968b90 0.019634032 0.000000000 0.000000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> SAMcf018fee2acd 0.003737999 0.002203283 0.005899748</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> SAMcc4675f394a1 0.007148875 0.007615527 0.000000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> SAM49f9b2e57aa5 0.008341286 0.000000000 0.002867088</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> SAM2e7aa8fa0ab3 0.003237255 0.003662716 0.000000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SAM7f0d9cc7f001 0.000000000 0.007160844 0.009291149</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SAM4305ab968b90 0.019340715 0.000000000 0.000000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SAMcf018fee2acd 0.003710350 0.002338438 0.005919669</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SAMcc4675f394a1 0.007115861 0.007581054 0.000000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SAM49f9b2e57aa5 0.008276877 0.000000000 0.002773503</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SAM2e7aa8fa0ab3 0.003119843 0.003587641 0.000000000</span>
 <span class="r-in"><span><span class="va">latent</span><span class="op">$</span><span class="va">nmf_model</span><span class="op">$</span><span class="va">d</span> <span class="co"># size of each factor</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 615.4030 594.7220 311.0203</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 617.9435 596.5999 307.7932</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

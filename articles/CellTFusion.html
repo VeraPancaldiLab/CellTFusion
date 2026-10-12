@@ -78,12 +78,12 @@ with transcription factor (TF)–gene regulatory networks to characterize
 immune cell states in the tumor microenvironment (TME) from bulk RNA-seq
 data.</p>
 <p>Starting from a count matrix, <code>CellTFusion</code> builds
-<strong>cell groups</strong> — sets of deconvolution features whose
-abundance follows the activity of a TF co-activity module — and
-summarizes them into <strong>latent factors</strong>, a compact
-representation of the TME that can be annotated as TME states, tested
-against clinical variables and used as features for machine
-learning.</p>
+<strong>cell groups</strong> — sets of deconvolution features related to
+the same TF co-activity module to the same degree (a similar correlation
+with the module activity) — and summarizes them into <strong>latent
+factors</strong>, a compact representation of the TME that can be
+annotated as TME states, tested against clinical variables and used as
+features for machine learning.</p>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
@@ -112,7 +112,7 @@ working directory.</p>
 <span>  raw.counts     <span class="op">=</span> <span class="fu">CellTFusion</span><span class="fu">::</span><span class="va"><a href="../reference/raw.counts.tuto.html">raw.counts.tuto</a></span>,</span>
 <span>  normalized     <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  deconv_methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Quantiseq"</span>, <span class="st">"Epidish"</span><span class="op">)</span>,</span>
-<span>  cancer_type    <span class="op">=</span> <span class="st">"skcm"</span>,</span>
+<span>  cancer_type    <span class="op">=</span> <span class="st">"blca"</span>,   <span class="co"># the example data are bladder cancer samples</span></span>
 <span>  file_name      <span class="op">=</span> <span class="st">"Tutorial"</span></span>
 <span><span class="op">)</span></span>
 <span></span>

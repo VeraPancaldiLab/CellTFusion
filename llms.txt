@@ -88,9 +88,9 @@ res <- CellTFusion(
   TF.collection = "CollecTRI",    # "CollecTRI", "Dorothea", or "ARACNE"
   cancer_type = "skcm",           # TCGA cancer type, used for meta-program mapping
   file_name = "TestRun",
-  min_targets_size = 15,
-  minMod = 20,
-  corr_mod = 0.25,
+  min_targets_size = 5,
+  minMod = 5,
+  corr_mod = 0.9,                 # modules whose scores correlate above 0.9 are merged
   corr = 0.7,
   pval = 0.05,
   return = TRUE
@@ -101,8 +101,8 @@ If cell subgroups (`dt`), TF activity (`tfs`), and/or pathway activity
 (`pathways`) have already been computed — e.g. from a previous
 [`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md)
 run — you can pass them back in to skip recomputing those steps. Once
-all three are supplied, the pipeline proceeds straight to cell group
-construction:
+all three are supplied, the pipeline proceeds to the TF modules and cell
+group construction:
 
 ``` r
 
@@ -113,8 +113,8 @@ res2 <- CellTFusion(
   tfs = res$TFs_matrix,
   pathways = res$Pathways_scores,
   file_name = "TestRun_rerun",
-  minMod = 20,
-  corr_mod = 0.25,
+  minMod = 5,
+  corr_mod = 0.9,
   pval = 0.05,
   return = TRUE
 )
@@ -140,7 +140,7 @@ and are available at `res$Cell_groups`:
 ``` r
 
 res$Cell_groups$Cell_groups  # data frame of cell group scores (samples x groups)
-res$Cell_groups$Composition  # cell types included in each group
+res$Cell_groups$Composition  # deconvolution features of each group
 res$Cell_groups$Weights      # CCA projection parameters per group (used to score new samples)
 ```
 
@@ -165,7 +165,7 @@ test_scores <- compute.test.set(
   deconv_res = res$Processed_deconvolution,        # deconvolution subgroups of the training set
   cell_groups = res$Cell_groups,                   # trained cell groups
   features = names(res$Cell_groups$Composition),   # cell groups to replicate
-  deconvolution_test = deconv_test                 # deconvolution matrix of the test set
+  deconvolution_test = deconv_test                 # deconvolution matrix of the test set (before subgrouping)
 )
 ```
 

@@ -87,7 +87,7 @@ groups — and clinical variables. It uses the result of
 <span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/CellTFusion.html">CellTFusion</a></span><span class="op">(</span></span>
 <span>  raw.counts  <span class="op">=</span> <span class="va">raw.counts</span>,</span>
 <span>  normalized  <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  cancer_type <span class="op">=</span> <span class="st">"skcm"</span>,</span>
+<span>  cancer_type <span class="op">=</span> <span class="st">"blca"</span>,   <span class="co"># the example data are bladder cancer samples</span></span>
 <span>  return      <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <div class="section level2">
@@ -157,11 +157,11 @@ be the same samples, in the same order, as the rows of the module matrix
 <li>
 <strong>Numeric traits</strong> are correlated with each module
 (Pearson by default, <code>corr_method = "s"</code> for Spearman) and
-shown in a heatmap, annotated for p-values below <code>pval</code>. For
-traits with missing values, each p-value uses the number of samples with
-both values. Numeric columns are treated as continuous: convert
-number-coded categories (e.g. a stage coded 1 to 4) to factor to test
-them as groups.</li>
+shown in a heatmap, annotated for p-values at or below
+<code>pval</code>. For traits with missing values, each p-value uses the
+number of samples with both values. Numeric columns are treated as
+continuous: convert number-coded categories (e.g. a stage coded 1 to 4)
+to factor to test them as groups.</li>
 <li>
 <strong>Categorical traits</strong> (text, factor and TRUE/FALSE
 columns) are tested with one-way ANOVA and Tukey post-hoc tests when
@@ -263,7 +263,9 @@ columns.</p>
 <span><span class="op">)</span></span></code></pre></div>
 <p>A Kaplan-Meier plot with a risk table is saved (always for predefined
 groups, and for every significant feature in feature screening) to
-<code>Results/SurvPlot_&lt;group-or-feature&gt;_&lt;file_name&gt;.svg</code>.</p>
+<code>Results/SurvPlot_&lt;group-or-feature&gt;_&lt;file_name&gt;.svg</code>
+(<code>Results/SurvPlot_&lt;group-or-feature&gt;.svg</code> without
+<code>file_name</code>).</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

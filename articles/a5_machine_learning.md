@@ -66,8 +66,9 @@ as `fold_construction_fun`, and its arguments through
 
 - `deconv` — deconvolution of the training samples, in the same order as
   `features_train`.
-- `raw.counts` — count matrix of the training samples. `pipeML` converts
-  gene names with
+- `raw.counts` — count matrix of the training samples, matched to the
+  samples of `deconv` by name (an error is raised if they differ).
+  `pipeML` converts gene names with
   [`make.names()`](https://rdrr.io/r/base/make.names.html) (e.g. `HLA-A`
   becomes `HLA.A`); passing the counts keeps the original gene symbols.
 - any other
@@ -159,8 +160,9 @@ training sample, in the same order as `features_train`.
 then corrects for cohort in each fold (see [Multi-cohort
 analysis](https://verapancaldilab.github.io/CellTFusion/articles/a6_batch_analysis.md)),
 and the test samples of each cohort are projected separately, centered
-on their own means. With `LODO = TRUE`, `pipeML` leaves one cohort out
-in each fold:
+on their own means. A cohort with fewer than 10 test samples in a fold
+gives a warning, as its scores are then centered on few samples. With
+`LODO = TRUE`, `pipeML` leaves one cohort out in each fold:
 
 ``` r
 
@@ -182,7 +184,9 @@ ml_res <- pipeML::compute_features.training.ML(
 For a model trained with `batch`, project each new cohort separately
 with
 [`project_test_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/project_test_factors.md),
-as its samples are centered on their own means.
+as its samples are centered on their own means; a warning is given with
+fewer than 10 samples, and a single sample cannot be scored this way
+(all its scores would be 0).
 
 **Note:**
 [`prepare_celltfusion_folds()`](https://verapancaldilab.github.io/CellTFusion/reference/prepare_celltfusion_folds.md)

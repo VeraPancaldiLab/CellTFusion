@@ -132,10 +132,12 @@ samples.</p>
 <code>deconv</code> — deconvolution of the training samples, in the
 same order as <code>features_train</code>.</li>
 <li>
-<code>raw.counts</code> — count matrix of the training samples.
-<code>pipeML</code> converts gene names with <code><a href="https://rdrr.io/r/base/make.names.html" class="external-link">make.names()</a></code>
-(e.g. <code>HLA-A</code> becomes <code>HLA.A</code>); passing the counts
-keeps the original gene symbols.</li>
+<code>raw.counts</code> — count matrix of the training samples,
+matched to the samples of <code>deconv</code> by name (an error is
+raised if they differ). <code>pipeML</code> converts gene names with
+<code><a href="https://rdrr.io/r/base/make.names.html" class="external-link">make.names()</a></code> (e.g. <code>HLA-A</code> becomes
+<code>HLA.A</code>); passing the counts keeps the original gene
+symbols.</li>
 <li>any other <code><a href="../reference/CellTFusion.html">CellTFusion()</a></code> argument,
 e.g. <code>TF.collection</code>, <code>minMod</code> or
 <code>corr</code>.</li>
@@ -220,8 +222,10 @@ of each training sample, in the same order as
 <code>features_train</code>. <code><a href="../reference/CellTFusion.html">CellTFusion()</a></code> then corrects
 for cohort in each fold (see <a href="a6_batch_analysis.html">Multi-cohort analysis</a>), and the test
 samples of each cohort are projected separately, centered on their own
-means. With <code>LODO = TRUE</code>, <code>pipeML</code> leaves one
-cohort out in each fold:</p>
+means. A cohort with fewer than 10 test samples in a fold gives a
+warning, as its scores are then centered on few samples. With
+<code>LODO = TRUE</code>, <code>pipeML</code> leaves one cohort out in
+each fold:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ml_res</span> <span class="op">&lt;-</span> <span class="fu">pipeML</span><span class="fu">::</span><span class="fu">compute_features.training.ML</span><span class="op">(</span></span>
 <span>  features_train <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">raw.counts_train</span><span class="op">)</span>,</span>
@@ -238,7 +242,9 @@ cohort out in each fold:</p>
 <span><span class="op">)</span></span></code></pre></div>
 <p>For a model trained with <code>batch</code>, project each new cohort
 separately with <code><a href="../reference/project_test_factors.html">project_test_factors()</a></code>, as its samples are
-centered on their own means.</p>
+centered on their own means; a warning is given with fewer than 10
+samples, and a single sample cannot be scored this way (all its scores
+would be 0).</p>
 <p><strong>Note:</strong> <code><a href="../reference/prepare_celltfusion_folds.html">prepare_celltfusion_folds()</a></code> runs
 <code><a href="../reference/CellTFusion.html">CellTFusion()</a></code> in every fold. Use <code>ncores</code> in
 <code>fold_construction_args_fixed</code> to compute several folds in

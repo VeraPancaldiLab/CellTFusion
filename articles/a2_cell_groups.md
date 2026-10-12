@@ -27,12 +27,16 @@ dendrograms into **cell groups**. Features are clustered on the value of
 their correlation with the module, so a cell group is a set of features
 with a similar biological activity: features related to the same TF
 module to the same degree, which do not need to vary together across
-samples. Each cell group gets a composite score per sample: the first
-canonical component of a canonical correlation analysis (CCA) between
-the group’s deconvolution features and the TFs of its module. The score
-is oriented to be aligned with the TF module: a positive score means
-that the sample is on the active side of the module for that cell group,
-a negative score that it is on the inactive side.
+samples. Each cell group covers a single range of correlation values:
+the dendrogram is cut with a dynamic tree cut, clusters made of
+separated ranges are split, and pieces smaller than `min_cluster_size`
+are joined to the neighbouring group with the closest correlation. Each
+cell group gets a composite score per sample: the first canonical
+component of a canonical correlation analysis (CCA) between the group’s
+deconvolution features and the TFs of its module. The score is oriented
+to be aligned with the TF module: a positive score means that the sample
+is on the active side of the module for that cell group, a negative
+score that it is on the inactive side.
 
 Key arguments:
 
@@ -62,10 +66,13 @@ cell_groups <- construct_cell_groups(
 ```
 
 One dendrogram is drawn per TF module, showing how its correlated
-deconvolution features cluster into cell groups. The number written next
-to each cluster is the one in the cell group name
-(`Dendrogram_<module>_group_<number>`); features that are not assigned
-to any cluster are not part of any cell group:
+deconvolution features cluster into cell groups. The leaves are drawn in
+the order of their correlation with the module as far as the tree
+allows, and the groups are numbered from the lowest to the highest
+correlation. The number written next to each group is the one in the
+cell group name (`Dendrogram_<module>_group_<number>`); a group that the
+tree splits into two places is drawn, and numbered, in both. Features
+that are not assigned to any cluster are not part of any cell group:
 
 ![Dendrogram of deconvolution features clustered into cell groups for
 one TF module](figures/cell_groups_dendrogram_02.png)
@@ -101,8 +108,8 @@ res_rerun <- CellTFusion(
   dt         = res$Processed_deconvolution,
   tfs        = res$TFs_matrix,
   pathways   = res$Pathways_scores,
-  corr_mod   = 0.25,
-  minMod     = 20,
+  corr_mod   = 0.8,    # e.g. merge modules more readily than the default 0.9
+  minMod     = 10,
   pval       = 0.05,
   return     = TRUE
 )
@@ -116,10 +123,9 @@ NMF. Each score is first split into a positive and a negative part
 (`_pos` and `_neg` columns: samples on the active and on the inactive
 side of the group’s TF module), so that both directions can contribute
 to the factors. If `rank = NULL`, the number of factors is chosen at the
-elbow of the reconstruction error across ranks 2 to 8 (fewer when there
-are few cell groups: the rank is always below the number of
-`_pos`/`_neg` columns, and `rank = 2` is used with one or two cell
-groups).
+elbow of the reconstruction error across ranks 2 to 8, never more than
+the number of cell groups (with fewer than 4 cell groups, `rank = 2` is
+used, and `rank = 1` with a single cell group).
 
 ``` r
 
@@ -137,8 +143,10 @@ head(latent_spaces$Z)  # samples x factors
 The result contains `Z` (factor scores, samples x factors — the input
 for statistics and machine learning), `W` (weights of each cell group
 part in each factor), `nmf_input`, the NMF model and the per-sample
-factor proportions. With `return = TRUE`, the mixture of factors in each
-sample is plotted:
+factor proportions. Each factor (column of `Z`) sums to 1 over the
+samples; the size of each factor is in `nmf_model$d`. The factor
+proportions of each sample take these sizes into account. With
+`return = TRUE`, the mixture of factors in each sample is plotted:
 
 ![Stacked bar plot of latent factor proportions per
 sample](figures/nmf_patient_mixture.png)
@@ -149,7 +157,10 @@ sample](figures/nmf_patient_mixture.png)
 characterizes each latent factor by the cell types enriched among the
 cell groups that contribute most to it: the top-weighted cell groups are
 selected (`quantile_cutoff`) and cell types more frequent in them than
-in all cell groups (`enrich_thresh`) are kept.
+in all cell groups (`enrich_thresh`) are kept. A niche lists the cell
+types associated with the factor; it does not yet say whether the factor
+has more or fewer of them (the `_pos` and `_neg` parts of the cell
+groups are added together).
 
 ``` r
 

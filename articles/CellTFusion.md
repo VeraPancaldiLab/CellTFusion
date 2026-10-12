@@ -6,11 +6,11 @@ immune cell states in the tumor microenvironment (TME) from bulk RNA-seq
 data.
 
 Starting from a count matrix, `CellTFusion` builds **cell groups** —
-sets of deconvolution features whose abundance follows the activity of a
-TF co-activity module — and summarizes them into **latent factors**, a
-compact representation of the TME that can be annotated as TME states,
-tested against clinical variables and used as features for machine
-learning.
+sets of deconvolution features related to the same TF co-activity module
+to the same degree (a similar correlation with the module activity) —
+and summarizes them into **latent factors**, a compact representation of
+the TME that can be annotated as TME states, tested against clinical
+variables and used as features for machine learning.
 
 ## Installation
 
@@ -48,7 +48,7 @@ res <- CellTFusion(
   raw.counts     = CellTFusion::raw.counts.tuto,
   normalized     = TRUE,
   deconv_methods = c("Quantiseq", "Epidish"),
-  cancer_type    = "skcm",
+  cancer_type    = "blca",   # the example data are bladder cancer samples
   file_name      = "Tutorial"
 )
 

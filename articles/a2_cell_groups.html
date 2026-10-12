@@ -100,12 +100,16 @@ groups</strong>. Features are clustered on the value of their
 correlation with the module, so a cell group is a set of features with a
 similar biological activity: features related to the same TF module to
 the same degree, which do not need to vary together across samples. Each
-cell group gets a composite score per sample: the first canonical
-component of a canonical correlation analysis (CCA) between the group’s
-deconvolution features and the TFs of its module. The score is oriented
-to be aligned with the TF module: a positive score means that the sample
-is on the active side of the module for that cell group, a negative
-score that it is on the inactive side.</p>
+cell group covers a single range of correlation values: the dendrogram
+is cut with a dynamic tree cut, clusters made of separated ranges are
+split, and pieces smaller than <code>min_cluster_size</code> are joined
+to the neighbouring group with the closest correlation. Each cell group
+gets a composite score per sample: the first canonical component of a
+canonical correlation analysis (CCA) between the group’s deconvolution
+features and the TFs of its module. The score is oriented to be aligned
+with the TF module: a positive score means that the sample is on the
+active side of the module for that cell group, a negative score that it
+is on the inactive side.</p>
 <p>Key arguments:</p>
 <ul>
 <li>
@@ -137,10 +141,15 @@ and
 <span>  return_dendrogram <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p>One dendrogram is drawn per TF module, showing how its correlated
-deconvolution features cluster into cell groups. The number written next
-to each cluster is the one in the cell group name
-(<code>Dendrogram_&lt;module&gt;_group_&lt;number&gt;</code>); features
-that are not assigned to any cluster are not part of any cell group:</p>
+deconvolution features cluster into cell groups. The leaves are drawn in
+the order of their correlation with the module as far as the tree
+allows, and the groups are numbered from the lowest to the highest
+correlation. The number written next to each group is the one in the
+cell group name
+(<code>Dendrogram_&lt;module&gt;_group_&lt;number&gt;</code>); a group
+that the tree splits into two places is drawn, and numbered, in both.
+Features that are not assigned to any cluster are not part of any cell
+group:</p>
 <p><img src="figures/cell_groups_dendrogram_02.png" class="r-plt" alt="Dendrogram of deconvolution features clustered into cell groups for one TF module" width="70%" style="display: block; margin: auto;"></p>
 <p><code><a href="../reference/construct_cell_groups.html">construct_cell_groups()</a></code> returns a named list:</p>
 <table class="table">
@@ -195,8 +204,8 @@ module or cell group parameters without recomputing the features:</p>
 <span>  dt         <span class="op">=</span> <span class="va">res</span><span class="op">$</span><span class="va">Processed_deconvolution</span>,</span>
 <span>  tfs        <span class="op">=</span> <span class="va">res</span><span class="op">$</span><span class="va">TFs_matrix</span>,</span>
 <span>  pathways   <span class="op">=</span> <span class="va">res</span><span class="op">$</span><span class="va">Pathways_scores</span>,</span>
-<span>  corr_mod   <span class="op">=</span> <span class="fl">0.25</span>,</span>
-<span>  minMod     <span class="op">=</span> <span class="fl">20</span>,</span>
+<span>  corr_mod   <span class="op">=</span> <span class="fl">0.8</span>,    <span class="co"># e.g. merge modules more readily than the default 0.9</span></span>
+<span>  minMod     <span class="op">=</span> <span class="fl">10</span>,</span>
 <span>  pval       <span class="op">=</span> <span class="fl">0.05</span>,</span>
 <span>  return     <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -212,10 +221,10 @@ split into a positive and a negative part (<code>_pos</code> and
 <code>_neg</code> columns: samples on the active and on the inactive
 side of the group’s TF module), so that both directions can contribute
 to the factors. If <code>rank = NULL</code>, the number of factors is
-chosen at the elbow of the reconstruction error across ranks 2 to 8
-(fewer when there are few cell groups: the rank is always below the
-number of <code>_pos</code>/<code>_neg</code> columns, and
-<code>rank = 2</code> is used with one or two cell groups).</p>
+chosen at the elbow of the reconstruction error across ranks 2 to 8,
+never more than the number of cell groups (with fewer than 4 cell
+groups, <code>rank = 2</code> is used, and <code>rank = 1</code> with a
+single cell group).</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">latent_spaces</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute.latent_factors.html">compute.latent_factors</a></span><span class="op">(</span></span>
 <span>  X         <span class="op">=</span> <span class="va">cell_groups</span><span class="op">$</span><span class="va">Cell_groups</span>,</span>
@@ -230,8 +239,11 @@ number of <code>_pos</code>/<code>_neg</code> columns, and
 — the input for statistics and machine learning), <code>W</code>
 (weights of each cell group part in each factor),
 <code>nmf_input</code>, the NMF model and the per-sample factor
-proportions. With <code>return = TRUE</code>, the mixture of factors in
-each sample is plotted:</p>
+proportions. Each factor (column of <code>Z</code>) sums to 1 over the
+samples; the size of each factor is in <code>nmf_model$d</code>. The
+factor proportions of each sample take these sizes into account. With
+<code>return = TRUE</code>, the mixture of factors in each sample is
+plotted:</p>
 <p><img src="figures/nmf_patient_mixture.png" class="r-plt" alt="Stacked bar plot of latent factor proportions per sample" width="90%" style="display: block; margin: auto;"></p>
 </div>
 <div class="section level2">
@@ -242,7 +254,10 @@ each sample is plotted:</p>
 by the cell types enriched among the cell groups that contribute most to
 it: the top-weighted cell groups are selected
 (<code>quantile_cutoff</code>) and cell types more frequent in them than
-in all cell groups (<code>enrich_thresh</code>) are kept.</p>
+in all cell groups (<code>enrich_thresh</code>) are kept. A niche lists
+the cell types associated with the factor; it does not yet say whether
+the factor has more or fewer of them (the <code>_pos</code> and
+<code>_neg</code> parts of the cell groups are added together).</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">cells_niches</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute_cells_niches.html">compute_cells_niches</a></span><span class="op">(</span></span>
 <span>  latent_factors  <span class="op">=</span> <span class="va">latent_spaces</span>,</span>

@@ -51,16 +51,16 @@ cell_groups <- construct_cell_groups(network.tuto, deconv_subgroups.tuto)
 #> 20 of 764 features were not assigned to any cluster by the tree cut and are not part of any cell group (blue: 6, pink: 2, red: 2, yellow: 8, black: 2)
 latent <- compute.latent_factors(cell_groups$Cell_groups, return = FALSE)
 #> Estimating optimal rank via elbow on reconstruction MSE (ranks 2:8)...
-#> MSE by rank: k2=0.00127  k3=0.000964  k4=0.000838  k5=0.000756  k6=0.00071  k7=0.000675  k8=0.000632
+#> MSE by rank: k2=0.00127  k3=0.000964  k4=0.000837  k5=0.000754  k6=0.000708  k7=0.000666  k8=0.000635
 #> Selected rank (elbow): 3
 #> Running RcppML NMF with rank = 3...
 projected <- project_factors(latent, cell_groups$Cell_groups[1:10, ])
 head(projected)
 #>                     Factor1     Factor2      Factor3
-#> SAM7f0d9cc7f001 0.000000000 0.007094249 9.496681e-03
-#> SAM4305ab968b90 0.019944131 0.000000000 1.019721e-05
-#> SAMcf018fee2acd 0.003743711 0.002179128 5.920653e-03
-#> SAMcc4675f394a1 0.007208812 0.007875054 0.000000e+00
-#> SAM49f9b2e57aa5 0.008377438 0.000000000 2.906892e-03
-#> SAM2e7aa8fa0ab3 0.003268215 0.003791681 0.000000e+00
+#> SAM7f0d9cc7f001 0.000000000 0.007239902 0.0095274763
+#> SAM4305ab968b90 0.019642386 0.000000000 0.0001585359
+#> SAMcf018fee2acd 0.003717295 0.002306112 0.0059498754
+#> SAMcc4675f394a1 0.007170350 0.007854249 0.0000000000
+#> SAM49f9b2e57aa5 0.008319473 0.000000000 0.0028190187
+#> SAM2e7aa8fa0ab3 0.003142387 0.003709980 0.0000000000
 ```

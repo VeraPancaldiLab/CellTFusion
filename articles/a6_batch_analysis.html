@@ -130,7 +130,9 @@ cohort beyond the first), Pearson or Spearman according to
 <td><code>construct_cell_groups(batch = batch_vec)</code></td>
 <td>Cohort vector</td>
 <td>Passes the cohort vector to the correlations and to the composite
-scores.</td>
+scores. Required for a network built with
+<code>compute.WTCNA(batch = TRUE)</code>; it can be named by
+sample.</td>
 </tr>
 <tr class="even">
 <td><code>compute_composite_score(batch = batch_vec)</code></td>
@@ -138,6 +140,13 @@ scores.</td>
 <td>Removes each cohort’s mean from the cell group features and TF
 activities before the CCA, so composite scores are <strong>corrected for
 cohort</strong>.</td>
+</tr>
+<tr class="odd">
+<td><code>compute_factor_gsea(batch = batch_vec)</code></td>
+<td>Cohort vector</td>
+<td>Adds the cohort to the <code>limma</code> model of each gene, so
+that expression differences between cohorts are not attributed to the
+latent factors in the Hallmark GSEA.</td>
 </tr>
 </tbody>
 </table>
@@ -183,9 +192,8 @@ the latent factors built from them.</li>
 <li>
 <strong>Projection of new cohorts.</strong> For models trained with
 <code>batch</code>, new samples are centered on their own means (as each
-training cohort was), so each new cohort should be projected separately
-(see <a href="a5_machine_learning.html">Machine learning
-workflows</a>).</li>
+training cohort was), so each new cohort should be projected separately,
+with enough samples: a warning is given with fewer than 10 (see <a href="a5_machine_learning.html">Machine learning workflows</a>).</li>
 </ul>
 </div>
 <div class="section level2">
@@ -219,6 +227,8 @@ consensus TF modules.</li>
 <code>compute.deconvolution.analysis()</code> and
 <code><a href="../reference/construct_cell_groups.html">construct_cell_groups()</a></code>, so subgroups, module-feature
 correlations and cell group scores are all cohort-corrected.</li>
+<li>Passes it to <code><a href="../reference/compute_factor_gsea.html">compute_factor_gsea()</a></code>, so the Hallmark
+GSEA of each latent factor is corrected for cohort.</li>
 </ol>
 </div>
 <div class="section level2">
