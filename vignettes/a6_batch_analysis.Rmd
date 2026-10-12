@@ -28,8 +28,9 @@ When samples come from several cohorts, batches or sequencing runs, cohort-level
 | `compute.WTCNA(batch = TRUE)` | Logical | Takes a **list** of per-cohort TF matrices, picks a soft-thresholding power per cohort and builds consensus modules with `WGCNA::blockwiseConsensusModules()`. |
 | `compute.deconvolution.analysis(batch = batch_vec)` | Cohort vector | Correlations used to build deconvolution subgroups control for cohort. |
 | `compute.modules.relationship(batch = batch_vec)` | Cohort vector | TF module-feature correlations are **partial correlations** controlling for cohort (one indicator variable per cohort beyond the first), Pearson or Spearman according to `cor_type`. |
-| `construct_cell_groups(batch = batch_vec)` | Cohort vector | Passes the cohort vector to the correlations and to the composite scores. |
+| `construct_cell_groups(batch = batch_vec)` | Cohort vector | Passes the cohort vector to the correlations and to the composite scores. Required for a network built with `compute.WTCNA(batch = TRUE)`; it can be named by sample. |
 | `compute_composite_score(batch = batch_vec)` | Cohort vector | Removes each cohort's mean from the cell group features and TF activities before the CCA, so composite scores are **corrected for cohort**. |
+| `compute_factor_gsea(batch = batch_vec)` | Cohort vector | Adds the cohort to the `limma` model of each gene, so that expression differences between cohorts are not attributed to the latent factors in the Hallmark GSEA. |
 
 In short, only in `compute.WTCNA()` is `batch` a logical switch (the cohorts are given by the list of TF matrices). Everywhere else, including `CellTFusion()`, `batch` is the cohort vector itself, used to split the samples and to remove cohort effects. Cohort is treated as categorical, and the samples do not need to be ordered by cohort.
 
@@ -43,7 +44,7 @@ Use `batch` when samples do not come from a single homogeneous cohort — for ex
 - **Common TFs.** Only TFs present in every cohort are used to build the consensus network.
 - **Pearson only.** Consensus modules support Pearson correlation; `cor_type = "s"` is only available for a single cohort.
 - **Partial correlation vs. correction.** Partial correlations only adjust a given correlation test, while the composite scores of the cell groups are themselves cohort-corrected, and so are the latent factors built from them.
-- **Projection of new cohorts.** For models trained with `batch`, new samples are centered on their own means (as each training cohort was), so each new cohort should be projected separately (see [Machine learning workflows](a5_machine_learning.html)).
+- **Projection of new cohorts.** For models trained with `batch`, new samples are centered on their own means (as each training cohort was), so each new cohort should be projected separately, with enough samples: a warning is given with fewer than 10 (see [Machine learning workflows](a5_machine_learning.html)).
 
 ## **Example: multi-cohort pipeline**
 
@@ -70,6 +71,7 @@ Internally, this:
 1. Splits the samples by cohort and runs `compute.TFs.activity()` on each cohort, giving a list of TF activity matrices.
 2. Runs `compute.WTCNA(batch = TRUE)` on that list to get consensus TF modules.
 3. Passes the cohort vector to `compute.deconvolution.analysis()` and `construct_cell_groups()`, so subgroups, module-feature correlations and cell group scores are all cohort-corrected.
+4. Passes it to `compute_factor_gsea()`, so the Hallmark GSEA of each latent factor is corrected for cohort.
 
 ## **Example: running the steps individually**
 

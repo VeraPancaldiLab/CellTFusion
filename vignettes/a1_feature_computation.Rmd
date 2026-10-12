@@ -192,7 +192,7 @@ res <- CellTFusion(
   normalized     = TRUE,
   deconv_methods = c("Quantiseq", "Epidish"),
   TF.collection  = "CollecTRI",
-  cancer_type    = "skcm",
+  cancer_type    = "blca",   # the example data are bladder cancer samples
   corr           = 0.7,
   corr_mod       = 0.9,
   pval           = 0.05,
