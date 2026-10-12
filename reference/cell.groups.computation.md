@@ -13,10 +13,11 @@ cell.groups.computation(
   tfs.module.network,
   batch = NULL,
   return = T,
-  pval = 0.05,
-  n_perm = 999,
   dendrogram_file = NULL,
-  return_dendrogram = FALSE
+  return_dendrogram = FALSE,
+  cells_extra = NULL,
+  min_cluster_size = 3,
+  deep_split = TRUE
 )
 ```
 
@@ -27,6 +28,7 @@ cell.groups.computation(
   A data frame with deconvolution features (samples as rows, cell-type
   features as columns). This is usually the first element returned by
   [`multideconv::compute.deconvolution.analysis()`](https://verapancaldilab.github.io/multideconv/reference/compute.deconvolution.analysis.html).
+  It must contain all the features of `cell.dendrograms`.
 
 - cell.dendrograms:
 
@@ -49,22 +51,13 @@ cell.groups.computation(
 - return:
 
   Logical; if TRUE (default), writes CSV files with cell group
-  compositions and scores to the "Results/" folder.
-
-- pval:
-
-  Numeric. Significance threshold for the CCA permutation test of each
-  cell group. Default is 0.05.
-
-- n_perm:
-
-  Integer. Number of permutations for significance testing. Default is
-  999.
+  compositions and scores to the "Results/" folder (named with
+  `dendrogram_file`; the folder is created if needed).
 
 - dendrogram_file:
 
-  Optional character. Suffix of the dendrogram PDF file name (see
-  `return_dendrogram`).
+  Optional character. Suffix of the output file names: the dendrogram
+  PDF (see `return_dendrogram`) and the CSV files (see `return`).
 
 - return_dendrogram:
 
@@ -72,28 +65,58 @@ cell.groups.computation(
   `Results/Dendrogram_color_clusters_<dendrogram_file>.pdf` (only when
   `dendrogram_file` is set). Default FALSE.
 
+- cells_extra:
+
+  Optional character vector with the cell names that are not in the
+  nomenclature of multideconv, used to list the cell types of each cell
+  group.
+
+- min_cluster_size:
+
+  Integer. Minimum number of features of a cell group (minimum cluster
+  size of the dynamic tree cut of each dendrogram). Default is 3.
+
+- deep_split:
+
+  Logical. If TRUE (default), the dynamic tree cut splits the clusters
+  more finely.
+
 ## Value
 
-An unnamed list of three elements:
+An unnamed list of four elements:
 
 - `[[1]]`: A data frame with the composite scores of all identified cell
-  groups across samples.
+  groups across samples. A positive score means that the sample is on
+  the active side of the TF module of that cell group.
 
-- `[[2]]`: A list of vectors indicating the composition (original
+- `[[2]]`: A named list of vectors indicating the composition (original
   features) of each cell group.
 
-- `[[3]]`: A list of CCA projection parameters (`xcoef`, `train_means`,
-  `train_sds`) for each cell group.
+- `[[3]]`: A named list of CCA projection parameters (`xcoef`,
+  `train_means`, `train_sds`) for each cell group.
 
-Cell groups made of a single feature, or that do not pass the CCA
-permutation test, are discarded; an error is raised if no cell group
-remains. If `return=TRUE`, two CSV files will be created:
+- `[[4]]`: A data frame with the relation of each cell group to its TF
+  module (see
+  [`construct_cell_groups()`](https://verapancaldilab.github.io/CellTFusion/reference/construct_cell_groups.md)).
 
-- `Results/Cell.groups.composition.csv`: A table showing the composition
-  of each cell group.
+Cell groups are named `Dendrogram_<module>_group_<n>`, where `n` is the
+cluster number of the dendrogram of that module (the number shown in the
+dendrogram PDF); the first three elements use the same names. An error
+is raised if no cluster is found in any module. Features that the tree
+cut does not assign to any cluster are not part of any cell group: a
+message reports how many there are per module. If `return=TRUE`, two CSV
+files will be created:
 
-- `Results/Cell.groups.scores.csv`: A matrix of cell group scores across
-  samples.
+- `Results/Cell.groups.composition_<dendrogram_file>.csv`: A table
+  showing the composition of each cell group, its TF module, its
+  relation to it (positive or negative, and the correlation) and its
+  cell types.
+
+- `Results/Cell.groups.scores_<dendrogram_file>.csv`: A matrix of cell
+  group scores across samples.
+
+Without `dendrogram_file`, they are named `Cell.groups.composition.csv`
+and `Cell.groups.scores.csv`.
 
 ## Examples
 

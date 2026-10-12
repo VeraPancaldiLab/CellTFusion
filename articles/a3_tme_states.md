@@ -173,9 +173,11 @@ meta_programs <- derive_meta_programs(
 
 ## **Running everything with `CellTFusion()`**
 
-The GSEA and meta-program mapping are run by
 [`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md)
-when `cancer_type` is given:
+always runs the Hallmark GSEA. The meta-program mapping is run when
+`cancer_type` is one of the cancer types with a reference (`"blca"`,
+`"luad"`, `"skcm"`); otherwise it is skipped (with a warning for an
+unsupported cancer type) and `res$TME_states` is `NULL`:
 
 ``` r
 

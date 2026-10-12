@@ -64,15 +64,15 @@ mapping):
     (Quantiseq, Epidish, DeconRNASeq, DWLS, CIBERSORTx)
 3.  **TF activity inference** —
     [`compute.TFs.activity()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.TFs.activity.md):
-    CollecTRI/Dorothea/ARACNe regulons scored via `decoupleR` consensus
-    methods
+    CollecTRI/Dorothea/ARACNe regulons scored via `decoupleR`
+    (`method = "ulm"` by default; `"mlm"`, `"wsum"`, `"consensus"`)
 4.  **TF module construction** —
     [`compute.WTCNA()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.WTCNA.md):
     WGCNA-based weighted co-expression networks
 5.  **Pathway scoring** —
     [`compute.pathway.activity()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.pathway.activity.md):
-    PROGENy-based pathway activities via
-    [`decoupleR::run_mlm()`](https://saezlab.github.io/decoupleR/reference/run_mlm.html)
+    PROGENy-based pathway activities via `decoupleR` (`method = "ulm"`
+    by default)
 6.  **Cell group construction** —
     [`construct_cell_groups()`](https://verapancaldilab.github.io/CellTFusion/reference/construct_cell_groups.md):
     TF module–deconvolution correlation, dendrogram cutting and CCA
@@ -99,12 +99,12 @@ mapping):
     [`project_test_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/project_test_factors.md)),
     run leakage-aware cross-validation with `pipeML`
     ([`prepare_celltfusion_folds()`](https://verapancaldilab.github.io/CellTFusion/reference/prepare_celltfusion_folds.md)),
-    or run multi-cohort analysis via `batch = TRUE` in
+    or run multi-cohort analysis via `batch` (cohort of each sample) in
     [`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md)
 
 ### Key Source Files
 
-- `R/CellTFusion.R` — All core logic (~5,050 lines); single monolithic
+- `R/CellTFusion.R` — All core logic (~4,700 lines); single monolithic
   file containing every exported function
 - `inst/shiny/server.R` / `ui.R` — Shiny app backend and frontend
 - `vignettes/CellTFusion.Rmd` — Getting-started overview (installation,
@@ -134,7 +134,7 @@ mapping):
 | [`map_factors_to_TME()`](https://verapancaldilab.github.io/CellTFusion/reference/map_factors_to_TME.md) / [`annotate_metaprograms_TME()`](https://verapancaldilab.github.io/CellTFusion/reference/annotate_metaprograms_TME.md) | Annotate factors/meta-programs with Bagaev et al. (2021) TME (MFP) subtypes |
 | [`compute.metadata.association()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.metadata.association.md) | Clinical trait association + visualization |
 | [`compute.survival.analysis()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.survival.analysis.md) | Kaplan-Meier / log-rank survival analysis (requires `survival`, `survminer`, `gridExtra`) |
-| [`compute.modules.relationship()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.modules.relationship.md) | Correlate TF modules with pathways |
+| [`compute.modules.relationship()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.modules.relationship.md) | Correlate TF modules with other continuous features (pathways, deconvolution features); returns correlations, p-values and significant pairs |
 | [`compute.modules.enrichment()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.modules.enrichment.md) | Pathway enrichment of TF modules |
 
 This is a curated subset — see `NAMESPACE` or the [pkgdown

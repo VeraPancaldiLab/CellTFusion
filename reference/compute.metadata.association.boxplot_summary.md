@@ -13,10 +13,7 @@ compute.metadata.association.boxplot_summary(
   pval = 0.05,
   file.name,
   ncol = 5,
-  y_min = 0,
-  y_max = 0.5,
-  width = 18,
-  height = 10
+  p_adjust = "none"
 )
 ```
 
@@ -31,40 +28,40 @@ compute.metadata.association.boxplot_summary(
 
 - coldata:
 
-  A data frame of sample metadata. Only character and factor columns are
-  used as traits.
+  A data frame of sample metadata. Only character, factor and logical
+  columns are used as traits. Traits with a single level, or with as
+  many levels as samples, are skipped with a message; samples with a
+  missing value are left out for that trait.
 
 - pval:
 
-  Numeric. ANOVA p-value threshold for significance. Default 0.05.
+  Numeric. ANOVA (adjusted) p-value threshold for significance
+  (`<= pval`). Default 0.05.
 
 - file.name:
 
   Character. Base name appended to output SVG file names
-  (`Results/ANOVA_boxplot_summary_<file.name>_<trait>.svg`).
+  (`Results/ANOVA_boxplot_summary_<file.name>_<trait>.svg`, or
+  `Results/ANOVA_boxplot_summary_<trait>.svg` without `file.name`). In
+  `<trait>`, characters other than letters, digits, ".", "*", "-" and
+  spaces (e.g. "/") are replaced by "*".
 
 - ncol:
 
-  Integer. Number of columns in the boxplot facet grid. Default 5.
+  Integer. Number of columns in the boxplot facet grid. Default 5. The
+  size of the figure is computed from the number of panels, and the
+  y-axis of each panel from its data.
 
-- y_min:
+- p_adjust:
 
-  Numeric. Lower y-axis limit for boxplots. Default 0.
-
-- y_max:
-
-  Numeric. Upper y-axis limit for boxplots. Default 0.5.
-
-- width:
-
-  Numeric. Width of the SVG output in inches. Default 18.
-
-- height:
-
-  Numeric. Height of the SVG output in inches. Default 10.
+  Character. Method of
+  [`stats::p.adjust()`](https://rdrr.io/r/stats/p.adjust.html) to
+  correct the ANOVA p-values across the modules, for each trait. Default
+  `"none"`.
 
 ## Value
 
-Called for its side effect (saves one SVG file per categorical trait
-with at least one significant module); returns `NULL` invisibly when
-`coldata` has no categorical traits.
+Invisibly, a data frame with the ANOVA of every module for every trait
+tested (`trait`, `module`, `F`, `p`, `p_adjusted`), or `NULL` when no
+trait could be tested. Called mainly for its side effect (saves one SVG
+file per categorical trait with at least one significant module).

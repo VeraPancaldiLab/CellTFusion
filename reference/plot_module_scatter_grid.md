@@ -1,9 +1,14 @@
 # Save a grid of scatter plots for significant module-feature pairs
 
 For each pair of columns from `matA` and `matB` whose p-value in `p_mat`
-is below `pval`, draws a scatter plot with a regression line and
-annotates it with the correlation coefficient. The full grid is saved as
-an SVG file in `Results/`.
+is at or below `pval`, draws a scatter plot with a linear regression
+line and annotates it with the correlation coefficient and p-value taken
+from `cor_mat` and `p_mat`. The full grid is saved as an SVG file in
+`Results/`. The line is a linear fit of the values given in `matA` and
+`matB`. Each panel is 3.2 x 3.2 inches, so the size of the file follows
+from the number of panels. The column names are the axis titles; names
+longer than 30 characters are split over several lines at `"_"` or
+`"."`, and the margins are set from the number of lines.
 
 ## Usage
 
@@ -15,10 +20,10 @@ plot_module_scatter_grid(
   p_mat,
   file_name,
   pval = 0.05,
-  width = 12,
-  height = 10,
   only_sig = TRUE,
-  ncol = NULL
+  ncol = NULL,
+  max_pairs = 100,
+  axis_suffix = ""
 )
 ```
 
@@ -26,11 +31,16 @@ plot_module_scatter_grid(
 
 - matA:
 
-  A numeric matrix (samples x modules) for the y-axis of each panel.
+  A numeric matrix or data frame (samples x modules) for the y-axis of
+  each panel.
+  [`compute.modules.relationship()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.modules.relationship.md)
+  passes the ranks for Spearman correlations, and the values corrected
+  for batch when `batch` is used.
 
 - matB:
 
-  A numeric matrix (samples x features) for the x-axis of each panel.
+  A numeric matrix or data frame (samples x features) for the x-axis of
+  each panel.
 
 - cor_mat:
 
@@ -50,16 +60,6 @@ plot_module_scatter_grid(
 
   Numeric. P-value cutoff for displaying a pair. Default 0.05.
 
-- width:
-
-  Numeric. Width of the SVG output in inches. Default 12. Increased if
-  needed so that each panel is at least 2 inches wide.
-
-- height:
-
-  Numeric. Height of the SVG output in inches. Default 10. Increased if
-  needed so that each panel is at least 2 inches high.
-
 - only_sig:
 
   Logical. If `TRUE` (default), only pairs with `p <= pval` are plotted.
@@ -68,6 +68,16 @@ plot_module_scatter_grid(
 
   Integer or `NULL`. Number of columns in the plot grid. If `NULL`, set
   to `ceiling(sqrt(n_pairs))`.
+
+- max_pairs:
+
+  Integer. Maximum number of panels: if there are more pairs, only the
+  strongest correlations are drawn (with a message). Default 100.
+
+- axis_suffix:
+
+  Character added to the axis titles after the column names (e.g.
+  `" (rank)"`). Default "".
 
 ## Value
 

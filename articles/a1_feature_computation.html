@@ -93,7 +93,11 @@ by the <code><a href="../reference/CellTFusion.html">CellTFusion()</a></code> wr
 </h2>
 <p>TF and pathway activities are computed from log2-transformed TPM
 values. Deconvolution methods use TPM without the log transform; this is
-handled internally by <code>compute.deconvolution()</code>.</p>
+handled internally by <code>compute.deconvolution()</code>. If your data
+are already TPM-normalized (and not log-transformed), use
+<code>normalized = FALSE</code> in <code><a href="../reference/CellTFusion.html">CellTFusion()</a></code>: the TPM
+values are then used as they are for deconvolution and log2(TPM + 1) is
+computed internally for the other steps.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">counts.norm</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="fu">ADImpute</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/ADImpute/man/NormalizeTPM.html" class="external-link">NormalizeTPM</a></span><span class="op">(</span><span class="va">raw.counts</span>, log <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 </div>
@@ -136,20 +140,24 @@ CIBERSORTx credentials, only needed if <code>"CBSX"</code> is in
 <strong>TF activity</strong><a class="anchor" aria-label="anchor" href="#tf-activity"></a>
 </h2>
 <p><code><a href="../reference/compute.TFs.activity.html">compute.TFs.activity()</a></code> infers the activity of each TF in
-each sample from the expression of its targets, using the consensus
-score of <code>decoupleR</code> <span class="citation">(<a href="#ref-10.1093/bioadv/vbac016">Badia-i-Mompel et al.
-2022</a>)</span> and a TF-target network (regulon).</p>
+each sample from the expression of its targets, using
+<code>decoupleR</code> <span class="citation">(<a href="#ref-10.1093/bioadv/vbac016">Badia-i-Mompel et al.
+2022</a>)</span> and a TF-target network (regulon). By default the
+univariate linear model is used (<code>method = "ulm"</code>);
+<code>"mlm"</code>, <code>"wsum"</code> and <code>"consensus"</code>
+(the consensus of the three) are also available.</p>
 <p>Key arguments:</p>
 <ul>
 <li>
-<code>RNA.counts</code> — normalized expression matrix (genes x
+<code>RNA.counts</code> — log-normalized expression matrix (genes x
 samples), typically log2(TPM + 1).</li>
 <li>
 <code>TF.collection</code> — source of the regulon:
 <ul>
 <li>
-<code>"CollecTRI"</code> (default) <span class="citation">(<a href="#ref-10.1093/nar/gkad841">Müller-Dott et al. 2023</a>)</span> and
-<code>"Dorothea"</code> are curated regulons fetched from OmnipathR.
+<code>"CollecTRI"</code> (default) <span class="citation">(<a href="#ref-10.1093/nar/gkad841">Müller-Dott et al. 2023</a>)</span>,
+fetched from OmnipathR, and <code>"Dorothea"</code> (confidence levels A
+and B, from the <code>dorothea</code> package) are curated regulons.
 Each collection is cached in its own file in <code>Results/</code>
 (<code>TF_target_collection_&lt;collection&gt;.csv</code>) and reused in
 later runs.</li>
@@ -162,9 +170,15 @@ indirect interactions. This is useful for a large, homogeneous cohort in
 which curated interactions may not hold. The network is read from
 <code>input/ARACNE/&lt;cancer.type&gt;/network/network.txt</code>
 (relative to the working directory), a tab-separated file with
-<code>Regulator</code> and <code>Target</code> columns; the sign of each
-interaction is taken from the Spearman correlation between the TF and
-its target.</li>
+<code>Regulator</code> and <code>Target</code> columns and a
+<code>mor</code> column with the sign of each interaction (1 activation,
+-1 repression). The sign should be computed once, as the sign of the
+Spearman correlation between the TF and its target in the cohort used to
+build the network. If the file has no <code>mor</code> column, the signs
+are computed from the samples given to
+<code><a href="../reference/compute.TFs.activity.html">compute.TFs.activity()</a></code> and a warning is given: they then
+depend on these samples and can differ between cohorts or between a
+training and a test set.</li>
 </ul>
 </li>
 <li>
@@ -173,10 +187,13 @@ regulon; TFs with fewer targets are dropped (default 5).</li>
 <li>
 <code>universe</code> — optional user-supplied regulon (data frame
 with <code>source</code>, <code>target</code> and <code>mor</code>
-columns), used instead of fetching one.</li>
+columns, all three required; <code>mor</code> is 1 for activation and -1
+for repression), used instead of fetching one.</li>
 <li>
 <code>scale</code> — if <code>TRUE</code> (default), z-scores TF
-activities across samples.</li>
+activities across samples. The scaled scores of a sample depend on the
+other samples of the call; use <code>scale = FALSE</code> to compare
+scores computed in separate calls.</li>
 </ul>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">tfs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute.TFs.activity.html">compute.TFs.activity</a></span><span class="op">(</span></span>
@@ -212,14 +229,21 @@ one score per sample, its eigengene.</p>
 <code>TFs.matrix</code> — TF activity matrix (samples x TFs), or a
 list of per-cohort matrices when <code>batch = TRUE</code> (see <a href="a6_batch_analysis.html">Multi-cohort analysis</a>).</li>
 <li>
-<code>network.type</code> — <code>"signed"</code> (default),
-<code>"unsigned"</code>, <code>"signed hybrid"</code> or
-<code>"distance"</code>.</li>
+<code>network.type</code> — <code>"signed"</code> (default) or
+<code>"unsigned"</code>. In a signed network, TFs with negatively
+correlated activities are not connected.</li>
 <li>
-<code>minMod</code> — minimum number of TFs per module.</li>
+<code>clustering.method</code> — linkage of the hierarchical
+clustering of the TFs on their TOM dissimilarity; <code>"average"</code>
+(default, as in WGCNA) joins two groups of TFs according to the average
+dissimilarity between their TFs.</li>
 <li>
-<code>corr_mod</code> — correlation above which module eigengenes
-are merged.</li>
+<code>minMod</code> — minimum number of TFs per module. TFs that fit
+no module (grey) are left out, with a message.</li>
+<li>
+<code>corr_mod</code> — correlation (of type <code>cor_type</code>)
+above which module eigengenes are merged, in single- and multi-cohort
+mode.</li>
 <li>
 <code>cor_type</code> — <code>"p"</code> (Pearson, default) or
 <code>"s"</code> (Spearman; single-cohort mode only).</li>
@@ -228,7 +252,7 @@ are merged.</li>
 <code class="sourceCode R"><span><span class="va">network</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute.WTCNA.html">compute.WTCNA</a></span><span class="op">(</span></span>
 <span>  TFs.matrix        <span class="op">=</span> <span class="va">tfs</span>,</span>
 <span>  network.type      <span class="op">=</span> <span class="st">"signed"</span>,</span>
-<span>  clustering.method <span class="op">=</span> <span class="st">"ward.D2"</span>,</span>
+<span>  clustering.method <span class="op">=</span> <span class="st">"average"</span>,</span>
 <span>  minMod            <span class="op">=</span> <span class="fl">15</span>,</span>
 <span>  corr_mod          <span class="op">=</span> <span class="fl">0.9</span>,</span>
 <span>  return            <span class="op">=</span> <span class="cn">TRUE</span></span>
@@ -248,15 +272,17 @@ the module scores (samples x modules) used to build cell groups.</p>
 <strong>Pathway activity</strong><a class="anchor" aria-label="anchor" href="#pathway-activity"></a>
 </h2>
 <p><code><a href="../reference/compute.pathway.activity.html">compute.pathway.activity()</a></code> estimates pathway activities
-with a multivariate linear model from <code>decoupleR</code> <span class="citation">(<a href="#ref-10.1093/bioadv/vbac016">Badia-i-Mompel
-et al. 2022</a>)</span> and the PROGENy pathway footprints <span class="citation">(<a href="#ref-Schubert2018">Schubert et al.
-2018</a>)</span>. If a list of gene sets is given, GSVA scores are
-computed as well.</p>
+with <code>decoupleR</code> <span class="citation">(<a href="#ref-10.1093/bioadv/vbac016">Badia-i-Mompel et al.
+2022</a>)</span> and the PROGENy pathway footprints <span class="citation">(<a href="#ref-Schubert2018">Schubert et al.
+2018</a>)</span>, by default with the univariate linear model
+(<code>method = "ulm"</code>, as in
+<code><a href="../reference/compute.TFs.activity.html">compute.TFs.activity()</a></code>). If a list of gene sets is given,
+GSVA scores are computed as well.</p>
 <p>Key arguments:</p>
 <ul>
 <li>
-<code>RNA.tpm</code> — normalized expression matrix (genes x
-samples).</li>
+<code>RNA.tpm</code> — log-normalized expression matrix,
+e.g. log2(TPM + 1) (genes x samples).</li>
 <li>
 <code>gene_sets</code> — optional named list of gene sets; if
 provided, GSVA scores are returned in addition to PROGENy.</li>
@@ -264,6 +290,11 @@ provided, GSVA scores are returned in addition to PROGENy.</li>
 <code>paths</code> — optional custom PROGENy-style table
 (<code>source</code>, <code>target</code>, <code>weight</code>); by
 default the human PROGENy model is used.</li>
+<li>
+<code>scale</code> — z-score each pathway across the samples
+(default). The scaled scores of a sample depend on the other samples of
+the call; use <code>scale = FALSE</code> to compare scores computed in
+separate calls.</li>
 </ul>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pathways</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute.pathway.activity.html">compute.pathway.activity</a></span><span class="op">(</span></span>
@@ -329,9 +360,11 @@ groups and latent factors and characterizes TME states:</p>
 <p>A few defaults worth knowing:</p>
 <ul>
 <li>
-<code>deconv_methods</code> runs Quantiseq, Epidish, DeconRNASeq and
-DWLS by default; add <code>"CBSX"</code> (with <code>cbsx.mail</code>
-and <code>cbsx.token</code>) to also run CIBERSORTx.</li>
+<code>deconv_methods</code> runs Quantiseq, CIBERSORTx
+(<code>"CBSX"</code>), Epidish, DeconRNASeq and DWLS by default.
+CIBERSORTx is only run when <code>cbsx.mail</code> and
+<code>cbsx.token</code> are given; without them it is skipped with a
+message.</li>
 <li>
 <code>cancer_type</code> selects the TCGA meta-program reference
 (<code>"blca"</code>, <code>"luad"</code> or <code>"skcm"</code>); if

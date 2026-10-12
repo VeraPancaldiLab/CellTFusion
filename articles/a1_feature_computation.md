@@ -27,7 +27,11 @@ traitdata  <- CellTFusion::traitdata.tuto
 
 TF and pathway activities are computed from log2-transformed TPM values.
 Deconvolution methods use TPM without the log transform; this is handled
-internally by `compute.deconvolution()`.
+internally by `compute.deconvolution()`. If your data are already
+TPM-normalized (and not log-transformed), use `normalized = FALSE` in
+[`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md):
+the TPM values are then used as they are for deconvolution and
+log2(TPM + 1) is computed internally for the other steps.
 
 ``` r
 
@@ -67,19 +71,22 @@ deconv <- multideconv::compute.deconvolution(
 
 [`compute.TFs.activity()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.TFs.activity.md)
 infers the activity of each TF in each sample from the expression of its
-targets, using the consensus score of `decoupleR` ([Badia-i-Mompel et
-al. 2022](#ref-10.1093/bioadv/vbac016)) and a TF-target network
-(regulon).
+targets, using `decoupleR` ([Badia-i-Mompel et al.
+2022](#ref-10.1093/bioadv/vbac016)) and a TF-target network (regulon).
+By default the univariate linear model is used (`method = "ulm"`);
+`"mlm"`, `"wsum"` and `"consensus"` (the consensus of the three) are
+also available.
 
 Key arguments:
 
-- `RNA.counts` — normalized expression matrix (genes x samples),
+- `RNA.counts` — log-normalized expression matrix (genes x samples),
   typically log2(TPM + 1).
 - `TF.collection` — source of the regulon:
   - `"CollecTRI"` (default) ([Müller-Dott et al.
-    2023](#ref-10.1093/nar/gkad841)) and `"Dorothea"` are curated
-    regulons fetched from OmnipathR. Each collection is cached in its
-    own file in `Results/` (`TF_target_collection_<collection>.csv`) and
+    2023](#ref-10.1093/nar/gkad841)), fetched from OmnipathR, and
+    `"Dorothea"` (confidence levels A and B, from the `dorothea`
+    package) are curated regulons. Each collection is cached in its own
+    file in `Results/` (`TF_target_collection_<collection>.csv`) and
     reused in later runs.
   - `"ARACNE"` uses a **data-driven, cohort-specific** network inferred
     with ARACNe ([Margolin et al. 2006](#ref-Margolin2006)), which
@@ -89,13 +96,23 @@ Key arguments:
     which curated interactions may not hold. The network is read from
     `input/ARACNE/<cancer.type>/network/network.txt` (relative to the
     working directory), a tab-separated file with `Regulator` and
-    `Target` columns; the sign of each interaction is taken from the
-    Spearman correlation between the TF and its target.
+    `Target` columns and a `mor` column with the sign of each
+    interaction (1 activation, -1 repression). The sign should be
+    computed once, as the sign of the Spearman correlation between the
+    TF and its target in the cohort used to build the network. If the
+    file has no `mor` column, the signs are computed from the samples
+    given to
+    [`compute.TFs.activity()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.TFs.activity.md)
+    and a warning is given: they then depend on these samples and can
+    differ between cohorts or between a training and a test set.
 - `min_targets_size` — minimum number of targets per regulon; TFs with
   fewer targets are dropped (default 5).
 - `universe` — optional user-supplied regulon (data frame with `source`,
-  `target` and `mor` columns), used instead of fetching one.
+  `target` and `mor` columns, all three required; `mor` is 1 for
+  activation and -1 for repression), used instead of fetching one.
 - `scale` — if `TRUE` (default), z-scores TF activities across samples.
+  The scaled scores of a sample depend on the other samples of the call;
+  use `scale = FALSE` to compare scores computed in separate calls.
 
 ``` r
 
@@ -140,10 +157,16 @@ Key arguments:
 - `TFs.matrix` — TF activity matrix (samples x TFs), or a list of
   per-cohort matrices when `batch = TRUE` (see [Multi-cohort
   analysis](https://verapancaldilab.github.io/CellTFusion/articles/a6_batch_analysis.md)).
-- `network.type` — `"signed"` (default), `"unsigned"`, `"signed hybrid"`
-  or `"distance"`.
-- `minMod` — minimum number of TFs per module.
-- `corr_mod` — correlation above which module eigengenes are merged.
+- `network.type` — `"signed"` (default) or `"unsigned"`. In a signed
+  network, TFs with negatively correlated activities are not connected.
+- `clustering.method` — linkage of the hierarchical clustering of the
+  TFs on their TOM dissimilarity; `"average"` (default, as in WGCNA)
+  joins two groups of TFs according to the average dissimilarity between
+  their TFs.
+- `minMod` — minimum number of TFs per module. TFs that fit no module
+  (grey) are left out, with a message.
+- `corr_mod` — correlation (of type `cor_type`) above which module
+  eigengenes are merged, in single- and multi-cohort mode.
 - `cor_type` — `"p"` (Pearson, default) or `"s"` (Spearman;
   single-cohort mode only).
 
@@ -152,7 +175,7 @@ Key arguments:
 network <- compute.WTCNA(
   TFs.matrix        = tfs,
   network.type      = "signed",
-  clustering.method = "ward.D2",
+  clustering.method = "average",
   minMod            = 15,
   corr_mod          = 0.9,
   return            = TRUE
@@ -178,19 +201,24 @@ module colors after merging](figures/gene_dendrogram_after_merging.png)
 ## **Pathway activity**
 
 [`compute.pathway.activity()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.pathway.activity.md)
-estimates pathway activities with a multivariate linear model from
-`decoupleR` ([Badia-i-Mompel et al. 2022](#ref-10.1093/bioadv/vbac016))
-and the PROGENy pathway footprints ([Schubert et al.
-2018](#ref-Schubert2018)). If a list of gene sets is given, GSVA scores
-are computed as well.
+estimates pathway activities with `decoupleR` ([Badia-i-Mompel et al.
+2022](#ref-10.1093/bioadv/vbac016)) and the PROGENy pathway footprints
+([Schubert et al. 2018](#ref-Schubert2018)), by default with the
+univariate linear model (`method = "ulm"`, as in
+[`compute.TFs.activity()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.TFs.activity.md)).
+If a list of gene sets is given, GSVA scores are computed as well.
 
 Key arguments:
 
-- `RNA.tpm` — normalized expression matrix (genes x samples).
+- `RNA.tpm` — log-normalized expression matrix, e.g. log2(TPM + 1)
+  (genes x samples).
 - `gene_sets` — optional named list of gene sets; if provided, GSVA
   scores are returned in addition to PROGENy.
 - `paths` — optional custom PROGENy-style table (`source`, `target`,
   `weight`); by default the human PROGENy model is used.
+- `scale` — z-score each pathway across the samples (default). The
+  scaled scores of a sample depend on the other samples of the call; use
+  `scale = FALSE` to compare scores computed in separate calls.
 
 ``` r
 
@@ -256,9 +284,10 @@ res <- CellTFusion(
 
 A few defaults worth knowing:
 
-- `deconv_methods` runs Quantiseq, Epidish, DeconRNASeq and DWLS by
-  default; add `"CBSX"` (with `cbsx.mail` and `cbsx.token`) to also run
-  CIBERSORTx.
+- `deconv_methods` runs Quantiseq, CIBERSORTx (`"CBSX"`), Epidish,
+  DeconRNASeq and DWLS by default. CIBERSORTx is only run when
+  `cbsx.mail` and `cbsx.token` are given; without them it is skipped
+  with a message.
 - `cancer_type` selects the TCGA meta-program reference (`"blca"`,
   `"luad"` or `"skcm"`); if `NULL`, the meta-program mapping step is
   skipped.

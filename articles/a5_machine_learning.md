@@ -120,7 +120,9 @@ pred$AUC$AUROC
 ## **Survival outcomes**
 
 The same function is used for survival models, with the follow-up time
-and event of each sample:
+and event of each sample (the tutorial `traitdata` does not include
+them: the example assumes `PFS` and `PFS_event` columns in your clinical
+data):
 
 ``` r
 
@@ -151,9 +153,8 @@ surv_pred$c_index
 
 ## **Multi-cohort data**
 
-For samples from several cohorts, pass `batch = TRUE`, the metadata of
-the training samples (`coldata`, in the same order as `features_train`)
-and the cohort column (`batch_id`).
+For samples from several cohorts, pass `batch`: the cohort of each
+training sample, in the same order as `features_train`.
 [`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md)
 then corrects for cohort in each fold (see [Multi-cohort
 analysis](https://verapancaldilab.github.io/CellTFusion/articles/a6_batch_analysis.md)),
@@ -174,14 +175,12 @@ ml_res <- pipeML::compute_features.training.ML(
   fold_construction_fun        = prepare_celltfusion_folds,
   fold_construction_args_fixed = list(deconv     = deconv_train,
                                       raw.counts = raw.counts_train,
-                                      coldata    = coldata_train,
-                                      batch      = TRUE,
-                                      batch_id   = "Cohort")
+                                      batch      = coldata_train$Cohort)
 )
 ```
 
-For a model trained with `batch = TRUE`, project each new cohort
-separately with
+For a model trained with `batch`, project each new cohort separately
+with
 [`project_test_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/project_test_factors.md),
 as its samples are centered on their own means.
 

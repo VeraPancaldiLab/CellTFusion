@@ -76,12 +76,11 @@
 <li>
 <strong>Cell-type deconvolution</strong> — multiple algorithms via <code><a href="https://verapancaldilab.github.io/multideconv/reference/compute.deconvolution.html" class="external-link">multideconv::compute.deconvolution()</a></code> (Quantiseq, Epidish, DeconRNASeq, DWLS, CIBERSORTx)</li>
 <li>
-<strong>TF activity inference</strong> — <code><a href="reference/compute.TFs.activity.html">compute.TFs.activity()</a></code>: CollecTRI/Dorothea/ARACNe regulons scored via <code>decoupleR</code> consensus methods</li>
+<strong>TF activity inference</strong> — <code><a href="reference/compute.TFs.activity.html">compute.TFs.activity()</a></code>: CollecTRI/Dorothea/ARACNe regulons scored via <code>decoupleR</code> (<code>method = "ulm"</code> by default; <code>"mlm"</code>, <code>"wsum"</code>, <code>"consensus"</code>)</li>
 <li>
 <strong>TF module construction</strong> — <code><a href="reference/compute.WTCNA.html">compute.WTCNA()</a></code>: WGCNA-based weighted co-expression networks</li>
 <li>
-<strong>Pathway scoring</strong> — <code><a href="reference/compute.pathway.activity.html">compute.pathway.activity()</a></code>: PROGENy-based pathway activities via <code><a href="https://saezlab.github.io/decoupleR/reference/run_mlm.html" class="external-link">decoupleR::run_mlm()</a></code>
-</li>
+<strong>Pathway scoring</strong> — <code><a href="reference/compute.pathway.activity.html">compute.pathway.activity()</a></code>: PROGENy-based pathway activities via <code>decoupleR</code> (<code>method = "ulm"</code> by default)</li>
 <li>
 <strong>Cell group construction</strong> — <code><a href="reference/construct_cell_groups.html">construct_cell_groups()</a></code>: TF module–deconvolution correlation, dendrogram cutting and CCA composite scores</li>
 <li>
@@ -91,13 +90,13 @@
 <li>
 <strong>Statistical analysis</strong> — clinical trait association (<code><a href="reference/scores.stat.analysis.html">scores.stat.analysis()</a></code> and the <code>scores.*</code> family), survival analysis (<code><a href="reference/compute.survival.analysis.html">compute.survival.analysis()</a></code>)</li>
 <li>
-<strong>Test-set / batch projection</strong> — apply a trained model to new data (<code><a href="reference/compute.test.set.html">compute.test.set()</a></code>, <code><a href="reference/project_test_factors.html">project_test_factors()</a></code>), run leakage-aware cross-validation with <code>pipeML</code> (<code><a href="reference/prepare_celltfusion_folds.html">prepare_celltfusion_folds()</a></code>), or run multi-cohort analysis via <code>batch = TRUE</code> in <code><a href="reference/CellTFusion.html">CellTFusion()</a></code>
+<strong>Test-set / batch projection</strong> — apply a trained model to new data (<code><a href="reference/compute.test.set.html">compute.test.set()</a></code>, <code><a href="reference/project_test_factors.html">project_test_factors()</a></code>), run leakage-aware cross-validation with <code>pipeML</code> (<code><a href="reference/prepare_celltfusion_folds.html">prepare_celltfusion_folds()</a></code>), or run multi-cohort analysis via <code>batch</code> (cohort of each sample) in <code><a href="reference/CellTFusion.html">CellTFusion()</a></code>
 </li>
 </ol></div>
 <div class="section level3">
 <h3 id="key-source-files">Key Source Files<a class="anchor" aria-label="anchor" href="#key-source-files"></a></h3>
 <ul><li>
-<code>R/CellTFusion.R</code> — All core logic (~5,050 lines); single monolithic file containing every exported function</li>
+<code>R/CellTFusion.R</code> — All core logic (~4,700 lines); single monolithic file containing every exported function</li>
 <li>
 <code>inst/shiny/server.R</code> / <code>ui.R</code> — Shiny app backend and frontend</li>
 <li>
@@ -146,7 +145,7 @@
 </tr><tr><td><code><a href="reference/compute.survival.analysis.html">compute.survival.analysis()</a></code></td>
 <td>Kaplan-Meier / log-rank survival analysis (requires <code>survival</code>, <code>survminer</code>, <code>gridExtra</code>)</td>
 </tr><tr><td><code><a href="reference/compute.modules.relationship.html">compute.modules.relationship()</a></code></td>
-<td>Correlate TF modules with pathways</td>
+<td>Correlate TF modules with other continuous features (pathways, deconvolution features); returns correlations, p-values and significant pairs</td>
 </tr><tr><td><code><a href="reference/compute.modules.enrichment.html">compute.modules.enrichment()</a></code></td>
 <td>Pathway enrichment of TF modules</td>
 </tr></tbody></table><p>This is a curated subset — see <code>NAMESPACE</code> or the <a href="https://verapancaldilab.github.io/CellTFusion/reference/index.html">pkgdown reference</a> for the full list, which also includes the <code>scores.*</code> statistical-test family and lower-level helpers (<code><a href="reference/cell.groups.computation.html">cell.groups.computation()</a></code>, <code><a href="reference/compute_composite_score.html">compute_composite_score()</a></code>, <code><a href="reference/extract_cells.html">extract_cells()</a></code>, etc.).</p>

@@ -74,7 +74,7 @@ res$TME_states             # mapping of each latent factor to a TCGA meta-progra
 | Survival analysis | [`compute.survival.analysis()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.survival.analysis.md) | [Statistical analysis](https://verapancaldilab.github.io/CellTFusion/articles/a4_statistical_analysis.md) |
 | Cross-validation with `pipeML` | [`prepare_celltfusion_folds()`](https://verapancaldilab.github.io/CellTFusion/reference/prepare_celltfusion_folds.md) | [Machine learning workflows](https://verapancaldilab.github.io/CellTFusion/articles/a5_machine_learning.md) |
 | Projection of new cohorts | [`project_test_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/project_test_factors.md) | [Machine learning workflows](https://verapancaldilab.github.io/CellTFusion/articles/a5_machine_learning.md) |
-| Multi-cohort analysis | `CellTFusion(batch = TRUE)` | [Multi-cohort analysis](https://verapancaldilab.github.io/CellTFusion/articles/a6_batch_analysis.md) |
+| Multi-cohort analysis | `CellTFusion(batch = ...)` | [Multi-cohort analysis](https://verapancaldilab.github.io/CellTFusion/articles/a6_batch_analysis.md) |
 
 ## Tutorials
 
@@ -100,7 +100,7 @@ navigation bar:
   — use latent factors as features and project independent cohorts
 - **[Multi-cohort
   analysis](https://verapancaldilab.github.io/CellTFusion/articles/a6_batch_analysis.md)**
-  — correct for cohort effects with `batch = TRUE`
+  — correct for cohort effects with `batch`
 
 ## Shiny app
 

@@ -59,24 +59,27 @@ TME state characterization (Hallmark GSEA per factor and mapping to TCGA meta-pr
 <span>  tfs <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  pathways <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  normalized <span class="op">=</span> <span class="cn">T</span>,</span>
-<span>  coldata <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  batch <span class="op">=</span> <span class="cn">F</span>,</span>
-<span>  batch_id <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  deconv_methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Quantiseq"</span>, <span class="st">"Epidish"</span>, <span class="st">"DeconRNASeq"</span>, <span class="st">"DWLS"</span><span class="op">)</span>,</span>
+<span>  batch <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  deconv_methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Quantiseq"</span>, <span class="st">"CBSX"</span>, <span class="st">"Epidish"</span>, <span class="st">"DeconRNASeq"</span>, <span class="st">"DWLS"</span><span class="op">)</span>,</span>
 <span>  cbsx.mail <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  cbsx.token <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  doParallel <span class="op">=</span> <span class="cn">F</span>,</span>
+<span>  workers <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  file_name <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  TF.collection <span class="op">=</span> <span class="st">"CollecTRI"</span>,</span>
-<span>  min_targets_size <span class="op">=</span> <span class="fl">3</span>,</span>
+<span>  min_targets_size <span class="op">=</span> <span class="fl">5</span>,</span>
 <span>  universe <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  paths <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  gene_sets <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  minMod <span class="op">=</span> <span class="fl">3</span>,</span>
+<span>  minMod <span class="op">=</span> <span class="fl">5</span>,</span>
 <span>  corr_mod <span class="op">=</span> <span class="fl">0.9</span>,</span>
+<span>  softPower <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  corr <span class="op">=</span> <span class="fl">0.7</span>,</span>
 <span>  corr_type <span class="op">=</span> <span class="st">"spearman"</span>,</span>
 <span>  cells_extra <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  pval <span class="op">=</span> <span class="fl">0.05</span>,</span>
+<span>  min_cluster_size <span class="op">=</span> <span class="fl">3</span>,</span>
+<span>  deep_split <span class="op">=</span> <span class="cn">T</span>,</span>
 <span>  enrich_thresh <span class="op">=</span> <span class="fl">1.5</span>,</span>
 <span>  quantile_cutoff <span class="op">=</span> <span class="fl">0.7</span>,</span>
 <span>  cancer_type <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -90,7 +93,8 @@ TME state characterization (Hallmark GSEA per factor and mapping to TCGA meta-pr
 
 
 <dl><dt id="arg-raw-counts">raw.counts<a class="anchor" aria-label="anchor" href="#arg-raw-counts"></a></dt>
-<dd><p>A matrix of raw gene expression counts (genes as rows, samples as columns).
+<dd><p>A matrix of raw gene expression counts (genes as rows, samples as columns). If
+<code>normalized = FALSE</code>, a matrix of TPM-normalized values instead (not log-transformed).
 Always required: even when <code>dt</code>, <code>tfs</code> and <code>pathways</code> are all supplied precomputed,
 the (normalized) expression matrix is still needed for the downstream GSEA-based TME state
 characterization step.</p></dd>
@@ -113,7 +117,7 @@ construction using this object.</p></dd>
 <dt id="arg-tfs">tfs<a class="anchor" aria-label="anchor" href="#arg-tfs"></a></dt>
 <dd><p>(Optional) A precomputed TF activity matrix (samples as rows, TFs as columns), typically
 the <code>TFs_matrix</code> element returned by a previous <code>CellTFusion()</code> run or by
-<code><a href="compute.TFs.activity.html">compute.TFs.activity()</a></code>. When <code>batch = TRUE</code>, a named list of such matrices (one per cohort).
+<code><a href="compute.TFs.activity.html">compute.TFs.activity()</a></code>. When <code>batch</code> is given, a named list of such matrices (one per cohort).
 If supplied, TF activity inference is skipped.</p></dd>
 
 
@@ -124,59 +128,68 @@ If supplied, pathway activity inference is skipped.</p></dd>
 
 
 <dt id="arg-normalized">normalized<a class="anchor" aria-label="anchor" href="#arg-normalized"></a></dt>
-<dd><p>Logical; if TRUE (default), <code>raw.counts</code> are normalized to log-transformed TPM for the
-TF activity, pathway activity and GSEA steps (for deconvolution they are normalized to TPM only). If FALSE,
-<code>raw.counts</code> is assumed to be already normalized and is used as is.</p></dd>
-
-
-<dt id="arg-coldata">coldata<a class="anchor" aria-label="anchor" href="#arg-coldata"></a></dt>
-<dd><p>(Optional) A data frame of sample metadata (samples as rows). Only used when
-<code>batch = TRUE</code>, to read the batch column given by <code>batch_id</code>.</p></dd>
+<dd><p>Logical; if TRUE (default), <code>raw.counts</code> are raw counts and are normalized to
+log2(TPM + 1) for the TF activity, pathway activity and GSEA steps (for deconvolution they are normalized to
+TPM only). If FALSE, <code>raw.counts</code> must already be TPM-normalized and <strong>not</strong> log-transformed: the
+TPM values are used as they are for deconvolution and log2(TPM + 1) is computed internally for the other
+steps. Do not pass log-transformed values, as they would be log-transformed a second time (a warning is
+given when the values do not look like TPM, i.e. no value above 20 or negative values).</p></dd>
 
 
 <dt id="arg-batch">batch<a class="anchor" aria-label="anchor" href="#arg-batch"></a></dt>
-<dd><p>Logical; whether to run the multi-cohort mode: TF activity is computed per cohort, TF modules are
-built with consensus WGCNA across cohorts, and the cohort is controlled for in the deconvolution analysis
-and cell group construction. Requires <code>coldata</code> and <code>batch_id</code>. Default is FALSE.</p></dd>
-
-
-<dt id="arg-batch-id">batch_id<a class="anchor" aria-label="anchor" href="#arg-batch-id"></a></dt>
-<dd><p>Optional character indicating the column name in coldata containing batch identifiers.
-Required when <code>batch = TRUE</code>.</p></dd>
+<dd><p>(Optional) A vector with the cohort of each sample (e.g. <code>coldata$Cohort</code>), in the same order
+as the columns of <code>raw.counts</code>; if it is named, it is matched to the samples by name instead. It is
+always treated as categorical. If given, the multi-cohort mode is run: TF activity is computed per cohort,
+TF modules are built with consensus WGCNA across cohorts, and the cohort is controlled for in the
+deconvolution analysis and cell group construction. Default is <code>NULL</code> (single cohort); a vector with
+only one cohort is treated the same way.</p></dd>
 
 
 <dt id="arg-deconv-methods">deconv_methods<a class="anchor" aria-label="anchor" href="#arg-deconv-methods"></a></dt>
 <dd><p>A character vector of deconvolution methods to apply. Default is
-<code>c("Quantiseq", "Epidish", "DeconRNASeq", "DWLS")</code>. Add <code>"CBSX"</code> to also run CIBERSORTx
-(requires <code>cbsx.mail</code> and <code>cbsx.token</code>).</p></dd>
+<code>c("Quantiseq", "CBSX", "Epidish", "DeconRNASeq", "DWLS")</code>. <code>"CBSX"</code> (CIBERSORTx) is only run
+when <code>cbsx.mail</code> and <code>cbsx.token</code> are given; otherwise it is skipped with a message.</p></dd>
 
 
 <dt id="arg-cbsx-mail">cbsx.mail<a class="anchor" aria-label="anchor" href="#arg-cbsx-mail"></a></dt>
-<dd><p>(Optional) Email credential for CIBERSORTx. Required if "CBSX" is among deconv_methods.</p></dd>
+<dd><p>(Optional) Email credential for CIBERSORTx. Needed to run "CBSX"; without it, CIBERSORTx is skipped.</p></dd>
 
 
 <dt id="arg-cbsx-token">cbsx.token<a class="anchor" aria-label="anchor" href="#arg-cbsx-token"></a></dt>
-<dd><p>(Optional) Token credential for CIBERSORTx. Required if "CBSX" is among deconv_methods.</p></dd>
+<dd><p>(Optional) Token credential for CIBERSORTx. Needed to run "CBSX"; without it, CIBERSORTx is skipped.</p></dd>
+
+
+<dt id="arg-doparallel">doParallel<a class="anchor" aria-label="anchor" href="#arg-doparallel"></a></dt>
+<dd><p>Logical; whether to run the deconvolution methods that support it (CIBERSORTx and DWLS) in
+parallel, one signature per worker (passed to <code><a href="https://verapancaldilab.github.io/multideconv/reference/compute.deconvolution.html" class="external-link">multideconv::compute.deconvolution()</a></code>). Default is FALSE.</p></dd>
+
+
+<dt id="arg-workers">workers<a class="anchor" aria-label="anchor" href="#arg-workers"></a></dt>
+<dd><p>(Optional) Number of parallel workers when <code>doParallel = TRUE</code>. If <code>NULL</code> (default),
+the number of available cores minus one is used.</p></dd>
 
 
 <dt id="arg-file-name">file_name<a class="anchor" aria-label="anchor" href="#arg-file-name"></a></dt>
-<dd><p>(Optional) Prefix for output files saved in the "Results/" directory.</p></dd>
+<dd><p>(Optional) Name used in the output files saved in the "Results/" directory. If <code>NULL</code>
+and <code>return = TRUE</code>, <code>"CellTFusion"</code> is used.</p></dd>
 
 
 <dt id="arg-tf-collection">TF.collection<a class="anchor" aria-label="anchor" href="#arg-tf-collection"></a></dt>
 <dd><p>Character. The source of the TF-target network. Options are <code>"CollecTRI"</code> (default), <code>"Dorothea"</code>, or <code>"ARACNE"</code>.</p><ul><li><p><code>"CollecTRI"</code> uses the prebuilt collection from OmnipathR and <code>"Dorothea"</code> the one from the <code>dorothea</code> package.</p></li>
-<li><p><code>"ARACNE"</code> reads a network file (tab-separated with <code>Regulator</code> and <code>Target</code> columns) from
+<li><p><code>"ARACNE"</code> reads a network file (tab-separated with <code>Regulator</code> and <code>Target</code> columns, and a <code>mor</code> column with
+the sign of each interaction; see <code><a href="compute.TFs.activity.html">compute.TFs.activity()</a></code>) from
 <code>input/ARACNE/&lt;cancer_type&gt;/network/network.txt</code>.</p></li>
 </ul></dd>
 
 
 <dt id="arg-min-targets-size">min_targets_size<a class="anchor" aria-label="anchor" href="#arg-min-targets-size"></a></dt>
 <dd><p>Integer. Minimum number of target genes per regulon, passed to
-<code><a href="compute.TFs.activity.html">compute.TFs.activity()</a></code>. Default is 3.</p></dd>
+<code><a href="compute.TFs.activity.html">compute.TFs.activity()</a></code>. Default is 5.</p></dd>
 
 
 <dt id="arg-universe">universe<a class="anchor" aria-label="anchor" href="#arg-universe"></a></dt>
-<dd><p>Optional. A user-specified data frame of TF-target interactions. If not provided, the function will fetch the relevant network based on the <code>TF.collection</code> argument.</p></dd>
+<dd><p>Optional. A user-specified data frame of TF-target interactions (columns <code>source</code>, <code>target</code> and
+<code>mor</code>, the mode of regulation: 1 activation, -1 repression). If not provided, the function will fetch the relevant network based on the <code>TF.collection</code> argument.</p></dd>
 
 
 <dt id="arg-paths">paths<a class="anchor" aria-label="anchor" href="#arg-paths"></a></dt>
@@ -189,11 +202,17 @@ Required when <code>batch = TRUE</code>.</p></dd>
 
 
 <dt id="arg-minmod">minMod<a class="anchor" aria-label="anchor" href="#arg-minmod"></a></dt>
-<dd><p>Integer; minimum module size for WGCNA module detection. Default is 3.</p></dd>
+<dd><p>Integer; minimum module size for WGCNA module detection. Default is 5.</p></dd>
 
 
 <dt id="arg-corr-mod">corr_mod<a class="anchor" aria-label="anchor" href="#arg-corr-mod"></a></dt>
 <dd><p>Numeric; correlation threshold for merging TF modules. Default is 0.9.</p></dd>
+
+
+<dt id="arg-softpower">softPower<a class="anchor" aria-label="anchor" href="#arg-softpower"></a></dt>
+<dd><p>(Optional) Soft-thresholding power used to build the TF network, passed to
+<code><a href="compute.WTCNA.html">compute.WTCNA()</a></code>: one value, or one value per cohort (in the order the cohorts first appear in
+<code>batch</code>) in multi-cohort mode. If <code>NULL</code> (default), it is chosen automatically.</p></dd>
 
 
 <dt id="arg-corr">corr<a class="anchor" aria-label="anchor" href="#arg-corr"></a></dt>
@@ -211,8 +230,18 @@ if they are not listed here they are discarded.</p></dd>
 
 
 <dt id="arg-pval">pval<a class="anchor" aria-label="anchor" href="#arg-pval"></a></dt>
-<dd><p>Numeric; p-value threshold used when building cell groups (TF module-deconvolution
-correlations and the CCA permutation test). Default is 0.05.</p></dd>
+<dd><p>Numeric; p-value threshold used when building cell groups (selection of the deconvolution
+features significantly correlated with each TF module). Default is 0.05.</p></dd>
+
+
+<dt id="arg-min-cluster-size">min_cluster_size<a class="anchor" aria-label="anchor" href="#arg-min-cluster-size"></a></dt>
+<dd><p>Integer; minimum number of features of a cell group (minimum cluster size of the
+dynamic tree cut), passed to <code><a href="construct_cell_groups.html">construct_cell_groups()</a></code>. Default is 3.</p></dd>
+
+
+<dt id="arg-deep-split">deep_split<a class="anchor" aria-label="anchor" href="#arg-deep-split"></a></dt>
+<dd><p>Logical; if TRUE (default), the dynamic tree cut that defines the cell groups splits the
+clusters more finely. Passed to <code><a href="construct_cell_groups.html">construct_cell_groups()</a></code>.</p></dd>
 
 
 <dt id="arg-enrich-thresh">enrich_thresh<a class="anchor" aria-label="anchor" href="#arg-enrich-thresh"></a></dt>
@@ -229,9 +258,10 @@ cell groups per NMF factor. Default is 0.7.</p></dd>
 <dd><p>Character. TCGA cancer type abbreviation (one of <code>"blca"</code>, <code>"luad"</code>, <code>"skcm"</code>).
 Used for two purposes: (1) loading TCGA meta-programs for TME state mapping, and (2) when
 <code>TF.collection = "ARACNE"</code>, locating the ARACNe network at
-<code>input/ARACNE/&lt;cancer_type&gt;/network/network.txt</code>. If <code>NULL</code>, the meta-program mapping
-step is skipped (<code>TME_states</code> and <code>Metaprograms_reference</code> are <code>NULL</code>) and, for ARACNE,
-the network is auto-detected when only one exists under <code>input/ARACNE/</code>.</p></dd>
+<code>input/ARACNE/&lt;cancer_type&gt;/network/network.txt</code>. If <code>NULL</code>, or if no TCGA meta-programs
+exist for that cancer type (a warning is given), the meta-program mapping step is skipped
+(<code>TME_states</code> and <code>Metaprograms_reference</code> are <code>NULL</code>). For ARACNE, if <code>NULL</code>, the
+network is auto-detected when only one exists under <code>input/ARACNE/</code>.</p></dd>
 
 
 <dt id="arg-return">return<a class="anchor" aria-label="anchor" href="#arg-return"></a></dt>
@@ -239,7 +269,8 @@ the network is auto-detected when only one exists under <code>input/ARACNE/</cod
 
 
 <dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>
-<dd><p>Logical; whether to print the function messages. Default is TRUE.</p></dd>
+<dd><p>Logical; whether to print the progress and the console output and messages of every step
+(warnings are always shown). Default is TRUE.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -248,10 +279,11 @@ the network is auto-detected when only one exists under <code>input/ARACNE/</cod
 <dd><p>A matrix with cell-type proportions (samples as rows, cell types as columns); <code>NULL</code> if <code>dt</code> was supplied without <code>deconv</code>.</p></dd>
 
 <dt>TFs_matrix</dt>
-<dd><p>A matrix with TF activity scores (samples as rows, TFs as columns), or a list of matrices (one per cohort) when <code>batch = TRUE</code>.</p></dd>
+<dd><p>A matrix with TF activity scores (samples as rows, TFs as columns), or a list of matrices (one per cohort) when <code>batch</code> is given.</p></dd>
 
 <dt>TF_network</dt>
-<dd><p>The TF module network returned by <code><a href="compute.WTCNA.html">compute.WTCNA()</a></code>.</p></dd>
+<dd><p>The TF module network returned by <code><a href="compute.WTCNA.html">compute.WTCNA()</a></code>. Its module matrix is always
+in the sample order of <code>raw.counts</code> (also in multi-cohort mode).</p></dd>
 
 <dt>Pathways_scores</dt>
 <dd><p>Pathway activity scores returned by <code><a href="compute.pathway.activity.html">compute.pathway.activity()</a></code>.</p></dd>
@@ -260,7 +292,8 @@ the network is auto-detected when only one exists under <code>input/ARACNE/</cod
 <dd><p>The processed deconvolution subgroups (output of <code><a href="https://verapancaldilab.github.io/multideconv/reference/compute.deconvolution.analysis.html" class="external-link">multideconv::compute.deconvolution.analysis()</a></code>).</p></dd>
 
 <dt>Cell_groups</dt>
-<dd><p>Output of <code><a href="construct_cell_groups.html">construct_cell_groups()</a></code>: cell group scores, compositions and projection weights.</p></dd>
+<dd><p>Output of <code><a href="construct_cell_groups.html">construct_cell_groups()</a></code>: cell group scores, compositions, projection weights
+and the relation of each cell group to its TF module.</p></dd>
 
 <dt>Latent_spaces</dt>
 <dd><p>NMF latent factors returned by <code><a href="compute.latent_factors.html">compute.latent_factors()</a></code>.</p></dd>
@@ -269,10 +302,10 @@ the network is auto-detected when only one exists under <code>input/ARACNE/</cod
 <dd><p>Enriched cell types per latent factor (see <code><a href="compute_cells_niches.html">compute_cells_niches()</a></code>).</p></dd>
 
 <dt>TME_states</dt>
-<dd><p>Factor-to-meta-program mapping (<code>factor_mapping</code> from <code><a href="map_factors_to_metaprograms.html">map_factors_to_metaprograms()</a></code>), or <code>NULL</code> if <code>cancer_type</code> is <code>NULL</code>.</p></dd>
+<dd><p>Factor-to-meta-program mapping (<code>factor_mapping</code> from <code><a href="map_factors_to_metaprograms.html">map_factors_to_metaprograms()</a></code>), or <code>NULL</code> if the mapping was skipped (see <code>cancer_type</code>).</p></dd>
 
 <dt>Metaprograms_reference</dt>
-<dd><p>The TCGA meta-program reference used for mapping, or <code>NULL</code> if <code>cancer_type</code> is <code>NULL</code>.</p></dd>
+<dd><p>The TCGA meta-program reference used for mapping, or <code>NULL</code> if the mapping was skipped.</p></dd>
 
 
 </dl></div>
@@ -290,12 +323,10 @@ in either form.</p>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"raw.counts.tuto"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"traitdata.tuto"</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu">CellTFusion</span><span class="op">(</span></span></span>
 <span class="r-in"><span>  raw.counts <span class="op">=</span> <span class="va">raw.counts.tuto</span>,</span></span>
 <span class="r-in"><span>  normalized <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
-<span class="r-in"><span>  coldata <span class="op">=</span> <span class="va">traitdata.tuto</span>,</span></span>
 <span class="r-in"><span>  deconv_methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Quantiseq"</span>, <span class="st">"DeconRNASeq"</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>  file_name <span class="op">=</span> <span class="st">"TestRun"</span>,</span></span>
 <span class="r-in"><span>  min_targets_size <span class="op">=</span> <span class="fl">15</span>,</span></span>
@@ -312,7 +343,6 @@ in either form.</p>
 <span class="r-in"><span>  tfs <span class="op">=</span> <span class="va">res</span><span class="op">$</span><span class="va">TFs_matrix</span>,</span></span>
 <span class="r-in"><span>  pathways <span class="op">=</span> <span class="va">res</span><span class="op">$</span><span class="va">Pathways_scores</span>,</span></span>
 <span class="r-in"><span>  normalized <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
-<span class="r-in"><span>  coldata <span class="op">=</span> <span class="va">traitdata.tuto</span>,</span></span>
 <span class="r-in"><span>  file_name <span class="op">=</span> <span class="st">"TestRun_rerun"</span>,</span></span>
 <span class="r-in"><span>  minMod <span class="op">=</span> <span class="fl">20</span>,</span></span>
 <span class="r-in"><span>  corr_mod <span class="op">=</span> <span class="fl">0.25</span>,</span></span>

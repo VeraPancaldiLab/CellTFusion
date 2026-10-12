@@ -19,9 +19,7 @@ prepare_celltfusion_folds(
   bestune = NULL,
   deconv,
   raw.counts = NULL,
-  coldata = NULL,
-  batch = FALSE,
-  batch_id = NULL,
+  batch = NULL,
   ncores = 1,
   return = FALSE,
   verbose = FALSE,
@@ -57,32 +55,27 @@ prepare_celltfusion_folds(
 
 - raw.counts:
 
-  Optional count matrix (genes x samples) with the samples in the same
-  order as `data`. `pipeML` converts the column names of
-  `features_train` with
+  Optional count matrix (genes x samples; TPM values if
+  `normalized = FALSE` is passed to
+  [`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md))
+  with the samples of `data`. Its columns are matched to the samples of
+  `deconv` by name (an error is raised if they are not the same
+  samples); without column names, they must be in the same order as
+  `data`. `pipeML` converts the column names of `features_train` with
   [`make.names()`](https://rdrr.io/r/base/make.names.html) (e.g.
   `"HLA-A"` becomes `"HLA.A"`), so gene symbols in `data` may no longer
   match TF regulons and gene sets; passing `raw.counts` keeps the
   original gene symbols. If `NULL` (default), `t(data)` is used.
 
-- coldata:
-
-  Optional data frame of sample metadata with rows in the same order as
-  `data`. Required when `batch = TRUE`.
-
 - batch:
 
-  Logical; whether to run
+  Optional vector with the cohort of each sample, in the same order as
+  `data` (e.g. `coldata$Cohort`). If given,
   [`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md)
-  in multi-cohort mode (see
-  [`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md)).
-  The test samples of each cohort are then projected separately,
-  centered on their own means. Default FALSE.
-
-- batch_id:
-
-  Column of `coldata` with the cohort of each sample. Required when
-  `batch = TRUE`.
+  runs in multi-cohort mode (see
+  [`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md))
+  and the test samples of each cohort are projected separately, centered
+  on their own means. Default `NULL` (single cohort).
 
 - ncores:
 
@@ -117,7 +110,11 @@ prepare_celltfusion_folds(
   outcome columns), `test_data` (latent factors of the test samples,
   plus `time` and `event` for survival), `obs_test` (observed outcome of
   the test samples), `rowIndex` (rows of the test samples) and
-  `fold_name`. The list of folds is returned invisibly.
+  `fold_name`. The list of folds is returned invisibly. If
+  [`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md)
+  fails in a fold (e.g. no cell groups are found on its training
+  samples), that fold is skipped with a warning and is not saved; an
+  error is raised only if all the folds fail.
 
 - In final mode (`bestune` provided): a list with (1) the latent factors
   of all the samples plus the outcome columns, (2) the
@@ -129,8 +126,8 @@ prepare_celltfusion_folds(
 
 ## Details
 
-Pass the fixed arguments (`deconv`, and optionally `raw.counts`,
-`coldata`, `batch`, `batch_id` and any
+Pass the fixed arguments (`deconv`, and optionally `raw.counts`, `batch`
+and any
 [`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md)
 argument) through `fold_construction_args_fixed`. Tunable arguments
 (`fold_construction_args_tunable`) are not supported. With `ncores > 1`,

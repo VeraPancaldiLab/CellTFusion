@@ -1,7 +1,15 @@
 # Compute a cell-type composition matrix from deconvolution subgroups
 
 Builds a binary presence matrix indicating which original cell types are
-present in higher-level cell groups.
+present in each cell group. Each feature of a cell group is opened down
+to its original deconvolution features (a subgroup is replaced by its
+members), and the cell type of each feature is read from its name with
+the cell type vocabulary of multideconv
+([`multideconv::get_cell_type_nomenclature()`](https://verapancaldilab.github.io/multideconv/reference/get_cell_type_nomenclature.html)).
+Cell types are therefore named as in that vocabulary: for example the
+LM22 features `Plasma.cells` and `T.cells.CD4.memory.activated` are
+counted as `Plasma` and `CD4.memory.activated`, as in the names of the
+deconvolution subgroups.
 
 ## Usage
 
@@ -24,20 +32,45 @@ compute.composition.matrix(
 
 - cell.groups:
 
-  A list containing cell group definitions, where the second element
-  holds the groupings (e.g. the output of
-  [`construct_cell_groups()`](https://verapancaldilab.github.io/CellTFusion/reference/construct_cell_groups.md)).
+  The cell groups returned by
+  [`construct_cell_groups()`](https://verapancaldilab.github.io/CellTFusion/reference/construct_cell_groups.md):
+  its element `Composition` (the features of each cell group) is used.
+  An unnamed list whose second element holds the composition is also
+  accepted.
 
 - cells_extra:
 
-  Optional vector of additional cell identifiers to consider during
-  extraction.
+  Optional character vector of additional cell type names, added to the
+  vocabulary used to recognise cell types in the feature names.
 
 ## Value
 
 A binary matrix (data.frame) where rows are cell groups and columns are
 cell types (1 = present, 0 = absent). Each cell group appears twice, as
-`<group>_pos` and `<group>_neg` (same composition), to match the feature
-names used by
-[`compute.latent_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.latent_factors.md).
-Cell types not present in any cell group are dropped (with a warning).
+`<group>_pos` and `<group>_neg`, to match the feature names used by
+[`compute.latent_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.latent_factors.md);
+both rows have the same composition (the direction of the relation with
+the TF module is not represented). Cell types not present in any cell
+group are dropped, and cell groups whose cell types are not recognised
+(their row is all zeros) are listed, each with a message.
+
+## Examples
+
+``` r
+data("network.tuto")
+data("deconv_subgroups.tuto")
+cell_groups <- construct_cell_groups(network.tuto, deconv_subgroups.tuto)
+#> 20 of 764 features were not assigned to any cluster by the tree cut and are not part of any cell group (blue: 6, pink: 2, red: 2, yellow: 8, black: 2)
+composition <- compute.composition.matrix(deconv_subgroups.tuto, cell_groups)
+composition[1:4, 1:5]
+#>                              B.cells B.naive.cells B.memory.cells
+#> Dendrogram_brown_group_1_pos       1             0              0
+#> Dendrogram_brown_group_1_neg       1             0              0
+#> Dendrogram_brown_group_2_pos       0             0              0
+#> Dendrogram_brown_group_2_neg       0             0              0
+#>                              Macrophages.cells Macrophages.M0
+#> Dendrogram_brown_group_1_pos                 0              0
+#> Dendrogram_brown_group_1_neg                 0              0
+#> Dendrogram_brown_group_2_pos                 0              0
+#> Dendrogram_brown_group_2_neg                 0              0
+```

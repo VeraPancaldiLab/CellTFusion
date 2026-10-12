@@ -24,7 +24,8 @@ compute.survival.analysis(
   features = NULL,
   p.value = 0.05,
   thres = 0.5,
-  group_column = NULL
+  group_column = NULL,
+  p_adjust = "none"
 )
 ```
 
@@ -32,7 +33,8 @@ compute.survival.analysis(
 
 - survival.data:
 
-  A data frame of clinical/survival metadata, with samples as rows.
+  A data frame (or tibble) of clinical/survival metadata, with samples
+  as rows.
 
 - PFS:
 
@@ -59,20 +61,29 @@ compute.survival.analysis(
 
 - p.value:
 
-  Numeric. Log-rank test p-value threshold used to keep a feature as
-  significant when `features` is used. Default is 0.05.
+  Numeric. Log-rank test threshold used to keep a feature as significant
+  when `features` is used: (adjusted) p-value `<= p.value`. Default is
+  0.05.
 
 - thres:
 
   Numeric between 0 and 1. Quantile cutoff used to split each feature
-  into High/Low groups when `features` is used. Default is 0.5 (median
-  split).
+  into High/Low groups when `features` is used (High = at or above the
+  cutoff). Default is 0.5 (median split).
 
 - group_column:
 
   Optional character. Column name in `survival.data` defining a
   predefined categorical grouping (e.g. cell group membership, cluster,
-  or trait class). Mutually exclusive with `features`.
+  or trait class). Samples without a value are left out (with a
+  message). Mutually exclusive with `features`.
+
+- p_adjust:
+
+  Character. Method to correct the log-rank p-values for multiple
+  testing across the features (see
+  [`stats::p.adjust()`](https://rdrr.io/r/stats/p.adjust.html), e.g.
+  `"BH"`), when `features` is used. Default `"none"`.
 
 ## Value
 
@@ -97,13 +108,18 @@ If `group_column` is provided, a list with:
 
   Median follow-up time (reverse Kaplan-Meier).
 
-If `features` is provided, a named list of significant
-`Surv() ~ feature` formulas (one per feature with log-rank p-value below
-`p.value`); `NULL` (with a message) if none are significant.
+If `features` is provided, a named list with one `Surv() ~ feature`
+formula per significant feature, and a last element `Statistics`: a data
+frame with the test of every feature (`feature`, `cutoff`, `n_high`,
+`n_low`, `p_value`, `p_adjusted`, `significant`). When no feature is
+significant, the list only contains `Statistics` (with a message).
 
 A Kaplan-Meier plot (with risk table) is saved as an SVG file to
-`Results/SurvPlot_<group-or-feature>_<file_name>.svg`: always for
-`group_column`, and one per significant feature for `features`.
+`Results/SurvPlot_<group-or-feature>_<file_name>.svg`
+(`Results/SurvPlot_<group-or-feature>.svg` without `file_name`;
+characters not allowed in file names, e.g. "/", replaced by "\_"):
+always for `group_column`, and one per significant feature for
+`features`.
 
 ## Details
 
@@ -114,6 +130,9 @@ Requires the `survival`, `survminer`, and `gridExtra` packages (see
 
 ``` r
 if (FALSE) { # \dontrun{
+# traitdata: clinical data with the survival columns (here "PFS" and "PFS_event");
+# the tutorial data (traitdata.tuto) does not include them
+
 # Predefined clinical/cell groups
 compute.survival.analysis(
   survival.data = traitdata,

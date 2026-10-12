@@ -58,10 +58,7 @@ saves a multi-panel SVG boxplot grid to <code>Results/</code>.</p>
 <span>  pval <span class="op">=</span> <span class="fl">0.05</span>,</span>
 <span>  <span class="va">file.name</span>,</span>
 <span>  ncol <span class="op">=</span> <span class="fl">5</span>,</span>
-<span>  y_min <span class="op">=</span> <span class="fl">0</span>,</span>
-<span>  y_max <span class="op">=</span> <span class="fl">0.5</span>,</span>
-<span>  width <span class="op">=</span> <span class="fl">18</span>,</span>
-<span>  height <span class="op">=</span> <span class="fl">10</span></span>
+<span>  p_adjust <span class="op">=</span> <span class="st">"none"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -76,44 +73,38 @@ output from <code><a href="compute.WTCNA.html">compute.WTCNA()</a></code>.</p></
 
 
 <dt id="arg-coldata">coldata<a class="anchor" aria-label="anchor" href="#arg-coldata"></a></dt>
-<dd><p>A data frame of sample metadata. Only character and factor
-columns are used as traits.</p></dd>
+<dd><p>A data frame of sample metadata. Only character, factor and logical
+columns are used as traits. Traits with a single level, or with as many levels as
+samples, are skipped with a message; samples with a missing value are left out for that trait.</p></dd>
 
 
 <dt id="arg-pval">pval<a class="anchor" aria-label="anchor" href="#arg-pval"></a></dt>
-<dd><p>Numeric. ANOVA p-value threshold for significance. Default 0.05.</p></dd>
+<dd><p>Numeric. ANOVA (adjusted) p-value threshold for significance (<code>&lt;= pval</code>). Default 0.05.</p></dd>
 
 
 <dt id="arg-file-name">file.name<a class="anchor" aria-label="anchor" href="#arg-file-name"></a></dt>
 <dd><p>Character. Base name appended to output SVG file names
-(<code>Results/ANOVA_boxplot_summary_&lt;file.name&gt;_&lt;trait&gt;.svg</code>).</p></dd>
+(<code>Results/ANOVA_boxplot_summary_&lt;file.name&gt;_&lt;trait&gt;.svg</code>, or <code>Results/ANOVA_boxplot_summary_&lt;trait&gt;.svg</code>
+without <code>file.name</code>). In <code>&lt;trait&gt;</code>, characters other than letters, digits, ".", "<em>", "-" and spaces
+(e.g. "/") are replaced by "</em>".</p></dd>
 
 
 <dt id="arg-ncol">ncol<a class="anchor" aria-label="anchor" href="#arg-ncol"></a></dt>
-<dd><p>Integer. Number of columns in the boxplot facet grid. Default 5.</p></dd>
+<dd><p>Integer. Number of columns in the boxplot facet grid. Default 5. The size of the figure is
+computed from the number of panels, and the y-axis of each panel from its data.</p></dd>
 
 
-<dt id="arg-y-min">y_min<a class="anchor" aria-label="anchor" href="#arg-y-min"></a></dt>
-<dd><p>Numeric. Lower y-axis limit for boxplots. Default 0.</p></dd>
-
-
-<dt id="arg-y-max">y_max<a class="anchor" aria-label="anchor" href="#arg-y-max"></a></dt>
-<dd><p>Numeric. Upper y-axis limit for boxplots. Default 0.5.</p></dd>
-
-
-<dt id="arg-width">width<a class="anchor" aria-label="anchor" href="#arg-width"></a></dt>
-<dd><p>Numeric. Width of the SVG output in inches. Default 18.</p></dd>
-
-
-<dt id="arg-height">height<a class="anchor" aria-label="anchor" href="#arg-height"></a></dt>
-<dd><p>Numeric. Height of the SVG output in inches. Default 10.</p></dd>
+<dt id="arg-p-adjust">p_adjust<a class="anchor" aria-label="anchor" href="#arg-p-adjust"></a></dt>
+<dd><p>Character. Method of <code><a href="https://rdrr.io/r/stats/p.adjust.html" class="external-link">stats::p.adjust()</a></code> to correct the ANOVA p-values across the modules,
+for each trait. Default <code>"none"</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>Called for its side effect (saves one SVG file per categorical trait with at
-least one significant module); returns <code>NULL</code> invisibly when <code>coldata</code> has no
-categorical traits.</p>
+    <p>Invisibly, a data frame with the ANOVA of every module for every trait tested (<code>trait</code>,
+<code>module</code>, <code>F</code>, <code>p</code>, <code>p_adjusted</code>), or <code>NULL</code> when no trait could be tested.
+Called mainly for its side effect (saves one SVG file per categorical trait with at
+least one significant module).</p>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

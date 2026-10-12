@@ -1,6 +1,12 @@
-# Extract cells from cell type groups
+# Extract cell types from deconvolution feature names
 
-Extract cells from cell type groups
+Reads the cell type of each deconvolution feature from its name, with
+the cell type vocabulary of multideconv
+([`multideconv::get_cell_type_nomenclature()`](https://verapancaldilab.github.io/multideconv/reference/get_cell_type_nomenclature.html),
+plus `cells_extra`). The first vocabulary name found in the feature name
+is kept, and a `_Subgroup.<n>` suffix (or `.Iteration.<n>` of
+multideconv \< 0.2.0) is removed. Vocabulary names are matched literally
+(a "." only matches a ".").
 
 ## Usage
 
@@ -12,15 +18,25 @@ extract_cells(groups, cells_extra = NULL)
 
 - groups:
 
-  A character vector of cell type group names, typically from
-  cell.groups.computation()
+  A character vector of deconvolution feature names: raw features
+  (`<method>_<signature>_<cell type>`, or `<method>_<cell type>`) or
+  subgroups (`<cell type>_Subgroup.<n>`).
 
 - cells_extra:
 
-  Optional character vector of additional cell type names to include in
-  the extraction
+  Optional character vector of additional cell type names, added to the
+  vocabulary.
 
 ## Value
 
-A character vector of unique cell types found in the groups, ignoring
-method and signature suffixes
+A character vector of the distinct cell types found (`character(0)` if
+none). Feature names without any vocabulary cell type are ignored.
+
+## Examples
+
+``` r
+extract_cells(c("Epidish_BPRNACan_Monocytes", "Monocytes_Subgroup.2", "Quantiseq_B.cells"))
+#> [1] "Monocytes" "B.cells"  
+extract_cells("Method_Signature_Mesenchymal.cells", cells_extra = "Mesenchymal.cells")
+#> [1] "Mesenchymal.cells"
+```

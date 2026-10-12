@@ -1,12 +1,16 @@
 # Merge highly correlated TF modules
 
-Identifies pairs of TF modules whose eigengene correlation exceeds
-`corr` and merges them by averaging their columns.
+Merges TF modules whose scores (eigengenes) are too similar, repeating
+until no pair of modules has a correlation above `corr`: at each step
+the most correlated pair above `corr` is merged, and the correlations
+are computed again. The merged module keeps the name and color of the
+first module of the pair; its score is the mean of the scores of all the
+original modules it contains, scaled (mean 0, standard deviation 1).
 
 ## Usage
 
 ``` r
-mergeModules(data, colors, corr)
+mergeModules(data, colors, corr, method = "spearman")
 ```
 
 ## Arguments
@@ -22,8 +26,11 @@ mergeModules(data, colors, corr)
 
 - corr:
 
-  Numeric. Spearman correlation threshold above which two modules are
-  merged.
+  Numeric. Correlation threshold above which two modules are merged.
+
+- method:
+
+  Character. Correlation used: "pearson" or "spearman" (default).
 
 ## Value
 

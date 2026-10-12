@@ -56,7 +56,7 @@ represented by the eigengene of the module.</p>
 <span>  <span class="va">TFs.matrix</span>,</span>
 <span>  batch <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  network.type <span class="op">=</span> <span class="st">"signed"</span>,</span>
-<span>  clustering.method <span class="op">=</span> <span class="st">"ward.D2"</span>,</span>
+<span>  clustering.method <span class="op">=</span> <span class="st">"average"</span>,</span>
 <span>  minMod <span class="op">=</span> <span class="fl">15</span>,</span>
 <span>  corr_mod <span class="op">=</span> <span class="fl">0.9</span>,</span>
 <span>  cor_type <span class="op">=</span> <span class="st">"p"</span>,</span>
@@ -78,16 +78,19 @@ one per cohort.</p></dd>
 
 <dt id="arg-batch">batch<a class="anchor" aria-label="anchor" href="#arg-batch"></a></dt>
 <dd><p>Logical; if TRUE, performs consensus WGCNA (<code><a href="https://rdrr.io/pkg/WGCNA/man/blockwiseConsensusModules.html" class="external-link">WGCNA::blockwiseConsensusModules()</a></code>) across cohorts
-provided as a list of matrices. In this mode <code>clustering.method</code> and <code>corr_mod</code> are not used
-(modules are merged with a fixed <code>mergeCutHeight = 0.25</code>), and module eigengenes are scaled within each cohort.</p></dd>
+provided as a list of matrices. In this mode <code>clustering.method</code> is not used (WGCNA builds the consensus tree
+itself), modules are merged by WGCNA with <code>mergeCutHeight = 1 - corr_mod</code>, and module eigengenes are scaled
+within each cohort.</p></dd>
 
 
 <dt id="arg-network-type">network.type<a class="anchor" aria-label="anchor" href="#arg-network-type"></a></dt>
-<dd><p>Network type: "signed", "unsigned", "signed hybrid", or "distance". Default is "signed".</p></dd>
+<dd><p>Network type: "signed" (default) or "unsigned".</p></dd>
 
 
 <dt id="arg-clustering-method">clustering.method<a class="anchor" aria-label="anchor" href="#arg-clustering-method"></a></dt>
-<dd><p>Clustering method for hierarchical clustering (single-cohort mode only). Default is "ward.D2".</p></dd>
+<dd><p>Linkage method of the hierarchical clustering of the TFs (<code><a href="https://rdrr.io/r/stats/hclust.html" class="external-link">stats::hclust()</a></code>), applied to the
+TOM dissimilarity (1 - topological overlap) between TFs (single-cohort mode only). Default is "average", as in WGCNA:
+two groups of TFs are joined according to the average dissimilarity between their TFs.</p></dd>
 
 
 <dt id="arg-minmod">minMod<a class="anchor" aria-label="anchor" href="#arg-minmod"></a></dt>
@@ -95,12 +98,14 @@ provided as a list of matrices. In this mode <code>clustering.method</code> and 
 
 
 <dt id="arg-corr-mod">corr_mod<a class="anchor" aria-label="anchor" href="#arg-corr-mod"></a></dt>
-<dd><p>Correlation threshold (0-1) above which module eigengenes are merged (single-cohort mode only). Default is 0.9.</p></dd>
+<dd><p>Correlation threshold (0-1): modules whose eigengenes have a correlation (of type <code>cor_type</code>)
+above it are merged. Default is 0.9.</p></dd>
 
 
 <dt id="arg-cor-type">cor_type<a class="anchor" aria-label="anchor" href="#arg-cor-type"></a></dt>
-<dd><p>Correlation used to pick the soft-threshold power and build the adjacency matrix:
-"p" (Pearson) or "s" (Spearman). Spearman is only available when <code>batch = FALSE</code>, because WGCNA
+<dd><p>Correlation used to pick the soft-threshold power, build the adjacency matrix, merge modules and
+compute the proportion of variance explained: "p" (Pearson) or "s" (Spearman). The module eigengene is always the
+first principal component of the module's TF activities. Spearman is only available when <code>batch = FALSE</code>, because WGCNA
 consensus modules only support Pearson correlation. Default is "p".</p></dd>
 
 
@@ -109,28 +114,49 @@ consensus modules only support Pearson correlation. Default is "p".</p></dd>
 
 
 <dt id="arg-file-name">file.name<a class="anchor" aria-label="anchor" href="#arg-file-name"></a></dt>
-<dd><p>Optional character suffix used when writing WTCNA outputs.</p></dd>
+<dd><p>Optional character suffix used when writing WTCNA outputs (CSV files and, in single-cohort
+mode, the diagnostic plots <code>Soft_Threshold_&lt;file.name&gt;.pdf</code>,
+<code>Gene_dendrogram_and_module_colors_&lt;file.name&gt;.pdf</code> and
+<code>Gene_dendrogram_and_module_colors_after_merging_&lt;file.name&gt;.pdf</code>).</p></dd>
 
 
 <dt id="arg-softpower">softPower<a class="anchor" aria-label="anchor" href="#arg-softpower"></a></dt>
 <dd><p>Optional numeric value specifying the soft-thresholding power used to build the adjacency
-matrix (one value per cohort when <code>batch = TRUE</code>). If <code>NULL</code>, the power whose scale-free fit
-\(R^2\) is closest to 0.9 is chosen automatically.</p></dd>
+matrix (one value per cohort when <code>batch = TRUE</code>). If <code>NULL</code>, the lowest power whose scale-free fit
+\(R^2\) reaches 0.9 is chosen automatically (the power with the best fit if none reaches 0.9, with a message).</p></dd>
 
 
 <dt id="arg-return">return<a class="anchor" aria-label="anchor" href="#arg-return"></a></dt>
-<dd><p>Logical, whether to save output plots and module list to "Results/". Default is TRUE.</p></dd>
+<dd><p>Logical, whether to save output plots, the module list (<code>Results/TFs_modules_&lt;file.name&gt;.csv</code>)
+and the module matrix (<code>Results/TF_module_matrix_&lt;file.name&gt;.csv</code>, with the sample names as row names)
+to "Results/" (without <code>file.name</code>, <code>TFs_modules.csv</code> and <code>TF_module_matrix.csv</code>). Default is TRUE.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A named list with:</p><ul><li><p><code>TFs module matrix</code>: Scaled module eigengenes (samples x modules). In batch mode, samples are
-concatenated in cohort order.</p></li>
-<li><p><code>TFs colors</code>: Vector of module colors assigned to each TF.</p></li>
+concatenated in cohort order (use the row names to match them to other tables).</p></li>
+<li><p><code>TFs colors</code>: Vector of module colors assigned to each TF (<code>"grey"</code> for TFs not assigned to any module).</p></li>
 <li><p><code>TFs per module</code>: List of TF names in each module.</p></li>
 <li><p><code>Proportion of variance</code>: Variance explained per module (single-cohort mode only).</p></li>
 <li><p><code>TFs_matrix</code>: The TF activity matrix used (a list of per-cohort matrices restricted to shared TFs in batch mode).</p></li>
+<li><p><code>Network parameters</code>: A list with the soft-thresholding power(s) used (<code>softPower</code>, one per cohort in
+batch mode), <code>network.type</code> and <code>cor_type</code>, used by <code><a href="identify_hub_TFs.html">identify_hub_TFs()</a></code>.</p></li>
 </ul></div>
+    <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p>TFs that WGCNA does not assign to any module (color <code>"grey"</code>) are not a module: they are left out of the
+module matrix and of <code>TFs per module</code>, with a message.</p>
+<p>In batch mode, the soft-thresholding powers are chosen on the TFs shared by all cohorts, the ones used to build
+the network.</p>
+<p>In batch mode, <code><a href="https://rdrr.io/pkg/WGCNA/man/blockwiseConsensusModules.html" class="external-link">WGCNA::blockwiseConsensusModules()</a></code> can fail with
+<code>"dim(X) must have a positive length"</code> when a consensus module has exactly one TF to reassign to
+another module (a known WGCNA issue). The problem goes away when the modules change. If the powers were
+chosen automatically (<code>softPower = NULL</code>), <code>compute.WTCNA()</code> retries moving the power of one cohort
+one step down or up, and gives a warning with the powers that were finally used. If <code>softPower</code> was
+given, or no neighbouring power works, it stops with a message reporting the powers: set <code>softPower</code>
+to slightly different values or change <code>minMod</code> (a small change may not be enough).</p>
+    </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
     <p>Langfelder, P., &amp; Horvath, S. (2008). WGCNA: an R package for weighted correlation network analysis.
@@ -141,7 +167,7 @@ BMC Bioinformatics, 9, 559. https://doi.org/10.1186/1471-2105-9-559</p>
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"tfs.tuto"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">network</span> <span class="op">&lt;-</span> <span class="fu">compute.WTCNA</span><span class="op">(</span><span class="va">tfs.tuto</span>, corr_mod <span class="op">=</span> <span class="fl">0.9</span>, clustering.method <span class="op">=</span> <span class="st">"ward.D2"</span>, return <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">network</span> <span class="op">&lt;-</span> <span class="fu">compute.WTCNA</span><span class="op">(</span><span class="va">tfs.tuto</span>, corr_mod <span class="op">=</span> <span class="fl">0.9</span>, return <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>executing %dopar% sequentially: no parallel backend registered</span>
 </code></pre></div>
     </div>

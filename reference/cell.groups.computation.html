@@ -55,10 +55,11 @@ using deconvolution features and TF module networks, and optionally exports the 
 <span>  <span class="va">tfs.module.network</span>,</span>
 <span>  batch <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  return <span class="op">=</span> <span class="cn">T</span>,</span>
-<span>  pval <span class="op">=</span> <span class="fl">0.05</span>,</span>
-<span>  n_perm <span class="op">=</span> <span class="fl">999</span>,</span>
 <span>  dendrogram_file <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  return_dendrogram <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  return_dendrogram <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  cells_extra <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  min_cluster_size <span class="op">=</span> <span class="fl">3</span>,</span>
+<span>  deep_split <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -68,7 +69,8 @@ using deconvolution features and TF module networks, and optionally exports the 
 
 <dl><dt id="arg-deconvolution">deconvolution<a class="anchor" aria-label="anchor" href="#arg-deconvolution"></a></dt>
 <dd><p>A data frame with deconvolution features (samples as rows, cell-type features as columns).
-This is usually the first element returned by <code><a href="https://verapancaldilab.github.io/multideconv/reference/compute.deconvolution.analysis.html" class="external-link">multideconv::compute.deconvolution.analysis()</a></code>.</p></dd>
+This is usually the first element returned by <code><a href="https://verapancaldilab.github.io/multideconv/reference/compute.deconvolution.analysis.html" class="external-link">multideconv::compute.deconvolution.analysis()</a></code>. It must
+contain all the features of <code>cell.dendrograms</code>.</p></dd>
 
 
 <dt id="arg-cell-dendrograms">cell.dendrograms<a class="anchor" aria-label="anchor" href="#arg-cell-dendrograms"></a></dt>
@@ -88,36 +90,50 @@ obtained from <code><a href="compute.WTCNA.html">compute.WTCNA()</a></code> (the
 
 <dt id="arg-return">return<a class="anchor" aria-label="anchor" href="#arg-return"></a></dt>
 <dd><p>Logical; if TRUE (default), writes CSV files with cell group compositions and scores
-to the "Results/" folder.</p></dd>
-
-
-<dt id="arg-pval">pval<a class="anchor" aria-label="anchor" href="#arg-pval"></a></dt>
-<dd><p>Numeric. Significance threshold for the CCA permutation test of each cell group. Default is 0.05.</p></dd>
-
-
-<dt id="arg-n-perm">n_perm<a class="anchor" aria-label="anchor" href="#arg-n-perm"></a></dt>
-<dd><p>Integer. Number of permutations for significance testing. Default is 999.</p></dd>
+to the "Results/" folder (named with <code>dendrogram_file</code>; the folder is created if needed).</p></dd>
 
 
 <dt id="arg-dendrogram-file">dendrogram_file<a class="anchor" aria-label="anchor" href="#arg-dendrogram-file"></a></dt>
-<dd><p>Optional character. Suffix of the dendrogram PDF file name (see <code>return_dendrogram</code>).</p></dd>
+<dd><p>Optional character. Suffix of the output file names: the dendrogram PDF (see
+<code>return_dendrogram</code>) and the CSV files (see <code>return</code>).</p></dd>
 
 
 <dt id="arg-return-dendrogram">return_dendrogram<a class="anchor" aria-label="anchor" href="#arg-return-dendrogram"></a></dt>
 <dd><p>Logical. If TRUE, saves a PDF of the colored cell-group dendrograms to
 <code>Results/Dendrogram_color_clusters_&lt;dendrogram_file&gt;.pdf</code> (only when <code>dendrogram_file</code> is set). Default FALSE.</p></dd>
 
+
+<dt id="arg-cells-extra">cells_extra<a class="anchor" aria-label="anchor" href="#arg-cells-extra"></a></dt>
+<dd><p>Optional character vector with the cell names that are not in the nomenclature of multideconv,
+used to list the cell types of each cell group.</p></dd>
+
+
+<dt id="arg-min-cluster-size">min_cluster_size<a class="anchor" aria-label="anchor" href="#arg-min-cluster-size"></a></dt>
+<dd><p>Integer. Minimum number of features of a cell group (minimum cluster size of the
+dynamic tree cut of each dendrogram). Default is 3.</p></dd>
+
+
+<dt id="arg-deep-split">deep_split<a class="anchor" aria-label="anchor" href="#arg-deep-split"></a></dt>
+<dd><p>Logical. If TRUE (default), the dynamic tree cut splits the clusters more finely.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>An unnamed list of three elements:</p><ul><li><p><code>[[1]]</code>: A data frame with the composite scores of all identified cell groups across samples.</p></li>
-<li><p><code>[[2]]</code>: A list of vectors indicating the composition (original features) of each cell group.</p></li>
-<li><p><code>[[3]]</code>: A list of CCA projection parameters (<code>xcoef</code>, <code>train_means</code>, <code>train_sds</code>) for each cell group.</p></li>
-</ul><p>Cell groups made of a single feature, or that do not pass the CCA permutation test, are discarded; an error
-is raised if no cell group remains.
-If <code>return=TRUE</code>, two CSV files will be created:</p><ul><li><p><code>Results/Cell.groups.composition.csv</code>: A table showing the composition of each cell group.</p></li>
-<li><p><code>Results/Cell.groups.scores.csv</code>: A matrix of cell group scores across samples.</p></li>
-</ul></div>
+    <p>An unnamed list of four elements:</p><ul><li><p><code>[[1]]</code>: A data frame with the composite scores of all identified cell groups across samples. A
+positive score means that the sample is on the active side of the TF module of that cell group.</p></li>
+<li><p><code>[[2]]</code>: A named list of vectors indicating the composition (original features) of each cell group.</p></li>
+<li><p><code>[[3]]</code>: A named list of CCA projection parameters (<code>xcoef</code>, <code>train_means</code>, <code>train_sds</code>) for each cell group.</p></li>
+<li><p><code>[[4]]</code>: A data frame with the relation of each cell group to its TF module (see
+<code><a href="construct_cell_groups.html">construct_cell_groups()</a></code>).</p></li>
+</ul><p>Cell groups are named <code>Dendrogram_&lt;module&gt;_group_&lt;n&gt;</code>, where <code>n</code> is the cluster number of the
+dendrogram of that module (the number shown in the dendrogram PDF); the first three elements use the same names.
+An error is raised if no cluster is found in any module. Features that the tree cut does not assign to any cluster
+are not part of any cell group: a message reports how many there are per module.
+If <code>return=TRUE</code>, two CSV files will be created:</p><ul><li><p><code>Results/Cell.groups.composition_&lt;dendrogram_file&gt;.csv</code>: A table showing the composition of each cell
+group, its TF module, its relation to it (positive or negative, and the correlation) and its cell types.</p></li>
+<li><p><code>Results/Cell.groups.scores_&lt;dendrogram_file&gt;.csv</code>: A matrix of cell group scores across samples.</p></li>
+</ul><p>Without <code>dendrogram_file</code>, they are named <code>Cell.groups.composition.csv</code> and <code>Cell.groups.scores.csv</code>.</p>
+    </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>

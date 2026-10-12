@@ -64,9 +64,7 @@ projected onto them with <code><a href="project_test_factors.html">project_test_
 <span>  bestune <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">deconv</span>,</span>
 <span>  raw.counts <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  coldata <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  batch <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  batch_id <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  batch <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  ncores <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  return <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">FALSE</span>,</span>
@@ -101,25 +99,21 @@ between folds.</p></dd>
 
 
 <dt id="arg-raw-counts">raw.counts<a class="anchor" aria-label="anchor" href="#arg-raw-counts"></a></dt>
-<dd><p>Optional count matrix (genes x samples) with the samples in the same order as <code>data</code>.
+<dd><p>Optional count matrix (genes x samples; TPM values if <code>normalized = FALSE</code> is passed
+to <code><a href="CellTFusion.html">CellTFusion()</a></code>) with the samples of <code>data</code>. Its columns are matched to the samples of
+<code>deconv</code> by name (an error is raised if they are not the same samples); without column names, they must be
+in the same order as <code>data</code>.
 <code>pipeML</code> converts the column names of <code>features_train</code> with <code><a href="https://rdrr.io/r/base/make.names.html" class="external-link">make.names()</a></code> (e.g.
 <code>"HLA-A"</code> becomes <code>"HLA.A"</code>), so gene symbols in <code>data</code> may no longer match TF regulons and
 gene sets; passing <code>raw.counts</code> keeps the original gene symbols. If <code>NULL</code> (default),
 <code>t(data)</code> is used.</p></dd>
 
 
-<dt id="arg-coldata">coldata<a class="anchor" aria-label="anchor" href="#arg-coldata"></a></dt>
-<dd><p>Optional data frame of sample metadata with rows in the same order as <code>data</code>. Required
-when <code>batch = TRUE</code>.</p></dd>
-
-
 <dt id="arg-batch">batch<a class="anchor" aria-label="anchor" href="#arg-batch"></a></dt>
-<dd><p>Logical; whether to run <code><a href="CellTFusion.html">CellTFusion()</a></code> in multi-cohort mode (see <code><a href="CellTFusion.html">CellTFusion()</a></code>).
-The test samples of each cohort are then projected separately, centered on their own means. Default FALSE.</p></dd>
-
-
-<dt id="arg-batch-id">batch_id<a class="anchor" aria-label="anchor" href="#arg-batch-id"></a></dt>
-<dd><p>Column of <code>coldata</code> with the cohort of each sample. Required when <code>batch = TRUE</code>.</p></dd>
+<dd><p>Optional vector with the cohort of each sample, in the same order as <code>data</code> (e.g.
+<code>coldata$Cohort</code>). If given, <code><a href="CellTFusion.html">CellTFusion()</a></code> runs in multi-cohort mode (see <code><a href="CellTFusion.html">CellTFusion()</a></code>)
+and the test samples of each cohort are projected separately, centered on their own means. Default
+<code>NULL</code> (single cohort).</p></dd>
 
 
 <dt id="arg-ncores">ncores<a class="anchor" aria-label="anchor" href="#arg-ncores"></a></dt>
@@ -148,7 +142,9 @@ The test samples of each cohort are then projected separately, centered on their
 <code>pipeML</code> reads back, as a list with <code>train_data</code> (latent factors of the training samples plus
 the outcome columns), <code>test_data</code> (latent factors of the test samples, plus <code>time</code> and
 <code>event</code> for survival), <code>obs_test</code> (observed outcome of the test samples), <code>rowIndex</code> (rows
-of the test samples) and <code>fold_name</code>. The list of folds is returned invisibly.</p></li>
+of the test samples) and <code>fold_name</code>. The list of folds is returned invisibly. If <code><a href="CellTFusion.html">CellTFusion()</a></code>
+fails in a fold (e.g. no cell groups are found on its training samples), that fold is skipped with a
+warning and is not saved; an error is raised only if all the folds fail.</p></li>
 <li><p>In final mode (<code>bestune</code> provided): a list with (1) the latent factors of all the samples plus
 the outcome columns, (2) the <code><a href="CellTFusion.html">CellTFusion()</a></code> result on all the samples, available as
 <code>Custom_output</code> in the <code>pipeML</code> result and used to compute the features of new samples with
@@ -156,8 +152,8 @@ the outcome columns, (2) the <code><a href="CellTFusion.html">CellTFusion()</a><
 </ul></div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>Pass the fixed arguments (<code>deconv</code>, and optionally <code>raw.counts</code>, <code>coldata</code>, <code>batch</code>,
-<code>batch_id</code> and any <code><a href="CellTFusion.html">CellTFusion()</a></code> argument) through <code>fold_construction_args_fixed</code>. Tunable
+    <p>Pass the fixed arguments (<code>deconv</code>, and optionally <code>raw.counts</code>, <code>batch</code>
+and any <code><a href="CellTFusion.html">CellTFusion()</a></code> argument) through <code>fold_construction_args_fixed</code>. Tunable
 arguments (<code>fold_construction_args_tunable</code>) are not supported. With <code>ncores &gt; 1</code>, the first fold is
 computed before the others start in parallel, so that the TF and pathway collections cached in
 <code>Results/</code> are downloaded only once; the package must be installed for the parallel workers.</p>

@@ -3,7 +3,8 @@
 Assigns each meta-program a TME subtype (IE, IE/F, F, D) by weighted
 majority vote across the TCGA factors with a positive score for it: the
 scores of the factors are summed per MFP subtype and the subtype with
-the highest total is assigned.
+the highest total is assigned. Factors without a subtype in
+`factor_tme_df` do not vote (a message lists them).
 
 ## Usage
 
@@ -34,7 +35,21 @@ annotate_metaprograms_TME(meta_programs_df, factor_tme_df, factors_mp_df)
 
 ## Value
 
-`meta_programs_df` with an additional `TME_subtype` column (`"IE"`,
-`"IE/F"`, `"F"`, `"D"`, or `"uncharacterized"` when no factor has a
-positive score for the meta-program, the vote is tied, or the winning
-label is `"uncharacterized"`).
+`meta_programs_df`, rows in the same order, with an additional (or
+replaced) `TME_subtype` column (`"IE"`, `"IE/F"`, `"F"`, `"D"`, or
+`"uncharacterized"` when no factor with a subtype has a positive score
+for the meta-program, the vote is tied, or the winning label is
+`"uncharacterized"`).
+
+## Examples
+
+``` r
+if (FALSE) { # \dontrun{
+# On a TCGA cohort: factors, their GSEA, meta-programs, and the MFP subtype of each factor
+gsea <- compute_factor_gsea(RNA.tpm = counts.norm, features_df = res$Latent_spaces$Z, plot_dot = FALSE)
+meta_programs <- derive_meta_programs(gsea)
+factors_mp <- map_factors_to_metaprograms(gsea, mp_file = meta_programs, plot = FALSE)$factor_mapping
+tme <- map_factors_to_TME(cancer_name = "BLCA", Z = res$Latent_spaces$Z)
+meta_programs <- annotate_metaprograms_TME(meta_programs, tme, factors_mp)
+} # }
+```

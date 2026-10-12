@@ -99,14 +99,18 @@ a clinical variable and saves a plot for every significant association
 in <code>Results/</code>. <code>scores</code> can be the output of
 <code><a href="../reference/compute.latent_factors.html">compute.latent_factors()</a></code> (<code>res$Latent_spaces</code>),
 a samples x features matrix, or a list whose first element is that
-matrix (e.g. <code>res$Cell_groups</code>). The rows must be in the same
-order as the rows of <code>coldata</code>.</p>
+matrix (e.g. <code>res$Cell_groups</code>). The samples are matched to
+the rows of <code>coldata</code> by row name (without row names in
+<code>coldata</code>, its rows must be in the order of the scores), and
+samples with a missing trait are left out. The trait must be
+categorical.</p>
 <p>Available tests (<code>method</code>):</p>
 <ul>
 <li>
 <code>"wilcox"</code> — Wilcoxon rank-sum test (two groups).</li>
 <li>
-<code>"ttest"</code> — Student’s t-test (two groups).</li>
+<code>"ttest"</code> — Welch’s t-test (two groups, unequal
+variances).</li>
 <li>
 <code>"kruskal"</code> — Kruskal-Wallis test with Dunn post-hoc
 tests (two or more groups).</li>
@@ -125,12 +129,16 @@ the median into High/Low.</li>
 <span>  method  <span class="op">=</span> <span class="st">"wilcox"</span>,</span>
 <span>  pval    <span class="op">=</span> <span class="fl">0.05</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p>The result keeps only the significant features (<code>NULL</code> if
-none). The individual tests (<code><a href="../reference/scores.wilcox.test.html">scores.wilcox.test()</a></code>,
-<code><a href="../reference/scores.ttest.html">scores.ttest()</a></code>, <code><a href="../reference/scores.kruskal.test.html">scores.kruskal.test()</a></code>,
-<code><a href="../reference/scores.anova.test.html">scores.anova.test()</a></code>, <code><a href="../reference/scores.fisher.test.html">scores.fisher.test()</a></code>) can
-also be called directly with a list whose first element is the score
-matrix.</p>
+<p>The result keeps only the significant features (its first element has
+no column if none is significant), and its element
+<code>Statistics</code> gives the test of every feature (statistic,
+p-value, adjusted p-value). Use <code>p_adjust</code>
+(e.g. <code>"BH"</code>) to correct the p-values for the number of
+features tested; it is <code>"none"</code> by default. The individual
+tests (<code><a href="../reference/scores.wilcox.test.html">scores.wilcox.test()</a></code>, <code><a href="../reference/scores.ttest.html">scores.ttest()</a></code>,
+<code><a href="../reference/scores.kruskal.test.html">scores.kruskal.test()</a></code>, <code><a href="../reference/scores.anova.test.html">scores.anova.test()</a></code>,
+<code><a href="../reference/scores.fisher.test.html">scores.fisher.test()</a></code>) can also be called directly with a
+list whose first element is the score matrix.</p>
 <p>The factor scores themselves are in
 <code>res$Latent_spaces$Z</code>:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
@@ -142,44 +150,64 @@ matrix.</p>
 <strong>TF modules and clinical traits</strong><a class="anchor" aria-label="anchor" href="#tf-modules-and-clinical-traits"></a>
 </h2>
 <p><code><a href="../reference/compute.metadata.association.html">compute.metadata.association()</a></code> relates TF module scores
-to all clinical variables at once:</p>
+to all clinical variables at once. The rows of <code>coldata</code> must
+be the same samples, in the same order, as the rows of the module matrix
+(an error is raised otherwise):</p>
 <ul>
 <li>
 <strong>Numeric traits</strong> are correlated with each module
 (Pearson by default, <code>corr_method = "s"</code> for Spearman) and
 shown in a heatmap, annotated for p-values below <code>pval</code>. For
 traits with missing values, each p-value uses the number of samples with
-both values.</li>
+both values. Numeric columns are treated as continuous: convert
+number-coded categories (e.g. a stage coded 1 to 4) to factor to test
+them as groups.</li>
 <li>
-<strong>Categorical traits</strong> are tested with one-way ANOVA
-and Tukey post-hoc tests when <code>plot_grid = TRUE</code>, and saved
-as boxplot grids.</li>
+<strong>Categorical traits</strong> (text, factor and TRUE/FALSE
+columns) are tested with one-way ANOVA and Tukey post-hoc tests when
+<code>plot_grid = TRUE</code>, and saved as boxplot grids with one panel
+per significant module.</li>
 </ul>
+<p>Traits that cannot be tested are skipped with a message: numeric
+traits without variation, and categorical traits with a single level or
+with one value per sample (e.g. a sample identifier). Use
+<code>p_adjust</code> (e.g. <code>"BH"</code>) to correct the p-values
+for multiple testing across the modules, for each trait.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/compute.metadata.association.html">compute.metadata.association</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="va">assoc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute.metadata.association.html">compute.metadata.association</a></span><span class="op">(</span></span>
 <span>  tfs.modules <span class="op">=</span> <span class="va">res</span><span class="op">$</span><span class="va">TF_network</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>,</span>
 <span>  coldata     <span class="op">=</span> <span class="va">traitdata</span>,</span>
 <span>  pval        <span class="op">=</span> <span class="fl">0.05</span>,</span>
 <span>  file.name   <span class="op">=</span> <span class="st">"Tutorial"</span>,</span>
 <span>  plot_grid   <span class="op">=</span> <span class="cn">TRUE</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">assoc</span><span class="op">$</span><span class="va">correlation</span>  <span class="co"># module-trait correlations (numeric traits)</span></span>
+<span><span class="va">assoc</span><span class="op">$</span><span class="va">p_value</span>      <span class="co"># their p-values</span></span>
+<span><span class="va">assoc</span><span class="op">$</span><span class="va">anova</span>        <span class="co"># ANOVA of every module for every categorical trait</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="tf-modules-and-pathways">
 <strong>TF modules and pathways</strong><a class="anchor" aria-label="anchor" href="#tf-modules-and-pathways"></a>
 </h2>
-<p><code><a href="../reference/compute.modules.relationship.html">compute.modules.relationship()</a></code> correlates two feature
-matrices over the same samples, for example TF modules and pathway
-activities, and saves a heatmap of the significant correlations. With
-<code>plot.grid = TRUE</code>, a scatter plot is also drawn for every
-significant pair.</p>
+<p><code><a href="../reference/compute.modules.relationship.html">compute.modules.relationship()</a></code> correlates two matrices
+of continuous features over the same samples, for example TF modules and
+pathway activities (Pearson by default, <code>cor_type = "s"</code> for
+Spearman), and saves a heatmap of the significant correlations. It is
+for numeric variables only; use
+<code><a href="../reference/compute.metadata.association.html">compute.metadata.association()</a></code> for categorical ones. With
+<code>plot.grid = TRUE</code>, a scatter plot is also drawn for the
+significant pairs (the 100 strongest at most).</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/compute.modules.relationship.html">compute.modules.relationship</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="va">rel</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute.modules.relationship.html">compute.modules.relationship</a></span><span class="op">(</span></span>
 <span>  matA      <span class="op">=</span> <span class="va">res</span><span class="op">$</span><span class="va">TF_network</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>,</span>
 <span>  matB      <span class="op">=</span> <span class="va">res</span><span class="op">$</span><span class="va">Pathways_scores</span>,</span>
-<span>  file_name <span class="op">=</span> <span class="st">"Pathways_vs_TF_modules"</span>,</span>
-<span>  width     <span class="op">=</span> <span class="fl">15</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span>  file_name <span class="op">=</span> <span class="st">"Pathways_vs_TF_modules"</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">rel</span><span class="op">$</span><span class="va">correlation</span>  <span class="co"># correlations (TF modules x pathways)</span></span>
+<span><span class="va">rel</span><span class="op">$</span><span class="va">p_value</span>      <span class="co"># their p-values</span></span>
+<span><span class="va">rel</span><span class="op">$</span><span class="va">significant</span>  <span class="co"># for each TF module, the pathways significantly correlated with it</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="survival-analysis">
@@ -197,13 +225,19 @@ data.</li>
 <li>
 <strong>Feature screening</strong> (<code>features</code>) —
 e.g. <code>res$Latent_spaces$Z</code>. Each feature is split into
-High/Low at a quantile (<code>thres</code>), and only features with a
-significant log-rank test (<code>p.value</code>) are returned. The rows
-of <code>features</code> must be the same samples, in the same order, as
+High/Low at a quantile (<code>thres</code>), and the features with a
+significant log-rank test (<code>p.value</code>, optionally corrected
+with <code>p_adjust</code>) are returned, with a <code>Statistics</code>
+table giving the test of every feature. Samples without a value for
+<code>group_column</code> are left out. The rows of
+<code>features</code> must be the same samples, in the same order, as
 the rows of the clinical data.</li>
 </ol>
 <p>Both modes need a time-to-event column and an event column (1 =
-event, 0 = censored) in the clinical data.</p>
+event, 0 = censored) in the clinical data. The tutorial
+<code>traitdata</code> does not include them: the examples below assume
+your clinical data has <code>PFS</code> and <code>PFS_event</code>
+columns.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Predefined groups</span></span>
 <span><span class="va">surv_group</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute.survival.analysis.html">compute.survival.analysis</a></span><span class="op">(</span></span>
@@ -227,8 +261,8 @@ event, 0 = censored) in the clinical data.</p>
 <span>  thres         <span class="op">=</span> <span class="fl">0.5</span>,   <span class="co"># median split; e.g. 0.75 for top quartile vs rest</span></span>
 <span>  file_name     <span class="op">=</span> <span class="st">"Tutorial"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p>For every significant result, a Kaplan-Meier plot with a risk table
-is saved to
+<p>A Kaplan-Meier plot with a risk table is saved (always for predefined
+groups, and for every significant feature in feature screening) to
 <code>Results/SurvPlot_&lt;group-or-feature&gt;_&lt;file_name&gt;.svg</code>.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

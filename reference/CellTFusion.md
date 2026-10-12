@@ -16,24 +16,27 @@ CellTFusion(
   tfs = NULL,
   pathways = NULL,
   normalized = T,
-  coldata = NULL,
-  batch = F,
-  batch_id = NULL,
-  deconv_methods = c("Quantiseq", "Epidish", "DeconRNASeq", "DWLS"),
+  batch = NULL,
+  deconv_methods = c("Quantiseq", "CBSX", "Epidish", "DeconRNASeq", "DWLS"),
   cbsx.mail = NULL,
   cbsx.token = NULL,
+  doParallel = F,
+  workers = NULL,
   file_name = NULL,
   TF.collection = "CollecTRI",
-  min_targets_size = 3,
+  min_targets_size = 5,
   universe = NULL,
   paths = NULL,
   gene_sets = NULL,
-  minMod = 3,
+  minMod = 5,
   corr_mod = 0.9,
+  softPower = NULL,
   corr = 0.7,
   corr_type = "spearman",
   cells_extra = NULL,
   pval = 0.05,
+  min_cluster_size = 3,
+  deep_split = T,
   enrich_thresh = 1.5,
   quantile_cutoff = 0.7,
   cancer_type = NULL,
@@ -47,9 +50,11 @@ CellTFusion(
 - raw.counts:
 
   A matrix of raw gene expression counts (genes as rows, samples as
-  columns). Always required: even when `dt`, `tfs` and `pathways` are
-  all supplied precomputed, the (normalized) expression matrix is still
-  needed for the downstream GSEA-based TME state characterization step.
+  columns). If `normalized = FALSE`, a matrix of TPM-normalized values
+  instead (not log-transformed). Always required: even when `dt`, `tfs`
+  and `pathways` are all supplied precomputed, the (normalized)
+  expression matrix is still needed for the downstream GSEA-based TME
+  state characterization step.
 
 - deconv:
 
@@ -74,7 +79,7 @@ CellTFusion(
   columns), typically the `TFs_matrix` element returned by a previous
   `CellTFusion()` run or by
   [`compute.TFs.activity()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.TFs.activity.md).
-  When `batch = TRUE`, a named list of such matrices (one per cohort).
+  When `batch` is given, a named list of such matrices (one per cohort).
   If supplied, TF activity inference is skipped.
 
 - pathways:
@@ -87,49 +92,61 @@ CellTFusion(
 
 - normalized:
 
-  Logical; if TRUE (default), `raw.counts` are normalized to
-  log-transformed TPM for the TF activity, pathway activity and GSEA
-  steps (for deconvolution they are normalized to TPM only). If FALSE,
-  `raw.counts` is assumed to be already normalized and is used as is.
-
-- coldata:
-
-  (Optional) A data frame of sample metadata (samples as rows). Only
-  used when `batch = TRUE`, to read the batch column given by
-  `batch_id`.
+  Logical; if TRUE (default), `raw.counts` are raw counts and are
+  normalized to log2(TPM + 1) for the TF activity, pathway activity and
+  GSEA steps (for deconvolution they are normalized to TPM only). If
+  FALSE, `raw.counts` must already be TPM-normalized and **not**
+  log-transformed: the TPM values are used as they are for deconvolution
+  and log2(TPM + 1) is computed internally for the other steps. Do not
+  pass log-transformed values, as they would be log-transformed a second
+  time (a warning is given when the values do not look like TPM, i.e. no
+  value above 20 or negative values).
 
 - batch:
 
-  Logical; whether to run the multi-cohort mode: TF activity is computed
-  per cohort, TF modules are built with consensus WGCNA across cohorts,
-  and the cohort is controlled for in the deconvolution analysis and
-  cell group construction. Requires `coldata` and `batch_id`. Default is
-  FALSE.
-
-- batch_id:
-
-  Optional character indicating the column name in coldata containing
-  batch identifiers. Required when `batch = TRUE`.
+  (Optional) A vector with the cohort of each sample (e.g.
+  `coldata$Cohort`), in the same order as the columns of `raw.counts`;
+  if it is named, it is matched to the samples by name instead. It is
+  always treated as categorical. If given, the multi-cohort mode is run:
+  TF activity is computed per cohort, TF modules are built with
+  consensus WGCNA across cohorts, and the cohort is controlled for in
+  the deconvolution analysis and cell group construction. Default is
+  `NULL` (single cohort); a vector with only one cohort is treated the
+  same way.
 
 - deconv_methods:
 
   A character vector of deconvolution methods to apply. Default is
-  `c("Quantiseq", "Epidish", "DeconRNASeq", "DWLS")`. Add `"CBSX"` to
-  also run CIBERSORTx (requires `cbsx.mail` and `cbsx.token`).
+  `c("Quantiseq", "CBSX", "Epidish", "DeconRNASeq", "DWLS")`. `"CBSX"`
+  (CIBERSORTx) is only run when `cbsx.mail` and `cbsx.token` are given;
+  otherwise it is skipped with a message.
 
 - cbsx.mail:
 
-  (Optional) Email credential for CIBERSORTx. Required if "CBSX" is
-  among deconv_methods.
+  (Optional) Email credential for CIBERSORTx. Needed to run "CBSX";
+  without it, CIBERSORTx is skipped.
 
 - cbsx.token:
 
-  (Optional) Token credential for CIBERSORTx. Required if "CBSX" is
-  among deconv_methods.
+  (Optional) Token credential for CIBERSORTx. Needed to run "CBSX";
+  without it, CIBERSORTx is skipped.
+
+- doParallel:
+
+  Logical; whether to run the deconvolution methods that support it
+  (CIBERSORTx and DWLS) in parallel, one signature per worker (passed to
+  [`multideconv::compute.deconvolution()`](https://verapancaldilab.github.io/multideconv/reference/compute.deconvolution.html)).
+  Default is FALSE.
+
+- workers:
+
+  (Optional) Number of parallel workers when `doParallel = TRUE`. If
+  `NULL` (default), the number of available cores minus one is used.
 
 - file_name:
 
-  (Optional) Prefix for output files saved in the "Results/" directory.
+  (Optional) Name used in the output files saved in the "Results/"
+  directory. If `NULL` and `return = TRUE`, `"CellTFusion"` is used.
 
 - TF.collection:
 
@@ -140,20 +157,23 @@ CellTFusion(
     `"Dorothea"` the one from the `dorothea` package.
 
   - `"ARACNE"` reads a network file (tab-separated with `Regulator` and
-    `Target` columns) from
-    `input/ARACNE/<cancer_type>/network/network.txt`.
+    `Target` columns, and a `mor` column with the sign of each
+    interaction; see
+    [`compute.TFs.activity()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.TFs.activity.md))
+    from `input/ARACNE/<cancer_type>/network/network.txt`.
 
 - min_targets_size:
 
   Integer. Minimum number of target genes per regulon, passed to
   [`compute.TFs.activity()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.TFs.activity.md).
-  Default is 3.
+  Default is 5.
 
 - universe:
 
-  Optional. A user-specified data frame of TF-target interactions. If
-  not provided, the function will fetch the relevant network based on
-  the `TF.collection` argument.
+  Optional. A user-specified data frame of TF-target interactions
+  (columns `source`, `target` and `mor`, the mode of regulation: 1
+  activation, -1 repression). If not provided, the function will fetch
+  the relevant network based on the `TF.collection` argument.
 
 - paths:
 
@@ -171,11 +191,20 @@ CellTFusion(
 
 - minMod:
 
-  Integer; minimum module size for WGCNA module detection. Default is 3.
+  Integer; minimum module size for WGCNA module detection. Default is 5.
 
 - corr_mod:
 
   Numeric; correlation threshold for merging TF modules. Default is 0.9.
+
+- softPower:
+
+  (Optional) Soft-thresholding power used to build the TF network,
+  passed to
+  [`compute.WTCNA()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.WTCNA.md):
+  one value, or one value per cohort (in the order the cohorts first
+  appear in `batch`) in multi-cohort mode. If `NULL` (default), it is
+  chosen automatically.
 
 - corr:
 
@@ -198,9 +227,22 @@ CellTFusion(
 
 - pval:
 
-  Numeric; p-value threshold used when building cell groups (TF
-  module-deconvolution correlations and the CCA permutation test).
-  Default is 0.05.
+  Numeric; p-value threshold used when building cell groups (selection
+  of the deconvolution features significantly correlated with each TF
+  module). Default is 0.05.
+
+- min_cluster_size:
+
+  Integer; minimum number of features of a cell group (minimum cluster
+  size of the dynamic tree cut), passed to
+  [`construct_cell_groups()`](https://verapancaldilab.github.io/CellTFusion/reference/construct_cell_groups.md).
+  Default is 3.
+
+- deep_split:
+
+  Logical; if TRUE (default), the dynamic tree cut that defines the cell
+  groups splits the clusters more finely. Passed to
+  [`construct_cell_groups()`](https://verapancaldilab.github.io/CellTFusion/reference/construct_cell_groups.md).
 
 - enrich_thresh:
 
@@ -219,10 +261,11 @@ CellTFusion(
   `"skcm"`). Used for two purposes: (1) loading TCGA meta-programs for
   TME state mapping, and (2) when `TF.collection = "ARACNE"`, locating
   the ARACNe network at
-  `input/ARACNE/<cancer_type>/network/network.txt`. If `NULL`, the
-  meta-program mapping step is skipped (`TME_states` and
-  `Metaprograms_reference` are `NULL`) and, for ARACNE, the network is
-  auto-detected when only one exists under `input/ARACNE/`.
+  `input/ARACNE/<cancer_type>/network/network.txt`. If `NULL`, or if no
+  TCGA meta-programs exist for that cancer type (a warning is given),
+  the meta-program mapping step is skipped (`TME_states` and
+  `Metaprograms_reference` are `NULL`). For ARACNE, if `NULL`, the
+  network is auto-detected when only one exists under `input/ARACNE/`.
 
 - return:
 
@@ -231,7 +274,8 @@ CellTFusion(
 
 - verbose:
 
-  Logical; whether to print the function messages. Default is TRUE.
+  Logical; whether to print the progress and the console output and
+  messages of every step (warnings are always shown). Default is TRUE.
 
 ## Value
 
@@ -245,12 +289,14 @@ A list containing:
 - TFs_matrix:
 
   A matrix with TF activity scores (samples as rows, TFs as columns), or
-  a list of matrices (one per cohort) when `batch = TRUE`.
+  a list of matrices (one per cohort) when `batch` is given.
 
 - TF_network:
 
   The TF module network returned by
   [`compute.WTCNA()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.WTCNA.md).
+  Its module matrix is always in the sample order of `raw.counts` (also
+  in multi-cohort mode).
 
 - Pathways_scores:
 
@@ -266,7 +312,8 @@ A list containing:
 
   Output of
   [`construct_cell_groups()`](https://verapancaldilab.github.io/CellTFusion/reference/construct_cell_groups.md):
-  cell group scores, compositions and projection weights.
+  cell group scores, compositions, projection weights and the relation
+  of each cell group to its TF module.
 
 - Latent_spaces:
 
@@ -282,12 +329,12 @@ A list containing:
 
   Factor-to-meta-program mapping (`factor_mapping` from
   [`map_factors_to_metaprograms()`](https://verapancaldilab.github.io/CellTFusion/reference/map_factors_to_metaprograms.md)),
-  or `NULL` if `cancer_type` is `NULL`.
+  or `NULL` if the mapping was skipped (see `cancer_type`).
 
 - Metaprograms_reference:
 
-  The TCGA meta-program reference used for mapping, or `NULL` if
-  `cancer_type` is `NULL`.
+  The TCGA meta-program reference used for mapping, or `NULL` if the
+  mapping was skipped.
 
 ## Details
 
@@ -305,12 +352,10 @@ also does; `deconv` rows are matched to the samples in either form.
 
 if (FALSE) { # \dontrun{
 data("raw.counts.tuto")
-data("traitdata.tuto")
 
 res <- CellTFusion(
   raw.counts = raw.counts.tuto,
   normalized = TRUE,
-  coldata = traitdata.tuto,
   deconv_methods = c("Quantiseq", "DeconRNASeq"),
   file_name = "TestRun",
   min_targets_size = 15,
@@ -327,7 +372,6 @@ res2 <- CellTFusion(
   tfs = res$TFs_matrix,
   pathways = res$Pathways_scores,
   normalized = TRUE,
-  coldata = traitdata.tuto,
   file_name = "TestRun_rerun",
   minMod = 20,
   corr_mod = 0.25,

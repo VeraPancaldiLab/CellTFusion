@@ -99,12 +99,11 @@ it.</p>
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td><code>CellTFusion(batch = TRUE, batch_id = "Cohort")</code></td>
-<td>Logical + column of <code>coldata</code>
-</td>
+<td><code>CellTFusion(batch = batch_vec)</code></td>
+<td>Cohort vector</td>
 <td>Computes <strong>TF activity separately per cohort</strong> and
-builds a <strong>consensus TF network</strong>; the cohort vector
-<code>coldata[, batch_id]</code> is passed to every step below.</td>
+builds a <strong>consensus TF network</strong>; the cohort vector is
+passed to every step below.</td>
 </tr>
 <tr class="even">
 <td><code>compute.WTCNA(batch = TRUE)</code></td>
@@ -124,7 +123,8 @@ cohort.</td>
 <td>Cohort vector</td>
 <td>TF module-feature correlations are <strong>partial
 correlations</strong> controlling for cohort (one indicator variable per
-cohort).</td>
+cohort beyond the first), Pearson or Spearman according to
+<code>cor_type</code>.</td>
 </tr>
 <tr class="odd">
 <td><code>construct_cell_groups(batch = batch_vec)</code></td>
@@ -141,18 +141,18 @@ cohort</strong>.</td>
 </tr>
 </tbody>
 </table>
-<p>In short, in <code><a href="../reference/CellTFusion.html">CellTFusion()</a></code> and
-<code><a href="../reference/compute.WTCNA.html">compute.WTCNA()</a></code>, <code>batch</code> is a switch that
-changes how the TF network is built. In every later step,
-<code>batch</code> is the cohort vector itself, used to remove cohort
-effects. Cohort is treated as categorical, and the samples do not need
-to be ordered by cohort.</p>
+<p>In short, only in <code><a href="../reference/compute.WTCNA.html">compute.WTCNA()</a></code> is <code>batch</code>
+a logical switch (the cohorts are given by the list of TF matrices).
+Everywhere else, including <code><a href="../reference/CellTFusion.html">CellTFusion()</a></code>,
+<code>batch</code> is the cohort vector itself, used to split the
+samples and to remove cohort effects. Cohort is treated as categorical,
+and the samples do not need to be ordered by cohort.</p>
 </div>
 <div class="section level2">
 <h2 id="when-to-use-it">
 <strong>When to use it</strong><a class="anchor" aria-label="anchor" href="#when-to-use-it"></a>
 </h2>
-<p>Use <code>batch = TRUE</code> when samples do not come from a single
+<p>Use <code>batch</code> when samples do not come from a single
 homogeneous cohort — for example, RNA-seq from different studies,
 sequencing batches or clinical sites — and cohort identity could create
 TF co-activity or cell type correlation patterns unrelated to biology.
@@ -182,9 +182,9 @@ scores of the cell groups are themselves cohort-corrected, and so are
 the latent factors built from them.</li>
 <li>
 <strong>Projection of new cohorts.</strong> For models trained with
-<code>batch = TRUE</code>, new samples are centered on their own means
-(as each training cohort was), so each new cohort should be projected
-separately (see <a href="a5_machine_learning.html">Machine learning
+<code>batch</code>, new samples are centered on their own means (as each
+training cohort was), so each new cohort should be projected separately
+(see <a href="a5_machine_learning.html">Machine learning
 workflows</a>).</li>
 </ul>
 </div>
@@ -193,13 +193,12 @@ workflows</a>).</li>
 <strong>Example: multi-cohort pipeline</strong><a class="anchor" aria-label="anchor" href="#example-multi-cohort-pipeline"></a>
 </h2>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># coldata must contain a column with the cohort of each sample, e.g. "Cohort"</span></span>
+<code class="sourceCode R"><span><span class="co"># batch: cohort of each sample, in the same order as the columns of raw.counts</span></span>
+<span><span class="co"># (or named by sample, in which case it is matched to the samples by name)</span></span>
 <span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/CellTFusion.html">CellTFusion</a></span><span class="op">(</span></span>
 <span>  raw.counts     <span class="op">=</span> <span class="va">raw.counts</span>,</span>
 <span>  normalized     <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  coldata        <span class="op">=</span> <span class="va">coldata</span>,</span>
-<span>  batch          <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  batch_id       <span class="op">=</span> <span class="st">"Cohort"</span>,</span>
+<span>  batch          <span class="op">=</span> <span class="va">coldata</span><span class="op">$</span><span class="va">Cohort</span>,</span>
 <span>  deconv_methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Quantiseq"</span>, <span class="st">"Epidish"</span><span class="op">)</span>,</span>
 <span>  TF.collection  <span class="op">=</span> <span class="st">"CollecTRI"</span>,</span>
 <span>  cancer_type    <span class="op">=</span> <span class="st">"skcm"</span>,</span>
@@ -211,12 +210,12 @@ workflows</a>).</li>
 <span><span class="op">)</span></span></code></pre></div>
 <p>Internally, this:</p>
 <ol style="list-style-type: decimal">
-<li>Splits the samples by <code>coldata$Cohort</code> and runs
+<li>Splits the samples by cohort and runs
 <code><a href="../reference/compute.TFs.activity.html">compute.TFs.activity()</a></code> on each cohort, giving a list of TF
 activity matrices.</li>
 <li>Runs <code>compute.WTCNA(batch = TRUE)</code> on that list to get
 consensus TF modules.</li>
-<li>Passes <code>coldata[, "Cohort"]</code> to
+<li>Passes the cohort vector to
 <code>compute.deconvolution.analysis()</code> and
 <code><a href="../reference/construct_cell_groups.html">construct_cell_groups()</a></code>, so subgroups, module-feature
 correlations and cell group scores are all cohort-corrected.</li>
@@ -229,7 +228,7 @@ correlations and cell group scores are all cohort-corrected.</li>
 <p>When running the steps yourself (see <a href="a1_feature_computation.html">Feature computation</a>), build the
 per-cohort TF list and the cohort vector:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">batch_vec</span> <span class="op">&lt;-</span> <span class="va">coldata</span><span class="op">[</span>, <span class="st">"Cohort"</span><span class="op">]</span></span>
+<code class="sourceCode R"><span><span class="va">batch_vec</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">coldata</span><span class="op">$</span><span class="va">Cohort</span><span class="op">)</span>  <span class="co"># categorical</span></span>
 <span><span class="va">cohorts</span>   <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/split.html" class="external-link">split</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">counts.norm</span><span class="op">)</span><span class="op">)</span>, <span class="va">batch_vec</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">tfs_list</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">cohorts</span>, <span class="kw">function</span><span class="op">(</span><span class="va">idx</span><span class="op">)</span> <span class="op">{</span></span>
@@ -241,6 +240,14 @@ per-cohort TF list and the cohort vector:</p>
 <span><span class="va">dt</span> <span class="op">&lt;-</span> <span class="fu">multideconv</span><span class="fu">::</span><span class="fu"><a href="https://verapancaldilab.github.io/multideconv/reference/compute.deconvolution.analysis.html" class="external-link">compute.deconvolution.analysis</a></span><span class="op">(</span><span class="va">deconv</span>, corr <span class="op">=</span> <span class="fl">0.7</span>, batch <span class="op">=</span> <span class="va">batch_vec</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">cell_groups</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/construct_cell_groups.html">construct_cell_groups</a></span><span class="op">(</span><span class="va">network</span>, <span class="va">dt</span>, batch <span class="op">=</span> <span class="va">batch_vec</span>, pval <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span></span></code></pre></div>
+<p><strong>Note:</strong> the module matrix returned by
+<code>compute.WTCNA(batch = TRUE)</code> (<code>network[[1]]</code>) is
+stacked cohort by cohort, so its rows are not in the original sample
+order unless the samples were sorted by cohort.
+<code><a href="../reference/construct_cell_groups.html">construct_cell_groups()</a></code> matches the samples by name, and
+<code><a href="../reference/CellTFusion.html">CellTFusion()</a></code> returns it in the sample order of the counts;
+reorder it by row name before combining it with other tables
+yourself.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

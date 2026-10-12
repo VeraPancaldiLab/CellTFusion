@@ -96,11 +96,16 @@ computation</a> tutorial:</p>
 <p><code><a href="../reference/construct_cell_groups.html">construct_cell_groups()</a></code> correlates each TF module with
 the deconvolution features, clusters the significantly correlated
 features of each module, and cuts the dendrograms into <strong>cell
-groups</strong>. Each cell group gets a composite score per sample: the
-first canonical component of a canonical correlation analysis (CCA)
-between the group’s deconvolution features and the TFs of its module.
-Groups whose association with the module does not pass a permutation
-test are discarded.</p>
+groups</strong>. Features are clustered on the value of their
+correlation with the module, so a cell group is a set of features with a
+similar biological activity: features related to the same TF module to
+the same degree, which do not need to vary together across samples. Each
+cell group gets a composite score per sample: the first canonical
+component of a canonical correlation analysis (CCA) between the group’s
+deconvolution features and the TFs of its module. The score is oriented
+to be aligned with the TF module: a positive score means that the sample
+is on the active side of the module for that cell group, a negative
+score that it is on the inactive side.</p>
 <p>Key arguments:</p>
 <ul>
 <li>
@@ -108,16 +113,19 @@ test are discarded.</p>
 <li>
 <code>batch</code> — optional cohort vector (see <a href="a6_batch_analysis.html">Multi-cohort analysis</a>).</li>
 <li>
-<code>pval</code> — p-value threshold for the module-feature
-correlations and for the permutation test.</li>
-<li>
-<code>n_perm</code> — number of permutations of the test (default
-999).</li>
+<code>pval</code> — p-value threshold to select the deconvolution
+features significantly correlated with each module.</li>
 <li>
 <code>dendrogram_file</code> / <code>return_dendrogram</code> — with
 <code>return_dendrogram = TRUE</code>, the colored dendrograms are saved
 to
 <code>Results/Dendrogram_color_clusters_&lt;dendrogram_file&gt;.pdf</code>.</li>
+<li>
+<code>return</code> — if <code>TRUE</code>, the composition and the
+scores of the cell groups are saved to
+<code>Results/Cell.groups.composition_&lt;dendrogram_file&gt;.csv</code>
+and
+<code>Results/Cell.groups.scores_&lt;dendrogram_file&gt;.csv</code>.</li>
 </ul>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">cell_groups</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/construct_cell_groups.html">construct_cell_groups</a></span><span class="op">(</span></span>
@@ -125,12 +133,14 @@ to
 <span>  dt                <span class="op">=</span> <span class="va">dt</span>,</span>
 <span>  pval              <span class="op">=</span> <span class="fl">0.05</span>,</span>
 <span>  clustering.method <span class="op">=</span> <span class="st">"ward.D2"</span>,</span>
-<span>  n_perm            <span class="op">=</span> <span class="fl">999</span>,</span>
 <span>  dendrogram_file   <span class="op">=</span> <span class="st">"Tutorial"</span>,</span>
 <span>  return_dendrogram <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p>One dendrogram is drawn per TF module, showing how its correlated
-deconvolution features cluster into cell groups:</p>
+deconvolution features cluster into cell groups. The number written next
+to each cluster is the one in the cell group name
+(<code>Dendrogram_&lt;module&gt;_group_&lt;number&gt;</code>); features
+that are not assigned to any cluster are not part of any cell group:</p>
 <p><img src="figures/cell_groups_dendrogram_02.png" class="r-plt" alt="Dendrogram of deconvolution features clustered into cell groups for one TF module" width="70%" style="display: block; margin: auto;"></p>
 <p><code><a href="../reference/construct_cell_groups.html">construct_cell_groups()</a></code> returns a named list:</p>
 <table class="table">
@@ -157,8 +167,18 @@ deconvolution features cluster into cell groups:</p>
 <code>train_means</code>, <code>train_sds</code>), used to score new
 samples</td>
 </tr>
+<tr class="even">
+<td><code>Module_relation</code></td>
+<td>For each cell group: its TF module, whether it is positively or
+negatively related to it, the correlation, the number of features and
+its cell types</td>
+</tr>
 </tbody>
 </table>
+<p><code>Module_relation</code> translates a score into cell abundance:
+for a positively related group, a positive score means more of its
+features; for a negatively related group, a positive score means fewer
+of them.</p>
 <div class="section level3">
 <h3 id="re-running-with-precomputed-features">Re-running with precomputed features<a class="anchor" aria-label="anchor" href="#re-running-with-precomputed-features"></a>
 </h3>
@@ -189,10 +209,13 @@ module or cell group parameters without recomputing the features:</p>
 <p><code><a href="../reference/compute.latent_factors.html">compute.latent_factors()</a></code> decomposes the cell group
 scores into non-negative latent factors with NMF. Each score is first
 split into a positive and a negative part (<code>_pos</code> and
-<code>_neg</code> columns), so that both directions of association can
-contribute to the factors. If <code>rank = NULL</code>, the number of
-factors is chosen at the elbow of the reconstruction error across ranks
-2 to 8.</p>
+<code>_neg</code> columns: samples on the active and on the inactive
+side of the group’s TF module), so that both directions can contribute
+to the factors. If <code>rank = NULL</code>, the number of factors is
+chosen at the elbow of the reconstruction error across ranks 2 to 8
+(fewer when there are few cell groups: the rank is always below the
+number of <code>_pos</code>/<code>_neg</code> columns, and
+<code>rank = 2</code> is used with one or two cell groups).</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">latent_spaces</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute.latent_factors.html">compute.latent_factors</a></span><span class="op">(</span></span>
 <span>  X         <span class="op">=</span> <span class="va">cell_groups</span><span class="op">$</span><span class="va">Cell_groups</span>,</span>

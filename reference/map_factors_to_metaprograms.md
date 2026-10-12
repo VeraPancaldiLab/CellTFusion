@@ -1,10 +1,13 @@
 # Map study factors to TCGA meta-programs
 
 For each study NMF factor, scores it against each TCGA meta-program by
-computing the mean NES of the meta-program's Hallmarks in that factor.
-The meta-program with the highest positive mean NES is the best match
-(`NA` if no meta-program has a positive score). If the meta-program
-reference has a `TME_subtype` column (see
+computing the mean NES of the meta-program's Hallmarks in that factor
+(NES read with
+[`build_nes_matrix()`](https://verapancaldilab.github.io/CellTFusion/reference/build_nes_matrix.md),
+as for the references: Hallmarks without a NES count as 0). The
+meta-program with the highest positive mean NES is the best match (`NA`
+if no meta-program has a positive score). If the meta-program reference
+has a `TME_subtype` column (see
 [`annotate_metaprograms_TME()`](https://verapancaldilab.github.io/CellTFusion/reference/annotate_metaprograms_TME.md)),
 it is appended to the output.
 
@@ -38,10 +41,10 @@ map_factors_to_metaprograms(
   Optional. Either a meta-program data frame (as returned by
   [`derive_meta_programs()`](https://verapancaldilab.github.io/CellTFusion/reference/derive_meta_programs.md)
   /
-  [`annotate_metaprograms_TME()`](https://verapancaldilab.github.io/CellTFusion/reference/annotate_metaprograms_TME.md))
-  or the path to an RData file containing such an object named
-  `meta_programs`. If NULL, the pre-built reference for `cancer_type` is
-  used.
+  [`annotate_metaprograms_TME()`](https://verapancaldilab.github.io/CellTFusion/reference/annotate_metaprograms_TME.md),
+  with columns `meta_program` and `hallmarks`) or the path to an RData
+  file containing such an object, which must be named `meta_programs`.
+  If NULL, the pre-built reference for `cancer_type` is used.
 
 - plot:
 
@@ -57,8 +60,20 @@ map_factors_to_metaprograms(
 
 A list with:
 
-- `factor_mapping`: Data frame with one row per study factor and columns
-  `best_MP`, `factor`, `best_score`, `all_scores` (all meta-program
-  scores as `"MP:score"` pairs) and, if available, `TME_subtype`.
+- `factor_mapping`: Data frame with one row per study factor, in the
+  order of the factors, and columns `factor`, `best_MP` (`NA` if no
+  meta-program has a positive score), `best_score`, `all_scores` (all
+  meta-program scores as `"MP:score"` pairs) and, if available,
+  `TME_subtype`.
 
 - `reference`: The meta-program reference data frame used.
+
+## Examples
+
+``` r
+if (FALSE) { # \dontrun{
+gsea <- compute_factor_gsea(RNA.tpm = counts.norm, features_df = res$Latent_spaces$Z, plot_dot = FALSE)
+mapping <- map_factors_to_metaprograms(gsea, cancer_type = "blca")
+mapping$factor_mapping
+} # }
+```

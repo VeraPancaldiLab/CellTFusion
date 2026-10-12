@@ -32,13 +32,15 @@ for every significant association in `Results/`. `scores` can be the
 output of
 [`compute.latent_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.latent_factors.md)
 (`res$Latent_spaces`), a samples x features matrix, or a list whose
-first element is that matrix (e.g. `res$Cell_groups`). The rows must be
-in the same order as the rows of `coldata`.
+first element is that matrix (e.g. `res$Cell_groups`). The samples are
+matched to the rows of `coldata` by row name (without row names in
+`coldata`, its rows must be in the order of the scores), and samples
+with a missing trait are left out. The trait must be categorical.
 
 Available tests (`method`):
 
 - `"wilcox"` — Wilcoxon rank-sum test (two groups).
-- `"ttest"` — Student’s t-test (two groups).
+- `"ttest"` — Welch’s t-test (two groups, unequal variances).
 - `"kruskal"` — Kruskal-Wallis test with Dunn post-hoc tests (two or
   more groups).
 - `"anova"` — one-way ANOVA with Tukey post-hoc tests (two or more
@@ -57,8 +59,11 @@ sig_factors <- scores.stat.analysis(
 )
 ```
 
-The result keeps only the significant features (`NULL` if none). The
-individual tests
+The result keeps only the significant features (its first element has no
+column if none is significant), and its element `Statistics` gives the
+test of every feature (statistic, p-value, adjusted p-value). Use
+`p_adjust` (e.g. `"BH"`) to correct the p-values for the number of
+features tested; it is `"none"` by default. The individual tests
 ([`scores.wilcox.test()`](https://verapancaldilab.github.io/CellTFusion/reference/scores.wilcox.test.md),
 [`scores.ttest()`](https://verapancaldilab.github.io/CellTFusion/reference/scores.ttest.md),
 [`scores.kruskal.test()`](https://verapancaldilab.github.io/CellTFusion/reference/scores.kruskal.test.md),
@@ -78,42 +83,64 @@ head(factor_scores)
 ## **TF modules and clinical traits**
 
 [`compute.metadata.association()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.metadata.association.md)
-relates TF module scores to all clinical variables at once:
+relates TF module scores to all clinical variables at once. The rows of
+`coldata` must be the same samples, in the same order, as the rows of
+the module matrix (an error is raised otherwise):
 
 - **Numeric traits** are correlated with each module (Pearson by
   default, `corr_method = "s"` for Spearman) and shown in a heatmap,
   annotated for p-values below `pval`. For traits with missing values,
-  each p-value uses the number of samples with both values.
-- **Categorical traits** are tested with one-way ANOVA and Tukey
-  post-hoc tests when `plot_grid = TRUE`, and saved as boxplot grids.
+  each p-value uses the number of samples with both values. Numeric
+  columns are treated as continuous: convert number-coded categories
+  (e.g. a stage coded 1 to 4) to factor to test them as groups.
+- **Categorical traits** (text, factor and TRUE/FALSE columns) are
+  tested with one-way ANOVA and Tukey post-hoc tests when
+  `plot_grid = TRUE`, and saved as boxplot grids with one panel per
+  significant module.
+
+Traits that cannot be tested are skipped with a message: numeric traits
+without variation, and categorical traits with a single level or with
+one value per sample (e.g. a sample identifier). Use `p_adjust`
+(e.g. `"BH"`) to correct the p-values for multiple testing across the
+modules, for each trait.
 
 ``` r
 
-compute.metadata.association(
+assoc <- compute.metadata.association(
   tfs.modules = res$TF_network[[1]],
   coldata     = traitdata,
   pval        = 0.05,
   file.name   = "Tutorial",
   plot_grid   = TRUE
 )
+
+assoc$correlation  # module-trait correlations (numeric traits)
+assoc$p_value      # their p-values
+assoc$anova        # ANOVA of every module for every categorical trait
 ```
 
 ## **TF modules and pathways**
 
 [`compute.modules.relationship()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.modules.relationship.md)
-correlates two feature matrices over the same samples, for example TF
-modules and pathway activities, and saves a heatmap of the significant
-correlations. With `plot.grid = TRUE`, a scatter plot is also drawn for
-every significant pair.
+correlates two matrices of continuous features over the same samples,
+for example TF modules and pathway activities (Pearson by default,
+`cor_type = "s"` for Spearman), and saves a heatmap of the significant
+correlations. It is for numeric variables only; use
+[`compute.metadata.association()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.metadata.association.md)
+for categorical ones. With `plot.grid = TRUE`, a scatter plot is also
+drawn for the significant pairs (the 100 strongest at most).
 
 ``` r
 
-compute.modules.relationship(
+rel <- compute.modules.relationship(
   matA      = res$TF_network[[1]],
   matB      = res$Pathways_scores,
-  file_name = "Pathways_vs_TF_modules",
-  width     = 15
+  file_name = "Pathways_vs_TF_modules"
 )
+
+rel$correlation  # correlations (TF modules x pathways)
+rel$p_value      # their p-values
+rel$significant  # for each TF module, the pathways significantly correlated with it
 ```
 
 ## **Survival analysis**
@@ -125,13 +152,17 @@ compares Kaplan-Meier survival curves with a log-rank test (packages
 1.  **Predefined groups** (`group_column`) — e.g. a clinical risk group
     or a cluster assignment in the clinical data.
 2.  **Feature screening** (`features`) — e.g. `res$Latent_spaces$Z`.
-    Each feature is split into High/Low at a quantile (`thres`), and
-    only features with a significant log-rank test (`p.value`) are
-    returned. The rows of `features` must be the same samples, in the
-    same order, as the rows of the clinical data.
+    Each feature is split into High/Low at a quantile (`thres`), and the
+    features with a significant log-rank test (`p.value`, optionally
+    corrected with `p_adjust`) are returned, with a `Statistics` table
+    giving the test of every feature. Samples without a value for
+    `group_column` are left out. The rows of `features` must be the same
+    samples, in the same order, as the rows of the clinical data.
 
 Both modes need a time-to-event column and an event column (1 = event, 0
-= censored) in the clinical data.
+= censored) in the clinical data. The tutorial `traitdata` does not
+include them: the examples below assume your clinical data has `PFS` and
+`PFS_event` columns.
 
 ``` r
 
@@ -162,5 +193,6 @@ surv_factors <- compute.survival.analysis(
 )
 ```
 
-For every significant result, a Kaplan-Meier plot with a risk table is
-saved to `Results/SurvPlot_<group-or-feature>_<file_name>.svg`.
+A Kaplan-Meier plot with a risk table is saved (always for predefined
+groups, and for every significant feature in feature screening) to
+`Results/SurvPlot_<group-or-feature>_<file_name>.svg`.

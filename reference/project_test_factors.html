@@ -75,18 +75,28 @@ at minimum <code>Processed_deconvolution</code>, <code>Cell_groups</code>, and
 
 
 <dt id="arg-test-deconv">test_deconv<a class="anchor" aria-label="anchor" href="#arg-test-deconv"></a></dt>
-<dd><p>A numeric matrix or data frame of deconvolution features
-for the test samples (samples x cell types). Column names must match those
-used during training. If the model was trained with batch correction, the test samples are
+<dd><p>A numeric matrix or data frame of the deconvolution features of the test samples before
+subgrouping (samples x features; the same kind of matrix as given to <code><a href="CellTFusion.html">CellTFusion()</a></code> as <code>deconv</code>),
+with the column names used during training. If the model was trained with batch correction, the test samples are
 centred on their own means (as each training cohort was), so they should come from a single cohort.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A numeric matrix (test samples x NMF factors) of non-negative
-projected factor scores.</p>
+projected factor scores. Cell groups with features missing in <code>test_deconv</code> are skipped by
+<code><a href="compute.test.set.html">compute.test.set()</a></code> (with a warning), and the projection uses the other cell groups.</p>
     </div>
 
+    <div class="section level2">
+    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
+<span class="r-in"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="CellTFusion.html">CellTFusion</a></span><span class="op">(</span><span class="va">raw.counts_train</span>, deconv <span class="op">=</span> <span class="va">deconv_train</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">test_factors</span> <span class="op">&lt;-</span> <span class="fu">project_test_factors</span><span class="op">(</span><span class="va">res</span>, <span class="va">deconv_test</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
+<span class="r-in"><span></span></span>
+</code></pre></div>
+    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 

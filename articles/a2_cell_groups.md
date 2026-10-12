@@ -23,23 +23,31 @@ tutorial:
 [`construct_cell_groups()`](https://verapancaldilab.github.io/CellTFusion/reference/construct_cell_groups.md)
 correlates each TF module with the deconvolution features, clusters the
 significantly correlated features of each module, and cuts the
-dendrograms into **cell groups**. Each cell group gets a composite score
-per sample: the first canonical component of a canonical correlation
-analysis (CCA) between the group’s deconvolution features and the TFs of
-its module. Groups whose association with the module does not pass a
-permutation test are discarded.
+dendrograms into **cell groups**. Features are clustered on the value of
+their correlation with the module, so a cell group is a set of features
+with a similar biological activity: features related to the same TF
+module to the same degree, which do not need to vary together across
+samples. Each cell group gets a composite score per sample: the first
+canonical component of a canonical correlation analysis (CCA) between
+the group’s deconvolution features and the TFs of its module. The score
+is oriented to be aligned with the TF module: a positive score means
+that the sample is on the active side of the module for that cell group,
+a negative score that it is on the inactive side.
 
 Key arguments:
 
 - `network`, `dt` — the inputs above.
 - `batch` — optional cohort vector (see [Multi-cohort
   analysis](https://verapancaldilab.github.io/CellTFusion/articles/a6_batch_analysis.md)).
-- `pval` — p-value threshold for the module-feature correlations and for
-  the permutation test.
-- `n_perm` — number of permutations of the test (default 999).
+- `pval` — p-value threshold to select the deconvolution features
+  significantly correlated with each module.
 - `dendrogram_file` / `return_dendrogram` — with
   `return_dendrogram = TRUE`, the colored dendrograms are saved to
   `Results/Dendrogram_color_clusters_<dendrogram_file>.pdf`.
+- `return` — if `TRUE`, the composition and the scores of the cell
+  groups are saved to
+  `Results/Cell.groups.composition_<dendrogram_file>.csv` and
+  `Results/Cell.groups.scores_<dendrogram_file>.csv`.
 
 ``` r
 
@@ -48,14 +56,16 @@ cell_groups <- construct_cell_groups(
   dt                = dt,
   pval              = 0.05,
   clustering.method = "ward.D2",
-  n_perm            = 999,
   dendrogram_file   = "Tutorial",
   return_dendrogram = TRUE
 )
 ```
 
 One dendrogram is drawn per TF module, showing how its correlated
-deconvolution features cluster into cell groups:
+deconvolution features cluster into cell groups. The number written next
+to each cluster is the one in the cell group name
+(`Dendrogram_<module>_group_<number>`); features that are not assigned
+to any cluster are not part of any cell group:
 
 ![Dendrogram of deconvolution features clustered into cell groups for
 one TF module](figures/cell_groups_dendrogram_02.png)
@@ -68,6 +78,11 @@ returns a named list:
 | `Cell_groups` | Data frame of composite scores (samples x cell groups) |
 | `Composition` | Deconvolution features in each cell group |
 | `Weights` | CCA projection parameters of each group (`xcoef`, `train_means`, `train_sds`), used to score new samples |
+| `Module_relation` | For each cell group: its TF module, whether it is positively or negatively related to it, the correlation, the number of features and its cell types |
+
+`Module_relation` translates a score into cell abundance: for a
+positively related group, a positive score means more of its features;
+for a negatively related group, a positive score means fewer of them.
 
 ### Re-running with precomputed features
 
@@ -98,9 +113,13 @@ res_rerun <- CellTFusion(
 [`compute.latent_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.latent_factors.md)
 decomposes the cell group scores into non-negative latent factors with
 NMF. Each score is first split into a positive and a negative part
-(`_pos` and `_neg` columns), so that both directions of association can
-contribute to the factors. If `rank = NULL`, the number of factors is
-chosen at the elbow of the reconstruction error across ranks 2 to 8.
+(`_pos` and `_neg` columns: samples on the active and on the inactive
+side of the group’s TF module), so that both directions can contribute
+to the factors. If `rank = NULL`, the number of factors is chosen at the
+elbow of the reconstruction error across ranks 2 to 8 (fewer when there
+are few cell groups: the rank is always below the number of
+`_pos`/`_neg` columns, and `rank = 2` is used with one or two cell
+groups).
 
 ``` r
 
