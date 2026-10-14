@@ -26,7 +26,7 @@ scores.stat.analysis(
   A list, NMF output from
   [`compute.latent_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.latent_factors.md),
   or a score matrix (samples x features). When a list, the first element
-  must be the score matrix; optional second to fourth elements (e.g. the
+  must be the score matrix; optional second and third elements (e.g. the
   output of
   [`construct_cell_groups()`](https://verapancaldilab.github.io/CellTFusion/reference/construct_cell_groups.md))
   are subsetted to the significant features and returned with their
@@ -79,11 +79,11 @@ scores.stat.analysis(
 
 A list whose first element is the score matrix restricted to the
 significant features (no column if none is significant). Optional second
-to fourth elements (from the input list, e.g. the composition, weights
-and `Module_relation` of the cell groups) are subsetted accordingly and
-keep their names. The last element, `Statistics`, is a data frame with
-the test of every feature (`feature`, `test`, `statistic_name`,
-`statistic`, `p_value`, `p_adjusted`, `significant`).
+and third elements (from the input list, e.g. the composition and
+weights of the cell groups) are subsetted accordingly and keep their
+names. The last element, `Statistics`, is a data frame with the test of
+every feature (`feature`, `test`, `statistic_name`, `statistic`,
+`p_value`, `p_adjusted`, `significant`).
 
 ## Details
 

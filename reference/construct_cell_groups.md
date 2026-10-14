@@ -29,13 +29,13 @@ construct_cell_groups(
   dt,
   batch = NULL,
   pval = 0.05,
+  padj = FALSE,
+  cor_type = "p",
   clustering.method = "ward.D2",
   dendrogram_file = NULL,
   return_dendrogram = FALSE,
   return = FALSE,
-  cells_extra = NULL,
-  min_cluster_size = 3,
-  deep_split = TRUE
+  min_cluster_size = 3
 )
 ```
 
@@ -64,7 +64,24 @@ construct_cell_groups(
 - pval:
 
   Numeric. P-value threshold used to select the deconvolution features
-  significantly correlated with each TF module. Default: 0.05.
+  significantly correlated with each TF module (adjusted p-value with
+  `padj = TRUE`). Default: 0.05.
+
+- padj:
+
+  Logical. If TRUE, the p-values of each TF module are corrected for
+  multiple testing across the deconvolution features
+  (Benjamini-Hochberg, see
+  [`compute.modules.relationship()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.modules.relationship.md))
+  before selecting the significant features. Default: FALSE.
+
+- cor_type:
+
+  Correlation used between the TF modules and the deconvolution features
+  (passed to
+  [`compute.modules.relationship()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.modules.relationship.md)):
+  `"p"` (Pearson, default) or `"s"` (Spearman). It is used to select the
+  significant features and to cluster them.
 
 - clustering.method:
 
@@ -90,26 +107,14 @@ construct_cell_groups(
   groups to `Results/Cell.groups.composition_<dendrogram_file>.csv` and
   `Results/Cell.groups.scores_<dendrogram_file>.csv`. Default FALSE.
 
-- cells_extra:
-
-  Optional character vector with the cell names that are not in the
-  nomenclature of multideconv (the same as in
-  [`multideconv::compute.deconvolution.analysis()`](https://verapancaldilab.github.io/multideconv/reference/compute.deconvolution.analysis.html)),
-  used to list the cell types of each cell group in `Module_relation`.
-
 - min_cluster_size:
 
   Integer. Minimum number of features of a cell group (minimum cluster
   size of the dynamic tree cut of each dendrogram). Default is 3.
 
-- deep_split:
-
-  Logical. If TRUE (default), the dynamic tree cut splits the clusters
-  more finely.
-
 ## Value
 
-A named list of 4 elements:
+A named list of 3 elements:
 
 - Cell_groups:
 
@@ -129,16 +134,6 @@ A named list of 4 elements:
   `train_sds`) for each group. With `batch`, `train_means` is `NULL`:
   test data are centred on their own means.
 
-- Module_relation:
-
-  A data frame with one row per cell group: `cell_group`, `module` (its
-  TF module), `relation` (`"positive"` or `"negative"`), `correlation`
-  (mean correlation of its features with the module score), `n_features`
-  and `cell_types` (the cell types of its features, the most frequent
-  first). It translates a score into cell abundance: for a positively
-  related group, a positive score means more of its features; for a
-  negatively related group, a positive score means fewer of them.
-
 Cell groups are named `Dendrogram_<module>_group_<n>`, where `n` is the
 cluster number shown in the dendrogram PDF of that module. Features that
 the tree cut does not assign to any cluster are not part of any cell
@@ -151,19 +146,13 @@ data("network.tuto")
 data("deconv_subgroups.tuto")
 cell_groups <- construct_cell_groups(network.tuto, deconv_subgroups.tuto)
 #> 20 of 764 features were not assigned to any cluster by the tree cut and are not part of any cell group (blue: 6, pink: 2, red: 2, yellow: 8, black: 2)
-head(cell_groups$Module_relation)
-#>                 cell_group module relation correlation n_features
-#> 1 Dendrogram_brown_group_1  brown negative  -0.4082087          8
-#> 2 Dendrogram_brown_group_2  brown negative  -0.3277192          5
-#> 3 Dendrogram_brown_group_3  brown negative  -0.2895496          5
-#> 4 Dendrogram_brown_group_4  brown negative  -0.2522286          4
-#> 5 Dendrogram_brown_group_5  brown negative  -0.1882202         16
-#> 6 Dendrogram_brown_group_6  brown positive   0.1479860          3
-#>                                                                                                                                                                                              cell_types
-#> 1                                                                                                                         Cancer, B.cells, CD8.cells, Eosinophils, Macrophages.M2, NK.cells, NK.resting
-#> 2                                                                                                                                                CD4.cells, Cancer, NK.cells, NKT.cells, T.cells.helper
-#> 3                                                                                                                                      Endothelial, Macrophages.M1, Macrophages.M2, Neutrophils, Plasma
-#> 4                                                                                                                                                           CD4.cells, NK.cells, NKT.cells, Neutrophils
-#> 5 Cancer, CD4.cells, CD4.memory.resting, CD4.naive, CD8.cells, Dendritic.activated.cells, Endothelial, Macrophages.M0, Macrophages.cells, Mast.resting.cells, NK.cells, NK.resting, Neutrophils, Plasma
-#> 6                                                                                                                                                                                   Monocytes, NK.cells
+cell_groups$Cell_groups[1:3, 1:3]
+#>                 Dendrogram_brown_group_1 Dendrogram_brown_group_2
+#> SAM7f0d9cc7f001               0.03998411               0.06757056
+#> SAM4305ab968b90              -0.13368092              -0.14208692
+#> SAMcf018fee2acd              -0.02670350               0.03518956
+#>                 Dendrogram_brown_group_3
+#> SAM7f0d9cc7f001               0.06172535
+#> SAM4305ab968b90              -0.15458310
+#> SAMcf018fee2acd              -0.03169306
 ```

@@ -74,12 +74,15 @@ TME state characterization (Hallmark GSEA per factor and mapping to TCGA meta-pr
 <span>  minMod <span class="op">=</span> <span class="fl">5</span>,</span>
 <span>  corr_mod <span class="op">=</span> <span class="fl">0.9</span>,</span>
 <span>  softPower <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  cor_type_modules <span class="op">=</span> <span class="st">"p"</span>,</span>
+<span>  consensus_quantile <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  corr <span class="op">=</span> <span class="fl">0.7</span>,</span>
 <span>  corr_type <span class="op">=</span> <span class="st">"spearman"</span>,</span>
 <span>  cells_extra <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  pval <span class="op">=</span> <span class="fl">0.05</span>,</span>
+<span>  padj <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  cor_type_groups <span class="op">=</span> <span class="st">"p"</span>,</span>
 <span>  min_cluster_size <span class="op">=</span> <span class="fl">3</span>,</span>
-<span>  deep_split <span class="op">=</span> <span class="cn">T</span>,</span>
 <span>  enrich_thresh <span class="op">=</span> <span class="fl">1.5</span>,</span>
 <span>  quantile_cutoff <span class="op">=</span> <span class="fl">0.7</span>,</span>
 <span>  cancer_type <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -139,8 +142,8 @@ given when the values do not look like TPM, i.e. no value above 20 or negative v
 <dt id="arg-batch">batch<a class="anchor" aria-label="anchor" href="#arg-batch"></a></dt>
 <dd><p>(Optional) A vector with the cohort of each sample (e.g. <code>coldata$Cohort</code>), in the same order
 as the columns of <code>raw.counts</code>; if it is named, it is matched to the samples by name instead. It is
-always treated as categorical. If given, the multi-cohort mode is run: TF activity is computed per cohort,
-TF modules are built with consensus WGCNA across cohorts, and the cohort is controlled for in the
+always treated as categorical. If given, the multi-cohort mode is run: TF and pathway activities are computed per
+cohort, TF modules are built from a consensus network across cohorts (see <code>consensus_quantile</code>), and the cohort is controlled for in the
 deconvolution analysis and cell group construction. Default is <code>NULL</code> (single cohort); a vector with
 only one cohort is treated the same way.</p></dd>
 
@@ -215,6 +218,17 @@ the sign of each interaction; see <code><a href="compute.TFs.activity.html">comp
 <code>batch</code>) in multi-cohort mode. If <code>NULL</code> (default), it is chosen automatically.</p></dd>
 
 
+<dt id="arg-cor-type-modules">cor_type_modules<a class="anchor" aria-label="anchor" href="#arg-cor-type-modules"></a></dt>
+<dd><p>Correlation used to build the TF network and merge TF modules: "p" (Pearson, default) or
+"s" (Spearman). Passed to <code><a href="compute.WTCNA.html">compute.WTCNA()</a></code> as <code>cor_type</code>.</p></dd>
+
+
+<dt id="arg-consensus-quantile">consensus_quantile<a class="anchor" aria-label="anchor" href="#arg-consensus-quantile"></a></dt>
+<dd><p>Numeric between 0 and 1, used in multi-cohort mode only: quantile of the topological
+overlaps of each pair of TFs across cohorts used as their consensus (0, the default, is the minimum: two TFs are
+close only if they are close in every cohort; higher values are less strict). Passed to <code><a href="compute.WTCNA.html">compute.WTCNA()</a></code>.</p></dd>
+
+
 <dt id="arg-corr">corr<a class="anchor" aria-label="anchor" href="#arg-corr"></a></dt>
 <dd><p>Numeric; correlation threshold used in the deconvolution analysis. Default is 0.7.</p></dd>
 
@@ -234,14 +248,20 @@ if they are not listed here they are discarded.</p></dd>
 features significantly correlated with each TF module). Default is 0.05.</p></dd>
 
 
+<dt id="arg-padj">padj<a class="anchor" aria-label="anchor" href="#arg-padj"></a></dt>
+<dd><p>Logical; if TRUE, the p-values used when building cell groups are corrected for multiple testing
+(Benjamini-Hochberg, across the deconvolution features for each TF module) and compared with <code>pval</code>.
+Passed to <code><a href="construct_cell_groups.html">construct_cell_groups()</a></code>. Default is FALSE.</p></dd>
+
+
+<dt id="arg-cor-type-groups">cor_type_groups<a class="anchor" aria-label="anchor" href="#arg-cor-type-groups"></a></dt>
+<dd><p>Correlation used between the TF modules and the deconvolution features when building
+cell groups: "p" (Pearson, default) or "s" (Spearman). Passed to <code><a href="construct_cell_groups.html">construct_cell_groups()</a></code> as <code>cor_type</code>.</p></dd>
+
+
 <dt id="arg-min-cluster-size">min_cluster_size<a class="anchor" aria-label="anchor" href="#arg-min-cluster-size"></a></dt>
 <dd><p>Integer; minimum number of features of a cell group (minimum cluster size of the
 dynamic tree cut), passed to <code><a href="construct_cell_groups.html">construct_cell_groups()</a></code>. Default is 3.</p></dd>
-
-
-<dt id="arg-deep-split">deep_split<a class="anchor" aria-label="anchor" href="#arg-deep-split"></a></dt>
-<dd><p>Logical; if TRUE (default), the dynamic tree cut that defines the cell groups splits the
-clusters more finely. Passed to <code><a href="construct_cell_groups.html">construct_cell_groups()</a></code>.</p></dd>
 
 
 <dt id="arg-enrich-thresh">enrich_thresh<a class="anchor" aria-label="anchor" href="#arg-enrich-thresh"></a></dt>
@@ -292,8 +312,7 @@ in the sample order of <code>raw.counts</code> (also in multi-cohort mode).</p><
 <dd><p>The processed deconvolution subgroups (output of <code><a href="https://verapancaldilab.github.io/multideconv/reference/compute.deconvolution.analysis.html" class="external-link">multideconv::compute.deconvolution.analysis()</a></code>).</p></dd>
 
 <dt>Cell_groups</dt>
-<dd><p>Output of <code><a href="construct_cell_groups.html">construct_cell_groups()</a></code>: cell group scores, compositions, projection weights
-and the relation of each cell group to its TF module.</p></dd>
+<dd><p>Output of <code><a href="construct_cell_groups.html">construct_cell_groups()</a></code>: cell group scores, compositions and projection weights.</p></dd>
 
 <dt>Latent_spaces</dt>
 <dd><p>NMF latent factors returned by <code><a href="compute.latent_factors.html">compute.latent_factors()</a></code>.</p></dd>

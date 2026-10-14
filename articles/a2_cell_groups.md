@@ -3,6 +3,10 @@
 ``` r
 
 library(CellTFusion)
+#> Warning: replacing previous import 'S4Arrays::makeNindexFromArrayViewport' by
+#> 'DelayedArray::makeNindexFromArrayViewport' when loading 'HDF5Array'
+#> Warning: replacing previous import 'S4Arrays::makeNindexFromArrayViewport' by
+#> 'DelayedArray::makeNindexFromArrayViewport' when loading 'SummarizedExperiment'
 #> 
 ```
 
@@ -85,11 +89,6 @@ returns a named list:
 | `Cell_groups` | Data frame of composite scores (samples x cell groups) |
 | `Composition` | Deconvolution features in each cell group |
 | `Weights` | CCA projection parameters of each group (`xcoef`, `train_means`, `train_sds`), used to score new samples |
-| `Module_relation` | For each cell group: its TF module, whether it is positively or negatively related to it, the correlation, the number of features and its cell types |
-
-`Module_relation` translates a score into cell abundance: for a
-positively related group, a positive score means more of its features;
-for a negatively related group, a positive score means fewer of them.
 
 ### Re-running with precomputed features
 

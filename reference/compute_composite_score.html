@@ -5,17 +5,13 @@ The score is the weighted sum of the (scaled) features of the cell group, with t
 canonical component. As the sign of CCA weights is arbitrary, the score is oriented so that it is aligned
 with the TF module: a positive score means that the sample is on the active side of the module for that cell
 group. The score therefore increases with the features of the cell group when they are positively related
-to the module, and decreases with them when they are negatively related. The relation of the cell group to
-its module (mean correlation of its features with the module score) is returned to translate the score
-into cell abundance."><meta property="og:description" content="Computes a composite score by performing Canonical Correlation Analysis (CCA)
+to the module, and decreases with them when they are negatively related."><meta property="og:description" content="Computes a composite score by performing Canonical Correlation Analysis (CCA)
 between the deconvolution features of a cell group and the TFs of its module.
 The score is the weighted sum of the (scaled) features of the cell group, with the weights of the first
 canonical component. As the sign of CCA weights is arbitrary, the score is oriented so that it is aligned
 with the TF module: a positive score means that the sample is on the active side of the module for that cell
 group. The score therefore increases with the features of the cell group when they are positively related
-to the module, and decreases with them when they are negatively related. The relation of the cell group to
-its module (mean correlation of its features with the module score) is returned to translate the score
-into cell abundance."><meta property="og:image" content="https://verapancaldilab.github.io/CellTFusion/logo.png"></head><body>
+to the module, and decreases with them when they are negatively related."><meta property="og:image" content="https://verapancaldilab.github.io/CellTFusion/logo.png"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -63,9 +59,7 @@ The score is the weighted sum of the (scaled) features of the cell group, with t
 canonical component. As the sign of CCA weights is arbitrary, the score is oriented so that it is aligned
 with the TF module: a positive score means that the sample is on the active side of the module for that cell
 group. The score therefore increases with the features of the cell group when they are positively related
-to the module, and decreases with them when they are negatively related. The relation of the cell group to
-its module (mean correlation of its features with the module score) is returned to translate the score
-into cell abundance.</p>
+to the module, and decreases with them when they are negatively related.</p>
     </div>
 
     <div class="section level2">
@@ -105,15 +99,13 @@ before the CCA.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>An unnamed list of three elements:</p><ul><li><p><code>[[1]]</code>: Numeric matrix (samples x 1) with the composite score, i.e. the scaled cell group
+    <p>An unnamed list of two elements:</p><ul><li><p><code>[[1]]</code>: Numeric matrix (samples x 1) with the composite score, i.e. the scaled cell group
 features projected onto the first canonical component, oriented to be aligned with the TF module.</p></li>
 <li><p><code>[[2]]</code>: Projection parameters used to score new samples: <code>xcoef</code> (canonical weights of
 the first component), <code>train_means</code> and <code>train_sds</code> (column means/SDs used for scaling).
 The sign of <code>xcoef</code> follows the orientation of the score.
 <code>train_means</code> is <code>NULL</code> when batch correction was applied: new samples are then centred on
 their own means, as each training cohort was.</p></li>
-<li><p><code>[[3]]</code>: Relation of the cell group to its TF module: the mean correlation of its features with
-the module score (positive or negative).</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -130,9 +122,10 @@ most affected.</p>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"deconv_subgroups.tuto"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">cell_groups</span> <span class="op">&lt;-</span> <span class="fu"><a href="construct_cell_groups.html">construct_cell_groups</a></span><span class="op">(</span><span class="va">network.tuto</span>, <span class="va">deconv_subgroups.tuto</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> 20 of 764 features were not assigned to any cluster by the tree cut and are not part of any cell group (blue: 6, pink: 2, red: 2, yellow: 8, black: 2)</span>
-<span class="r-in"><span><span class="va">group</span> <span class="op">&lt;-</span> <span class="va">cell_groups</span><span class="op">$</span><span class="va">Module_relation</span><span class="op">[</span><span class="fl">1</span>, <span class="op">]</span></span></span>
-<span class="r-in"><span><span class="va">features</span> <span class="op">&lt;-</span> <span class="va">deconv_subgroups.tuto</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">[</span>, <span class="va">cell_groups</span><span class="op">$</span><span class="va">Composition</span><span class="op">[[</span><span class="va">group</span><span class="op">$</span><span class="va">cell_group</span><span class="op">]</span><span class="op">]</span>, drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span></span></span>
-<span class="r-in"><span><span class="va">score</span> <span class="op">&lt;-</span> <span class="fu">compute_composite_score</span><span class="op">(</span><span class="va">features</span>, <span class="va">group</span><span class="op">$</span><span class="va">module</span>, <span class="va">network.tuto</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">group</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">cell_groups</span><span class="op">$</span><span class="va">Composition</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span></span></span>
+<span class="r-in"><span><span class="va">module</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">sub</a></span><span class="op">(</span><span class="st">"^Dendrogram_(.*)_group_.*$"</span>, <span class="st">"\\1"</span>, <span class="va">group</span><span class="op">)</span> <span class="co"># TF module of the cell group</span></span></span>
+<span class="r-in"><span><span class="va">features</span> <span class="op">&lt;-</span> <span class="va">deconv_subgroups.tuto</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">[</span>, <span class="va">cell_groups</span><span class="op">$</span><span class="va">Composition</span><span class="op">[[</span><span class="va">group</span><span class="op">]</span><span class="op">]</span>, drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span></span></span>
+<span class="r-in"><span><span class="va">score</span> <span class="op">&lt;-</span> <span class="fu">compute_composite_score</span><span class="op">(</span><span class="va">features</span>, <span class="va">module</span>, <span class="va">network.tuto</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">score</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                         [,1]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> SAM7f0d9cc7f001  0.039984111</span>

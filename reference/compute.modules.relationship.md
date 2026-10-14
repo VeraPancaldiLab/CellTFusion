@@ -17,6 +17,7 @@ compute.modules.relationship(
   file_name = NULL,
   batch = NULL,
   pval = 0.05,
+  padj = FALSE,
   cor_type = "p",
   vertical = F,
   plot = T,
@@ -54,8 +55,15 @@ compute.modules.relationship(
 
 - pval:
 
-  A numeric threshold for the p-value to define significance (p-value
-  \<= `pval`). Default is 0.05.
+  A numeric threshold for the p-value to define significance (p-value,
+  or adjusted p-value with `padj = TRUE`, \<= `pval`). Default is 0.05.
+
+- padj:
+
+  Logical; if TRUE, the p-values are corrected for multiple testing with
+  the Benjamini-Hochberg method, across the columns of `matB` for each
+  column of `matA`, and the adjusted p-values are used to define
+  significance (in `significant` and in the figures). Default is FALSE.
 
 - cor_type:
 
@@ -97,10 +105,13 @@ Invisibly, a list with:
   columns of `matB` as columns).
 
 - `significant`: a named list with, for each column of `matA`, the
-  columns of `matB` significantly correlated with it (p-value \<=
-  `pval`).
+  columns of `matB` significantly correlated with it (p-value, or
+  adjusted p-value with `padj = TRUE`, \<= `pval`).
 
 - `p_value`: the matrix of p-values.
+
+- `p_adjusted`: the matrix of Benjamini-Hochberg adjusted p-values
+  (equal to `p_value` with `padj = FALSE`).
 
 If `plot = TRUE` and `file_name` is given, a heatmap of the correlations
 is saved to "Results/\<file_name\>.pdf" (the ".pdf" extension is added

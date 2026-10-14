@@ -23,7 +23,8 @@ plot_module_scatter_grid(
   only_sig = TRUE,
   ncol = NULL,
   max_pairs = 100,
-  axis_suffix = ""
+  axis_suffix = "",
+  p_label = "p"
 )
 ```
 
@@ -78,6 +79,11 @@ plot_module_scatter_grid(
 
   Character added to the axis titles after the column names (e.g.
   `" (rank)"`). Default "".
+
+- p_label:
+
+  Character. Name of the values of `p_mat` written in each panel (e.g.
+  `"padj"` for adjusted p-values). Default "p".
 
 ## Value
 

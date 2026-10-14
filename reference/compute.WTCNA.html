@@ -63,6 +63,7 @@ represented by the eigengene of the module.</p>
 <span>  verbose <span class="op">=</span> <span class="cn">F</span>,</span>
 <span>  file.name <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  softPower <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  consensus_quantile <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  return <span class="op">=</span> <span class="cn">T</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -77,10 +78,8 @@ one per cohort.</p></dd>
 
 
 <dt id="arg-batch">batch<a class="anchor" aria-label="anchor" href="#arg-batch"></a></dt>
-<dd><p>Logical; if TRUE, performs consensus WGCNA (<code><a href="https://rdrr.io/pkg/WGCNA/man/blockwiseConsensusModules.html" class="external-link">WGCNA::blockwiseConsensusModules()</a></code>) across cohorts
-provided as a list of matrices. In this mode <code>clustering.method</code> is not used (WGCNA builds the consensus tree
-itself), modules are merged by WGCNA with <code>mergeCutHeight = 1 - corr_mod</code>, and module eigengenes are scaled
-within each cohort.</p></dd>
+<dd><p>Logical; if TRUE, builds consensus TF modules across cohorts provided as a list of matrices (see
+Details). Module eigengenes are then computed and scaled within each cohort.</p></dd>
 
 
 <dt id="arg-network-type">network.type<a class="anchor" aria-label="anchor" href="#arg-network-type"></a></dt>
@@ -89,8 +88,8 @@ within each cohort.</p></dd>
 
 <dt id="arg-clustering-method">clustering.method<a class="anchor" aria-label="anchor" href="#arg-clustering-method"></a></dt>
 <dd><p>Linkage method of the hierarchical clustering of the TFs (<code><a href="https://rdrr.io/r/stats/hclust.html" class="external-link">stats::hclust()</a></code>), applied to the
-TOM dissimilarity (1 - topological overlap) between TFs (single-cohort mode only). Default is "average", as in WGCNA:
-two groups of TFs are joined according to the average dissimilarity between their TFs.</p></dd>
+TOM dissimilarity (1 - topological overlap) between TFs, or to the consensus TOM dissimilarity in batch mode. Default
+is "average", as in WGCNA: two groups of TFs are joined according to the average dissimilarity between their TFs.</p></dd>
 
 
 <dt id="arg-minmod">minMod<a class="anchor" aria-label="anchor" href="#arg-minmod"></a></dt>
@@ -99,14 +98,14 @@ two groups of TFs are joined according to the average dissimilarity between thei
 
 <dt id="arg-corr-mod">corr_mod<a class="anchor" aria-label="anchor" href="#arg-corr-mod"></a></dt>
 <dd><p>Correlation threshold (0-1): modules whose eigengenes have a correlation (of type <code>cor_type</code>)
-above it are merged. Default is 0.9.</p></dd>
+above it are merged. In batch mode, the correlation is computed on the eigengenes of all the samples, scaled within
+each cohort. Default is 0.9.</p></dd>
 
 
 <dt id="arg-cor-type">cor_type<a class="anchor" aria-label="anchor" href="#arg-cor-type"></a></dt>
 <dd><p>Correlation used to pick the soft-threshold power, build the adjacency matrix, merge modules and
-compute the proportion of variance explained: "p" (Pearson) or "s" (Spearman). The module eigengene is always the
-first principal component of the module's TF activities. Spearman is only available when <code>batch = FALSE</code>, because WGCNA
-consensus modules only support Pearson correlation. Default is "p".</p></dd>
+compute the proportion of variance explained: "p" (Pearson) or "s" (Spearman), in single-cohort and batch mode. The
+module eigengene is always the first principal component of the module's TF activities. Default is "p".</p></dd>
 
 
 <dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>
@@ -126,6 +125,15 @@ matrix (one value per cohort when <code>batch = TRUE</code>). If <code>NULL</cod
 \(R^2\) reaches 0.9 is chosen automatically (the power with the best fit if none reaches 0.9, with a message).</p></dd>
 
 
+<dt id="arg-consensus-quantile">consensus_quantile<a class="anchor" aria-label="anchor" href="#arg-consensus-quantile"></a></dt>
+<dd><p>Numeric between 0 and 1 (batch mode only). For each pair of TFs, the consensus topological
+overlap is this quantile of its (calibrated) topological overlaps across the cohorts. With 0 (default), the
+minimum: two TFs are close only if they are close in every cohort, the strictest choice, which removes more TF
+relationships as more cohorts are added. Higher values are less strict: with <code>K</code> cohorts,
+<code>consensus_quantile = k / (K - 1)</code> takes the <code>(k + 1)</code>-th lowest value, so two TFs are close if they are
+close in all cohorts but <code>k</code> (e.g. 0.25 with 5 cohorts: in at least 4 of them); 0.5 is the median.</p></dd>
+
+
 <dt id="arg-return">return<a class="anchor" aria-label="anchor" href="#arg-return"></a></dt>
 <dd><p>Logical, whether to save output plots, the module list (<code>Results/TFs_modules_&lt;file.name&gt;.csv</code>)
 and the module matrix (<code>Results/TF_module_matrix_&lt;file.name&gt;.csv</code>, with the sample names as row names)
@@ -141,21 +149,25 @@ concatenated in cohort order (use the row names to match them to other tables).<
 <li><p><code>Proportion of variance</code>: Variance explained per module (single-cohort mode only).</p></li>
 <li><p><code>TFs_matrix</code>: The TF activity matrix used (a list of per-cohort matrices restricted to shared TFs in batch mode).</p></li>
 <li><p><code>Network parameters</code>: A list with the soft-thresholding power(s) used (<code>softPower</code>, one per cohort in
-batch mode), <code>network.type</code> and <code>cor_type</code>, used by <code><a href="identify_hub_TFs.html">identify_hub_TFs()</a></code>.</p></li>
+batch mode), <code>network.type</code> and <code>cor_type</code>, used by <code><a href="identify_hub_TFs.html">identify_hub_TFs()</a></code>, and in batch mode
+<code>consensus_quantile</code>.</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>TFs that WGCNA does not assign to any module (color <code>"grey"</code>) are not a module: they are left out of the
 module matrix and of <code>TFs per module</code>, with a message.</p>
-<p>In batch mode, the soft-thresholding powers are chosen on the TFs shared by all cohorts, the ones used to build
-the network.</p>
-<p>In batch mode, <code><a href="https://rdrr.io/pkg/WGCNA/man/blockwiseConsensusModules.html" class="external-link">WGCNA::blockwiseConsensusModules()</a></code> can fail with
-<code>"dim(X) must have a positive length"</code> when a consensus module has exactly one TF to reassign to
-another module (a known WGCNA issue). The problem goes away when the modules change. If the powers were
-chosen automatically (<code>softPower = NULL</code>), <code>compute.WTCNA()</code> retries moving the power of one cohort
-one step down or up, and gives a warning with the powers that were finally used. If <code>softPower</code> was
-given, or no neighbouring power works, it stops with a message reporting the powers: set <code>softPower</code>
-to slightly different values or change <code>minMod</code> (a small change may not be enough).</p>
+<p>In batch mode, the modules are built with the same steps as in single-cohort mode, on a consensus network:</p><ol><li><p>only the TFs shared by all cohorts are used, and a soft-thresholding power is chosen for each cohort;</p></li>
+<li><p>the adjacency and the topological overlap matrix (TOM) are computed in each cohort, with its own power;</p></li>
+<li><p>the TOMs are calibrated to a common scale as in <code><a href="https://rdrr.io/pkg/WGCNA/man/blockwiseConsensusModules.html" class="external-link">WGCNA::blockwiseConsensusModules()</a></code>: each TOM is raised to
+the power that makes its 0.95 quantile equal to that of the first cohort;</p></li>
+<li><p>the consensus TOM is, for each pair of TFs, the <code>consensus_quantile</code> quantile of its calibrated TOMs across
+cohorts;</p></li>
+<li><p>the TFs are clustered on 1 - consensus TOM with <code>clustering.method</code> and the tree is cut with the same dynamic
+tree cut as in single-cohort mode;</p></li>
+<li><p>the module eigengenes are computed and scaled within each cohort, and the modules are merged as in single-cohort
+mode (see <code>corr_mod</code>); merged scores are scaled within each cohort again.</p></li>
+</ol><p>Unlike <code><a href="https://rdrr.io/pkg/WGCNA/man/blockwiseConsensusModules.html" class="external-link">WGCNA::blockwiseConsensusModules()</a></code>, the TFs of each module are not filtered or reassigned afterwards
+by their module membership (as in single-cohort mode). The diagnostic plots are only saved in single-cohort mode.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>

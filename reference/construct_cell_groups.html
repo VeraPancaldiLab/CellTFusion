@@ -77,13 +77,13 @@ the deconvolution matrix, which may contain only part of the samples of the netw
 <span>  <span class="va">dt</span>,</span>
 <span>  batch <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  pval <span class="op">=</span> <span class="fl">0.05</span>,</span>
+<span>  padj <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  cor_type <span class="op">=</span> <span class="st">"p"</span>,</span>
 <span>  clustering.method <span class="op">=</span> <span class="st">"ward.D2"</span>,</span>
 <span>  dendrogram_file <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  return_dendrogram <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  return <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  cells_extra <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  min_cluster_size <span class="op">=</span> <span class="fl">3</span>,</span>
-<span>  deep_split <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>  min_cluster_size <span class="op">=</span> <span class="fl">3</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -109,7 +109,19 @@ correlations and scores are corrected for cohort.</p></dd>
 
 <dt id="arg-pval">pval<a class="anchor" aria-label="anchor" href="#arg-pval"></a></dt>
 <dd><p>Numeric. P-value threshold used to select the deconvolution features significantly
-correlated with each TF module. Default: 0.05.</p></dd>
+correlated with each TF module (adjusted p-value with <code>padj = TRUE</code>). Default: 0.05.</p></dd>
+
+
+<dt id="arg-padj">padj<a class="anchor" aria-label="anchor" href="#arg-padj"></a></dt>
+<dd><p>Logical. If TRUE, the p-values of each TF module are corrected for multiple testing across the
+deconvolution features (Benjamini-Hochberg, see <code><a href="compute.modules.relationship.html">compute.modules.relationship()</a></code>) before selecting the
+significant features. Default: FALSE.</p></dd>
+
+
+<dt id="arg-cor-type">cor_type<a class="anchor" aria-label="anchor" href="#arg-cor-type"></a></dt>
+<dd><p>Correlation used between the TF modules and the deconvolution features (passed to
+<code><a href="compute.modules.relationship.html">compute.modules.relationship()</a></code>): <code>"p"</code> (Pearson, default) or <code>"s"</code> (Spearman). It is used to
+select the significant features and to cluster them.</p></dd>
 
 
 <dt id="arg-clustering-method">clustering.method<a class="anchor" aria-label="anchor" href="#arg-clustering-method"></a></dt>
@@ -133,24 +145,14 @@ and <code>return</code>).</p></dd>
 <code>Results/Cell.groups.scores_&lt;dendrogram_file&gt;.csv</code>. Default FALSE.</p></dd>
 
 
-<dt id="arg-cells-extra">cells_extra<a class="anchor" aria-label="anchor" href="#arg-cells-extra"></a></dt>
-<dd><p>Optional character vector with the cell names that are not in the nomenclature of multideconv
-(the same as in <code><a href="https://verapancaldilab.github.io/multideconv/reference/compute.deconvolution.analysis.html" class="external-link">multideconv::compute.deconvolution.analysis()</a></code>), used to list the cell types of each
-cell group in <code>Module_relation</code>.</p></dd>
-
-
 <dt id="arg-min-cluster-size">min_cluster_size<a class="anchor" aria-label="anchor" href="#arg-min-cluster-size"></a></dt>
 <dd><p>Integer. Minimum number of features of a cell group (minimum cluster size of the
 dynamic tree cut of each dendrogram). Default is 3.</p></dd>
 
-
-<dt id="arg-deep-split">deep_split<a class="anchor" aria-label="anchor" href="#arg-deep-split"></a></dt>
-<dd><p>Logical. If TRUE (default), the dynamic tree cut splits the clusters more finely.</p></dd>
-
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A named list of 4 elements:</p><dl><dt>Cell_groups</dt>
+    <p>A named list of 3 elements:</p><dl><dt>Cell_groups</dt>
 <dd><p>A data frame with the projected cell group scores (samples x groups). A positive score
 means that the sample is on the active side of the TF module of that cell group, a negative score that
 it is on the inactive side.</p></dd>
@@ -161,14 +163,6 @@ it is on the inactive side.</p></dd>
 <dt>Weights</dt>
 <dd><p>A named list of CCA projection parameters (<code>xcoef</code>, <code>train_means</code>, <code>train_sds</code>) for each group.
 With <code>batch</code>, <code>train_means</code> is <code>NULL</code>: test data are centred on their own means.</p></dd>
-
-<dt>Module_relation</dt>
-<dd><p>A data frame with one row per cell group: <code>cell_group</code>, <code>module</code> (its TF
-module), <code>relation</code> (<code>"positive"</code> or <code>"negative"</code>), <code>correlation</code> (mean correlation of
-its features with the module score), <code>n_features</code> and <code>cell_types</code> (the cell types of its
-features, the most frequent first). It translates a score into cell abundance: for a
-positively related group, a positive score means more of its features; for a negatively related group, a
-positive score means fewer of them.</p></dd>
 
 
 </dl><p>Cell groups are named <code>Dendrogram_&lt;module&gt;_group_&lt;n&gt;</code>, where <code>n</code> is the cluster number shown in the
@@ -182,21 +176,15 @@ cell group (a message reports how many).</p>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"deconv_subgroups.tuto"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">cell_groups</span> <span class="op">&lt;-</span> <span class="fu">construct_cell_groups</span><span class="op">(</span><span class="va">network.tuto</span>, <span class="va">deconv_subgroups.tuto</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> 20 of 764 features were not assigned to any cluster by the tree cut and are not part of any cell group (blue: 6, pink: 2, red: 2, yellow: 8, black: 2)</span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">cell_groups</span><span class="op">$</span><span class="va">Module_relation</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                 cell_group module relation correlation n_features</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 Dendrogram_brown_group_1  brown negative  -0.4082087          8</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 Dendrogram_brown_group_2  brown negative  -0.3277192          5</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3 Dendrogram_brown_group_3  brown negative  -0.2895496          5</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4 Dendrogram_brown_group_4  brown negative  -0.2522286          4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5 Dendrogram_brown_group_5  brown negative  -0.1882202         16</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6 Dendrogram_brown_group_6  brown positive   0.1479860          3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                                                                              cell_types</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                                                                                         Cancer, B.cells, CD8.cells, Eosinophils, Macrophages.M2, NK.cells, NK.resting</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2                                                                                                                                                CD4.cells, Cancer, NK.cells, NKT.cells, T.cells.helper</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3                                                                                                                                      Endothelial, Macrophages.M1, Macrophages.M2, Neutrophils, Plasma</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4                                                                                                                                                           CD4.cells, NK.cells, NKT.cells, Neutrophils</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5 Cancer, CD4.cells, CD4.memory.resting, CD4.naive, CD8.cells, Dendritic.activated.cells, Endothelial, Macrophages.M0, Macrophages.cells, Mast.resting.cells, NK.cells, NK.resting, Neutrophils, Plasma</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6                                                                                                                                                                                   Monocytes, NK.cells</span>
+<span class="r-in"><span><span class="va">cell_groups</span><span class="op">$</span><span class="va">Cell_groups</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">3</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">3</span><span class="op">]</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                 Dendrogram_brown_group_1 Dendrogram_brown_group_2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SAM7f0d9cc7f001               0.03998411               0.06757056</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SAM4305ab968b90              -0.13368092              -0.14208692</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SAMcf018fee2acd              -0.02670350               0.03518956</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                 Dendrogram_brown_group_3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SAM7f0d9cc7f001               0.06172535</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SAM4305ab968b90              -0.15458310</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SAMcf018fee2acd              -0.03169306</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

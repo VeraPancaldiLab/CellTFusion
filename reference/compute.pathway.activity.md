@@ -16,6 +16,7 @@ compute.pathway.activity(
   paths = NULL,
   method = "ulm",
   scale = TRUE,
+  batch = NULL,
   return = TRUE,
   file.name = NULL
 )
@@ -64,6 +65,19 @@ compute.pathway.activity(
   can be compared between separate calls (e.g. a training and a test
   set). With fewer than three samples the scores are not scaled (a
   message is given).
+
+- batch:
+
+  Optional vector with the cohort of each sample, in the column order of
+  `RNA.tpm` (if it is named, it is matched to the samples by name
+  instead). It is always treated as categorical. If given, the samples
+  are split by cohort, the pathway activities (PROGENy and, if
+  requested, GSVA) are computed and scaled (see `scale`) separately in
+  each cohort, and the results are joined in the sample order of
+  `RNA.tpm`; the output has the same form as without `batch`. Pathways
+  or gene sets that cannot be scored in every cohort are left out (with
+  a message). Default is `NULL` (single cohort); a vector with only one
+  cohort is treated the same way.
 
 - return:
 

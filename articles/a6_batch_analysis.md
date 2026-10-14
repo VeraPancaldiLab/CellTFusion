@@ -3,6 +3,10 @@
 ``` r
 
 library(CellTFusion)
+#> Warning: replacing previous import 'S4Arrays::makeNindexFromArrayViewport' by
+#> 'DelayedArray::makeNindexFromArrayViewport' when loading 'HDF5Array'
+#> Warning: replacing previous import 'S4Arrays::makeNindexFromArrayViewport' by
+#> 'DelayedArray::makeNindexFromArrayViewport' when loading 'SummarizedExperiment'
 #> 
 ```
 
@@ -17,7 +21,7 @@ at each step and how to use it.
 | Function | `batch` | Effect |
 |----|----|----|
 | `CellTFusion(batch = batch_vec)` | Cohort vector | Computes **TF activity separately per cohort** and builds a **consensus TF network**; the cohort vector is passed to every step below. |
-| `compute.WTCNA(batch = TRUE)` | Logical | Takes a **list** of per-cohort TF matrices, picks a soft-thresholding power per cohort and builds consensus modules with [`WGCNA::blockwiseConsensusModules()`](https://rdrr.io/pkg/WGCNA/man/blockwiseConsensusModules.html). |
+| `compute.WTCNA(batch = TRUE)` | Logical | Takes a **list** of per-cohort TF matrices, picks a soft-thresholding power per cohort, combines the per-cohort topological overlaps into a consensus network (`consensus_quantile`, default 0: the minimum across cohorts) and builds the modules from it as in single-cohort mode. |
 | `compute.deconvolution.analysis(batch = batch_vec)` | Cohort vector | Correlations used to build deconvolution subgroups control for cohort. |
 | `compute.modules.relationship(batch = batch_vec)` | Cohort vector | TF module-feature correlations are **partial correlations** controlling for cohort (one indicator variable per cohort beyond the first), Pearson or Spearman according to `cor_type`. |
 | `construct_cell_groups(batch = batch_vec)` | Cohort vector | Passes the cohort vector to the correlations and to the composite scores. Required for a network built with `compute.WTCNA(batch = TRUE)`; it can be named by sample. |

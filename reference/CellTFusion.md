@@ -31,12 +31,15 @@ CellTFusion(
   minMod = 5,
   corr_mod = 0.9,
   softPower = NULL,
+  cor_type_modules = "p",
+  consensus_quantile = 0,
   corr = 0.7,
   corr_type = "spearman",
   cells_extra = NULL,
   pval = 0.05,
+  padj = FALSE,
+  cor_type_groups = "p",
   min_cluster_size = 3,
-  deep_split = T,
   enrich_thresh = 1.5,
   quantile_cutoff = 0.7,
   cancer_type = NULL,
@@ -108,11 +111,12 @@ CellTFusion(
   `coldata$Cohort`), in the same order as the columns of `raw.counts`;
   if it is named, it is matched to the samples by name instead. It is
   always treated as categorical. If given, the multi-cohort mode is run:
-  TF activity is computed per cohort, TF modules are built with
-  consensus WGCNA across cohorts, and the cohort is controlled for in
-  the deconvolution analysis and cell group construction. Default is
-  `NULL` (single cohort); a vector with only one cohort is treated the
-  same way.
+  TF and pathway activities are computed per cohort, TF modules are
+  built from a consensus network across cohorts (see
+  `consensus_quantile`), and the cohort is controlled for in the
+  deconvolution analysis and cell group construction. Default is `NULL`
+  (single cohort); a vector with only one cohort is treated the same
+  way.
 
 - deconv_methods:
 
@@ -206,6 +210,22 @@ CellTFusion(
   appear in `batch`) in multi-cohort mode. If `NULL` (default), it is
   chosen automatically.
 
+- cor_type_modules:
+
+  Correlation used to build the TF network and merge TF modules: "p"
+  (Pearson, default) or "s" (Spearman). Passed to
+  [`compute.WTCNA()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.WTCNA.md)
+  as `cor_type`.
+
+- consensus_quantile:
+
+  Numeric between 0 and 1, used in multi-cohort mode only: quantile of
+  the topological overlaps of each pair of TFs across cohorts used as
+  their consensus (0, the default, is the minimum: two TFs are close
+  only if they are close in every cohort; higher values are less
+  strict). Passed to
+  [`compute.WTCNA()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.WTCNA.md).
+
 - corr:
 
   Numeric; correlation threshold used in the deconvolution analysis.
@@ -231,18 +251,29 @@ CellTFusion(
   of the deconvolution features significantly correlated with each TF
   module). Default is 0.05.
 
+- padj:
+
+  Logical; if TRUE, the p-values used when building cell groups are
+  corrected for multiple testing (Benjamini-Hochberg, across the
+  deconvolution features for each TF module) and compared with `pval`.
+  Passed to
+  [`construct_cell_groups()`](https://verapancaldilab.github.io/CellTFusion/reference/construct_cell_groups.md).
+  Default is FALSE.
+
+- cor_type_groups:
+
+  Correlation used between the TF modules and the deconvolution features
+  when building cell groups: "p" (Pearson, default) or "s" (Spearman).
+  Passed to
+  [`construct_cell_groups()`](https://verapancaldilab.github.io/CellTFusion/reference/construct_cell_groups.md)
+  as `cor_type`.
+
 - min_cluster_size:
 
   Integer; minimum number of features of a cell group (minimum cluster
   size of the dynamic tree cut), passed to
   [`construct_cell_groups()`](https://verapancaldilab.github.io/CellTFusion/reference/construct_cell_groups.md).
   Default is 3.
-
-- deep_split:
-
-  Logical; if TRUE (default), the dynamic tree cut that defines the cell
-  groups splits the clusters more finely. Passed to
-  [`construct_cell_groups()`](https://verapancaldilab.github.io/CellTFusion/reference/construct_cell_groups.md).
 
 - enrich_thresh:
 
@@ -312,8 +343,7 @@ A list containing:
 
   Output of
   [`construct_cell_groups()`](https://verapancaldilab.github.io/CellTFusion/reference/construct_cell_groups.md):
-  cell group scores, compositions, projection weights and the relation
-  of each cell group to its TF module.
+  cell group scores, compositions and projection weights.
 
 - Latent_spaces:
 

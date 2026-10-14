@@ -70,7 +70,7 @@ they vary together across samples. The dendrograms are cut into cell groups by <
 <dd><p>The list returned by <code><a href="compute.modules.relationship.html">compute.modules.relationship()</a></code>. Its first two elements are used
 (accessed by position):</p><ul><li><p><code>[[1]]</code> (<code>correlation</code>): A matrix of correlations between TF modules (rows, named) and deconvolution features (columns).</p></li>
 <li><p><code>[[2]]</code> (<code>significant</code>): A list, named by TF module, of the features significantly correlated with each module
-(p-value &lt;= the <code>pval</code> given to <code><a href="compute.modules.relationship.html">compute.modules.relationship()</a></code>).</p></li>
+(p-value, or adjusted p-value with <code>padj = TRUE</code>, &lt;= the <code>pval</code> given to <code><a href="compute.modules.relationship.html">compute.modules.relationship()</a></code>).</p></li>
 </ul><p>The correlations of each module are taken from the row with its name.</p></dd>
 
 

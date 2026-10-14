@@ -69,7 +69,7 @@ clinical/experimental trait. Accepts cell group scores, NMF latent factors
 <dl><dt id="arg-scores">scores<a class="anchor" aria-label="anchor" href="#arg-scores"></a></dt>
 <dd><p>A list, NMF output from <code><a href="compute.latent_factors.html">compute.latent_factors()</a></code>, or a
 score matrix (samples x features). When a list, the first element must be
-the score matrix; optional second to fourth elements (e.g. the output of
+the score matrix; optional second and third elements (e.g. the output of
 <code><a href="construct_cell_groups.html">construct_cell_groups()</a></code>) are subsetted to the significant features and returned with their names.</p></dd>
 
 
@@ -106,8 +106,8 @@ or experimental trait to test against (e.g., response, subtype, etc.). It must b
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A list whose first element is the score matrix restricted to the significant features (no column if none
-is significant). Optional second to fourth elements (from the input list, e.g. the composition, weights and
-<code>Module_relation</code> of the cell groups) are subsetted accordingly and keep their names. The last element,
+is significant). Optional second and third elements (from the input list, e.g. the composition and weights
+of the cell groups) are subsetted accordingly and keep their names. The last element,
 <code>Statistics</code>, is a data frame with the test of every feature (<code>feature</code>, <code>test</code>,
 <code>statistic_name</code>, <code>statistic</code>, <code>p_value</code>, <code>p_adjusted</code>, <code>significant</code>).</p>
     </div>

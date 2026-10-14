@@ -75,6 +75,10 @@
     
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://verapancaldilab.github.io/CellTFusion/">CellTFusion</a></span><span class="op">)</span></span>
+<span><span class="co">#&gt; Warning: replacing previous import 'S4Arrays::makeNindexFromArrayViewport' by</span></span>
+<span><span class="co">#&gt; 'DelayedArray::makeNindexFromArrayViewport' when loading 'HDF5Array'</span></span>
+<span><span class="co">#&gt; Warning: replacing previous import 'S4Arrays::makeNindexFromArrayViewport' by</span></span>
+<span><span class="co">#&gt; 'DelayedArray::makeNindexFromArrayViewport' when loading 'SummarizedExperiment'</span></span>
 <span><span class="co">#&gt; </span></span></code></pre></div>
 <p>This tutorial covers the core steps of <code>CellTFusion</code>:
 building cell groups from TF modules and deconvolution features,
@@ -176,18 +180,8 @@ group:</p>
 <code>train_means</code>, <code>train_sds</code>), used to score new
 samples</td>
 </tr>
-<tr class="even">
-<td><code>Module_relation</code></td>
-<td>For each cell group: its TF module, whether it is positively or
-negatively related to it, the correlation, the number of features and
-its cell types</td>
-</tr>
 </tbody>
 </table>
-<p><code>Module_relation</code> translates a score into cell abundance:
-for a positively related group, a positive score means more of its
-features; for a negatively related group, a positive score means fewer
-of them.</p>
 <div class="section level3">
 <h3 id="re-running-with-precomputed-features">Re-running with precomputed features<a class="anchor" aria-label="anchor" href="#re-running-with-precomputed-features"></a>
 </h3>

@@ -54,13 +54,14 @@ with the TF module: it increases with the features of the cell group
 when they are positively related to the module and decreases with them
 when negatively related (a positive score = the sample is on the active
 side of the module). The `* -1` step was removed. The relation of each
-group to its module is returned in the new `Module_relation` table of
-[`construct_cell_groups()`](https://verapancaldilab.github.io/CellTFusion/reference/construct_cell_groups.md).
-Tutorial data: the score follows this rule in all 123 groups (66
-positive, 57 negative); 122 of 123 scores are identical when the samples
-are reordered (72 before); 121 of 123 scores are positively related to
-their module score (the two others have almost no link with it, \|r\|
-0.11 and 0.05). The text below describes the behaviour before the fix.
+group to its module was returned in a `Module_relation` table of
+[`construct_cell_groups()`](https://verapancaldilab.github.io/CellTFusion/reference/construct_cell_groups.md)
+(removed 14 October 2026 at the user’s request). Tutorial data: the
+score follows this rule in all 123 groups (66 positive, 57 negative);
+122 of 123 scores are identical when the samples are reordered (72
+before); 121 of 123 scores are positively related to their module score
+(the two others have almost no link with it, \|r\| 0.11 and 0.05). The
+text below describes the behaviour before the fix.
 
 **What happens.** CCA weights are only defined up to a sign, and the
 sign returned by
@@ -179,7 +180,18 @@ Decide where to correct the p-values (in
 for every use, or only in
 [`construct_cell_groups()`](https://verapancaldilab.github.io/CellTFusion/reference/construct_cell_groups.md)),
 with which method, and across which tests (all pairs, or per module). It
-would change the cell groups and everything computed from them.
+would change the cell groups and everything computed from them. **Done
+14 October 2026:** `padj` (TRUE / FALSE, default FALSE) in
+[`compute.modules.relationship()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.modules.relationship.md),
+[`construct_cell_groups()`](https://verapancaldilab.github.io/CellTFusion/reference/construct_cell_groups.md)
+and
+[`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md);
+Benjamini-Hochberg across the features for each TF module; the adjusted
+p-values are returned as `p_adjusted`. With the default, results are
+unchanged.
+
+Decide whether `padj = TRUE` should become the default (changes the cell
+groups for every caller).
 
 ## Scaling of TF and pathway activity scores (noted 12 October 2026)
 
@@ -219,6 +231,123 @@ Decide whether `scale = TRUE` stays the default, what to do for test
 sets and multi-cohort runs (TF activity is computed and scaled per
 cohort in batch mode), and whether the downstream steps should scale by
 themselves instead.
+
+## Consistency of parameters shared between functions (noted 14 October 2026)
+
+To check later: the same setting has different names, values and
+defaults in different functions, and some are hard-coded in one place
+and settable in another. Inventory of `R/CellTFusion.R` on 14 October
+2026 (`*` = internal function):
+
+**Correlation type.**
+
+- Names: `cor_type`
+  ([`compute.WTCNA()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.WTCNA.md),
+  [`compute.modules.relationship()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.modules.relationship.md),
+  [`construct_cell_groups()`](https://verapancaldilab.github.io/CellTFusion/reference/construct_cell_groups.md)),
+  `corr_type`
+  ([`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md),
+  passed to
+  [`multideconv::compute.deconvolution.analysis()`](https://verapancaldilab.github.io/multideconv/reference/compute.deconvolution.analysis.html)),
+  `corr_method`
+  ([`compute.metadata.association()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.metadata.association.md)),
+  `method` (`mergeModules()*`, where `method` means the scoring
+  statistic in
+  [`compute.TFs.activity()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.TFs.activity.md)
+  /
+  [`compute.pathway.activity()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.pathway.activity.md)).
+- Values: `"p"` / `"s"` in most functions, but `"spearman"` /
+  `"pearson"` in `corr_type` and `mergeModules()*`.
+- Defaults: Pearson everywhere except the deconvolution subgroups
+  (Spearman).
+- Hard-coded:
+  - [`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md)
+    passes `cor_type = "p"` to
+    [`compute.WTCNA()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.WTCNA.md).
+    The `cor_type` of
+    [`construct_cell_groups()`](https://verapancaldilab.github.io/CellTFusion/reference/construct_cell_groups.md)
+    (added 14 October 2026) is exposed in
+    [`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md)
+    as `cor_type_groups`, next to `corr_type` (deconvolution subgroups).
+  - The ARACNe signs without a `mor` column use Spearman.
+- Threshold names: `corr`
+  ([`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md):
+  deconvolution subgroups; `mergeModules()*`: module merging),
+  `corr_mod`
+  ([`compute.WTCNA()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.WTCNA.md)).
+
+**Tree cut (deep split).**
+
+- [`compute.WTCNA()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.WTCNA.md)
+  hard-codes `deepSplit = 2`, the hybrid method’s 0-4 scale, in both
+  single- and multi-cohort mode.
+- The cell groups always use `deep_split = TRUE`, a switch in
+  `method = "tree"`. Since 14 October 2026 it is no longer a parameter
+  of
+  [`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md),
+  [`construct_cell_groups()`](https://verapancaldilab.github.io/CellTFusion/reference/construct_cell_groups.md)
+  or
+  [`cell.groups.computation()`](https://verapancaldilab.github.io/CellTFusion/reference/cell.groups.computation.md);
+  `calculate_dendrogram_cuts()*` keeps it.
+- Decide whether this stays hard-coded in both places, and document that
+  the two values have different meanings.
+
+**Minimum sizes.**
+
+- `minMod` (TF modules): default 15 in
+  [`compute.WTCNA()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.WTCNA.md)
+  but 5 in
+  [`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md).
+- `min_cluster_size` (cell groups), `min_targets_size` (regulons),
+  `min_genes` (`module_enrich()*`).
+
+**Clustering method.** `clustering.method` is `"average"` in
+[`compute.WTCNA()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.WTCNA.md)
+and `"ward.D2"` in
+[`identify.cell.groups()`](https://verapancaldilab.github.io/CellTFusion/reference/identify.cell.groups.md)
+/
+[`construct_cell_groups()`](https://verapancaldilab.github.io/CellTFusion/reference/construct_cell_groups.md);
+[`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md)
+hard-codes both.
+
+**Other common parameters.**
+
+- **Output file:** `file_name` vs `file.name` vs `dendrogram_file`.
+- **Saving and plots:**
+  - `return` defaults to `TRUE` in most functions but `FALSE` in
+    [`construct_cell_groups()`](https://verapancaldilab.github.io/CellTFusion/reference/construct_cell_groups.md)
+    and
+    [`prepare_celltfusion_folds()`](https://verapancaldilab.github.io/CellTFusion/reference/prepare_celltfusion_folds.md).
+  - Plots are switched by `plot`, `plot_dot`, `plot_grid`, `plot.grid`
+    or `return_dendrogram`.
+- **`verbose`:** default `TRUE` in
+  [`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md),
+  `FALSE` in
+  [`compute.WTCNA()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.WTCNA.md)
+  and
+  [`prepare_celltfusion_folds()`](https://verapancaldilab.github.io/CellTFusion/reference/prepare_celltfusion_folds.md).
+- **`batch`:** a cohort vector everywhere except
+  [`compute.WTCNA()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.WTCNA.md)
+  (logical).
+- **Multiple-testing correction:** `p_adjust` (any
+  [`stats::p.adjust()`](https://rdrr.io/r/stats/p.adjust.html) method,
+  default `"none"`) in
+  [`compute.metadata.association()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.metadata.association.md),
+  [`compute.survival.analysis()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.survival.analysis.md)
+  and the `scores.*` tests, but `padj` (TRUE / FALSE, always
+  Benjamini-Hochberg) in
+  [`compute.modules.relationship()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.modules.relationship.md),
+  [`construct_cell_groups()`](https://verapancaldilab.github.io/CellTFusion/reference/construct_cell_groups.md)
+  and
+  [`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md)
+  since 14 October 2026.
+- **`seed`:** only in
+  [`compute.latent_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.latent_factors.md)
+  and
+  [`compute_factor_gsea()`](https://verapancaldilab.github.io/CellTFusion/reference/compute_factor_gsea.md).
+
+Renaming or changing defaults breaks callers (MCP server, paper scripts,
+Shiny app): list them before deciding.
 
 ## Deferred: to do after the review of `CellTFusion()` (noted October 2026)
 
@@ -294,12 +423,15 @@ neighbour is the right answer.
 **Cell niches: more or fewer cells.**
 [`compute_cells_niches()`](https://verapancaldilab.github.io/CellTFusion/reference/compute_cells_niches.md)
 adds together the selected cell group parts that mean more cells and
-those that mean fewer (it uses neither `_pos` / `_neg` nor
-`Module_relation`). Measured 12 October 2026 on the tutorial data (3
-factors): the selected parts meaning more / fewer cells are 41 / 25, 29
-/ 40 and 38 / 17; the top cell type of Factor1, CAF (weight 0.14), gets
-0.11 from parts meaning fewer CAFs and 0.03 from parts meaning more.
-Proposed: give each part its direction from `Module_relation`, compute
-weights and enrichment separately for more and fewer, return per factor
-a table (cell type, direction, weight, enrichment) and colour the plot
-edges by direction; this changes the structure of `Cells_niches`.
+those that mean fewer (it uses neither `_pos` / `_neg` nor the relation
+of each group to its TF module). Measured 12 October 2026 on the
+tutorial data (3 factors): the selected parts meaning more / fewer cells
+are 41 / 25, 29 / 40 and 38 / 17; the top cell type of Factor1, CAF
+(weight 0.14), gets 0.11 from parts meaning fewer CAFs and 0.03 from
+parts meaning more. Proposed: give each part its direction (from the
+relation of its group to the TF module; `Module_relation`, which gave
+it, was removed on 14 October 2026, so it would have to be computed
+here), compute weights and enrichment separately for more and fewer,
+return per factor a table (cell type, direction, weight, enrichment) and
+colour the plot edges by direction; this changes the structure of
+`Cells_niches`.

@@ -90,12 +90,11 @@ For each factor and cell type:
   present in only one of them can pass the threshold.
 
 The direction is not taken into account: a selected part can mean more
-or fewer cells of its group (depending on `_pos` / `_neg` and on the
-relation of the group to its TF module, see `Module_relation` in
-[`construct_cell_groups()`](https://verapancaldilab.github.io/CellTFusion/reference/construct_cell_groups.md)),
-and both are added together. A cell type of a niche is therefore
-associated with the factor, without saying whether the factor has more
-or fewer of it.
+or fewer cells of its group (depending on `_pos` / `_neg` and on whether
+the features of the group are positively or negatively related to its TF
+module), and both are added together. A cell type of a niche is
+therefore associated with the factor, without saying whether the factor
+has more or fewer of it.
 
 ## Examples
 
@@ -106,23 +105,23 @@ cell_groups <- construct_cell_groups(network.tuto, deconv_subgroups.tuto)
 #> 20 of 764 features were not assigned to any cluster by the tree cut and are not part of any cell group (blue: 6, pink: 2, red: 2, yellow: 8, black: 2)
 latent <- compute.latent_factors(cell_groups$Cell_groups, return = FALSE)
 #> Estimating optimal rank via elbow on reconstruction MSE (ranks 2:8)...
-#> MSE by rank: k2=0.00127  k3=0.000964  k4=0.000837  k5=0.000754  k6=0.000708  k7=0.000666  k8=0.000635
+#> MSE by rank: k2=0.00127  k3=0.000964  k4=0.000838  k5=0.000756  k6=0.00071  k7=0.000675  k8=0.000632
 #> Selected rank (elbow): 3
 #> Running RcppML NMF with rank = 3...
 niches <- compute_cells_niches(latent, deconv_subgroups.tuto, cell_groups, return = FALSE)
 niches
 #> $Factor1
 #>                  CAF               Plasma           NK.resting 
-#>           0.13981351           0.08590253           0.07909920 
+#>           0.14005451           0.08621658           0.07939530 
 #> Mast.activated.cells          Eosinophils 
-#>           0.04980160           0.03468501 
+#>           0.04995649           0.03483520 
 #> 
 #> $Factor2
 #> Mast.activated.cells 
-#>           0.05223202 
+#>           0.05231772 
 #> 
 #> $Factor3
 #>             B.cells T.cells.gamma.delta 
-#>          0.35521646          0.02325468 
+#>          0.35303595          0.02312485 
 #> 
 ```

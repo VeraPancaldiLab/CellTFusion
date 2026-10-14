@@ -61,6 +61,7 @@ Optionally, it also performs Gene Set Variation Analysis (GSVA) using hallmark s
 <span>  paths <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  method <span class="op">=</span> <span class="st">"ulm"</span>,</span>
 <span>  scale <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  batch <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  return <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  file.name <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -99,6 +100,15 @@ linear model, default), <code>"mlm"</code> (multivariate linear model), <code>"w
 sample then depend on the other samples given in the same call; use <code>scale = FALSE</code> to get scores that can be
 compared between separate calls (e.g. a training and a test set). With fewer than three samples the scores are
 not scaled (a message is given).</p></dd>
+
+
+<dt id="arg-batch">batch<a class="anchor" aria-label="anchor" href="#arg-batch"></a></dt>
+<dd><p>Optional vector with the cohort of each sample, in the column order of <code>RNA.tpm</code> (if it is named,
+it is matched to the samples by name instead). It is always treated as categorical. If given, the samples are split
+by cohort, the pathway activities (PROGENy and, if requested, GSVA) are computed and scaled (see <code>scale</code>)
+separately in each cohort, and the results are joined in the sample order of <code>RNA.tpm</code>; the output has the same
+form as without <code>batch</code>. Pathways or gene sets that cannot be scored in every cohort are left out (with a message).
+Default is <code>NULL</code> (single cohort); a vector with only one cohort is treated the same way.</p></dd>
 
 
 <dt id="arg-return">return<a class="anchor" aria-label="anchor" href="#arg-return"></a></dt>

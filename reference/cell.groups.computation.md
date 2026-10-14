@@ -15,9 +15,7 @@ cell.groups.computation(
   return = T,
   dendrogram_file = NULL,
   return_dendrogram = FALSE,
-  cells_extra = NULL,
-  min_cluster_size = 3,
-  deep_split = TRUE
+  min_cluster_size = 3
 )
 ```
 
@@ -65,25 +63,14 @@ cell.groups.computation(
   `Results/Dendrogram_color_clusters_<dendrogram_file>.pdf` (only when
   `dendrogram_file` is set). Default FALSE.
 
-- cells_extra:
-
-  Optional character vector with the cell names that are not in the
-  nomenclature of multideconv, used to list the cell types of each cell
-  group.
-
 - min_cluster_size:
 
   Integer. Minimum number of features of a cell group (minimum cluster
   size of the dynamic tree cut of each dendrogram). Default is 3.
 
-- deep_split:
-
-  Logical. If TRUE (default), the dynamic tree cut splits the clusters
-  more finely.
-
 ## Value
 
-An unnamed list of four elements:
+An unnamed list of three elements:
 
 - `[[1]]`: A data frame with the composite scores of all identified cell
   groups across samples. A positive score means that the sample is on
@@ -95,22 +82,16 @@ An unnamed list of four elements:
 - `[[3]]`: A named list of CCA projection parameters (`xcoef`,
   `train_means`, `train_sds`) for each cell group.
 
-- `[[4]]`: A data frame with the relation of each cell group to its TF
-  module (see
-  [`construct_cell_groups()`](https://verapancaldilab.github.io/CellTFusion/reference/construct_cell_groups.md)).
-
 Cell groups are named `Dendrogram_<module>_group_<n>`, where `n` is the
 cluster number of the dendrogram of that module (the number shown in the
-dendrogram PDF); the first three elements use the same names. An error
-is raised if no cluster is found in any module. Features that the tree
-cut does not assign to any cluster are not part of any cell group: a
-message reports how many there are per module. If `return=TRUE`, two CSV
-files will be created:
+dendrogram PDF); the three elements use the same names. An error is
+raised if no cluster is found in any module. Features that the tree cut
+does not assign to any cluster are not part of any cell group: a message
+reports how many there are per module. If `return=TRUE`, two CSV files
+will be created:
 
 - `Results/Cell.groups.composition_<dendrogram_file>.csv`: A table
-  showing the composition of each cell group, its TF module, its
-  relation to it (positive or negative, and the correlation) and its
-  cell types.
+  showing the composition of each cell group.
 
 - `Results/Cell.groups.scores_<dendrogram_file>.csv`: A matrix of cell
   group scores across samples.

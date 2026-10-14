@@ -51,7 +51,7 @@ scores.ttest(scores, coldata, trait, pval = 0.05, p_adjust = "none")
 A list with the significant features: its first element is the score
 matrix restricted to them (no column if none is significant), followed
 by the matching parts of the other elements of `scores` (e.g.
-`Composition`, `Weights` and `Module_relation` of
+`Composition` and `Weights` of
 [`construct_cell_groups()`](https://verapancaldilab.github.io/CellTFusion/reference/construct_cell_groups.md)),
 with their names. The last element, `Statistics`, is a data frame with
 the test of every feature (`feature`, `test`, `statistic_name`,

@@ -29,8 +29,8 @@ identify(features, clustering.method = "ward.D2", file_name = NULL, return = T)
     (rows, named) and deconvolution features (columns).
 
   - `[[2]]` (`significant`): A list, named by TF module, of the features
-    significantly correlated with each module (p-value \<= the `pval`
-    given to
+    significantly correlated with each module (p-value, or adjusted
+    p-value with `padj = TRUE`, \<= the `pval` given to
     [`compute.modules.relationship()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.modules.relationship.md)).
 
   The correlations of each module are taken from the row with its name.
