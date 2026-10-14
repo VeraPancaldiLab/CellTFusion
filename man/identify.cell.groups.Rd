@@ -12,7 +12,7 @@
 \itemize{
 \item \code{[[1]]} (\code{correlation}): A matrix of correlations between TF modules (rows, named) and deconvolution features (columns).
 \item \code{[[2]]} (\code{significant}): A list, named by TF module, of the features significantly correlated with each module
-(p-value <= the \code{pval} given to \code{compute.modules.relationship()}).
+(p-value, or adjusted p-value with \code{padj = TRUE}, <= the \code{pval} given to \code{compute.modules.relationship()}).
 }
 The correlations of each module are taken from the row with its name.}
 

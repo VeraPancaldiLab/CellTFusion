@@ -59,8 +59,8 @@ cell groups containing it. It is a ratio, not a statistical test: with few selec
 present in only one of them can pass the threshold.
 }
 The direction is not taken into account: a selected part can mean more or fewer cells of its group (depending on
-\code{_pos} / \code{_neg} and on the relation of the group to its TF module, see \code{Module_relation} in
-\code{construct_cell_groups()}), and both are added together. A cell type of a niche is therefore associated with
+\code{_pos} / \code{_neg} and on whether the features of the group are positively or negatively related to its TF
+module), and both are added together. A cell type of a niche is therefore associated with
 the factor, without saying whether the factor has more or fewer of it.
 }
 \examples{

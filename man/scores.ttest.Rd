@@ -26,7 +26,7 @@ scores. Samples with a missing trait are left out (with a message).}
 \value{
 A list with the significant features: its first element is the score matrix restricted to them (no
 column if none is significant), followed by the matching parts of the other elements of \code{scores} (e.g.
-\code{Composition}, \code{Weights} and \code{Module_relation} of \code{construct_cell_groups()}), with their names.
+\code{Composition} and \code{Weights} of \code{construct_cell_groups()}), with their names.
 The last element, \code{Statistics}, is a data frame with the test of every feature (\code{feature}, \code{test},
 \code{statistic_name}, \code{statistic}, \code{p_value}, \code{p_adjusted}, \code{significant}).
 }

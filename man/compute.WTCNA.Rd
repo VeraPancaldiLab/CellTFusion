@@ -15,6 +15,7 @@ compute.WTCNA(
   verbose = F,
   file.name = NULL,
   softPower = NULL,
+  consensus_quantile = 0,
   return = T
 )
 }
@@ -22,26 +23,24 @@ compute.WTCNA(
 \item{TFs.matrix}{Matrix of TF activity (samples x TFs). When \code{batch = TRUE}, a list of such matrices,
 one per cohort.}
 
-\item{batch}{Logical; if TRUE, performs consensus WGCNA (\code{WGCNA::blockwiseConsensusModules()}) across cohorts
-provided as a list of matrices. In this mode \code{clustering.method} is not used (WGCNA builds the consensus tree
-itself), modules are merged by WGCNA with \code{mergeCutHeight = 1 - corr_mod}, and module eigengenes are scaled
-within each cohort.}
+\item{batch}{Logical; if TRUE, builds consensus TF modules across cohorts provided as a list of matrices (see
+Details). Module eigengenes are then computed and scaled within each cohort.}
 
 \item{network.type}{Network type: "signed" (default) or "unsigned".}
 
 \item{clustering.method}{Linkage method of the hierarchical clustering of the TFs (\code{stats::hclust()}), applied to the
-TOM dissimilarity (1 - topological overlap) between TFs (single-cohort mode only). Default is "average", as in WGCNA:
-two groups of TFs are joined according to the average dissimilarity between their TFs.}
+TOM dissimilarity (1 - topological overlap) between TFs, or to the consensus TOM dissimilarity in batch mode. Default
+is "average", as in WGCNA: two groups of TFs are joined according to the average dissimilarity between their TFs.}
 
 \item{minMod}{Minimum number of TFs per module. Default is 15.}
 
 \item{corr_mod}{Correlation threshold (0-1): modules whose eigengenes have a correlation (of type \code{cor_type})
-above it are merged. Default is 0.9.}
+above it are merged. In batch mode, the correlation is computed on the eigengenes of all the samples, scaled within
+each cohort. Default is 0.9.}
 
 \item{cor_type}{Correlation used to pick the soft-threshold power, build the adjacency matrix, merge modules and
-compute the proportion of variance explained: "p" (Pearson) or "s" (Spearman). The module eigengene is always the
-first principal component of the module's TF activities. Spearman is only available when \code{batch = FALSE}, because WGCNA
-consensus modules only support Pearson correlation. Default is "p".}
+compute the proportion of variance explained: "p" (Pearson) or "s" (Spearman), in single-cohort and batch mode. The
+module eigengene is always the first principal component of the module's TF activities. Default is "p".}
 
 \item{verbose}{Logical; whether to print the function messages. Default is FALSE.}
 
@@ -53,6 +52,13 @@ mode, the diagnostic plots \code{Soft_Threshold_<file.name>.pdf},
 \item{softPower}{Optional numeric value specifying the soft-thresholding power used to build the adjacency
 matrix (one value per cohort when \code{batch = TRUE}). If \code{NULL}, the lowest power whose scale-free fit
 \eqn{R^2} reaches 0.9 is chosen automatically (the power with the best fit if none reaches 0.9, with a message).}
+
+\item{consensus_quantile}{Numeric between 0 and 1 (batch mode only). For each pair of TFs, the consensus topological
+overlap is this quantile of its (calibrated) topological overlaps across the cohorts. With 0 (default), the
+minimum: two TFs are close only if they are close in every cohort, the strictest choice, which removes more TF
+relationships as more cohorts are added. Higher values are less strict: with \code{K} cohorts,
+\code{consensus_quantile = k / (K - 1)} takes the \code{(k + 1)}-th lowest value, so two TFs are close if they are
+close in all cohorts but \code{k} (e.g. 0.25 with 5 cohorts: in at least 4 of them); 0.5 is the median.}
 
 \item{return}{Logical, whether to save output plots, the module list (\code{Results/TFs_modules_<file.name>.csv})
 and the module matrix (\code{Results/TF_module_matrix_<file.name>.csv}, with the sample names as row names)
@@ -68,7 +74,8 @@ concatenated in cohort order (use the row names to match them to other tables).
 \item \code{Proportion of variance}: Variance explained per module (single-cohort mode only).
 \item \code{TFs_matrix}: The TF activity matrix used (a list of per-cohort matrices restricted to shared TFs in batch mode).
 \item \code{Network parameters}: A list with the soft-thresholding power(s) used (\code{softPower}, one per cohort in
-batch mode), \code{network.type} and \code{cor_type}, used by \code{identify_hub_TFs()}.
+batch mode), \code{network.type} and \code{cor_type}, used by \code{identify_hub_TFs()}, and in batch mode
+\code{consensus_quantile}.
 }
 }
 \description{
@@ -80,16 +87,21 @@ represented by the eigengene of the module.
 TFs that WGCNA does not assign to any module (color \code{"grey"}) are not a module: they are left out of the
 module matrix and of \code{TFs per module}, with a message.
 
-In batch mode, the soft-thresholding powers are chosen on the TFs shared by all cohorts, the ones used to build
-the network.
-
-In batch mode, \code{WGCNA::blockwiseConsensusModules()} can fail with
-\code{"dim(X) must have a positive length"} when a consensus module has exactly one TF to reassign to
-another module (a known WGCNA issue). The problem goes away when the modules change. If the powers were
-chosen automatically (\code{softPower = NULL}), \code{compute.WTCNA()} retries moving the power of one cohort
-one step down or up, and gives a warning with the powers that were finally used. If \code{softPower} was
-given, or no neighbouring power works, it stops with a message reporting the powers: set \code{softPower}
-to slightly different values or change \code{minMod} (a small change may not be enough).
+In batch mode, the modules are built with the same steps as in single-cohort mode, on a consensus network:
+\enumerate{
+\item only the TFs shared by all cohorts are used, and a soft-thresholding power is chosen for each cohort;
+\item the adjacency and the topological overlap matrix (TOM) are computed in each cohort, with its own power;
+\item the TOMs are calibrated to a common scale as in \code{WGCNA::blockwiseConsensusModules()}: each TOM is raised to
+the power that makes its 0.95 quantile equal to that of the first cohort;
+\item the consensus TOM is, for each pair of TFs, the \code{consensus_quantile} quantile of its calibrated TOMs across
+cohorts;
+\item the TFs are clustered on 1 - consensus TOM with \code{clustering.method} and the tree is cut with the same dynamic
+tree cut as in single-cohort mode;
+\item the module eigengenes are computed and scaled within each cohort, and the modules are merged as in single-cohort
+mode (see \code{corr_mod}); merged scores are scaled within each cohort again.
+}
+Unlike \code{WGCNA::blockwiseConsensusModules()}, the TFs of each module are not filtered or reassigned afterwards
+by their module membership (as in single-cohort mode). The diagnostic plots are only saved in single-cohort mode.
 }
 \examples{
 

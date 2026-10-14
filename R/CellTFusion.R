@@ -65,8 +65,8 @@ NULL
 #'   given when the values do not look like TPM, i.e. no value above 20 or negative values).
 #' @param batch (Optional) A vector with the cohort of each sample (e.g. \code{coldata$Cohort}), in the same order
 #'   as the columns of \code{raw.counts}; if it is named, it is matched to the samples by name instead. It is
-#'   always treated as categorical. If given, the multi-cohort mode is run: TF activity is computed per cohort,
-#'   TF modules are built with consensus WGCNA across cohorts, and the cohort is controlled for in the
+#'   always treated as categorical. If given, the multi-cohort mode is run: TF and pathway activities are computed per
+#'   cohort, TF modules are built from a consensus network across cohorts (see \code{consensus_quantile}), and the cohort is controlled for in the
 #'   deconvolution analysis and cell group construction. Default is \code{NULL} (single cohort); a vector with
 #'   only one cohort is treated the same way.
 #' @param deconv_methods A character vector of deconvolution methods to apply. Default is
@@ -97,6 +97,11 @@ NULL
 #' @param softPower (Optional) Soft-thresholding power used to build the TF network, passed to
 #'   \code{compute.WTCNA()}: one value, or one value per cohort (in the order the cohorts first appear in
 #'   \code{batch}) in multi-cohort mode. If \code{NULL} (default), it is chosen automatically.
+#' @param cor_type_modules Correlation used to build the TF network and merge TF modules: "p" (Pearson, default) or
+#'   "s" (Spearman). Passed to \code{compute.WTCNA()} as \code{cor_type}.
+#' @param consensus_quantile Numeric between 0 and 1, used in multi-cohort mode only: quantile of the topological
+#'   overlaps of each pair of TFs across cohorts used as their consensus (0, the default, is the minimum: two TFs are
+#'   close only if they are close in every cohort; higher values are less strict). Passed to \code{compute.WTCNA()}.
 #' @param corr Numeric; correlation threshold used in the deconvolution analysis. Default is 0.7.
 #' @param corr_type Correlation type used in deconvolution analysis. Default is \code{"spearman"}.
 #' @param cells_extra (Optional) A character vector with the cell names to consider that are not included in the nomenclature of multideconv (see R package).
@@ -104,10 +109,13 @@ NULL
 #'   if they are not listed here they are discarded.
 #' @param pval Numeric; p-value threshold used when building cell groups (selection of the deconvolution
 #'   features significantly correlated with each TF module). Default is 0.05.
+#' @param padj Logical; if TRUE, the p-values used when building cell groups are corrected for multiple testing
+#'   (Benjamini-Hochberg, across the deconvolution features for each TF module) and compared with \code{pval}.
+#'   Passed to \code{construct_cell_groups()}. Default is FALSE.
+#' @param cor_type_groups Correlation used between the TF modules and the deconvolution features when building
+#'   cell groups: "p" (Pearson, default) or "s" (Spearman). Passed to \code{construct_cell_groups()} as \code{cor_type}.
 #' @param min_cluster_size Integer; minimum number of features of a cell group (minimum cluster size of the
 #'   dynamic tree cut), passed to \code{construct_cell_groups()}. Default is 3.
-#' @param deep_split Logical; if TRUE (default), the dynamic tree cut that defines the cell groups splits the
-#'   clusters more finely. Passed to \code{construct_cell_groups()}.
 #' @param enrich_thresh Numeric. Minimum enrichment ratio (foreground/background cell-type frequency)
 #'   required to include a cell type in a latent factor's niche. Default is 1.5.
 #' @param quantile_cutoff Numeric between 0 and 1. Quantile threshold for selecting top-contributing
@@ -138,8 +146,7 @@ NULL
 #'     in the sample order of \code{raw.counts} (also in multi-cohort mode).}
 #'   \item{Pathways_scores}{Pathway activity scores returned by \code{compute.pathway.activity()}.}
 #'   \item{Processed_deconvolution}{The processed deconvolution subgroups (output of \code{multideconv::compute.deconvolution.analysis()}).}
-#'   \item{Cell_groups}{Output of \code{construct_cell_groups()}: cell group scores, compositions, projection weights
-#'     and the relation of each cell group to its TF module.}
+#'   \item{Cell_groups}{Output of \code{construct_cell_groups()}: cell group scores, compositions and projection weights.}
 #'   \item{Latent_spaces}{NMF latent factors returned by \code{compute.latent_factors()}.}
 #'   \item{Cells_niches}{Enriched cell types per latent factor (see \code{compute_cells_niches()}).}
 #'   \item{TME_states}{Factor-to-meta-program mapping (\code{factor_mapping} from \code{map_factors_to_metaprograms()}), or \code{NULL} if the mapping was skipped (see \code{cancer_type}).}
@@ -180,7 +187,7 @@ NULL
 #'}
 #'
 CellTFusion = function(raw.counts, deconv = NULL, dt = NULL, tfs = NULL, pathways = NULL, normalized = T, batch = NULL, deconv_methods = c("Quantiseq", "CBSX", "Epidish", "DeconRNASeq", "DWLS"), cbsx.mail = NULL, cbsx.token = NULL, doParallel = F, workers = NULL, file_name = NULL,
-                       TF.collection = "CollecTRI", min_targets_size = 5, universe = NULL, paths = NULL, gene_sets = NULL, minMod = 5, corr_mod = 0.9, softPower = NULL, corr = 0.7, corr_type = "spearman", cells_extra = NULL, pval = 0.05, min_cluster_size = 3, deep_split = T, enrich_thresh = 1.5, quantile_cutoff = 0.7, cancer_type = NULL, return = T, verbose = T){
+                       TF.collection = "CollecTRI", min_targets_size = 5, universe = NULL, paths = NULL, gene_sets = NULL, minMod = 5, corr_mod = 0.9, softPower = NULL, cor_type_modules = "p", consensus_quantile = 0, corr = 0.7, corr_type = "spearman", cells_extra = NULL, pval = 0.05, padj = FALSE, cor_type_groups = "p", min_cluster_size = 3, enrich_thresh = 1.5, quantile_cutoff = 0.7, cancer_type = NULL, return = T, verbose = T){
 
   withr::local_preserve_seed()
   set.seed(123)
@@ -286,7 +293,7 @@ CellTFusion = function(raw.counts, deconv = NULL, dt = NULL, tfs = NULL, pathway
   if(verbose){
     cat("\nConstructing TF network............................................................\n")
   }
-  network = quiet(compute.WTCNA(TFs.matrix = tfs, batch = !is.null(batch_vec), network.type = "signed", clustering.method = "average", minMod = minMod, corr_mod = corr_mod, cor_type = "p", softPower = softPower, return = return, file.name = file_name))
+  network = quiet(compute.WTCNA(TFs.matrix = tfs, batch = !is.null(batch_vec), network.type = "signed", clustering.method = "average", minMod = minMod, corr_mod = corr_mod, cor_type = cor_type_modules, softPower = softPower, consensus_quantile = consensus_quantile, return = return, file.name = file_name))
   if(!is.null(batch_vec)){ # Consensus module scores are stacked cohort by cohort: back to the sample order of the counts
     idx = match(make.names(colnames(counts.norm)), make.names(rownames(network[["TFs module matrix"]])))
     if(!anyNA(idx)) network[["TFs module matrix"]] = network[["TFs module matrix"]][idx, , drop = F]
@@ -297,7 +304,7 @@ CellTFusion = function(raw.counts, deconv = NULL, dt = NULL, tfs = NULL, pathway
     if(verbose){
       cat("\nCalculating pathway activities............................................................\n")
     }
-    pathways = quiet(compute.pathway.activity(counts.norm, gene_sets = gene_sets, paths = paths, return = return, file.name = file_name))
+    pathways = quiet(compute.pathway.activity(counts.norm, gene_sets = gene_sets, paths = paths, batch = batch_vec, return = return, file.name = file_name))
   }
 
   # 3. Deconvolution analysis / cell subgroups (skipped if precomputed `dt` is supplied)
@@ -313,7 +320,7 @@ CellTFusion = function(raw.counts, deconv = NULL, dt = NULL, tfs = NULL, pathway
   if(verbose){
     cat("\nCell groups identification............................................................\n")
   }
-  cell.groups = quiet(construct_cell_groups(network, dt, batch = batch_vec, pval = pval, clustering.method = "ward.D2", dendrogram_file = file_name, return_dendrogram = return, return = return, cells_extra = cells_extra, min_cluster_size = min_cluster_size, deep_split = deep_split))
+  cell.groups = quiet(construct_cell_groups(network, dt, batch = batch_vec, pval = pval, padj = padj, cor_type = cor_type_groups, clustering.method = "ward.D2", dendrogram_file = file_name, return_dendrogram = return, return = return, min_cluster_size = min_cluster_size))
 
   # 5. Cell groups latent spaces
   if(verbose){
@@ -390,29 +397,23 @@ CellTFusion = function(raw.counts, deconv = NULL, dt = NULL, tfs = NULL, pathway
 #'   \code{return_dendrogram}) and the CSV files (see \code{return}).
 #' @param return_dendrogram Logical. If TRUE, saves a PDF of the colored cell-group dendrograms to
 #'   \code{Results/Dendrogram_color_clusters_<dendrogram_file>.pdf} (only when \code{dendrogram_file} is set). Default FALSE.
-#' @param cells_extra Optional character vector with the cell names that are not in the nomenclature of multideconv,
-#'   used to list the cell types of each cell group.
 #' @param min_cluster_size Integer. Minimum number of features of a cell group (minimum cluster size of the
 #'   dynamic tree cut of each dendrogram). Default is 3.
-#' @param deep_split Logical. If TRUE (default), the dynamic tree cut splits the clusters more finely.
 #'
-#' @return An unnamed list of four elements:
+#' @return An unnamed list of three elements:
 #' \itemize{
 #'   \item \code{[[1]]}: A data frame with the composite scores of all identified cell groups across samples. A
 #'     positive score means that the sample is on the active side of the TF module of that cell group.
 #'   \item \code{[[2]]}: A named list of vectors indicating the composition (original features) of each cell group.
 #'   \item \code{[[3]]}: A named list of CCA projection parameters (\code{xcoef}, \code{train_means}, \code{train_sds}) for each cell group.
-#'   \item \code{[[4]]}: A data frame with the relation of each cell group to its TF module (see
-#'     \code{construct_cell_groups()}).
 #' }
 #' Cell groups are named \code{Dendrogram_<module>_group_<n>}, where \code{n} is the cluster number of the
-#' dendrogram of that module (the number shown in the dendrogram PDF); the first three elements use the same names.
+#' dendrogram of that module (the number shown in the dendrogram PDF); the three elements use the same names.
 #' An error is raised if no cluster is found in any module. Features that the tree cut does not assign to any cluster
 #' are not part of any cell group: a message reports how many there are per module.
 #' If \code{return=TRUE}, two CSV files will be created:
 #' \itemize{
-#'   \item \code{Results/Cell.groups.composition_<dendrogram_file>.csv}: A table showing the composition of each cell
-#'     group, its TF module, its relation to it (positive or negative, and the correlation) and its cell types.
+#'   \item \code{Results/Cell.groups.composition_<dendrogram_file>.csv}: A table showing the composition of each cell group.
 #'   \item \code{Results/Cell.groups.scores_<dendrogram_file>.csv}: A matrix of cell group scores across samples.
 #' }
 #' Without \code{dendrogram_file}, they are named \code{Cell.groups.composition.csv} and \code{Cell.groups.scores.csv}.
@@ -432,7 +433,7 @@ CellTFusion = function(raw.counts, deconv = NULL, dt = NULL, tfs = NULL, pathway
 #'   return = TRUE
 #' )
 #' }
-cell.groups.computation = function(deconvolution, cell.dendrograms, tfs.module.network, batch = NULL, return = T, dendrogram_file = NULL, return_dendrogram = FALSE, cells_extra = NULL, min_cluster_size = 3, deep_split = TRUE){
+cell.groups.computation = function(deconvolution, cell.dendrograms, tfs.module.network, batch = NULL, return = T, dendrogram_file = NULL, return_dendrogram = FALSE, min_cluster_size = 3){
 
   if(length(cell.dendrograms) == 0){
     stop("No dendrograms given: no TF module has deconvolution features to cluster")
@@ -448,7 +449,7 @@ cell.groups.computation = function(deconvolution, cell.dendrograms, tfs.module.n
 
   cell.groups = list()
   unassigned = c()
-  cuts_per_dendrogram = calculate_dendrogram_cuts(cell.dendrograms, deep_split = deep_split, min_cluster_size = min_cluster_size)
+  cuts_per_dendrogram = calculate_dendrogram_cuts(cell.dendrograms, deep_split = TRUE, min_cluster_size = min_cluster_size)
 
   if(return_dendrogram){
     plot_dendrogram_clusters(cell.dendrograms, cuts_per_dendrogram, file_name = dendrogram_file)
@@ -464,7 +465,6 @@ cell.groups.computation = function(deconvolution, cell.dendrograms, tfs.module.n
     y = list()
     x = list()
     z = list()
-    r = c()
 
     for (j in seq_along(cluster_ids)) {
       cells = names(clusters)[clusters == cluster_ids[j]]
@@ -475,14 +475,13 @@ cell.groups.computation = function(deconvolution, cell.dendrograms, tfs.module.n
       score = compute_composite_score(pca_group, color, tfs.module.network, batch = batch)
       x[[j]] = score[[1]]
       z[[j]] = score[[2]]
-      r[j] = score[[3]]
       y[[j]] = rownames(score[[2]]$xcoef) # Features with a weight (the CCA can drop collinear features)
     }
 
     if(length(x) != 0){
       ###################################################Naming of cell groups: cluster number of the dendrogram (same number as in the dendrogram plot)
       names(x) = names(y) = names(z) = paste0("Dendrogram_", names(cell.dendrograms)[k], "_group_", cluster_ids)
-      cell.groups[[k]] = list(x, y, z, r)
+      cell.groups[[k]] = list(x, y, z)
     }else{
       cell.groups[[k]] <- NA #To avoid the problem when putting NULL (list ignore it and not consider it an element)
     }
@@ -504,20 +503,7 @@ cell.groups.computation = function(deconvolution, cell.dendrograms, tfs.module.n
   cell.groups.names <- lapply(cell.groups, function(x) x[[2]])
   cell.groups.loadings <- lapply(cell.groups, function(x) x[[3]])
 
-  ###################################################Relation of each cell group to its TF module
-  cell.groups.relation <- unlist(lapply(unname(cell.groups), function(x) x[[4]]))
-  module.relation = data.frame(cell_group = unlist(lapply(unname(cell.groups.names), names)),
-                               module = rep(names(cell.groups), times = sapply(cell.groups, function(x) length(x[[2]]))),
-                               relation = ifelse(cell.groups.relation < 0, "negative", "positive"),
-                               correlation = cell.groups.relation,
-                               n_features = unlist(lapply(unname(cell.groups.names), lengths)),
-                               stringsAsFactors = F, row.names = NULL)
-  # Cell types of each cell group, the most frequent among its features first
-  module.relation$cell_types = sapply(unlist(unname(cell.groups.names), recursive = F), function(features){
-    paste(names(sort(table(unlist(lapply(features, extract_cells, cells_extra = cells_extra))), decreasing = T)), collapse = ", ")
-  })
-
-  cell.groups = list(unlist(unname(cell.groups.values), recursive = F), unlist(unname(cell.groups.names), recursive = F),  unlist(unname(cell.groups.loadings), recursive = F), module.relation)
+  cell.groups = list(unlist(unname(cell.groups.values), recursive = F), unlist(unname(cell.groups.names), recursive = F),  unlist(unname(cell.groups.loadings), recursive = F))
   cell.groups[[1]] = cell.groups[[1]] %>%
     data.frame()
 
@@ -528,7 +514,6 @@ cell.groups.computation = function(deconvolution, cell.dendrograms, tfs.module.n
     clusters[i,2] = paste(cell.groups[[2]][[i]], collapse ="\n")
   }
   colnames(clusters) = c("Cell groups", "Methods-signatures")
-  clusters = cbind(clusters, "Module" = module.relation$module, "Relation" = module.relation$relation, "Correlation" = module.relation$correlation, "Cell types" = module.relation$cell_types)
 
   if(return){
     file_suffix = if(!is.null(dendrogram_file)) paste0("_", dendrogram_file)
@@ -889,7 +874,11 @@ compute.modules.enrichment <- function(RNA.tpm, hub_tfs, TF.collection = "Collec
 #' @param batch Optional vector indicating batch assignment for samples (no missing values). If it has two or more
 #'   levels, partial correlations (\code{ppcor::pcor.test()}, Pearson or Spearman according to \code{cor_type}) are
 #'   computed controlling for batch. Batch is treated as categorical (one dummy variable per level beyond the first).
-#' @param pval A numeric threshold for the p-value to define significance (p-value <= \code{pval}). Default is 0.05.
+#' @param pval A numeric threshold for the p-value to define significance (p-value, or adjusted p-value with
+#'   \code{padj = TRUE}, <= \code{pval}). Default is 0.05.
+#' @param padj Logical; if TRUE, the p-values are corrected for multiple testing with the Benjamini-Hochberg method,
+#'   across the columns of \code{matB} for each column of \code{matA}, and the adjusted p-values are used to define
+#'   significance (in \code{significant} and in the figures). Default is FALSE.
 #' @param cor_type Type of correlation to compute: "p" (Pearson) or "s" (Spearman). Default is "p". It also sets
 #'   the type of the partial correlations computed with \code{batch}.
 #' @param vertical Logical; if TRUE, modules are on the x-axis and the \code{matB} features on the y-axis.
@@ -906,8 +895,10 @@ compute.modules.enrichment <- function(RNA.tpm, hub_tfs, TF.collection = "Collec
 #' \itemize{
 #'   \item \code{correlation}: the correlation matrix (columns of \code{matA} as rows, columns of \code{matB} as columns).
 #'   \item \code{significant}: a named list with, for each column of \code{matA}, the columns of \code{matB} significantly
-#'     correlated with it (p-value <= \code{pval}).
+#'     correlated with it (p-value, or adjusted p-value with \code{padj = TRUE}, <= \code{pval}).
 #'   \item \code{p_value}: the matrix of p-values.
+#'   \item \code{p_adjusted}: the matrix of Benjamini-Hochberg adjusted p-values (equal to \code{p_value} with
+#'     \code{padj = FALSE}).
 #' }
 #' If `plot = TRUE` and `file_name` is given, a heatmap of the correlations is saved to
 #' "Results/<file_name>.pdf" (the ".pdf" extension is added if missing). Its size is computed from the number of
@@ -941,13 +932,16 @@ compute.modules.enrichment <- function(RNA.tpm, hub_tfs, TF.collection = "Collec
 #'                              "Pathways_Progeny-TFs_Modules")
 #' }
 #'
-compute.modules.relationship <- function(matA, matB, file_name = NULL, batch = NULL, pval = 0.05, cor_type = "p", vertical = F, plot = T, plot.grid = F, ncol.grid = NULL){
+compute.modules.relationship <- function(matA, matB, file_name = NULL, batch = NULL, pval = 0.05, padj = FALSE, cor_type = "p", vertical = F, plot = T, plot.grid = F, ncol.grid = NULL){
 
   matA = data.frame(matA, check.names = FALSE)
   matB = data.frame(matB, check.names = FALSE) # keep feature names unchanged (e.g. "-") so they match the deconvolution columns
 
   if(!cor_type %in% c("p", "s")){
     stop("cor_type must be 'p' (Pearson) or 's' (Spearman)")
+  }
+  if(!isTRUE(padj) && !isFALSE(padj)){
+    stop("padj must be TRUE or FALSE")
   }
   if(!is.null(batch) && anyNA(batch)){
     stop("batch has missing values: every sample needs a batch")
@@ -1029,9 +1023,18 @@ compute.modules.relationship <- function(matA, matB, file_name = NULL, batch = N
     cor_label = paste0(if(cor_type == "s") "Spearman" else "Pearson", " correlation")
   }
 
+  # Multiple testing correction (Benjamini-Hochberg) across the features of matB, for each column of matA
+  moduleTraitPadj = moduleTraitPvalue
+  if(padj){
+    for(i in seq_len(nrow(moduleTraitPadj))){
+      moduleTraitPadj[i, ] = stats::p.adjust(moduleTraitPvalue[i, ], method = "BH")
+    }
+  }
+  p_label = if(padj) "adjusted p-value" else "p-value"
+
   #Significant features of matB for each column of matA
-  sig = lapply(seq_len(nrow(moduleTraitPvalue)), function(i) colnames(moduleTraitPvalue)[which(moduleTraitPvalue[i,] <= pval)])
-  names(sig) = rownames(moduleTraitPvalue)
+  sig = lapply(seq_len(nrow(moduleTraitPadj)), function(i) colnames(moduleTraitPadj)[which(moduleTraitPadj[i,] <= pval)])
+  names(sig) = rownames(moduleTraitPadj)
 
   if((plot || plot.grid) && is.null(file_name)){
     message("No file_name given: the figures are not saved")
@@ -1042,19 +1045,20 @@ compute.modules.relationship <- function(matA, matB, file_name = NULL, batch = N
       matA = matA_plot,
       matB = matB_plot,
       cor_mat = moduleTraitCor,
-      p_mat = moduleTraitPvalue,
+      p_mat = moduleTraitPadj,
       file_name = file_name,
       pval = pval,
       ncol = ncol.grid,
       only_sig = TRUE,
-      axis_suffix = if(cor_type == "s") " (rank)" else ""
+      axis_suffix = if(cor_type == "s") " (rank)" else "",
+      p_label = if(padj) "padj" else "p"
     )
   }
 
   ###Heatmap of the correlations (size computed from the number of features)
   if(plot && !is.null(file_name)){
-    significant = !is.na(moduleTraitPvalue) & moduleTraitPvalue <= pval
-    stars = as.character(cut(moduleTraitPvalue, breaks = c(-Inf, 0.0001, 0.001, 0.01, 0.05, Inf), labels = c("****", "***", "**", "*", ""), right = FALSE))
+    significant = !is.na(moduleTraitPadj) & moduleTraitPadj <= pval
+    stars = as.character(cut(moduleTraitPadj, breaks = c(-Inf, 0.0001, 0.001, 0.01, 0.05, Inf), labels = c("****", "***", "**", "*", ""), right = FALSE))
     show_numbers = ncol(matA) <= 40 && ncol(matB) <= 40 # Otherwise the cells are too small for text: significant cells are marked with an asterisk
     textMatrix = if(show_numbers) ifelse(significant, paste0(signif(moduleTraitCor, 2), ifelse(stars != "", paste0("\n", stars), "")), "") else ifelse(significant, "*", "")
     dim(textMatrix) = dim(moduleTraitCor)
@@ -1069,7 +1073,7 @@ compute.modules.relationship <- function(matA, matB, file_name = NULL, batch = N
       heat_text = t(heat_text)
     }
 
-    heatmap_title = c(cor_label, paste0("shown for p-value <= ", pval), if(show_numbers) "* < 0.05, ** < 0.01, *** < 0.001, **** < 0.0001")
+    heatmap_title = c(cor_label, paste0("shown for ", p_label, " <= ", pval), if(show_numbers) "* < 0.05, ** < 0.01, *** < 0.001, **** < 0.0001")
     cell_width = if(show_numbers) 36 else if(vertical) 14 else 11
     cell_width = max(cell_width, ceiling(6.3 * max(nchar(heatmap_title)) / ncol(heat))) # The title is centred on the cells: wide enough for it with few columns
     pheatmap::pheatmap(
@@ -1094,7 +1098,7 @@ compute.modules.relationship <- function(matA, matB, file_name = NULL, batch = N
     )
   }
 
-  invisible(list(correlation = moduleTraitCor, significant = sig, p_value = moduleTraitPvalue))
+  invisible(list(correlation = moduleTraitCor, significant = sig, p_value = moduleTraitPvalue, p_adjusted = moduleTraitPadj))
 }
 
 #' Compute pathway activity scores
@@ -1120,6 +1124,12 @@ compute.modules.relationship <- function(matA, matB, file_name = NULL, batch = N
 #'   sample then depend on the other samples given in the same call; use \code{scale = FALSE} to get scores that can be
 #'   compared between separate calls (e.g. a training and a test set). With fewer than three samples the scores are
 #'   not scaled (a message is given).
+#' @param batch Optional vector with the cohort of each sample, in the column order of \code{RNA.tpm} (if it is named,
+#'   it is matched to the samples by name instead). It is always treated as categorical. If given, the samples are split
+#'   by cohort, the pathway activities (PROGENy and, if requested, GSVA) are computed and scaled (see \code{scale})
+#'   separately in each cohort, and the results are joined in the sample order of \code{RNA.tpm}; the output has the same
+#'   form as without \code{batch}. Pathways or gene sets that cannot be scored in every cohort are left out (with a message).
+#'   Default is \code{NULL} (single cohort); a vector with only one cohort is treated the same way.
 #' @param return Logical; if TRUE, saves the score matrices in Results/ folder. Default is TRUE.
 #' @param file.name Optional character suffix used when writing output CSV files
 #'   (\code{Results/Pathway_matrix_PROGENy_<file.name>.csv} and \code{Results/Pathway_matrix_GSVA_<file.name>.csv};
@@ -1150,7 +1160,7 @@ compute.modules.relationship <- function(matA, matB, file_name = NULL, batch = N
 #' pathways <- compute.pathway.activity(counts.norm.tuto)
 #' }
 #'
-compute.pathway.activity <- function(RNA.tpm, gene_sets = NULL, paths = NULL, method = "ulm", scale = TRUE, return = TRUE, file.name = NULL) {
+compute.pathway.activity <- function(RNA.tpm, gene_sets = NULL, paths = NULL, method = "ulm", scale = TRUE, batch = NULL, return = TRUE, file.name = NULL) {
 
   if (!method %in% c("ulm", "mlm", "wsum", "consensus")) {
     stop("method must be 'ulm', 'mlm', 'wsum' or 'consensus'")
@@ -1164,10 +1174,25 @@ compute.pathway.activity <- function(RNA.tpm, gene_sets = NULL, paths = NULL, me
   rownames(RNA.tpm) <- rn
   results_list <- list()
 
-  if (max(RNA.tpm, na.rm = TRUE) > 20) { # log2(TPM + 1) cannot exceed 20
+  # Cohort of each sample (always categorical), in the column order of RNA.tpm; if named, matched to the samples by name
+  if (!is.null(batch)) {
+    if (length(batch) != ncol(RNA.tpm)) {
+      stop("batch must have one value per sample of RNA.tpm (", ncol(RNA.tpm), " samples)")
+    }
+    if (!is.null(names(batch))) {
+      idx <- match(make.names(colnames(RNA.tpm)), make.names(names(batch)))
+      if (anyNA(idx)) stop("The names of batch do not match the sample names of RNA.tpm")
+      batch <- batch[idx]
+    }
+    if (anyNA(batch)) stop("batch contains missing values")
+    if (length(unique(batch)) < 2) batch <- NULL # A single cohort: same as no batch
+  }
+
+  # With batch, these checks are done within each cohort
+  if (is.null(batch) && max(RNA.tpm, na.rm = TRUE) > 20) { # log2(TPM + 1) cannot exceed 20
     warning("RNA.tpm has values above 20, so it does not look log-transformed: log-normalized expression (e.g. log2(TPM + 1)) is expected")
   }
-  if (scale && ncol(RNA.tpm) < 3) {
+  if (is.null(batch) && scale && ncol(RNA.tpm) < 3) {
     message("Fewer than three samples: the pathway scores are not scaled")
     scale <- FALSE
   }
@@ -1196,6 +1221,32 @@ compute.pathway.activity <- function(RNA.tpm, gene_sets = NULL, paths = NULL, me
   }
   if (!all(c("source", "target", "weight") %in% colnames(paths))) {
     stop("paths must have the columns 'source', 'target' and 'weight'")
+  }
+
+  ###### Batch: pathway activities computed (and scaled) separately in each cohort, then joined in the sample order of RNA.tpm
+  if (!is.null(batch)) {
+    cohorts <- split(seq_len(ncol(RNA.tpm)), factor(batch, levels = unique(batch)))
+    per_cohort <- lapply(cohorts, function(idx) {
+      res <- compute.pathway.activity(RNA.tpm[, idx, drop = FALSE], gene_sets = gene_sets, paths = paths, method = method, scale = scale, return = FALSE)
+      if (is.data.frame(res)) list(PROGENy = res) else res
+    })
+    for (name in names(per_cohort[[1]])) {
+      common <- Reduce(intersect, lapply(per_cohort, function(res) colnames(res[[name]])))
+      not_common <- setdiff(unique(unlist(lapply(per_cohort, function(res) colnames(res[[name]])))), common)
+      if (length(not_common) > 0) {
+        message(name, " scores left out because they could not be computed in every cohort: ", paste(not_common, collapse = ", "))
+      }
+      joined <- do.call(rbind, unname(lapply(per_cohort, function(res) res[[name]][, common, drop = FALSE])))
+      results_list[[name]] <- joined[colnames(RNA.tpm), , drop = FALSE]
+    }
+
+    if (return) {
+      file_suffix <- if (!is.null(file.name)) paste0("_", file.name) else ""
+      for (name in names(results_list)) {
+        utils::write.csv(results_list[[name]], paste0("Results/Pathway_matrix_", name, file_suffix, ".csv"))
+      }
+    }
+    return(if (length(results_list) == 1) results_list[[1]] else results_list)
   }
 
   progeny <- decoupleR::decouple(
@@ -1501,24 +1552,28 @@ compute.TFs.activity <- function(RNA.counts, TF.collection = "CollecTRI", min_ta
 #'
 #' @param TFs.matrix Matrix of TF activity (samples x TFs). When \code{batch = TRUE}, a list of such matrices,
 #'   one per cohort.
-#' @param batch Logical; if TRUE, performs consensus WGCNA (\code{WGCNA::blockwiseConsensusModules()}) across cohorts
-#'   provided as a list of matrices. In this mode \code{clustering.method} is not used (WGCNA builds the consensus tree
-#'   itself), modules are merged by WGCNA with \code{mergeCutHeight = 1 - corr_mod}, and module eigengenes are scaled
-#'   within each cohort.
+#' @param batch Logical; if TRUE, builds consensus TF modules across cohorts provided as a list of matrices (see
+#'   Details). Module eigengenes are then computed and scaled within each cohort.
 #' @param network.type Network type: "signed" (default) or "unsigned".
 #' @param clustering.method Linkage method of the hierarchical clustering of the TFs (\code{stats::hclust()}), applied to the
-#'   TOM dissimilarity (1 - topological overlap) between TFs (single-cohort mode only). Default is "average", as in WGCNA:
-#'   two groups of TFs are joined according to the average dissimilarity between their TFs.
+#'   TOM dissimilarity (1 - topological overlap) between TFs, or to the consensus TOM dissimilarity in batch mode. Default
+#'   is "average", as in WGCNA: two groups of TFs are joined according to the average dissimilarity between their TFs.
 #' @param minMod Minimum number of TFs per module. Default is 15.
 #' @param corr_mod Correlation threshold (0-1): modules whose eigengenes have a correlation (of type \code{cor_type})
-#'   above it are merged. Default is 0.9.
+#'   above it are merged. In batch mode, the correlation is computed on the eigengenes of all the samples, scaled within
+#'   each cohort. Default is 0.9.
 #' @param cor_type Correlation used to pick the soft-threshold power, build the adjacency matrix, merge modules and
-#'   compute the proportion of variance explained: "p" (Pearson) or "s" (Spearman). The module eigengene is always the
-#'   first principal component of the module's TF activities. Spearman is only available when \code{batch = FALSE}, because WGCNA
-#'   consensus modules only support Pearson correlation. Default is "p".
+#'   compute the proportion of variance explained: "p" (Pearson) or "s" (Spearman), in single-cohort and batch mode. The
+#'   module eigengene is always the first principal component of the module's TF activities. Default is "p".
 #' @param softPower Optional numeric value specifying the soft-thresholding power used to build the adjacency
 #'   matrix (one value per cohort when \code{batch = TRUE}). If \code{NULL}, the lowest power whose scale-free fit
 #'   \eqn{R^2} reaches 0.9 is chosen automatically (the power with the best fit if none reaches 0.9, with a message).
+#' @param consensus_quantile Numeric between 0 and 1 (batch mode only). For each pair of TFs, the consensus topological
+#'   overlap is this quantile of its (calibrated) topological overlaps across the cohorts. With 0 (default), the
+#'   minimum: two TFs are close only if they are close in every cohort, the strictest choice, which removes more TF
+#'   relationships as more cohorts are added. Higher values are less strict: with \code{K} cohorts,
+#'   \code{consensus_quantile = k / (K - 1)} takes the \code{(k + 1)}-th lowest value, so two TFs are close if they are
+#'   close in all cohorts but \code{k} (e.g. 0.25 with 5 cohorts: in at least 4 of them); 0.5 is the median.
 #' @param verbose Logical; whether to print the function messages. Default is FALSE.
 #' @param file.name Optional character suffix used when writing WTCNA outputs (CSV files and, in single-cohort
 #'   mode, the diagnostic plots \code{Soft_Threshold_<file.name>.pdf},
@@ -1537,23 +1592,29 @@ compute.TFs.activity <- function(RNA.counts, TF.collection = "CollecTRI", min_ta
 #'   \item \code{Proportion of variance}: Variance explained per module (single-cohort mode only).
 #'   \item \code{TFs_matrix}: The TF activity matrix used (a list of per-cohort matrices restricted to shared TFs in batch mode).
 #'   \item \code{Network parameters}: A list with the soft-thresholding power(s) used (\code{softPower}, one per cohort in
-#'     batch mode), \code{network.type} and \code{cor_type}, used by \code{identify_hub_TFs()}.
+#'     batch mode), \code{network.type} and \code{cor_type}, used by \code{identify_hub_TFs()}, and in batch mode
+#'     \code{consensus_quantile}.
 #' }
 #'
 #' @details
 #' TFs that WGCNA does not assign to any module (color \code{"grey"}) are not a module: they are left out of the
 #' module matrix and of \code{TFs per module}, with a message.
 #'
-#' In batch mode, the soft-thresholding powers are chosen on the TFs shared by all cohorts, the ones used to build
-#' the network.
-#'
-#' In batch mode, \code{WGCNA::blockwiseConsensusModules()} can fail with
-#' \code{"dim(X) must have a positive length"} when a consensus module has exactly one TF to reassign to
-#' another module (a known WGCNA issue). The problem goes away when the modules change. If the powers were
-#' chosen automatically (\code{softPower = NULL}), \code{compute.WTCNA()} retries moving the power of one cohort
-#' one step down or up, and gives a warning with the powers that were finally used. If \code{softPower} was
-#' given, or no neighbouring power works, it stops with a message reporting the powers: set \code{softPower}
-#' to slightly different values or change \code{minMod} (a small change may not be enough).
+#' In batch mode, the modules are built with the same steps as in single-cohort mode, on a consensus network:
+#' \enumerate{
+#'   \item only the TFs shared by all cohorts are used, and a soft-thresholding power is chosen for each cohort;
+#'   \item the adjacency and the topological overlap matrix (TOM) are computed in each cohort, with its own power;
+#'   \item the TOMs are calibrated to a common scale as in \code{WGCNA::blockwiseConsensusModules()}: each TOM is raised to
+#'     the power that makes its 0.95 quantile equal to that of the first cohort;
+#'   \item the consensus TOM is, for each pair of TFs, the \code{consensus_quantile} quantile of its calibrated TOMs across
+#'     cohorts;
+#'   \item the TFs are clustered on 1 - consensus TOM with \code{clustering.method} and the tree is cut with the same dynamic
+#'     tree cut as in single-cohort mode;
+#'   \item the module eigengenes are computed and scaled within each cohort, and the modules are merged as in single-cohort
+#'     mode (see \code{corr_mod}); merged scores are scaled within each cohort again.
+#' }
+#' Unlike \code{WGCNA::blockwiseConsensusModules()}, the TFs of each module are not filtered or reassigned afterwards
+#' by their module membership (as in single-cohort mode). The diagnostic plots are only saved in single-cohort mode.
 #'
 #' @references
 #' Langfelder, P., & Horvath, S. (2008). WGCNA: an R package for weighted correlation network analysis.
@@ -1566,7 +1627,7 @@ compute.TFs.activity <- function(RNA.counts, TF.collection = "CollecTRI", min_ta
 #' network <- compute.WTCNA(tfs.tuto, corr_mod = 0.9, return = FALSE)
 compute.WTCNA <- function(TFs.matrix, batch = FALSE, network.type = "signed", clustering.method = "average",
                           minMod = 15, corr_mod = 0.9, cor_type = "p", verbose = F, file.name = NULL,
-                          softPower = NULL, return = T) {
+                          softPower = NULL, consensus_quantile = 0, return = T) {
 
   if(verbose){
     cat("Creating weighted TF-coactivity network......................................................................\n\n")
@@ -1586,9 +1647,10 @@ compute.WTCNA <- function(TFs.matrix, batch = FALSE, network.type = "signed", cl
   }
 
   if(batch){
-    if(cor_type != "p"){
-      stop("cor_type = '", cor_type, "' is only available when batch = FALSE: WGCNA consensus modules only support Pearson correlation (cor_type = 'p')")
+    if(!is.numeric(consensus_quantile) || length(consensus_quantile) != 1 || is.na(consensus_quantile) || consensus_quantile < 0 || consensus_quantile > 1){
+      stop("consensus_quantile must be a number between 0 and 1")
     }
+    cor_method = ifelse(cor_type == "p", "pearson", "spearman")
     nCohorts <- length(TFs.matrix)
     if(verbose) cat("Running consensus WGCNA across", nCohorts, "cohorts...\n")
 
@@ -1599,12 +1661,12 @@ compute.WTCNA <- function(TFs.matrix, batch = FALSE, network.type = "signed", cl
 
     # Step 2: pick soft-threshold per cohort if not provided
     powers = c(1:10, 12:20)
-    auto_power = is.null(softPower)
-    if(auto_power){
+    if(is.null(softPower)){
       softPower <- numeric(nCohorts)
       for(i in 1:nCohorts){
         if(verbose) cat("Picking soft threshold for cohort", i, "...\n")
-        utils::capture.output(sft <- WGCNA::pickSoftThreshold(TFs.matrix[[i]], powerVector = powers, verbose = 0, networkType = network.type)) # it prints its table otherwise
+        utils::capture.output(sft <- WGCNA::pickSoftThreshold(TFs.matrix[[i]], powerVector = powers, verbose = 0, networkType = network.type,
+                                                              corOptions = list(use = "p", method = cor_method))) # it prints its table otherwise
         target = 0.9
         fit = -sign(sft$fitIndices[,3]) * sft$fitIndices[,2] # signed scale-free fit R^2
         reached = which(fit >= target)
@@ -1618,84 +1680,66 @@ compute.WTCNA <- function(TFs.matrix, batch = FALSE, network.type = "signed", cl
       }
     }
 
-    multiExpr <- lapply(TFs.matrix, function(x) list(data = x))
-
-    # Step 3: run blockwiseConsensusModules
-    # Known WGCNA issue: it fails ("dim(X) must have a positive length") when exactly one TF of a module is a candidate
-    # for reassignment. NULL is returned in that case; any other error is raised as it is
-    run_consensus <- function(power) tryCatch(WGCNA::blockwiseConsensusModules(
-      multiExpr,
-      power = power,                      # vector of powers per cohort
-      networkType = network.type,
-      minModuleSize = minMod,
-      deepSplit = 2,
-      pamRespectsDendro = FALSE,
-      mergeCutHeight = 1 - corr_mod,       # merge modules whose eigengenes correlate above corr_mod, as in single-cohort mode
-      corType = ifelse(cor_type == "p", "pearson", "spearman"),
-      verbose = ifelse(verbose, 3, 0)
-    ), error = function(e) if(grepl("dim(X) must have a positive length", conditionMessage(e), fixed = TRUE)) NULL else stop(e))
-
-    consensusModules <- run_consensus(softPower)
-    power_used <- softPower
-
-    # The issue goes away when the modules change: with automatic powers, move the power of one cohort one step down or up
-    if(is.null(consensusModules) && auto_power){
-      for(step in c(-1, 1)){
-        for(i in seq_len(nCohorts)){
-          pos <- match(softPower[i], powers) + step
-          if(is.null(consensusModules) && pos >= 1 && pos <= length(powers)){
-            candidate <- softPower
-            candidate[i] <- powers[pos]
-            consensusModules <- run_consensus(candidate)
-            if(!is.null(consensusModules)){
-              power_used <- candidate
-              warning("WGCNA::blockwiseConsensusModules() failed with the automatically chosen soft-thresholding powers (", paste(softPower, collapse = ", "),
-                      ") because of a known WGCNA issue (a consensus module with exactly one TF to reassign): the powers ", paste(candidate, collapse = ", "),
-                      " were used instead. Set 'softPower' to choose them yourself.", call. = FALSE)
-            }
-          }
-        }
-      }
-    }
-
-    if(is.null(consensusModules)){
-      stop("WGCNA::blockwiseConsensusModules() failed because of a known WGCNA issue (a consensus module with exactly one TF ",
-           "to reassign). It goes away when the modules change: set 'softPower' to other values than the ones used here (",
-           paste(softPower, collapse = ", "), "; one step up or down is usually enough), or change 'minMod' (currently ", minMod,
-           "; a small change may not be enough).", call. = FALSE)
-    }
-
-    dynamicColors <- consensusModules$colors
-
-    # Step 4: Extract module eigengenes per cohort and scale within cohort (grey = TFs without module, not a module)
-    MEs_list <- consensusModules$multiMEs
-    scaled_MEs_list <- lapply(MEs_list, function(x) {
-      ME <- x$data[, colnames(x$data) != "MEgrey", drop = FALSE]              # extract the data.frame
-      ME_scaled <- scale(ME)    # scale MEs scores to account for variabilities across cohorts even though they are already scaled at TF level (MEs can be different in scale)
-      colnames(ME_scaled) <- colnames(ME)
-      return(ME_scaled)
+    # Step 3: TOM of each cohort (with its own power), calibrated to the scale of the first cohort as in
+    # WGCNA::blockwiseConsensusModules() ("single quantile": the 0.95 quantile of each TOM is matched to that of the first cohort)
+    TOMs <- lapply(seq_len(nCohorts), function(i){
+      adjacency = WGCNA::adjacency(TFs.matrix[[i]], power = softPower[i], type = network.type, corFnc = "cor", corOptions = list(use = "p", method = cor_method))
+      WGCNA::TOMsimilarity(adjacency, TOMType = network.type, verbose = 0)
     })
-
-    # Step 5: concatenate scaled MEs across cohorts
-    MEs <- do.call(rbind, scaled_MEs_list)
-    if(ncol(MEs) == 0) stop("No TF module found: no TF was assigned to a consensus module. Try a smaller minMod")
-    colnames(MEs) <- gsub("ME", "", colnames(MEs))
-
-    # Step 6: Map TFs to modules (same as before)
-    modtfs <- list()
-    modules <- setdiff(unique(dynamicColors), "grey")
-    tfs <- colnames(TFs.matrix[[1]])
-    for(i in seq_along(modules)){
-      modtfs[[i]] <- tfs[dynamicColors == modules[i]]
+    q_ref <- stats::quantile(TOMs[[1]][upper.tri(TOMs[[1]])], probs = 0.95, type = 8)
+    for(i in seq_len(nCohorts)[-1]){
+      q <- stats::quantile(TOMs[[i]][upper.tri(TOMs[[i]])], probs = 0.95, type = 8)
+      TOMs[[i]] <- TOMs[[i]]^(log(q_ref)/log(q))
     }
-    names(modtfs) <- modules
+
+    # Step 4: consensus TOM: for each pair of TFs, the consensus_quantile quantile of its calibrated TOMs across cohorts (0 = minimum)
+    consTOM <- do.call(WGCNA::pquantile, c(list(prob = consensus_quantile), unname(TOMs)))
+    dissTOM <- 1 - consTOM
+
+    # Step 5: clustering and dynamic tree cut of the consensus dissimilarity, as in single-cohort mode
+    geneTree = stats::hclust(stats::as.dist(dissTOM), method = clustering.method)
+    dynamicMods = dynamicTreeCut::cutreeDynamic(dendro = geneTree, distM = dissTOM,
+                                                deepSplit = 2, pamRespectsDendro = FALSE,
+                                                minClusterSize = minMod, verbose = 0);
+    dynamicColors = WGCNA::labels2colors(dynamicMods)
+    rm(TOMs, consTOM, dissTOM)
+    gc()
+
+    # Step 6: module eigengenes computed and scaled within each cohort, then stacked cohort by cohort (grey = TFs without module, not a module)
+    MEs = do.call(rbind, lapply(TFs.matrix, function(x){
+      ME = WGCNA::moduleEigengenes(x, colors = dynamicColors, scale = F)$eigengenes ## TFs are already scaled (compute.TFs.activity())
+      rownames(ME) = rownames(x)
+      scale(ME)
+    }))
+    MEs = WGCNA::orderMEs(MEs)
+    MEs = MEs[, colnames(MEs) != "MEgrey", drop = FALSE]
+    if(ncol(MEs) == 0) stop("No TF module found: no TF was assigned to a consensus module. Try a smaller minMod")
+
+    # Step 7: merging of the modules as in single-cohort mode, on the stacked eigengenes; merged scores are scaled within each cohort again
+    merge = mergeModules(MEs, dynamicColors, corr_mod, method = cor_method)
+    MEs = merge[[1]]
+    dynamicColors = merge[[2]]
+    cohort_rows = rep(seq_len(nCohorts), sapply(TFs.matrix, nrow))
+    for(i in seq_len(nCohorts)){
+      MEs[cohort_rows == i, ] = scale(MEs[cohort_rows == i, , drop = FALSE])
+    }
+
+    # Step 8: Map TFs to modules (same as single-cohort mode)
+    modtfs = list()
+    tfs = colnames(TFs.matrix[[1]])
+    modules = c(substring(names(MEs), 3))
+    for(i in seq_along(modules)){
+      modtfs[[i]] = tfs[dynamicColors == modules[i]]
+    }
+    names(modtfs) = modules
+    colnames(MEs) <- gsub("ME", "", colnames(MEs))
 
     output <- list(
       "TFs module matrix" = MEs,
       "TFs colors" = dynamicColors,
       "TFs per module" = modtfs,
       "TFs_matrix" = TFs.matrix,
-      "Network parameters" = list(softPower = power_used, network.type = network.type, cor_type = cor_type)
+      "Network parameters" = list(softPower = softPower, network.type = network.type, cor_type = cor_type, consensus_quantile = consensus_quantile)
     )
 
 
@@ -1983,7 +2027,7 @@ identify_hub_TFs <- function(TF.network, MM_thresh = 0.8, degree_thresh = 0.9) {
 #'   \itemize{
 #'     \item \code{[[1]]} (\code{correlation}): A matrix of correlations between TF modules (rows, named) and deconvolution features (columns).
 #'     \item \code{[[2]]} (\code{significant}): A list, named by TF module, of the features significantly correlated with each module
-#'       (p-value <= the \code{pval} given to \code{compute.modules.relationship()}).
+#'       (p-value, or adjusted p-value with \code{padj = TRUE}, <= the \code{pval} given to \code{compute.modules.relationship()}).
 #'   }
 #'   The correlations of each module are taken from the row with its name.
 #' @param clustering.method Linkage method of the hierarchical clustering (\code{stats::hclust()}) of the features
@@ -2174,7 +2218,13 @@ compute.composition.matrix = function(deconvolution.subgroupped, cell.groups, ce
 #'   sample. Required when \code{network} was built with \code{compute.WTCNA(batch = TRUE)}. With two or more cohorts,
 #'   correlations and scores are corrected for cohort.
 #' @param pval Numeric. P-value threshold used to select the deconvolution features significantly
-#'   correlated with each TF module. Default: 0.05.
+#'   correlated with each TF module (adjusted p-value with \code{padj = TRUE}). Default: 0.05.
+#' @param padj Logical. If TRUE, the p-values of each TF module are corrected for multiple testing across the
+#'   deconvolution features (Benjamini-Hochberg, see \code{compute.modules.relationship()}) before selecting the
+#'   significant features. Default: FALSE.
+#' @param cor_type Correlation used between the TF modules and the deconvolution features (passed to
+#'   \code{compute.modules.relationship()}): \code{"p"} (Pearson, default) or \code{"s"} (Spearman). It is used to
+#'   select the significant features and to cluster them.
 #' @param clustering.method Linkage method of the hierarchical clustering of the deconvolution features of each module
 #'   on their correlation with it (see \code{identify.cell.groups()}). Default: "ward.D2".
 #' @param dendrogram_file Optional character. Suffix of the output file names (see \code{return_dendrogram}
@@ -2184,14 +2234,10 @@ compute.composition.matrix = function(deconvolution.subgroupped, cell.groups, ce
 #' @param return Logical. If TRUE, saves the composition and the scores of the cell groups to
 #'   \code{Results/Cell.groups.composition_<dendrogram_file>.csv} and
 #'   \code{Results/Cell.groups.scores_<dendrogram_file>.csv}. Default FALSE.
-#' @param cells_extra Optional character vector with the cell names that are not in the nomenclature of multideconv
-#'   (the same as in \code{multideconv::compute.deconvolution.analysis()}), used to list the cell types of each
-#'   cell group in \code{Module_relation}.
 #' @param min_cluster_size Integer. Minimum number of features of a cell group (minimum cluster size of the
 #'   dynamic tree cut of each dendrogram). Default is 3.
-#' @param deep_split Logical. If TRUE (default), the dynamic tree cut splits the clusters more finely.
 #'
-#' @return A named list of 4 elements:
+#' @return A named list of 3 elements:
 #' \describe{
 #'   \item{Cell_groups}{A data frame with the projected cell group scores (samples x groups). A positive score
 #'     means that the sample is on the active side of the TF module of that cell group, a negative score that
@@ -2199,12 +2245,6 @@ compute.composition.matrix = function(deconvolution.subgroupped, cell.groups, ce
 #'   \item{Composition}{A named list where each element is a character vector of the deconvolution features in each group.}
 #'   \item{Weights}{A named list of CCA projection parameters (\code{xcoef}, \code{train_means}, \code{train_sds}) for each group.
 #'     With \code{batch}, \code{train_means} is \code{NULL}: test data are centred on their own means.}
-#'   \item{Module_relation}{A data frame with one row per cell group: \code{cell_group}, \code{module} (its TF
-#'     module), \code{relation} (\code{"positive"} or \code{"negative"}), \code{correlation} (mean correlation of
-#'     its features with the module score), \code{n_features} and \code{cell_types} (the cell types of its
-#'     features, the most frequent first). It translates a score into cell abundance: for a
-#'     positively related group, a positive score means more of its features; for a negatively related group, a
-#'     positive score means fewer of them.}
 #' }
 #' Cell groups are named \code{Dendrogram_<module>_group_<n>}, where \code{n} is the cluster number shown in the
 #' dendrogram PDF of that module. Features that the tree cut does not assign to any cluster are not part of any
@@ -2213,10 +2253,10 @@ compute.composition.matrix = function(deconvolution.subgroupped, cell.groups, ce
 #' data("network.tuto")
 #' data("deconv_subgroups.tuto")
 #' cell_groups <- construct_cell_groups(network.tuto, deconv_subgroups.tuto)
-#' head(cell_groups$Module_relation)
+#' cell_groups$Cell_groups[1:3, 1:3]
 #'
 #' @export
-construct_cell_groups = function(network, dt, batch = NULL, pval = 0.05, clustering.method = "ward.D2", dendrogram_file = NULL, return_dendrogram = FALSE, return = FALSE, cells_extra = NULL, min_cluster_size = 3, deep_split = TRUE){
+construct_cell_groups = function(network, dt, batch = NULL, pval = 0.05, padj = FALSE, cor_type = "p", clustering.method = "ward.D2", dendrogram_file = NULL, return_dendrogram = FALSE, return = FALSE, min_cluster_size = 3){
 
   if(!is.list(network) || is.data.frame(network) || is.null(network[["TFs module matrix"]]) || is.null(network[["TFs_matrix"]]) || is.null(network[["TFs per module"]])){
     stop("network must be the output of compute.WTCNA()")
@@ -2256,14 +2296,14 @@ construct_cell_groups = function(network, dt, batch = NULL, pval = 0.05, cluster
   network[["TFs module matrix"]] = network[["TFs module matrix"]][idx_modules, , drop = F]
   network[["TFs_matrix"]] = tfs[idx_tfs, , drop = F]
 
-  corr_modules = compute.modules.relationship(network[["TFs module matrix"]], deconv, batch = batch, plot = F, pval = pval)
+  corr_modules = compute.modules.relationship(network[["TFs module matrix"]], deconv, batch = batch, plot = F, pval = pval, padj = padj, cor_type = cor_type)
   cell_dendrograms = identify.cell.groups(corr_modules, clustering.method = clustering.method, return = F)
   if(is.null(cell_dendrograms)){
-    stop("No cell groups found: no TF module is significantly correlated (p-value <= ", pval, ") with at least two deconvolution features")
+    stop("No cell groups found: no TF module is significantly correlated (", if(padj) "adjusted p-value" else "p-value", " <= ", pval, ") with at least two deconvolution features")
   }
-  cell.groups = cell.groups.computation(deconv, cell_dendrograms, network, batch = batch, return = return, dendrogram_file = dendrogram_file, return_dendrogram = return_dendrogram, cells_extra = cells_extra, min_cluster_size = min_cluster_size, deep_split = deep_split)
+  cell.groups = cell.groups.computation(deconv, cell_dendrograms, network, batch = batch, return = return, dendrogram_file = dendrogram_file, return_dendrogram = return_dendrogram, min_cluster_size = min_cluster_size)
 
-  names(cell.groups) = c("Cell_groups", "Composition", "Weights", "Module_relation")
+  names(cell.groups) = c("Cell_groups", "Composition", "Weights")
   return(cell.groups)
 }
 
@@ -2717,9 +2757,7 @@ module_enrich = function(tpm.counts, module_color, hub_genes, tfs_universe, min_
 #' canonical component. As the sign of CCA weights is arbitrary, the score is oriented so that it is aligned
 #' with the TF module: a positive score means that the sample is on the active side of the module for that cell
 #' group. The score therefore increases with the features of the cell group when they are positively related
-#' to the module, and decreases with them when they are negatively related. The relation of the cell group to
-#' its module (mean correlation of its features with the module score) is returned to translate the score
-#' into cell abundance.
+#' to the module, and decreases with them when they are negatively related.
 #'
 #' @param cell_group A numeric matrix of cell deconvolution features for a cell group (samples x features), with sample
 #'   names as row names. The module score and TF activities of \code{tfs.module.network} are matched to these samples by
@@ -2731,7 +2769,7 @@ module_enrich = function(tpm.counts, module_color, hub_genes, tfs_universe, min_
 #'   categorical: per-batch means are regressed out of the cell group features, the module score and the module TFs
 #'   before the CCA.
 #'
-#' @return An unnamed list of three elements:
+#' @return An unnamed list of two elements:
 #' \itemize{
 #'   \item \code{[[1]]}: Numeric matrix (samples x 1) with the composite score, i.e. the scaled cell group
 #'     features projected onto the first canonical component, oriented to be aligned with the TF module.
@@ -2740,8 +2778,6 @@ module_enrich = function(tpm.counts, module_color, hub_genes, tfs_universe, min_
 #'     The sign of \code{xcoef} follows the orientation of the score.
 #'     \code{train_means} is \code{NULL} when batch correction was applied: new samples are then centred on
 #'     their own means, as each training cohort was.
-#'   \item \code{[[3]]}: Relation of the cell group to its TF module: the mean correlation of its features with
-#'     the module score (positive or negative).
 #' }
 #'
 #' @details
@@ -2755,9 +2791,10 @@ module_enrich = function(tpm.counts, module_color, hub_genes, tfs_universe, min_
 #' data("network.tuto")
 #' data("deconv_subgroups.tuto")
 #' cell_groups <- construct_cell_groups(network.tuto, deconv_subgroups.tuto)
-#' group <- cell_groups$Module_relation[1, ]
-#' features <- deconv_subgroups.tuto[[1]][, cell_groups$Composition[[group$cell_group]], drop = FALSE]
-#' score <- compute_composite_score(features, group$module, network.tuto)
+#' group <- names(cell_groups$Composition)[1]
+#' module <- sub("^Dendrogram_(.*)_group_.*$", "\\1", group) # TF module of the cell group
+#' features <- deconv_subgroups.tuto[[1]][, cell_groups$Composition[[group]], drop = FALSE]
+#' score <- compute_composite_score(features, module, network.tuto)
 #' head(score[[1]])
 #'
 #' @export
@@ -2798,9 +2835,6 @@ compute_composite_score = function(cell_group, module_group, tfs.module.network,
     tf_module_matrix <- apply(tf_module_matrix, 2, function(x) residuals(lm(x ~ batch)))
     tf_per_module_matrix <- apply(tf_per_module_matrix, 2, function(x) residuals(lm(x ~ batch)))
   }
-
-  # Relation of the cell group to its TF module: mean correlation of its features with the module score
-  relation = mean(stats::cor(cell_group, tf_module_matrix))
 
   cell_group_matrix = scale(cell_group)
 
@@ -2843,7 +2877,7 @@ compute_composite_score = function(cell_group, module_group, tfs.module.network,
     train_sds   = train_sds
   )
 
-  return(list(weighted_cell_group_matrix, projection_params, relation))
+  return(list(weighted_cell_group_matrix, projection_params))
 
 }
 
@@ -3009,7 +3043,6 @@ finish_trait_test = function(input, statistic, p, test, statistic_name, pval, p_
   result[[1]] = scores[[1]][, sig, drop = FALSE]
   if (length(scores) >= 2) result[[2]] = scores[[2]][sig]
   if (length(scores) >= 3) result[[3]] = scores[[3]][sig]
-  if (length(scores) >= 4 && is.data.frame(scores[[4]])) result[[4]] = scores[[4]][sig, , drop = FALSE]
   if (!is.null(names(scores))) names(result) = names(scores)[seq_along(result)]
   result[["Statistics"]] = statistics
 
@@ -3049,7 +3082,7 @@ finish_trait_test = function(input, statistic, p, test, statistic_name, pval, p_
 #'
 #' @return A list with the significant features: its first element is the score matrix restricted to them (no
 #'   column if none is significant), followed by the matching parts of the other elements of \code{scores} (e.g.
-#'   \code{Composition}, \code{Weights} and \code{Module_relation} of \code{construct_cell_groups()}), with their names.
+#'   \code{Composition} and \code{Weights} of \code{construct_cell_groups()}), with their names.
 #'   The last element, \code{Statistics}, is a data frame with the test of every feature (\code{feature}, \code{test},
 #'   \code{statistic_name}, \code{statistic}, \code{p_value}, \code{p_adjusted}, \code{significant}).
 #'
@@ -3421,7 +3454,7 @@ scores.fisher.test = function(scores, coldata, trait, pval = 0.05, p_adjust = "n
 #'
 #' @param scores A list, NMF output from \code{compute.latent_factors()}, or a
 #'   score matrix (samples x features). When a list, the first element must be
-#'   the score matrix; optional second to fourth elements (e.g. the output of
+#'   the score matrix; optional second and third elements (e.g. the output of
 #'   \code{construct_cell_groups()}) are subsetted to the significant features and returned with their names.
 #' @param coldata A data frame (or tibble) containing clinical or experimental metadata for samples.
 #'   Must include the column specified in `trait`. Its rows are matched to the samples of the scores by row name;
@@ -3458,8 +3491,8 @@ scores.fisher.test = function(scores, coldata, trait, pval = 0.05, p_adjust = "n
 #' test results (p-values) annotated on the plots.
 #'
 #' @return A list whose first element is the score matrix restricted to the significant features (no column if none
-#'   is significant). Optional second to fourth elements (from the input list, e.g. the composition, weights and
-#'   \code{Module_relation} of the cell groups) are subsetted accordingly and keep their names. The last element,
+#'   is significant). Optional second and third elements (from the input list, e.g. the composition and weights
+#'   of the cell groups) are subsetted accordingly and keep their names. The last element,
 #'   \code{Statistics}, is a data frame with the test of every feature (\code{feature}, \code{test},
 #'   \code{statistic_name}, \code{statistic}, \code{p_value}, \code{p_adjusted}, \code{significant}).
 #'
@@ -3721,8 +3754,8 @@ extract_contributing_features <- function(latent_factors,
 #'     present in only one of them can pass the threshold.
 #' }
 #' The direction is not taken into account: a selected part can mean more or fewer cells of its group (depending on
-#' \code{_pos} / \code{_neg} and on the relation of the group to its TF module, see \code{Module_relation} in
-#' \code{construct_cell_groups()}), and both are added together. A cell type of a niche is therefore associated with
+#' \code{_pos} / \code{_neg} and on whether the features of the group are positively or negatively related to its TF
+#' module), and both are added together. A cell type of a niche is therefore associated with
 #' the factor, without saying whether the factor has more or fewer of it.
 #'
 #' @param latent_factors A list returned by \code{compute.latent_factors()},
@@ -4260,6 +4293,8 @@ prepare_celltfusion_folds <- function(data, folds = NULL, bestune = NULL, deconv
 #' @param max_pairs Integer. Maximum number of panels: if there are more pairs, only the strongest
 #'   correlations are drawn (with a message). Default 100.
 #' @param axis_suffix Character added to the axis titles after the column names (e.g. \code{" (rank)"}). Default "".
+#' @param p_label Character. Name of the values of \code{p_mat} written in each panel (e.g. \code{"padj"} for adjusted
+#'   p-values). Default "p".
 #'
 #' @return Called for its side effect (saves SVG); returns \code{NULL} invisibly.
 #'
@@ -4270,7 +4305,8 @@ plot_module_scatter_grid <- function(matA, matB, cor_mat, p_mat,
                                      only_sig = TRUE,
                                      ncol = NULL,     # allow NULL for auto
                                      max_pairs = 100,
-                                     axis_suffix = "") {
+                                     axis_suffix = "",
+                                     p_label = "p") {
 
   pairs <- expand.grid(A = colnames(matA),
                        B = colnames(matB),
@@ -4361,7 +4397,7 @@ plot_module_scatter_grid <- function(matA, matB, cor_mat, p_mat,
 
     mtext(
       paste0("R = ", signif(r, 3),
-             " | p = ", format.pval(pv, digits = 2)),
+             " | ", p_label, " = ", format.pval(pv, digits = 2)),
       side = 3,
       line = 0.5,
       cex = 1

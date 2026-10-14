@@ -16,7 +16,7 @@ scores.stat.analysis(
 \arguments{
 \item{scores}{A list, NMF output from \code{compute.latent_factors()}, or a
 score matrix (samples x features). When a list, the first element must be
-the score matrix; optional second to fourth elements (e.g. the output of
+the score matrix; optional second and third elements (e.g. the output of
 \code{construct_cell_groups()}) are subsetted to the significant features and returned with their names.}
 
 \item{coldata}{A data frame (or tibble) containing clinical or experimental metadata for samples.
@@ -44,8 +44,8 @@ Only one can be used per call; defaults to the first one (\code{"fisher"}).}
 }
 \value{
 A list whose first element is the score matrix restricted to the significant features (no column if none
-is significant). Optional second to fourth elements (from the input list, e.g. the composition, weights and
-\code{Module_relation} of the cell groups) are subsetted accordingly and keep their names. The last element,
+is significant). Optional second and third elements (from the input list, e.g. the composition and weights
+of the cell groups) are subsetted accordingly and keep their names. The last element,
 \code{Statistics}, is a data frame with the test of every feature (\code{feature}, \code{test},
 \code{statistic_name}, \code{statistic}, \code{p_value}, \code{p_adjusted}, \code{significant}).
 }

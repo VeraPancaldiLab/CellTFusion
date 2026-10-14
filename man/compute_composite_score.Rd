@@ -26,7 +26,7 @@ categorical: per-batch means are regressed out of the cell group features, the m
 before the CCA.}
 }
 \value{
-An unnamed list of three elements:
+An unnamed list of two elements:
 \itemize{
 \item \code{[[1]]}: Numeric matrix (samples x 1) with the composite score, i.e. the scaled cell group
 features projected onto the first canonical component, oriented to be aligned with the TF module.
@@ -35,8 +35,6 @@ the first component), \code{train_means} and \code{train_sds} (column means/SDs 
 The sign of \code{xcoef} follows the orientation of the score.
 \code{train_means} is \code{NULL} when batch correction was applied: new samples are then centred on
 their own means, as each training cohort was.
-\item \code{[[3]]}: Relation of the cell group to its TF module: the mean correlation of its features with
-the module score (positive or negative).
 }
 }
 \description{
@@ -46,9 +44,7 @@ The score is the weighted sum of the (scaled) features of the cell group, with t
 canonical component. As the sign of CCA weights is arbitrary, the score is oriented so that it is aligned
 with the TF module: a positive score means that the sample is on the active side of the module for that cell
 group. The score therefore increases with the features of the cell group when they are positively related
-to the module, and decreases with them when they are negatively related. The relation of the cell group to
-its module (mean correlation of its features with the module score) is returned to translate the score
-into cell abundance.
+to the module, and decreases with them when they are negatively related.
 }
 \details{
 The CCA is reliable only when the number of variables (features of the cell group plus TFs of the module) is well
@@ -61,9 +57,10 @@ most affected.
 data("network.tuto")
 data("deconv_subgroups.tuto")
 cell_groups <- construct_cell_groups(network.tuto, deconv_subgroups.tuto)
-group <- cell_groups$Module_relation[1, ]
-features <- deconv_subgroups.tuto[[1]][, cell_groups$Composition[[group$cell_group]], drop = FALSE]
-score <- compute_composite_score(features, group$module, network.tuto)
+group <- names(cell_groups$Composition)[1]
+module <- sub("^Dendrogram_(.*)_group_.*$", "\\\\1", group) # TF module of the cell group
+features <- deconv_subgroups.tuto[[1]][, cell_groups$Composition[[group]], drop = FALSE]
+score <- compute_composite_score(features, module, network.tuto)
 head(score[[1]])
 
 }

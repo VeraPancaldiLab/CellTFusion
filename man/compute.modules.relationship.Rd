@@ -10,6 +10,7 @@ compute.modules.relationship(
   file_name = NULL,
   batch = NULL,
   pval = 0.05,
+  padj = FALSE,
   cor_type = "p",
   vertical = F,
   plot = T,
@@ -29,7 +30,12 @@ If \code{NULL} (default), no figure is saved.}
 levels, partial correlations (\code{ppcor::pcor.test()}, Pearson or Spearman according to \code{cor_type}) are
 computed controlling for batch. Batch is treated as categorical (one dummy variable per level beyond the first).}
 
-\item{pval}{A numeric threshold for the p-value to define significance (p-value <= \code{pval}). Default is 0.05.}
+\item{pval}{A numeric threshold for the p-value to define significance (p-value, or adjusted p-value with
+\code{padj = TRUE}, <= \code{pval}). Default is 0.05.}
+
+\item{padj}{Logical; if TRUE, the p-values are corrected for multiple testing with the Benjamini-Hochberg method,
+across the columns of \code{matB} for each column of \code{matA}, and the adjusted p-values are used to define
+significance (in \code{significant} and in the figures). Default is FALSE.}
 
 \item{cor_type}{Type of correlation to compute: "p" (Pearson) or "s" (Spearman). Default is "p". It also sets
 the type of the partial correlations computed with \code{batch}.}
@@ -52,8 +58,10 @@ Invisibly, a list with:
 \itemize{
 \item \code{correlation}: the correlation matrix (columns of \code{matA} as rows, columns of \code{matB} as columns).
 \item \code{significant}: a named list with, for each column of \code{matA}, the columns of \code{matB} significantly
-correlated with it (p-value <= \code{pval}).
+correlated with it (p-value, or adjusted p-value with \code{padj = TRUE}, <= \code{pval}).
 \item \code{p_value}: the matrix of p-values.
+\item \code{p_adjusted}: the matrix of Benjamini-Hochberg adjusted p-values (equal to \code{p_value} with
+\code{padj = FALSE}).
 }
 If \code{plot = TRUE} and \code{file_name} is given, a heatmap of the correlations is saved to
 "Results/<file_name>.pdf" (the ".pdf" extension is added if missing). Its size is computed from the number of

@@ -12,9 +12,7 @@ cell.groups.computation(
   return = T,
   dendrogram_file = NULL,
   return_dendrogram = FALSE,
-  cells_extra = NULL,
-  min_cluster_size = 3,
-  deep_split = TRUE
+  min_cluster_size = 3
 )
 }
 \arguments{
@@ -40,32 +38,24 @@ to the "Results/" folder (named with \code{dendrogram_file}; the folder is creat
 \item{return_dendrogram}{Logical. If TRUE, saves a PDF of the colored cell-group dendrograms to
 \code{Results/Dendrogram_color_clusters_<dendrogram_file>.pdf} (only when \code{dendrogram_file} is set). Default FALSE.}
 
-\item{cells_extra}{Optional character vector with the cell names that are not in the nomenclature of multideconv,
-used to list the cell types of each cell group.}
-
 \item{min_cluster_size}{Integer. Minimum number of features of a cell group (minimum cluster size of the
 dynamic tree cut of each dendrogram). Default is 3.}
-
-\item{deep_split}{Logical. If TRUE (default), the dynamic tree cut splits the clusters more finely.}
 }
 \value{
-An unnamed list of four elements:
+An unnamed list of three elements:
 \itemize{
 \item \code{[[1]]}: A data frame with the composite scores of all identified cell groups across samples. A
 positive score means that the sample is on the active side of the TF module of that cell group.
 \item \code{[[2]]}: A named list of vectors indicating the composition (original features) of each cell group.
 \item \code{[[3]]}: A named list of CCA projection parameters (\code{xcoef}, \code{train_means}, \code{train_sds}) for each cell group.
-\item \code{[[4]]}: A data frame with the relation of each cell group to its TF module (see
-\code{construct_cell_groups()}).
 }
 Cell groups are named \code{Dendrogram_<module>_group_<n>}, where \code{n} is the cluster number of the
-dendrogram of that module (the number shown in the dendrogram PDF); the first three elements use the same names.
+dendrogram of that module (the number shown in the dendrogram PDF); the three elements use the same names.
 An error is raised if no cluster is found in any module. Features that the tree cut does not assign to any cluster
 are not part of any cell group: a message reports how many there are per module.
 If \code{return=TRUE}, two CSV files will be created:
 \itemize{
-\item \code{Results/Cell.groups.composition_<dendrogram_file>.csv}: A table showing the composition of each cell
-group, its TF module, its relation to it (positive or negative, and the correlation) and its cell types.
+\item \code{Results/Cell.groups.composition_<dendrogram_file>.csv}: A table showing the composition of each cell group.
 \item \code{Results/Cell.groups.scores_<dendrogram_file>.csv}: A matrix of cell group scores across samples.
 }
 Without \code{dendrogram_file}, they are named \code{Cell.groups.composition.csv} and \code{Cell.groups.scores.csv}.

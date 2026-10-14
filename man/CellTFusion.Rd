@@ -26,12 +26,15 @@ CellTFusion(
   minMod = 5,
   corr_mod = 0.9,
   softPower = NULL,
+  cor_type_modules = "p",
+  consensus_quantile = 0,
   corr = 0.7,
   corr_type = "spearman",
   cells_extra = NULL,
   pval = 0.05,
+  padj = FALSE,
+  cor_type_groups = "p",
   min_cluster_size = 3,
-  deep_split = T,
   enrich_thresh = 1.5,
   quantile_cutoff = 0.7,
   cancer_type = NULL,
@@ -74,8 +77,8 @@ given when the values do not look like TPM, i.e. no value above 20 or negative v
 
 \item{batch}{(Optional) A vector with the cohort of each sample (e.g. \code{coldata$Cohort}), in the same order
 as the columns of \code{raw.counts}; if it is named, it is matched to the samples by name instead. It is
-always treated as categorical. If given, the multi-cohort mode is run: TF activity is computed per cohort,
-TF modules are built with consensus WGCNA across cohorts, and the cohort is controlled for in the
+always treated as categorical. If given, the multi-cohort mode is run: TF and pathway activities are computed per
+cohort, TF modules are built from a consensus network across cohorts (see \code{consensus_quantile}), and the cohort is controlled for in the
 deconvolution analysis and cell group construction. Default is \code{NULL} (single cohort); a vector with
 only one cohort is treated the same way.}
 
@@ -123,6 +126,13 @@ the sign of each interaction; see \code{compute.TFs.activity()}) from
 \code{compute.WTCNA()}: one value, or one value per cohort (in the order the cohorts first appear in
 \code{batch}) in multi-cohort mode. If \code{NULL} (default), it is chosen automatically.}
 
+\item{cor_type_modules}{Correlation used to build the TF network and merge TF modules: "p" (Pearson, default) or
+"s" (Spearman). Passed to \code{compute.WTCNA()} as \code{cor_type}.}
+
+\item{consensus_quantile}{Numeric between 0 and 1, used in multi-cohort mode only: quantile of the topological
+overlaps of each pair of TFs across cohorts used as their consensus (0, the default, is the minimum: two TFs are
+close only if they are close in every cohort; higher values are less strict). Passed to \code{compute.WTCNA()}.}
+
 \item{corr}{Numeric; correlation threshold used in the deconvolution analysis. Default is 0.7.}
 
 \item{corr_type}{Correlation type used in deconvolution analysis. Default is \code{"spearman"}.}
@@ -134,11 +144,15 @@ if they are not listed here they are discarded.}
 \item{pval}{Numeric; p-value threshold used when building cell groups (selection of the deconvolution
 features significantly correlated with each TF module). Default is 0.05.}
 
+\item{padj}{Logical; if TRUE, the p-values used when building cell groups are corrected for multiple testing
+(Benjamini-Hochberg, across the deconvolution features for each TF module) and compared with \code{pval}.
+Passed to \code{construct_cell_groups()}. Default is FALSE.}
+
+\item{cor_type_groups}{Correlation used between the TF modules and the deconvolution features when building
+cell groups: "p" (Pearson, default) or "s" (Spearman). Passed to \code{construct_cell_groups()} as \code{cor_type}.}
+
 \item{min_cluster_size}{Integer; minimum number of features of a cell group (minimum cluster size of the
 dynamic tree cut), passed to \code{construct_cell_groups()}. Default is 3.}
-
-\item{deep_split}{Logical; if TRUE (default), the dynamic tree cut that defines the cell groups splits the
-clusters more finely. Passed to \code{construct_cell_groups()}.}
 
 \item{enrich_thresh}{Numeric. Minimum enrichment ratio (foreground/background cell-type frequency)
 required to include a cell type in a latent factor's niche. Default is 1.5.}
@@ -168,8 +182,7 @@ A list containing:
 in the sample order of \code{raw.counts} (also in multi-cohort mode).}
 \item{Pathways_scores}{Pathway activity scores returned by \code{compute.pathway.activity()}.}
 \item{Processed_deconvolution}{The processed deconvolution subgroups (output of \code{multideconv::compute.deconvolution.analysis()}).}
-\item{Cell_groups}{Output of \code{construct_cell_groups()}: cell group scores, compositions, projection weights
-and the relation of each cell group to its TF module.}
+\item{Cell_groups}{Output of \code{construct_cell_groups()}: cell group scores, compositions and projection weights.}
 \item{Latent_spaces}{NMF latent factors returned by \code{compute.latent_factors()}.}
 \item{Cells_niches}{Enriched cell types per latent factor (see \code{compute_cells_niches()}).}
 \item{TME_states}{Factor-to-meta-program mapping (\code{factor_mapping} from \code{map_factors_to_metaprograms()}), or \code{NULL} if the mapping was skipped (see \code{cancer_type}).}

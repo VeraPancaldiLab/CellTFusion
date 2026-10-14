@@ -14,7 +14,8 @@ plot_module_scatter_grid(
   only_sig = TRUE,
   ncol = NULL,
   max_pairs = 100,
-  axis_suffix = ""
+  axis_suffix = "",
+  p_label = "p"
 )
 }
 \arguments{
@@ -44,6 +45,9 @@ If \code{NULL}, set to \code{ceiling(sqrt(n_pairs))}.}
 correlations are drawn (with a message). Default 100.}
 
 \item{axis_suffix}{Character added to the axis titles after the column names (e.g. \code{" (rank)"}). Default "".}
+
+\item{p_label}{Character. Name of the values of \code{p_mat} written in each panel (e.g. \code{"padj"} for adjusted
+p-values). Default "p".}
 }
 \value{
 Called for its side effect (saves SVG); returns \code{NULL} invisibly.

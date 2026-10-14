@@ -9,13 +9,13 @@ construct_cell_groups(
   dt,
   batch = NULL,
   pval = 0.05,
+  padj = FALSE,
+  cor_type = "p",
   clustering.method = "ward.D2",
   dendrogram_file = NULL,
   return_dendrogram = FALSE,
   return = FALSE,
-  cells_extra = NULL,
-  min_cluster_size = 3,
-  deep_split = TRUE
+  min_cluster_size = 3
 )
 }
 \arguments{
@@ -30,7 +30,15 @@ sample. Required when \code{network} was built with \code{compute.WTCNA(batch = 
 correlations and scores are corrected for cohort.}
 
 \item{pval}{Numeric. P-value threshold used to select the deconvolution features significantly
-correlated with each TF module. Default: 0.05.}
+correlated with each TF module (adjusted p-value with \code{padj = TRUE}). Default: 0.05.}
+
+\item{padj}{Logical. If TRUE, the p-values of each TF module are corrected for multiple testing across the
+deconvolution features (Benjamini-Hochberg, see \code{compute.modules.relationship()}) before selecting the
+significant features. Default: FALSE.}
+
+\item{cor_type}{Correlation used between the TF modules and the deconvolution features (passed to
+\code{compute.modules.relationship()}): \code{"p"} (Pearson, default) or \code{"s"} (Spearman). It is used to
+select the significant features and to cluster them.}
 
 \item{clustering.method}{Linkage method of the hierarchical clustering of the deconvolution features of each module
 on their correlation with it (see \code{identify.cell.groups()}). Default: "ward.D2".}
@@ -45,17 +53,11 @@ and \code{return}).}
 \code{Results/Cell.groups.composition_<dendrogram_file>.csv} and
 \code{Results/Cell.groups.scores_<dendrogram_file>.csv}. Default FALSE.}
 
-\item{cells_extra}{Optional character vector with the cell names that are not in the nomenclature of multideconv
-(the same as in \code{multideconv::compute.deconvolution.analysis()}), used to list the cell types of each
-cell group in \code{Module_relation}.}
-
 \item{min_cluster_size}{Integer. Minimum number of features of a cell group (minimum cluster size of the
 dynamic tree cut of each dendrogram). Default is 3.}
-
-\item{deep_split}{Logical. If TRUE (default), the dynamic tree cut splits the clusters more finely.}
 }
 \value{
-A named list of 4 elements:
+A named list of 3 elements:
 \describe{
 \item{Cell_groups}{A data frame with the projected cell group scores (samples x groups). A positive score
 means that the sample is on the active side of the TF module of that cell group, a negative score that
@@ -63,12 +65,6 @@ it is on the inactive side.}
 \item{Composition}{A named list where each element is a character vector of the deconvolution features in each group.}
 \item{Weights}{A named list of CCA projection parameters (\code{xcoef}, \code{train_means}, \code{train_sds}) for each group.
 With \code{batch}, \code{train_means} is \code{NULL}: test data are centred on their own means.}
-\item{Module_relation}{A data frame with one row per cell group: \code{cell_group}, \code{module} (its TF
-module), \code{relation} (\code{"positive"} or \code{"negative"}), \code{correlation} (mean correlation of
-its features with the module score), \code{n_features} and \code{cell_types} (the cell types of its
-features, the most frequent first). It translates a score into cell abundance: for a
-positively related group, a positive score means more of its features; for a negatively related group, a
-positive score means fewer of them.}
 }
 Cell groups are named \code{Dendrogram_<module>_group_<n>}, where \code{n} is the cluster number shown in the
 dendrogram PDF of that module. Features that the tree cut does not assign to any cluster are not part of any
@@ -92,6 +88,6 @@ the deconvolution matrix, which may contain only part of the samples of the netw
 data("network.tuto")
 data("deconv_subgroups.tuto")
 cell_groups <- construct_cell_groups(network.tuto, deconv_subgroups.tuto)
-head(cell_groups$Module_relation)
+cell_groups$Cell_groups[1:3, 1:3]
 
 }

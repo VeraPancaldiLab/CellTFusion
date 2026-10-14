@@ -14,7 +14,7 @@ Found during the September 2026 audit; fix deferred. Both problems are in `compu
 
 ### 1. The sign of composite scores is arbitrary
 
-- [x] Orient composite scores consistently — **fixed 5–6 October 2026.** After the CCA, `compute_composite_score()` flips the weights and the score when needed so that the score is aligned with the TF module: it increases with the features of the cell group when they are positively related to the module and decreases with them when negatively related (a positive score = the sample is on the active side of the module). The `* -1` step was removed. The relation of each group to its module is returned in the new `Module_relation` table of `construct_cell_groups()`. Tutorial data: the score follows this rule in all 123 groups (66 positive, 57 negative); 122 of 123 scores are identical when the samples are reordered (72 before); 121 of 123 scores are positively related to their module score (the two others have almost no link with it, |r| 0.11 and 0.05). The text below describes the behaviour before the fix.
+- [x] Orient composite scores consistently — **fixed 5–6 October 2026.** After the CCA, `compute_composite_score()` flips the weights and the score when needed so that the score is aligned with the TF module: it increases with the features of the cell group when they are positively related to the module and decreases with them when negatively related (a positive score = the sample is on the active side of the module). The `* -1` step was removed. The relation of each group to its module was returned in a `Module_relation` table of `construct_cell_groups()` (removed 14 October 2026 at the user's request). Tutorial data: the score follows this rule in all 123 groups (66 positive, 57 negative); 122 of 123 scores are identical when the samples are reordered (72 before); 121 of 123 scores are positively related to their module score (the two others have almost no link with it, |r| 0.11 and 0.05). The text below describes the behaviour before the fix.
 
 **What happens.** CCA weights are only defined up to a sign, and the sign returned by `stats::cancor()` depends on the order of the samples. The composite score (`scaled_obj %*% cca_result$xcoef[, 1]`) is used as returned, so the same cell group can get the opposite sign when the samples are given in another order or subset (e.g. cross-validation folds).
 
@@ -90,7 +90,8 @@ Measured on the tutorial data (10 TF modules x 184 deconvolution features = 1,84
 
 With the random columns, all 10 modules had at least two "significant" features, which is enough to build cell groups.
 
-- [ ] Decide where to correct the p-values (in `compute.modules.relationship()` for every use, or only in `construct_cell_groups()`), with which method, and across which tests (all pairs, or per module). It would change the cell groups and everything computed from them.
+- [x] Decide where to correct the p-values (in `compute.modules.relationship()` for every use, or only in `construct_cell_groups()`), with which method, and across which tests (all pairs, or per module). It would change the cell groups and everything computed from them. **Done 14 October 2026:** `padj` (TRUE / FALSE, default FALSE) in `compute.modules.relationship()`, `construct_cell_groups()` and `CellTFusion()`; Benjamini-Hochberg across the features for each TF module; the adjusted p-values are returned as `p_adjusted`. With the default, results are unchanged.
+- [ ] Decide whether `padj = TRUE` should become the default (changes the cell groups for every caller).
 
 ## Scaling of TF and pathway activity scores (noted 12 October 2026)
 
@@ -105,6 +106,38 @@ What was measured on the tutorial data:
 
 - [ ] Decide whether `scale = TRUE` stays the default, what to do for test sets and multi-cohort runs (TF activity is computed and scaled per cohort in batch mode), and whether the downstream steps should scale by themselves instead.
 
+## Consistency of parameters shared between functions (noted 14 October 2026)
+
+To check later: the same setting has different names, values and defaults in different functions, and some are hard-coded in one place and settable in another. Inventory of `R/CellTFusion.R` on 14 October 2026 (`*` = internal function):
+
+- [ ] **Correlation type.**
+  - Names: `cor_type` (`compute.WTCNA()`, `compute.modules.relationship()`, `construct_cell_groups()`), `corr_type` (`CellTFusion()`, passed to `multideconv::compute.deconvolution.analysis()`), `corr_method` (`compute.metadata.association()`), `method` (`mergeModules()*`, where `method` means the scoring statistic in `compute.TFs.activity()` / `compute.pathway.activity()`).
+  - Values: `"p"` / `"s"` in most functions, but `"spearman"` / `"pearson"` in `corr_type` and `mergeModules()*`.
+  - Defaults: Pearson everywhere except the deconvolution subgroups (Spearman).
+  - Hard-coded:
+    - `CellTFusion()` passes `cor_type = "p"` to `compute.WTCNA()`. The `cor_type` of `construct_cell_groups()` (added 14 October 2026) is exposed in `CellTFusion()` as `cor_type_groups`, next to `corr_type` (deconvolution subgroups).
+    - The ARACNe signs without a `mor` column use Spearman.
+  - Threshold names: `corr` (`CellTFusion()`: deconvolution subgroups; `mergeModules()*`: module merging), `corr_mod` (`compute.WTCNA()`).
+- [ ] **Tree cut (deep split).**
+  - `compute.WTCNA()` hard-codes `deepSplit = 2`, the hybrid method's 0-4 scale, in both single- and multi-cohort mode.
+  - The cell groups always use `deep_split = TRUE`, a switch in `method = "tree"`. Since 14 October 2026 it is no longer a parameter of `CellTFusion()`, `construct_cell_groups()` or `cell.groups.computation()`; `calculate_dendrogram_cuts()*` keeps it.
+  - Decide whether this stays hard-coded in both places, and document that the two values have different meanings.
+- [ ] **Minimum sizes.**
+  - `minMod` (TF modules): default 15 in `compute.WTCNA()` but 5 in `CellTFusion()`.
+  - `min_cluster_size` (cell groups), `min_targets_size` (regulons), `min_genes` (`module_enrich()*`).
+- [ ] **Clustering method.** `clustering.method` is `"average"` in `compute.WTCNA()` and `"ward.D2"` in `identify.cell.groups()` / `construct_cell_groups()`; `CellTFusion()` hard-codes both.
+- [ ] **Other common parameters.**
+  - **Output file:** `file_name` vs `file.name` vs `dendrogram_file`.
+  - **Saving and plots:**
+    - `return` defaults to `TRUE` in most functions but `FALSE` in `construct_cell_groups()` and `prepare_celltfusion_folds()`.
+    - Plots are switched by `plot`, `plot_dot`, `plot_grid`, `plot.grid` or `return_dendrogram`.
+  - **`verbose`:** default `TRUE` in `CellTFusion()`, `FALSE` in `compute.WTCNA()` and `prepare_celltfusion_folds()`.
+  - **`batch`:** a cohort vector everywhere except `compute.WTCNA()` (logical).
+  - **Multiple-testing correction:** `p_adjust` (any `stats::p.adjust()` method, default `"none"`) in `compute.metadata.association()`, `compute.survival.analysis()` and the `scores.*` tests, but `padj` (TRUE / FALSE, always Benjamini-Hochberg) in `compute.modules.relationship()`, `construct_cell_groups()` and `CellTFusion()` since 14 October 2026.
+  - **`seed`:** only in `compute.latent_factors()` and `compute_factor_gsea()`.
+
+Renaming or changing defaults breaks callers (MCP server, paper scripts, Shiny app): list them before deciding.
+
 ## Deferred: to do after the review of `CellTFusion()` (noted October 2026)
 
 - [ ] **TCGA references.** Regenerate `inst/extdata/TCGA_meta_programs_*.RData` and `CellTFusion_TCGA_*.RData`: they were built while cell groups were mislabelled (2026-04-29 to 2026-10-05), so `TME_states` maps against references from wrong cell groups. They must also be rebuilt with the current defaults (12 October 2026): ulm TF activities, TF tree on the TOM dissimilarity with average linkage, merging repeated until no pair is above `corr_mod`, cell groups cut into single ranges of correlation, rank limited to the number of cell groups, GSEA with the cohort covariate and a fixed seed. The current blca reference labels 5 of its 7 meta-programs as IE.
@@ -117,5 +150,5 @@ What was measured on the tutorial data:
 - [ ] **Scoring method in `CellTFusion()`.** `compute.TFs.activity()` and `compute.pathway.activity()` have a `method` argument (default `"ulm"`), but `CellTFusion()` does not pass one, so the pipeline always uses `"ulm"`. Decide whether to add the argument to `CellTFusion()` (noted 11 October 2026).
 - [ ] Check behavior across all pipeline when batch is set to TRUE (noted 12 October 2026).
 - [ ] **Revise `calculate_dendrogram_cuts()` to really understand how it works** (noted 12 October 2026): how `dynamicTreeCut::cutreeDynamic(method = "tree")` gives out cluster numbers (on the tutorial data, 55 of 123 cell groups were made of separated ranges of correlation), and whether the step added that splits clusters into single ranges and joins small pieces to their closest neighbour is the right answer.
-- [ ] **Cell niches: more or fewer cells.** `compute_cells_niches()` adds together the selected cell group parts that mean more cells and those that mean fewer (it uses neither `_pos` / `_neg` nor `Module_relation`). Measured 12 October 2026 on the tutorial data (3 factors): the selected parts meaning more / fewer cells are 41 / 25, 29 / 40 and 38 / 17; the top cell type of Factor1, CAF (weight 0.14), gets 0.11 from parts meaning fewer CAFs and 0.03 from parts meaning more. Proposed: give each part its direction from `Module_relation`, compute weights and enrichment separately for more and fewer, return per factor a table (cell type, direction, weight, enrichment) and colour the plot edges by direction; this changes the structure of `Cells_niches`.
+- [ ] **Cell niches: more or fewer cells.** `compute_cells_niches()` adds together the selected cell group parts that mean more cells and those that mean fewer (it uses neither `_pos` / `_neg` nor the relation of each group to its TF module). Measured 12 October 2026 on the tutorial data (3 factors): the selected parts meaning more / fewer cells are 41 / 25, 29 / 40 and 38 / 17; the top cell type of Factor1, CAF (weight 0.14), gets 0.11 from parts meaning fewer CAFs and 0.03 from parts meaning more. Proposed: give each part its direction (from the relation of its group to the TF module; `Module_relation`, which gave it, was removed on 14 October 2026, so it would have to be computed here), compute weights and enrichment separately for more and fewer, return per factor a table (cell type, direction, weight, enrichment) and colour the plot edges by direction; this changes the structure of `Cells_niches`.
 
