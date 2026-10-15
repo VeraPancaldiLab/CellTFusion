@@ -37,9 +37,9 @@ These steps use:
 
 ```{r, eval = FALSE}
 gsea_results <- compute_factor_gsea(
-  RNA.tpm     = counts.norm,
-  features_df = latent_spaces$Z,
-  plot_dot    = TRUE,
+  counts_norm     = counts.norm,
+  scores = latent_spaces$Z,
+  return    = TRUE,
   top_n       = 10,
   file_name   = "Tutorial"
 )
@@ -50,7 +50,7 @@ gsea_results <- compute_factor_gsea(
 | `$DE_results` | Named list of `limma` results, one per factor (logFC per standard deviation of the factor) |
 | `$GSEA_results` | Named list of `fgsea` results, one per factor |
 
-With `plot_dot = TRUE`, a dot plot of the top Hallmarks is saved per factor (dot size = significance, color = normalized enrichment score, NES):
+With `return = TRUE`, a dot plot of the top Hallmarks is saved per factor (dot size = significance, color = normalized enrichment score, NES):
 
 ```{r, echo = FALSE, out.width = "80%", fig.align = "center", fig.alt = "Dot plot of the top Hallmark gene sets for latent factor 1"}
 knitr::include_graphics("figures/gsea_factor1.png")
@@ -72,9 +72,9 @@ In other words: *which known program does this factor's Hallmark signature resem
 
 ```{r, eval = FALSE}
 mp_mapping <- map_factors_to_metaprograms(
-  gsea_study  = gsea_results,
+  gsea_results  = gsea_results,
   cancer_type = "skcm",
-  plot        = TRUE,
+  return        = TRUE,
   file_name   = "Tutorial"
 )
 ```
@@ -86,7 +86,7 @@ mp_mapping <- map_factors_to_metaprograms(
 
 A custom reference can be used with `mp_file`, either a data frame like `$reference` or the path to an `.RData` file containing an object named `meta_programs`.
 
-With `plot = TRUE`, each panel shows a study factor: grey bars are the mean NES for every meta-program, and the best-matching one is colored by its TME subtype:
+With `return = TRUE`, each panel shows a study factor: grey bars are the mean NES for every meta-program, and the best-matching one is colored by its TME subtype:
 
 ```{r, echo = FALSE, out.width = "90%", fig.align = "center", fig.alt = "Bar plots of mean NES per meta-program for each study factor, with the best match highlighted"}
 knitr::include_graphics("figures/mp_mapping.png")
@@ -101,13 +101,13 @@ knitr::include_graphics("figures/mp_mapping.png")
 - **F** (fibrotic) — stroma-dominated, low immune infiltration.
 - **D** (depleted) — low immune infiltration and low fibrosis.
 
-These subtypes are associated with response to immune checkpoint blockade. For a TCGA cancer type, `map_factors_to_TME()` matches the TCGA patients in `Z` to their MFP subtype and tests each factor across the four subtypes with a Kruskal-Wallis test. Factors with p < 0.05 are labeled with the subtype that has the highest median score; the others are labeled `"uncharacterized"`. This is how the TME subtypes of the TCGA meta-program references were assigned (`annotate_metaprograms_TME()`).
+These subtypes are associated with response to immune checkpoint blockade. For a TCGA cancer type, `map_factors_to_TME()` matches the TCGA patients in `scores` to their MFP subtype and tests each factor across the four subtypes with a Kruskal-Wallis test. Factors with p < 0.05 are labeled with the subtype that has the highest median score; the others are labeled `"uncharacterized"`. This is how the TME subtypes of the TCGA meta-program references were assigned (`annotate_metaprograms_TME()`).
 
 ```{r, eval = FALSE}
 tme_annotation <- map_factors_to_TME(
-  cancer_name = "skcm",
-  Z           = latent_spaces$Z,   # TCGA samples x factors
-  plot        = TRUE,
+  cancer_type = "skcm",
+  scores           = latent_spaces$Z,   # TCGA samples x factors
+  return        = TRUE,
   file_name   = "Tutorial"
 )
 ```
@@ -121,7 +121,7 @@ meta_programs <- derive_meta_programs(
   gsea_results = gsea_results,
   k            = NULL,
   file_name    = "Tutorial",
-  plot         = TRUE
+  return         = TRUE
 )
 
 # Several cohorts (gsea_A, gsea_B: outputs of compute_factor_gsea())
@@ -137,7 +137,7 @@ meta_programs <- derive_meta_programs(gsea_both, file_name = "two_cohorts")
 `CellTFusion()` always runs the Hallmark GSEA. The meta-program mapping is run when `cancer_type` is one of the cancer types with a reference (`"blca"`, `"luad"`, `"skcm"`); otherwise it is skipped (with a warning for an unsupported cancer type) and `res$TME_states` is `NULL`:
 
 ```{r, eval = FALSE}
-res <- CellTFusion(raw.counts = raw.counts, cancer_type = "blca")  # the example data are bladder cancer samples
+res <- CellTFusion(raw_counts = raw.counts, cancer_type = "blca")  # the example data are bladder cancer samples
 
 res$TME_states              # factor-to-meta-program mapping
 res$Metaprograms_reference  # meta-program reference used

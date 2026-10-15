@@ -5,8 +5,9 @@
 \alias{traitdata.tuto}
 \title{Clinical data}
 \format{
-A data frame with 192 samples as rows and 3 traits as columns
-(\code{Best.Confirmed.Overall.Response}, \code{binaryResponse} and \code{Enrollment.IC})
+A data frame with 192 samples as rows and 5 columns: \code{Best.Confirmed.Overall.Response},
+\code{binaryResponse}, \code{Enrollment.IC}, and the overall survival \code{os} (months) and \code{censOS}
+(1 = death, 0 = censored)
 }
 \source{
 Mariathasan et al. (2018), doi: https://doi.org/10.1038/nature25501

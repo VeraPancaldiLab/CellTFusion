@@ -23,7 +23,7 @@ pathways, which then have an \code{NA} NES), are filled with 0, i.e. treated as 
 }
 \examples{
 \dontrun{
-gsea <- compute_factor_gsea(RNA.tpm = counts.norm, features_df = res$Latent_spaces$Z, plot_dot = FALSE)
+gsea <- compute_factor_gsea(counts_norm = counts.norm, scores = res$Latent_spaces$Z, return = FALSE)
 nes <- build_nes_matrix(gsea)
 }
 

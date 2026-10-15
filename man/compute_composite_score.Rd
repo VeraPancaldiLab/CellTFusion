@@ -4,54 +4,51 @@
 \alias{compute_composite_score}
 \title{Compute composite score for cell groups}
 \usage{
-compute_composite_score(
-  cell_group,
-  module_group,
-  tfs.module.network,
-  batch = NULL
-)
+compute_composite_score(cell_group, module, network, batch = NULL)
 }
 \arguments{
 \item{cell_group}{A numeric matrix of cell deconvolution features for a cell group (samples x features), with sample
-names as row names. The module score and TF activities of \code{tfs.module.network} are matched to these samples by
-name; every sample must be in the network.}
+names as row names. The module score of \code{network} is matched to these samples by name; every sample must
+be in the network.}
 
-\item{module_group}{Character. Name (color) of the TF module the cell group was built from; must match a
-column name of the module matrix in \code{tfs.module.network} exactly.}
+\item{module}{Character. Name (color) of the TF module the cell group was built from; must match a
+column name of the module matrix in \code{network} exactly.}
 
-\item{tfs.module.network}{Output of compute.WTCNA() (single- or multi-cohort).}
+\item{network}{Output of compute.WTCNA() (single- or multi-cohort).}
 
 \item{batch}{Optional vector with the cohort of each sample, in the row order of \code{cell_group}. It is treated as
-categorical: per-batch means are regressed out of the cell group features, the module score and the module TFs
-before the CCA.}
+categorical: the cell group features are z-scored within each cohort (mean 0, SD 1 per cohort; a feature constant
+in a cohort is 0 there) before the CCA. The module score is used as it is: \code{compute.WTCNA()} already scales it
+within each cohort.}
 }
 \value{
 An unnamed list of two elements:
 \itemize{
 \item \code{[[1]]}: Numeric matrix (samples x 1) with the composite score, i.e. the scaled cell group
-features projected onto the first canonical component, oriented to be aligned with the TF module.
+features projected onto the first canonical component, oriented to be aligned with the TF module. With
+\code{batch}, it has mean 0 within each cohort.
 \item \code{[[2]]}: Projection parameters used to score new samples: \code{xcoef} (canonical weights of
 the first component), \code{train_means} and \code{train_sds} (column means/SDs used for scaling).
 The sign of \code{xcoef} follows the orientation of the score.
-\code{train_means} is \code{NULL} when batch correction was applied: new samples are then centred on
-their own means, as each training cohort was.
+When batch correction was applied, only \code{xcoef} is returned: new samples are then z-scored on their own
+means and SDs, as each training cohort was.
 }
 }
 \description{
 Computes a composite score by performing Canonical Correlation Analysis (CCA)
-between the deconvolution features of a cell group and the TFs of its module.
+between the deconvolution features of a cell group and the score of its TF module (module eigengene).
 The score is the weighted sum of the (scaled) features of the cell group, with the weights of the first
-canonical component. As the sign of CCA weights is arbitrary, the score is oriented so that it is aligned
+canonical component: the combination of the features that correlates most with the TF module score (with a single
+module score, this is the linear regression of the module score on the features, up to a scaling factor). As the sign of CCA weights is arbitrary, the score is oriented so that it is aligned
 with the TF module: a positive score means that the sample is on the active side of the module for that cell
 group. The score therefore increases with the features of the cell group when they are positively related
 to the module, and decreases with them when they are negatively related.
 }
 \details{
-The CCA is reliable only when the number of variables (features of the cell group plus TFs of the module) is well
-below the number of samples. When it reaches the number of samples, the first canonical correlation is 1 whatever
-the data, the weights are not unique and the score is decided by numerical noise (it can change completely with
-the sample order or a tiny change in the data). Large modules with few samples (e.g. cross-validation folds) are the
-most affected.
+The CCA is reliable only when the number of features of the cell group is well below the number of samples. When
+it reaches the number of samples, the first canonical correlation is 1 whatever the data, the weights are not unique
+and the score is decided by numerical noise. Cell groups with many features and few samples (e.g. cross-validation
+folds) are the most affected.
 }
 \examples{
 data("network.tuto")

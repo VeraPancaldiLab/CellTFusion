@@ -25,24 +25,22 @@ This tutorial covers the core steps of `CellTFusion`: building cell groups from 
 
 ## **Cell groups**
 
-`construct_cell_groups()` correlates each TF module with the deconvolution features, clusters the significantly correlated features of each module, and cuts the dendrograms into **cell groups**. Features are clustered on the value of their correlation with the module, so a cell group is a set of features with a similar biological activity: features related to the same TF module to the same degree, which do not need to vary together across samples. Each cell group covers a single range of correlation values: the dendrogram is cut with a dynamic tree cut, clusters made of separated ranges are split, and pieces smaller than `min_cluster_size` are joined to the neighbouring group with the closest correlation. Each cell group gets a composite score per sample: the first canonical component of a canonical correlation analysis (CCA) between the group's deconvolution features and the TFs of its module. The score is oriented to be aligned with the TF module: a positive score means that the sample is on the active side of the module for that cell group, a negative score that it is on the inactive side.
+`construct_cell_groups()` correlates each TF module with the deconvolution features, clusters the significantly correlated features of each module, and cuts the dendrograms into **cell groups**. Features are clustered on the value of their correlation with the module, so a cell group is a set of features with a similar biological activity: features related to the same TF module to the same degree, which do not need to vary together across samples. Each cell group covers a single range of correlation values: the dendrogram is cut with a dynamic tree cut, clusters made of separated ranges are split, and pieces smaller than `min_cluster_size` are joined to the neighbouring group with the closest correlation. Each cell group gets a composite score per sample: the first canonical component of a canonical correlation analysis (CCA) between the group's deconvolution features and the score of its TF module, i.e. the combination of the features that correlates most with the module score. The score is oriented to be aligned with the TF module: a positive score means that the sample is on the active side of the module for that cell group, a negative score that it is on the inactive side.
 
 Key arguments:
 
 - `network`, `dt` — the inputs above.
 - `batch` — optional cohort vector (see [Multi-cohort analysis](a6_batch_analysis.html)).
 - `pval` — p-value threshold to select the deconvolution features significantly correlated with each module.
-- `dendrogram_file` / `return_dendrogram` — with `return_dendrogram = TRUE`, the colored dendrograms are saved to `Results/Dendrogram_color_clusters_<dendrogram_file>.pdf`.
-- `return` — if `TRUE`, the composition and the scores of the cell groups are saved to `Results/Cell.groups.composition_<dendrogram_file>.csv` and `Results/Cell.groups.scores_<dendrogram_file>.csv`.
+- `file_name` / `return` — with `return = TRUE` (default), the colored dendrograms are saved to `Results/Dendrogram_color_clusters_<file_name>.pdf`, and the composition and the scores of the cell groups to `Results/Cell.groups.composition_<file_name>.csv` and `Results/Cell.groups.scores_<file_name>.csv`.
 
 ```{r, eval = FALSE}
 cell_groups <- construct_cell_groups(
   network           = network,
   dt                = dt,
   pval              = 0.05,
-  clustering.method = "ward.D2",
-  dendrogram_file   = "Tutorial",
-  return_dendrogram = TRUE
+  clustering_method = "ward.D2",
+  file_name         = "Tutorial"
 )
 ```
 
@@ -58,7 +56,7 @@ knitr::include_graphics("figures/cell_groups_dendrogram_02.png")
 | ------- | ----------- |
 | `Cell_groups` | Data frame of composite scores (samples x cell groups) |
 | `Composition` | Deconvolution features in each cell group |
-| `Weights` | CCA projection parameters of each group (`xcoef`, `train_means`, `train_sds`), used to score new samples |
+| `Weights` | CCA projection parameters of each group (`xcoef`, `train_means`, `train_sds`; only `xcoef` with `batch`), used to score new samples |
 
 ### Re-running with precomputed features
 
@@ -66,13 +64,13 @@ knitr::include_graphics("figures/cell_groups_dendrogram_02.png")
 
 ```{r, eval = FALSE}
 res_rerun <- CellTFusion(
-  raw.counts = raw.counts,
+  raw_counts = raw.counts,
   normalized = TRUE,
   dt         = res$Processed_deconvolution,
   tfs        = res$TFs_matrix,
   pathways   = res$Pathways_scores,
   corr_mod   = 0.8,    # e.g. merge modules more readily than the default 0.9
-  minMod     = 10,
+  min_module_size     = 10,
   pval       = 0.05,
   return     = TRUE
 )
@@ -84,7 +82,7 @@ res_rerun <- CellTFusion(
 
 ```{r, eval = FALSE}
 latent_spaces <- compute.latent_factors(
-  X         = cell_groups$Cell_groups,
+  scores    = cell_groups$Cell_groups,
   rank      = NULL,
   seed      = 123,
   file_name = "Tutorial",
@@ -108,7 +106,7 @@ knitr::include_graphics("figures/nmf_patient_mixture.png")
 cells_niches <- compute_cells_niches(
   latent_factors  = latent_spaces,
   dt              = dt,
-  cell.groups     = cell_groups,
+  cell_groups     = cell_groups,
   enrich_thresh   = 1.5,
   quantile_cutoff = 0.7,
   return          = TRUE,

@@ -4,7 +4,7 @@
 \alias{finish_trait_test}
 \title{Build the result of a score-trait test}
 \usage{
-finish_trait_test(input, statistic, p, test, statistic_name, pval, p_adjust)
+finish_trait_test(input, statistic, p, test, statistic_name, pval, padj)
 }
 \arguments{
 \item{input}{The output of \code{prepare_trait_test()}.}
@@ -19,7 +19,7 @@ finish_trait_test(input, statistic, p, test, statistic_name, pval, p_adjust)
 
 \item{pval}{Numeric. Significance threshold for the adjusted p-values.}
 
-\item{p_adjust}{Character. Method of \code{stats::p.adjust()}.}
+\item{padj}{Logical. If TRUE, the p-values are adjusted with the Benjamini-Hochberg method.}
 }
 \value{
 A list with \code{result} (see the \code{scores.*} tests), \code{sig} (indices of the significant

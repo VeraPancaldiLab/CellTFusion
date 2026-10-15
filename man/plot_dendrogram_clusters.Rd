@@ -5,13 +5,13 @@
 \title{Plot cell-group dendrograms colored by cluster}
 \usage{
 plot_dendrogram_clusters(
-  cell.group.dendrogram,
+  cell_dendrograms,
   cuts_per_dendrogram,
   file_name = NULL
 )
 }
 \arguments{
-\item{cell.group.dendrogram}{A named list of \code{hclust} objects (or objects convertible to \code{hclust}),
+\item{cell_dendrograms}{A named list of \code{hclust} objects (or objects convertible to \code{hclust}),
 one per TF module, as returned by \code{identify.cell.groups()} (the correlations they store are used to order the
 leaves; without them, the leaves keep the order of the tree).}
 
@@ -19,8 +19,8 @@ leaves; without them, the leaves keep the order of the tree).}
 as returned by \code{calculate_dendrogram_cuts()}.}
 
 \item{file_name}{Optional character. Suffix of the output file
-(\code{Results/Dendrogram_color_clusters_<file_name>.pdf}). If \code{NULL} (default),
-nothing is saved.}
+(\code{Results/Dendrogram_color_clusters_<file_name>.pdf}; \code{Results/Dendrogram_color_clusters.pdf} if
+\code{NULL}, the default).}
 }
 \value{
 Called for its side effect (saves a PDF); returns \code{NULL} invisibly.

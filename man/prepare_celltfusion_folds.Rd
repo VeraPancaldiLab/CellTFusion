@@ -9,11 +9,12 @@ prepare_celltfusion_folds(
   folds = NULL,
   bestune = NULL,
   deconv,
-  raw.counts = NULL,
+  raw_counts = NULL,
   batch = NULL,
-  ncores = 1,
-  return = FALSE,
-  verbose = FALSE,
+  do_parallel = FALSE,
+  workers = NULL,
+  return = TRUE,
+  verbose = TRUE,
   ...
 )
 }
@@ -32,29 +33,32 @@ running the folds.}
 computed independently for each sample, so computing it once for all samples does not leak information
 between folds.}
 
-\item{raw.counts}{Optional count matrix (genes x samples; TPM values if \code{normalized = FALSE} is passed
+\item{raw_counts}{Optional count matrix (genes x samples; TPM values if \code{normalized = FALSE} is passed
 to \code{CellTFusion()}) with the samples of \code{data}. Its columns are matched to the samples of
 \code{deconv} by name (an error is raised if they are not the same samples); without column names, they must be
 in the same order as \code{data}.
 \code{pipeML} converts the column names of \code{features_train} with \code{make.names()} (e.g.
 \code{"HLA-A"} becomes \code{"HLA.A"}), so gene symbols in \code{data} may no longer match TF regulons and
-gene sets; passing \code{raw.counts} keeps the original gene symbols. If \code{NULL} (default),
+gene sets; passing \code{raw_counts} keeps the original gene symbols. If \code{NULL} (default),
 \code{t(data)} is used.}
 
 \item{batch}{Optional vector with the cohort of each sample, in the same order as \code{data} (e.g.
 \code{coldata$Cohort}). If given, \code{CellTFusion()} runs in multi-cohort mode (see \code{CellTFusion()})
-and the test samples of each cohort are projected separately, centered on their own means. Default
+and the test samples of each cohort are projected separately, z-scored on their own means and SDs. Default
 \code{NULL} (single cohort).}
 
-\item{ncores}{Integer. Number of folds computed in parallel. Default 1 (sequential).}
+\item{do_parallel}{Logical; whether to compute the folds in parallel. Default is FALSE (one after the other).}
+
+\item{workers}{(Optional) Number of parallel workers when \code{do_parallel = TRUE}. If \code{NULL} (default),
+the number of available cores minus one is used.}
 
 \item{return}{Logical; in final mode, whether \code{CellTFusion()} saves its outputs and plots in
-\code{Results/}. Outputs are never saved for the folds. Default FALSE.}
+\code{Results/}. Outputs are never saved for the folds. Default TRUE.}
 
-\item{verbose}{Logical; whether \code{CellTFusion()} prints its progress messages. Default FALSE.}
+\item{verbose}{Logical; whether \code{CellTFusion()} prints its progress messages. Default TRUE.}
 
 \item{...}{Other arguments passed to \code{CellTFusion()} (e.g. \code{normalized}, \code{TF.collection},
-\code{min_targets_size}, \code{minMod}, \code{corr_mod}, \code{corr}, \code{pval}, \code{cancer_type}).
+\code{min_targets_size}, \code{min_module_size}, \code{corr_mod}, \code{corr}, \code{pval}, \code{cancer_type}).
 \code{dt}, \code{tfs} and \code{pathways} are not allowed, as they must be computed within each fold.}
 }
 \value{
@@ -80,21 +84,23 @@ cross-validation fold, without information leakage: cell groups and latent facto
 projected onto them with \code{project_test_factors()}. It works for classification and survival tasks.
 }
 \details{
-Pass the fixed arguments (\code{deconv}, and optionally \code{raw.counts}, \code{batch}
+Pass the fixed arguments (\code{deconv}, and optionally \code{raw_counts}, \code{batch}
 and any \code{CellTFusion()} argument) through \code{fold_construction_args_fixed}. Tunable
-arguments (\code{fold_construction_args_tunable}) are not supported. With \code{ncores > 1}, the first fold is
+arguments (\code{fold_construction_args_tunable}) are not supported. With \code{batch}, a warning names the folds and cohorts
+with fewer than 10 test samples (their test samples are z-scored on their own means and SDs, which is unreliable with
+few samples; leave-one-cohort-out folds avoid it). With \code{do_parallel = TRUE}, the first fold is
 computed before the others start in parallel, so that the TF and pathway collections cached in
 \code{Results/} are downloaded only once; the package must be installed for the parallel workers.
 }
 \examples{
 \dontrun{
-raw.counts <- CellTFusion::raw.counts.tuto
+raw_counts <- CellTFusion::raw.counts.tuto
 traitdata  <- CellTFusion::traitdata.tuto
 deconv     <- CellTFusion::deconv.tuto  # deconvolution of all the samples
 
 # Classification
 ml_res <- pipeML::compute_features.training.ML(
-  features_train = t(raw.counts),
+  features_train = t(raw_counts),
   task_type      = "classification",
   target_var     = traitdata$Best.Confirmed.Overall.Response,
   trait.positive = "PD",
@@ -102,7 +108,7 @@ ml_res <- pipeML::compute_features.training.ML(
   k_folds        = 5,
   n_rep          = 1,
   fold_construction_fun        = prepare_celltfusion_folds,
-  fold_construction_args_fixed = list(deconv = deconv, raw.counts = raw.counts)
+  fold_construction_args_fixed = list(deconv = deconv, raw_counts = raw_counts)
 )
 
 # Features of new samples: projected onto the model trained on all the training samples
@@ -110,14 +116,14 @@ features_test <- project_test_factors(ml_res$Custom_output, deconv_test)
 
 # Survival (time and event of each sample)
 surv_res <- pipeML::compute_features.training.ML(
-  features_train = t(raw.counts),
+  features_train = t(raw_counts),
   task_type      = "survival",
   time_var       = time,
   event_var      = event,
   k_folds        = 5,
   n_rep          = 1,
   fold_construction_fun        = prepare_celltfusion_folds,
-  fold_construction_args_fixed = list(deconv = deconv, raw.counts = raw.counts)
+  fold_construction_args_fixed = list(deconv = deconv, raw_counts = raw_counts)
 )
 }
 

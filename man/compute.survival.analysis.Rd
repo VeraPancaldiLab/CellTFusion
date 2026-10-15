@@ -5,44 +5,44 @@
 \title{Kaplan-Meier survival analysis on clinical groups or CellTFusion features}
 \usage{
 compute.survival.analysis(
-  survival.data,
-  PFS,
-  PFS_event,
+  coldata,
+  time_column,
+  event_column,
   file_name = NULL,
-  features = NULL,
-  p.value = 0.05,
-  thres = 0.5,
+  scores = NULL,
+  pval = 0.05,
+  quantile_cutoff = 0.5,
   group_column = NULL,
-  p_adjust = "none"
+  padj = FALSE
 )
 }
 \arguments{
-\item{survival.data}{A data frame (or tibble) of clinical/survival metadata, with samples as rows.}
+\item{coldata}{A data frame (or tibble) of clinical/survival metadata, with samples as rows.}
 
-\item{PFS}{Character. Column name in \code{survival.data} with the survival/follow-up time.}
+\item{time_column}{Character. Column name in \code{coldata} with the survival/follow-up time.}
 
-\item{PFS_event}{Character. Column name in \code{survival.data} with the event indicator
+\item{event_column}{Character. Column name in \code{coldata} with the event indicator
 (1 = event occurred, 0 = censored).}
 
 \item{file_name}{Optional character. Suffix used when saving Kaplan-Meier plots to \code{Results/}.}
 
-\item{features}{Optional. A samples x features numeric matrix or data frame (e.g.
+\item{scores}{Optional. A samples x features numeric matrix or data frame (e.g.
 \code{latent_spaces$Z}). If provided (and \code{group_column} is
 \code{NULL}), each feature is tested individually. Rows must be the same samples, in the same order, as the rows of
-\code{survival.data} (checked by name). Mutually exclusive with \code{group_column}.}
+\code{coldata} (checked by name). Mutually exclusive with \code{group_column}.}
 
-\item{p.value}{Numeric. Log-rank test threshold used to keep a feature as significant when \code{features} is used:
-(adjusted) p-value \code{<= p.value}. Default is 0.05.}
+\item{pval}{Numeric. Log-rank test threshold used to keep a feature as significant when \code{scores} is used:
+(adjusted) p-value \code{<= pval}. Default is 0.05.}
 
-\item{thres}{Numeric between 0 and 1. Quantile cutoff used to split each feature into
-High/Low groups when \code{features} is used (High = at or above the cutoff). Default is 0.5 (median split).}
+\item{quantile_cutoff}{Numeric between 0 and 1. Quantile cutoff used to split each feature into
+High/Low groups when \code{scores} is used (High = at or above the cutoff). Default is 0.5 (median split).}
 
-\item{group_column}{Optional character. Column name in \code{survival.data} defining a
+\item{group_column}{Optional character. Column name in \code{coldata} defining a
 predefined categorical grouping (e.g. cell group membership, cluster, or trait class). Samples without a value
-are left out (with a message). Mutually exclusive with \code{features}.}
+are left out (with a message). Mutually exclusive with \code{scores}.}
 
-\item{p_adjust}{Character. Method to correct the log-rank p-values for multiple testing across the features (see
-\code{stats::p.adjust()}, e.g. \code{"BH"}), when \code{features} is used. Default \code{"none"}.}
+\item{padj}{Logical; if TRUE, the log-rank p-values are corrected for multiple testing across the features with the
+Benjamini-Hochberg method, when \code{scores} is used. Default FALSE.}
 }
 \value{
 If \code{group_column} is provided, a list with:
@@ -52,7 +52,7 @@ If \code{group_column} is provided, a list with:
 \item{p_value}{Log-rank test p-value across groups.}
 \item{median_follow_up}{Median follow-up time (reverse Kaplan-Meier).}
 }
-If \code{features} is provided, a named list with one \code{Surv() ~ feature} formula per significant feature,
+If \code{scores} is provided, a named list with one \code{Surv() ~ feature} formula per significant feature,
 and a last element \code{Statistics}: a data frame with the test of every feature (\code{feature}, \code{cutoff},
 \code{n_high}, \code{n_low}, \code{p_value}, \code{p_adjusted}, \code{significant}). When no feature is significant,
 the list only contains \code{Statistics} (with a message).
@@ -60,7 +60,7 @@ the list only contains \code{Statistics} (with a message).
 A Kaplan-Meier plot (with risk table) is saved as an SVG file to
 \code{Results/SurvPlot_<group-or-feature>_<file_name>.svg} (\code{Results/SurvPlot_<group-or-feature>.svg} without
 \code{file_name}; characters not allowed in file names, e.g. "/", replaced by "_"): always for
-\code{group_column}, and one per significant feature for \code{features}.
+\code{group_column}, and one per significant feature for \code{scores}.
 }
 \description{
 Performs Kaplan-Meier survival analysis and log-rank testing, either on a predefined
@@ -76,26 +76,26 @@ Requires the \code{survival}, \code{survminer}, and \code{gridExtra} packages (s
 }
 \examples{
 \dontrun{
-# traitdata: clinical data with the survival columns (here "PFS" and "PFS_event");
-# the tutorial data (traitdata.tuto) does not include them
+# Overall survival of the tutorial data (os: months, censOS: 1 = death)
+data("traitdata.tuto")
 
-# Predefined clinical/cell groups
+# Predefined clinical groups
 compute.survival.analysis(
-  survival.data = traitdata,
-  PFS           = "PFS",
-  PFS_event     = "PFS_event",
+  coldata       = traitdata.tuto,
+  time_column   = "os",
+  event_column  = "censOS",
   group_column  = "Best.Confirmed.Overall.Response",
   file_name     = "Tutorial"
 )
 
-# Automatic screening of latent factor scores
+# Automatic screening of latent factor scores (res: output of CellTFusion() on the tutorial data)
 compute.survival.analysis(
-  survival.data = traitdata,
-  PFS           = "PFS",
-  PFS_event     = "PFS_event",
-  features      = res$Latent_spaces$Z,
-  p.value       = 0.05,
-  thres         = 0.5,
+  coldata       = traitdata.tuto,
+  time_column   = "os",
+  event_column  = "censOS",
+  scores        = res$Latent_spaces$Z,
+  pval          = 0.05,
+  quantile_cutoff = 0.5,
   file_name     = "Tutorial"
 )
 }

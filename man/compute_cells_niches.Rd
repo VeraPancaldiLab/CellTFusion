@@ -7,7 +7,7 @@
 compute_cells_niches(
   latent_factors,
   dt,
-  cell.groups,
+  cell_groups,
   enrich_thresh = 1.5,
   quantile_cutoff = 0.7,
   cells_extra = NULL,
@@ -22,7 +22,7 @@ containing \code{W} (features x factors) and the NMF model object.}
 \item{dt}{A named list of deconvolution subgroup results, used to build
 the cell-group composition matrix via \code{compute.composition.matrix()}.}
 
-\item{cell.groups}{A list of cell group definitions as returned by
+\item{cell_groups}{A list of cell group definitions as returned by
 \code{construct_cell_groups()}.}
 
 \item{enrich_thresh}{Numeric. Minimum enrichment ratio (see above) for a cell type to be retained per factor.

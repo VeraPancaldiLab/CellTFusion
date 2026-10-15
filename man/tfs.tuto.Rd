@@ -11,7 +11,8 @@ A data frame with 192 samples as rows and 770 TFs as columns
 tfs.tuto
 }
 \description{
-Data frame with the inferred TFs activity across samples
+Data frame with the inferred TFs activity across samples: \code{compute.TFs.activity()} on \code{counts.norm.tuto}
+with its defaults (CollecTRI regulons, \code{"ulm"}, scaled). Built with \code{data-raw/tutorial_data.R}.
 }
 \examples{
 data(tfs.tuto)

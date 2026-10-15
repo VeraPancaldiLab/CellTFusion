@@ -5,16 +5,16 @@
 \title{Summarize TF module-trait associations as ANOVA boxplot grids}
 \usage{
 compute.metadata.association.boxplot_summary(
-  tfs.modules,
+  scores,
   coldata,
   pval = 0.05,
-  file.name,
-  ncol = 5,
-  p_adjust = "none"
+  file_name = NULL,
+  ncol_grid = NULL,
+  padj = FALSE
 )
 }
 \arguments{
-\item{tfs.modules}{A numeric matrix or data frame of TF module scores
+\item{scores}{A numeric matrix or data frame of TF module scores
 (samples x modules), typically the first element (\code{TFs module matrix}) of the
 output from \code{compute.WTCNA()}.}
 
@@ -24,16 +24,17 @@ samples, are skipped with a message; samples with a missing value are left out f
 
 \item{pval}{Numeric. ANOVA (adjusted) p-value threshold for significance (\code{<= pval}). Default 0.05.}
 
-\item{file.name}{Character. Base name appended to output SVG file names
-(\code{Results/ANOVA_boxplot_summary_<file.name>_<trait>.svg}, or \code{Results/ANOVA_boxplot_summary_<trait>.svg}
-without \code{file.name}). In \code{<trait>}, characters other than letters, digits, ".", "\emph{", "-" and spaces
+\item{file_name}{Character. Base name appended to output SVG file names
+(\code{Results/ANOVA_boxplot_summary_<file_name>_<trait>.svg}, or \code{Results/ANOVA_boxplot_summary_<trait>.svg}
+without \code{file_name}). In \code{<trait>}, characters other than letters, digits, ".", "\emph{", "-" and spaces
 (e.g. "/") are replaced by "}".}
 
-\item{ncol}{Integer. Number of columns in the boxplot facet grid. Default 5. The size of the figure is
+\item{ncol_grid}{Integer. Number of columns in the boxplot facet grid; if \code{NULL} (default), the ceiling of the
+square root of the number of panels. The size of the figure is
 computed from the number of panels, and the y-axis of each panel from its data.}
 
-\item{p_adjust}{Character. Method of \code{stats::p.adjust()} to correct the ANOVA p-values across the modules,
-for each trait. Default \code{"none"}.}
+\item{padj}{Logical. If TRUE, the ANOVA p-values are corrected across the modules, for each trait, with the
+Benjamini-Hochberg method. Default FALSE.}
 }
 \value{
 Invisibly, a data frame with the ANOVA of every module for every trait tested (\code{trait},

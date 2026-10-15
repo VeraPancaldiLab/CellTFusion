@@ -14,10 +14,11 @@ other columns are ignored.}
 \item{projection_params}{A list containing:
 \describe{
 \item{xcoef}{Named numeric matrix of CCA canonical weights (features x 1).}
-\item{train_means}{Named numeric vector of training column means, or \code{NULL} if the training used
-batch correction, in which case the test data are centred on their own column means.}
+\item{train_means}{Named numeric vector of training column means.}
 \item{train_sds}{Named numeric vector of training column standard deviations.}
-}}
+}
+\code{train_means} and \code{train_sds} are absent when the training used batch correction: the test data are
+then z-scored on their own column means and SDs (a constant feature is 0), as each training cohort was.}
 }
 \value{
 A numeric matrix (samples x 1) of projected canonical scores for the

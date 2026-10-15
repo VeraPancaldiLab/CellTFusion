@@ -4,12 +4,12 @@
 \alias{identify_hub_TFs}
 \title{Identify hub TFs}
 \usage{
-identify_hub_TFs(TF.network, MM_thresh = 0.8, degree_thresh = 0.9)
+identify_hub_TFs(network, mm_thresh = 0.8, degree_thresh = 0.9)
 }
 \arguments{
-\item{TF.network}{TF network obtained from \code{compute.WTCNA()}.}
+\item{network}{TF network obtained from \code{compute.WTCNA()}.}
 
-\item{MM_thresh}{Threshold for module membership. Default is 0.8.}
+\item{mm_thresh}{Threshold for module membership. Default is 0.8.}
 
 \item{degree_thresh}{Quantile threshold for degree within each module. Default is 0.9 (top 10\%).}
 }
@@ -23,7 +23,8 @@ A list with two elements:
 }
 \description{
 Identifies hub TFs per module using values of module membership and degree.
-TFs with high module membership (Pearson correlation of their activity with the module score > \code{MM_thresh})
+TFs with high module membership (correlation of their activity with the module score > \code{mm_thresh}, with the
+correlation used to build the network, \code{corr_type} of \code{compute.WTCNA()})
 and a degree at or above the \code{degree_thresh} quantile of their module are considered hub TFs.
 The degree of a TF is its intramodular connectivity, as in WGCNA: the sum of its network adjacencies with the
 other TFs of the same module. The adjacencies are computed as in \code{compute.WTCNA()}, with the same
@@ -31,12 +32,12 @@ soft-thresholding power, network type and correlation (for a \code{"signed"} net
 negative correlation adds almost nothing instead of being subtracted).
 }
 \details{
-The TF activities are taken from \code{TF.network} (element \code{TFs_matrix}) and matched to the module scores
-by sample name. For a multi-cohort network (\code{compute.WTCNA(batch = TRUE)}), the per-cohort TF activities
+The TF activities are taken from \code{network} (element \code{TFs_matrix}) and matched to the module scores
+by sample name. For a multi-cohort network (\code{compute.WTCNA()} with \code{batch}), the per-cohort TF activities
 are stacked to compute the membership, and the degree is the mean of the per-cohort degrees (each with the power
 of its cohort).
 
-Networks built before the soft-thresholding power was stored in \code{TF.network} (element \code{Network parameters})
+Networks built before the soft-thresholding power was stored in \code{network} (element \code{Network parameters})
 have their power chosen again with the rule of \code{compute.WTCNA()} (with a message), assuming a signed network
 and Pearson correlation.
 }
@@ -44,6 +45,6 @@ and Pearson correlation.
 
 data("network.tuto")
 
-hub_tfs <- identify_hub_TFs(network.tuto, MM_thresh = 0.8, degree_thresh = 0.9)
+hub_tfs <- identify_hub_TFs(network.tuto, mm_thresh = 0.8, degree_thresh = 0.9)
 
 }

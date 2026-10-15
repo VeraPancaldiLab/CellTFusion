@@ -4,14 +4,14 @@
 \alias{project_factors}
 \title{Project cell group scores onto trained NMF latent factors}
 \usage{
-project_factors(latent_spaces, scores_test)
+project_factors(latent_factors, scores)
 }
 \arguments{
-\item{latent_spaces}{A list returned by \code{compute.latent_factors()},
+\item{latent_factors}{A list returned by \code{compute.latent_factors()},
 containing at minimum \code{W} (features x rank) and the RcppML model
 object with the \code{nmf_model$d} scaling vector.}
 
-\item{scores_test}{A samples x cell groups matrix of signed CCA composite
+\item{scores}{A samples x cell groups matrix of signed CCA composite
 scores for the test cohort. Column names must match those used in training
 (before the _pos/_neg suffix was added).}
 }
@@ -23,7 +23,7 @@ projected NMF factor scores for the test cohort.
 Applies the positive-negative split to new samples and projects them
 onto the latent space learned during training using the Moore-Penrose
 pseudoinverse of the scaled basis matrix W. Negative values of the projection are set to 0 (on the tutorial data
-the result is the same as an exact non-negative projection). Cell groups missing in \code{scores_test} are
+the result is the same as an exact non-negative projection). Cell groups missing in \code{scores} are
 tolerated with a warning naming them: the projection uses the other cell groups (on the tutorial data, with 20 of
 144 cell groups missing, the factors still correlate 0.999 with the full projection).
 }

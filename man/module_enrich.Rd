@@ -4,17 +4,17 @@
 \alias{module_enrich}
 \title{Run Reactome pathway enrichment for a single TF module}
 \usage{
-module_enrich(tpm.counts, module_color, hub_genes, tfs_universe, min_genes = 5)
+module_enrich(counts_norm, module_color, hub_tfs, universe, min_genes = 5)
 }
 \arguments{
-\item{tpm.counts}{A numeric matrix of normalized expression values (genes x samples), with gene symbols as row names.}
+\item{counts_norm}{A numeric matrix of normalized expression values (genes x samples), with gene symbols as row names.}
 
 \item{module_color}{Character. Name of the TF module (color label) to analyze.}
 
-\item{hub_genes}{A list as returned by \code{identify_hub_TFs()}, where the first
+\item{hub_tfs}{A list as returned by \code{identify_hub_TFs()}, where the first
 element maps module names to vectors of hub TF gene symbols.}
 
-\item{tfs_universe}{A data frame of TF-target interactions with at minimum columns
+\item{universe}{A data frame of TF-target interactions with at minimum columns
 \code{source} (TF) and \code{target} (gene).}
 
 \item{min_genes}{Integer. Minimum number of genes to test (20\% most variable targets); with fewer, no enrichment is
@@ -23,7 +23,7 @@ computed and a message is given. Default is 5.}
 \value{
 A \code{ReactomePA} enrichResult object restricted to pathways with
 adjusted p-value < 0.05, or \code{NULL} if no enrichment is found, if none of the
-targets is in the row names of \code{tpm.counts}, or if fewer than \code{min_genes} genes would be tested.
+targets is in the row names of \code{counts_norm}, or if fewer than \code{min_genes} genes would be tested.
 }
 \description{
 Given the hub TFs of a module, extracts their target genes from the TF-gene

@@ -4,10 +4,10 @@
 \alias{compute.test.set}
 \title{Compute composite scores on test set based on previous cell groups}
 \usage{
-compute.test.set(deconv_res, cell_groups, features = NULL, deconvolution_test)
+compute.test.set(dt, cell_groups, group_names = NULL, deconv_test)
 }
 \arguments{
-\item{deconv_res}{Deconvolution subgroups of the training set, as returned by
+\item{dt}{Deconvolution subgroups of the training set, as returned by
 \code{multideconv::compute.deconvolution.analysis()} (the elements \code{Deconvolution matrix} and
 \code{Deconvolution subgroups composition} are used).}
 
@@ -16,11 +16,11 @@ compute.test.set(deconv_res, cell_groups, features = NULL, deconvolution_test)
 \code{train_means}, \code{train_sds} of each cell group) are used. Older unnamed lists, with these as second and
 third elements, are also accepted.}
 
-\item{features}{Optional character vector with the names of the cell groups to score. If \code{NULL} (default), all
+\item{group_names}{Optional character vector with the names of the cell groups to score. If \code{NULL} (default), all
 cell groups are scored. Names that are not cell groups are ignored with a message; an error is raised if none
 of them is a cell group.}
 
-\item{deconvolution_test}{A data frame or matrix with the deconvolution features of the test set before
+\item{deconv_test}{A data frame or matrix with the deconvolution features of the test set before
 subgrouping (the same kind of matrix as given to \code{multideconv::compute.deconvolution.analysis()} for the
 training set, with the same column names), samples as rows.}
 }
@@ -44,8 +44,8 @@ Scoring the training samples themselves reproduces their training scores. Each t
 so a single sample can be scored (except for cell groups built with \code{batch}, see Details).
 }
 \details{
-If the cell groups were built with batch correction (\code{batch} in \code{construct_cell_groups()}), the test
-samples are centred on their own means (as each training cohort was), so \code{deconvolution_test} should contain a
+If the cell groups were built with batch correction (\code{batch} in \code{construct_cell_groups()}), the features of
+the test samples are z-scored on their own means and SDs (as each training cohort was), so \code{deconv_test} should contain a
 single cohort with several samples: the scores then describe each sample relative to the other test samples.
 A warning is given when such cell groups are scored with fewer than 10 test samples.
 }
@@ -54,7 +54,8 @@ data("network.tuto")
 data("deconv_subgroups.tuto")
 data("deconv.tuto")
 cell_groups <- construct_cell_groups(network.tuto, deconv_subgroups.tuto)
-test_scores <- compute.test.set(deconv_subgroups.tuto, cell_groups, deconvolution_test = deconv.tuto[1:20, ])
+test_scores <- compute.test.set(deconv_subgroups.tuto, cell_groups,
+                                deconv_test = deconv.tuto[1:20, ])
 test_scores[1:3, 1:3]
 
 }

@@ -5,15 +5,16 @@
 \alias{network.tuto}
 \title{TF Network}
 \format{
-A list of 5 elements (\code{TFs module matrix}, \code{TFs colors}, \code{TFs per module},
-\code{Proportion of variance} and \code{TFs_matrix}), where the first element corresponds to the
-TF modules scores per sample (192 samples x 10 modules)
+A list of 6 elements (\code{TFs module matrix}, \code{TFs colors}, \code{TFs per module},
+\code{Proportion of variance}, \code{TFs_matrix} and \code{Network parameters}), where the first element corresponds
+to the TF modules scores per sample (192 samples x 8 modules)
 }
 \usage{
 network.tuto
 }
 \description{
-Network file obtained from compute.WTCNA()
+Network file obtained from \code{compute.WTCNA()} on \code{tfs.tuto} with its defaults (signed network, Spearman
+correlation, \code{"ward.D2"} clustering, \code{min_module_size = 5}). Built with \code{data-raw/tutorial_data.R}.
 }
 \examples{
 data(network.tuto)

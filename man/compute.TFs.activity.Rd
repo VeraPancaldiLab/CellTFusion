@@ -5,19 +5,19 @@
 \title{Compute Transcription Factor (TF) activity}
 \usage{
 compute.TFs.activity(
-  RNA.counts,
+  counts_norm,
   TF.collection = "CollecTRI",
   min_targets_size = 5,
   universe = NULL,
-  cancer.type = NULL,
+  cancer_type = NULL,
   method = "ulm",
   scale = TRUE,
   return = TRUE,
-  file.name = NULL
+  file_name = NULL
 )
 }
 \arguments{
-\item{RNA.counts}{A gene expression matrix with genes (symbols) as rows and samples as columns, with unique sample
+\item{counts_norm}{A gene expression matrix with genes (symbols) as rows and samples as columns, with unique sample
 names. The matrix should be log-normalized (e.g., log2(TPM + 1), log2CPM, etc.). A warning is given if it has
 values above 20, which log2(TPM + 1) cannot reach.}
 
@@ -30,11 +30,11 @@ TFs and interactions of the cached file and the date it was saved. A cached file
 columns \code{source}, \code{target} and \code{mor} is not used (the collection is obtained again, with a warning). Delete the
 file to obtain the collection again.
 \item \code{"ARACNE"} reads a tab-separated network file with \code{Regulator} and \code{Target} columns from
-\verb{input/ARACNE/<cancer.type>/network/network.txt} (relative to the working directory). The mode of
+\verb{input/ARACNE/<cancer_type>/network/network.txt} (relative to the working directory). The mode of
 regulation of each edge is read from a \code{mor} column of the file (1 activation, -1 repression), which should be
 the sign of the Spearman correlation between TF and target computed on the cohort used to build the network.
 If the file has no \code{mor} column, a warning is given and the signs are computed as the sign of the Spearman
-correlation between TF and target in the samples of \code{RNA.counts}; they then depend on the samples given (e.g.
+correlation between TF and target in the samples of \code{counts_norm}; they then depend on the samples given (e.g.
 they can differ between cohorts, or between a training and a test set).
 }}
 
@@ -46,7 +46,7 @@ they can differ between cohorts, or between a training and a test set).
 (1 activation, -1 repression; use 1 for every edge if the network has no sign). If not provided, the
 network is fetched based on \code{TF.collection}. Ignored when \code{TF.collection = "ARACNE"}.}
 
-\item{cancer.type}{Optional character. TCGA cancer type abbreviation used to locate the ARACNe network
+\item{cancer_type}{Optional character. TCGA cancer type abbreviation used to locate the ARACNe network
 (only used when \code{TF.collection = "ARACNE"}). If \code{NULL}, the network is auto-detected when only one
 \code{network.txt} exists under \code{input/ARACNE/}.}
 
@@ -61,8 +61,8 @@ scores are not scaled (a message is given).}
 
 \item{return}{Logical; if TRUE, saves matrix in Results/ folder. Default is TRUE.}
 
-\item{file.name}{Optional character suffix used when writing the TF activity matrix to disk
-(\code{Results/TF_matrix_<file.name>.csv}; without it, \code{Results/TF_matrix.csv}).}
+\item{file_name}{Optional character suffix used when writing the TF activity matrix to disk
+(\code{Results/TF_matrix_<file_name>.csv}; without it, \code{Results/TF_matrix.csv}).}
 }
 \value{
 A data frame of inferred (and, if \code{scale = TRUE}, scaled) TF activity scores, with samples as rows

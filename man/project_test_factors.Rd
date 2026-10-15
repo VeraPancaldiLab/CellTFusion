@@ -4,21 +4,21 @@
 \alias{project_test_factors}
 \title{Project test-set samples onto training NMF factors}
 \usage{
-project_test_factors(train_processed, test_deconv)
+project_test_factors(train_processed, deconv_test)
 }
 \arguments{
 \item{train_processed}{A list returned by \code{CellTFusion()}, containing
 at minimum \code{Processed_deconvolution}, \code{Cell_groups}, and
 \code{Latent_spaces}.}
 
-\item{test_deconv}{A numeric matrix or data frame of the deconvolution features of the test samples before
+\item{deconv_test}{A numeric matrix or data frame of the deconvolution features of the test samples before
 subgrouping (samples x features; the same kind of matrix as given to \code{CellTFusion()} as \code{deconv}),
 with the column names used during training. If the model was trained with batch correction, the test samples are
-centred on their own means (as each training cohort was), so they should come from a single cohort.}
+z-scored on their own means and SDs (as each training cohort was), so they should come from a single cohort.}
 }
 \value{
 A numeric matrix (test samples x NMF factors) of non-negative
-projected factor scores. Cell groups with features missing in \code{test_deconv} are skipped by
+projected factor scores. Cell groups with features missing in \code{deconv_test} are skipped by
 \code{compute.test.set()} (with a warning), and the projection uses the other cell groups.
 }
 \description{

@@ -5,9 +5,9 @@
 \title{Run multivariate feature-based GSEA using limma and Hallmark gene sets}
 \usage{
 compute_factor_gsea(
-  RNA.tpm,
-  features_df,
-  plot_dot = TRUE,
+  counts_norm,
+  scores,
+  return = TRUE,
   top_n = 10,
   file_name = NULL,
   width = 8,
@@ -17,15 +17,15 @@ compute_factor_gsea(
 )
 }
 \arguments{
-\item{RNA.tpm}{A numeric matrix or data frame of log-normalized gene expression values (e.g. log2(TPM + 1);
+\item{counts_norm}{A numeric matrix or data frame of log-normalized gene expression values (e.g. log2(TPM + 1);
 genes as rows, gene symbols as row names, samples as columns).}
 
-\item{features_df}{A data frame of continuous features (samples in rows,
+\item{scores}{A data frame of continuous features (samples in rows,
 features in columns) to be modeled as covariates. Rows must be the same samples,
-in the same order, as the columns of \code{RNA.tpm} (checked by name; an error is raised otherwise). Features
+in the same order, as the columns of \code{counts_norm} (checked by name; an error is raised otherwise). Features
 without variation are left out with a message.}
 
-\item{plot_dot}{Logical; if TRUE, generates and saves dotplots of top
+\item{return}{Logical; if TRUE, generates and saves dotplots of top
 enriched Hallmark pathways for each feature. Default is TRUE.}
 
 \item{top_n}{Integer; number of top pathways to display in the dotplot. Default is 10.}
@@ -37,7 +37,7 @@ enriched Hallmark pathways for each feature. Default is TRUE.}
 
 \item{height}{Numeric; height of the PDF plot in inches. Default is 10.}
 
-\item{batch}{Optional vector with the cohort of each sample (in the row order of \code{features_df}, or named by
+\item{batch}{Optional vector with the cohort of each sample (in the row order of \code{scores}, or named by
 sample). With two or more cohorts, the cohort is added to the model as a categorical covariate, so that expression
 differences between cohorts are not attributed to the features. Default \code{NULL}.}
 
@@ -58,7 +58,7 @@ ordered by p-value. fgsea may not be able to estimate the p-value of some pathwa
 }
 \description{
 This function fits a multivariate linear model for each gene using all features
-in \code{features_df} as continuous covariates (each feature standardized, and the cohort added when \code{batch}
+in \code{scores} as continuous covariates (each feature standardized, and the cohort added when \code{batch}
 is given). For each feature, it extracts the moderated t-statistics and p-values, ranks genes, and performs GSEA
 (\code{fgsea}) using the human Hallmark gene sets from MSigDB. Optional dotplots for the top enriched
 pathways can be saved as PDFs.
@@ -82,9 +82,9 @@ the coefficient of that feature.
 }
 \examples{
 \dontrun{
-  results <- compute_factor_gsea(RNA.tpm = expression_matrix,
-                              features_df = feature_table,
-                              plot_dot = TRUE,
+  results <- compute_factor_gsea(counts_norm = expression_matrix,
+                              scores = feature_table,
+                              return = TRUE,
                               top_n = 10,
                               file_name = "Feature1_vs_all")
 }

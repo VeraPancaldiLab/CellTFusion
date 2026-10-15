@@ -10,23 +10,21 @@ construct_cell_groups(
   batch = NULL,
   pval = 0.05,
   padj = FALSE,
-  cor_type = "p",
-  clustering.method = "ward.D2",
-  dendrogram_file = NULL,
-  return_dendrogram = FALSE,
-  return = FALSE,
+  corr_type = "spearman",
+  clustering_method = "ward.D2",
+  file_name = NULL,
+  return = TRUE,
   min_cluster_size = 3
 )
 }
 \arguments{
-\item{network}{A TF module network as returned by \code{compute.WTCNA()} (its module scores, TF activities and
-TFs per module are used).}
+\item{network}{A TF module network as returned by \code{compute.WTCNA()} (its module scores are used).}
 
 \item{dt}{Deconvolution subgroups as returned by \code{multideconv::compute.deconvolution.analysis()}; its element
-\code{Deconvolution matrix} (samples x features) is used. Every sample must be in \code{network}.}
+\code{Deconvolution matrix} (samples x features) is used. It must have the same samples as \code{network}.}
 
 \item{batch}{Optional vector with the cohort of each sample: in the row order of the deconvolution matrix, or named by
-sample. Required when \code{network} was built with \code{compute.WTCNA(batch = TRUE)}. With two or more cohorts,
+sample. Required when \code{network} was built with \code{compute.WTCNA()} with \code{batch}. With two or more cohorts,
 correlations and scores are corrected for cohort.}
 
 \item{pval}{Numeric. P-value threshold used to select the deconvolution features significantly
@@ -36,22 +34,18 @@ correlated with each TF module (adjusted p-value with \code{padj = TRUE}). Defau
 deconvolution features (Benjamini-Hochberg, see \code{compute.modules.relationship()}) before selecting the
 significant features. Default: FALSE.}
 
-\item{cor_type}{Correlation used between the TF modules and the deconvolution features (passed to
-\code{compute.modules.relationship()}): \code{"p"} (Pearson, default) or \code{"s"} (Spearman). It is used to
+\item{corr_type}{Correlation used between the TF modules and the deconvolution features (passed to
+\code{compute.modules.relationship()}): \code{"spearman"} (default) or \code{"pearson"}. It is used to
 select the significant features and to cluster them.}
 
-\item{clustering.method}{Linkage method of the hierarchical clustering of the deconvolution features of each module
+\item{clustering_method}{Linkage method of the hierarchical clustering of the deconvolution features of each module
 on their correlation with it (see \code{identify.cell.groups()}). Default: "ward.D2".}
 
-\item{dendrogram_file}{Optional character. Suffix of the output file names (see \code{return_dendrogram}
-and \code{return}).}
+\item{file_name}{Optional character. Suffix of the output file names (see \code{return}).}
 
-\item{return_dendrogram}{Logical. If TRUE, saves a PDF of the colored cell-group dendrograms to
-\code{Results/Dendrogram_color_clusters_<dendrogram_file>.pdf} (only when \code{dendrogram_file} is set). Default FALSE.}
-
-\item{return}{Logical. If TRUE, saves the composition and the scores of the cell groups to
-\code{Results/Cell.groups.composition_<dendrogram_file>.csv} and
-\code{Results/Cell.groups.scores_<dendrogram_file>.csv}. Default FALSE.}
+\item{return}{Logical. If TRUE (default), saves a PDF of the colored cell-group dendrograms
+(\code{Results/Dendrogram_color_clusters_<file_name>.pdf}) and the composition and the scores of the cell groups
+(\code{Results/Cell.groups.composition_<file_name>.csv} and \code{Results/Cell.groups.scores_<file_name>.csv}).}
 
 \item{min_cluster_size}{Integer. Minimum number of features of a cell group (minimum cluster size of the
 dynamic tree cut of each dendrogram). Default is 3.}
@@ -64,7 +58,8 @@ means that the sample is on the active side of the TF module of that cell group,
 it is on the inactive side.}
 \item{Composition}{A named list where each element is a character vector of the deconvolution features in each group.}
 \item{Weights}{A named list of CCA projection parameters (\code{xcoef}, \code{train_means}, \code{train_sds}) for each group.
-With \code{batch}, \code{train_means} is \code{NULL}: test data are centred on their own means.}
+With \code{batch}, only \code{xcoef} is kept: test data are z-scored on their own means and SDs, as each training
+cohort was.}
 }
 Cell groups are named \code{Dendrogram_<module>_group_<n>}, where \code{n} is the cluster number shown in the
 dendrogram PDF of that module. Features that the tree cut does not assign to any cluster are not part of any
@@ -79,10 +74,10 @@ do not need to vary together across samples. The cell groups are built in three 
 \item for each module, the significantly correlated features are clustered on their correlation with the
 module (\code{identify.cell.groups()});
 \item each dendrogram is cut into cell groups, and each cell group gets one score per sample from a CCA with the
-TFs of its module (\code{cell.groups.computation()}).
+score of its TF module (\code{cell.groups.computation()}).
 }
-Samples are matched by name: the module scores and TF activities of \code{network} are put in the sample order of
-the deconvolution matrix, which may contain only part of the samples of the network.
+The deconvolution matrix and \code{network} must have the same samples (matched by name; their order can differ): the
+module scores of \code{network} are put in the sample order of the deconvolution matrix.
 }
 \examples{
 data("network.tuto")

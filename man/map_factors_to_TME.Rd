@@ -4,18 +4,18 @@
 \alias{map_factors_to_TME}
 \title{Annotate NMF factors with Bagaev et al. (2021) MFP subtypes}
 \usage{
-map_factors_to_TME(cancer_name, Z, plot = TRUE, file_name = NULL)
+map_factors_to_TME(cancer_type, scores, return = TRUE, file_name = NULL)
 }
 \arguments{
-\item{cancer_name}{Character. Cancer type abbreviation matching the
+\item{cancer_type}{Character. Cancer type abbreviation matching the
 \code{TCGA_project} column of the internal annotation (case-insensitive,
 e.g. \code{"skcm"}).}
 
-\item{Z}{Numeric matrix. Samples x factors NMF score matrix (row names =
+\item{scores}{Numeric matrix. Samples x factors NMF score matrix (row names =
 TCGA barcodes).}
 
-\item{plot}{Logical. If TRUE (default), saves violin/boxplots of factor scores by MFP group
-to \code{Results/TME_factors_MFP_<cancer_name>_<file_name>.pdf} (\code{cancer_name} in lower case).}
+\item{return}{Logical. If TRUE (default), saves violin/boxplots of factor scores by MFP group
+to \code{Results/TME_factors_MFP_<cancer_type>_<file_name>.pdf} (\code{cancer_type} in lower case).}
 
 \item{file_name}{Optional character suffix for saving output plots.}
 }
@@ -27,7 +27,7 @@ cancer type is not annotated or fewer than 10 patients are matched.
 }
 \description{
 For a single cancer type, matches TCGA patients present in the NMF factor
-score matrix \code{Z} to the Bagaev et al. (2021) MFP annotation shipped with the
+score matrix \code{scores} to the Bagaev et al. (2021) MFP annotation shipped with the
 package, then tests each factor across the four MFP subtypes (IE, IE/F, F, D)
 with a Kruskal-Wallis test. Factors with p < 0.05 (fixed threshold, not corrected for the number of factors) are
 labelled with the subtype that has the highest median factor score; the others are labelled
@@ -41,8 +41,8 @@ left out.
 }
 \examples{
 \dontrun{
-# Z: latent factors of a TCGA cohort, samples named by their TCGA barcodes
-tme <- map_factors_to_TME(cancer_name = "BLCA", Z = res$Latent_spaces$Z)
+# scores: latent factors of a TCGA cohort, samples named by their TCGA barcodes
+tme <- map_factors_to_TME(cancer_type = "BLCA", scores = res$Latent_spaces$Z)
 }
 
 }

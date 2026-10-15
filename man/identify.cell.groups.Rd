@@ -4,10 +4,15 @@
 \alias{identify.cell.groups}
 \title{Identify cell groups}
 \usage{
-\method{identify}{cell.groups}(features, clustering.method = "ward.D2", file_name = NULL, return = T)
+\method{identify}{cell.groups}(
+  relationship,
+  clustering_method = "ward.D2",
+  file_name = NULL,
+  return = TRUE
+)
 }
 \arguments{
-\item{features}{The list returned by \code{compute.modules.relationship()}. Its first two elements are used
+\item{relationship}{The list returned by \code{compute.modules.relationship()}. Its first two elements are used
 (accessed by position):
 \itemize{
 \item \code{[[1]]} (\code{correlation}): A matrix of correlations between TF modules (rows, named) and deconvolution features (columns).
@@ -16,7 +21,7 @@
 }
 The correlations of each module are taken from the row with its name.}
 
-\item{clustering.method}{Linkage method of the hierarchical clustering (\code{stats::hclust()}) of the features
+\item{clustering_method}{Linkage method of the hierarchical clustering (\code{stats::hclust()}) of the features
 on the distance described above. Default: "ward.D2".}
 
 \item{file_name}{Optional character suffix for the names of the saved plots.}
@@ -42,7 +47,7 @@ they vary together across samples. The dendrograms are cut into cell groups by \
 \examples{
 data("network.tuto")
 data("deconv_subgroups.tuto")
-rel <- compute.modules.relationship(network.tuto[[1]], deconv_subgroups.tuto[[1]], plot = FALSE)
+rel <- compute.modules.relationship(network.tuto[[1]], deconv_subgroups.tuto[[1]], return = FALSE)
 dendrograms <- identify.cell.groups(rel, return = FALSE)
 names(dendrograms)
 

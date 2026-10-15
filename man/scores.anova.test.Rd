@@ -4,7 +4,7 @@
 \alias{scores.anova.test}
 \title{One-way ANOVA test for multi-group comparisons}
 \usage{
-scores.anova.test(scores, coldata, trait, pval = 0.05, p_adjust = "none")
+scores.anova.test(scores, coldata, trait, pval = 0.05, padj = FALSE)
 }
 \arguments{
 \item{scores}{A samples x features score matrix, a list whose first element is that matrix (e.g. the output of
@@ -20,8 +20,8 @@ scores. Samples with a missing trait are left out (with a message).}
 \item{pval}{Numeric. Threshold for significance: a feature is significant if its (adjusted) p-value is
 \code{<= pval} (default = 0.05).}
 
-\item{p_adjust}{Character. Method to correct the p-values for multiple testing across the features (see
-\code{stats::p.adjust()}, e.g. \code{"BH"}). Default \code{"none"}.}
+\item{padj}{Logical; if TRUE, the p-values are corrected for multiple testing across the features with the
+Benjamini-Hochberg method, and the adjusted p-values are compared with the threshold. Default FALSE.}
 }
 \value{
 See \code{scores.ttest()}.

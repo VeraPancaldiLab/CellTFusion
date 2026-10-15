@@ -4,10 +4,10 @@
 \alias{extract_cells}
 \title{Extract cell types from deconvolution feature names}
 \usage{
-extract_cells(groups, cells_extra = NULL)
+extract_cells(features, cells_extra = NULL)
 }
 \arguments{
-\item{groups}{A character vector of deconvolution feature names: raw features (\code{<method>_<signature>_<cell type>},
+\item{features}{A character vector of deconvolution feature names: raw features (\code{<method>_<signature>_<cell type>},
 or \code{<method>_<cell type>}) or subgroups (\code{<cell type>_Subgroup.<n>}).}
 
 \item{cells_extra}{Optional character vector of additional cell type names, added to the vocabulary.}

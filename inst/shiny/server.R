@@ -42,6 +42,14 @@ server <- function(input, output, session) {
     utils::head(obj, n)
   }
 
+  # Per-cohort list of matrices (batch mode) joined into one table
+  all_frames <- function(x) {
+    if (is.list(x) && !is.data.frame(x)) {
+      return(as.data.frame(do.call(rbind, unname(lapply(x, as.matrix))), check.names = FALSE))
+    }
+    first_frame(x)
+  }
+
   first_frame <- function(x) {
     if (is.null(x)) {
       return(NULL)
@@ -88,47 +96,20 @@ server <- function(input, output, session) {
     m
   }
 
+  # One row per cell group (output of construct_cell_groups(): Cell_groups, Composition, Weights)
   flatten_cell_groups <- function(cell_groups) {
-    if (is.null(cell_groups) || !is.list(cell_groups)) {
+    composition <- if (is.list(cell_groups)) cell_groups[["Composition"]] else NULL
+    if (is.null(composition) || length(composition) == 0) {
       return(data.frame())
     }
-
-    out <- list()
-    idx <- 1
-    for (module_name in names(cell_groups)) {
-      module_obj <- cell_groups[[module_name]]
-      if (!is.list(module_obj) || length(module_obj) < 2) {
-        next
-      }
-      group_scores <- module_obj[[1]]
-      group_comp <- module_obj[[2]]
-      if (!is.list(group_scores) || !is.list(group_comp)) {
-        next
-      }
-      group_names <- names(group_scores)
-      if (is.null(group_names)) {
-        group_names <- paste0("group_", seq_along(group_scores))
-      }
-      for (j in seq_along(group_scores)) {
-        composition_size <- if (length(group_comp) >= j && !is.null(group_comp[[j]])) {
-          length(group_comp[[j]])
-        } else {
-          NA_integer_
-        }
-        out[[idx]] <- data.frame(
-          Module = module_name,
-          Group = group_names[[j]],
-          Features_in_group = composition_size,
-          stringsAsFactors = FALSE
-        )
-        idx <- idx + 1
-      }
-    }
-
-    if (length(out) == 0) {
-      return(data.frame())
-    }
-    do.call(rbind, out)
+    data.frame(
+      Group = names(composition),
+      Module = sub("^Dendrogram_(.*)_group_.*$", "\\1", names(composition)),
+      Features_in_group = lengths(composition),
+      Features = vapply(composition, paste, character(1), collapse = ", "),
+      stringsAsFactors = FALSE,
+      row.names = NULL
+    )
   }
 
   rv <- reactiveValues(
@@ -190,22 +171,28 @@ server <- function(input, output, session) {
     }
 
     args <- list(
-      raw.counts = as.data.frame(rv$counts, check.names = FALSE),
+      raw_counts = as.data.frame(rv$counts, check.names = FALSE),
       deconv = rv$deconv,
       normalized = isTRUE(input$normalized),
       batch = if (isTRUE(input$batch)) stats::setNames(coldata[[batch_id]], rownames(coldata)),
       deconv_methods = methods,
-      cbsx.mail = parse_nullable(input$cbsx_mail),
-      cbsx.token = parse_nullable(input$cbsx_token),
+      cbsx_mail = parse_nullable(input$cbsx_mail),
+      cbsx_token = parse_nullable(input$cbsx_token),
       file_name = file_name,
       TF.collection = input$TF.collection,
       min_targets_size = input$min_targets_size,
-      minMod = input$minMod,
+      method = input$method,
+      min_module_size = input$min_module_size,
       corr_mod = input$corr_mod,
       corr = input$corr,
       corr_type = input$corr_type,
+      clustering_method = input$clustering_method,
       cells_extra = parse_cells_extra(input$cells_extra),
       pval = input$pval,
+      padj = isTRUE(input$padj),
+      consensus_quantile = input$consensus_quantile,
+      seed = input$seed,
+      cancer_type = if (is.null(input$cancer_type) || input$cancer_type == "none") NULL else input$cancer_type,
       return = TRUE,
       verbose = TRUE
     )
@@ -278,6 +265,7 @@ server <- function(input, output, session) {
   deconv_pca <- reactive({
     df <- deconv_data()
     m <- numeric_df(df)
+    m <- m[, vapply(m, function(x) isTRUE(stats::sd(x, na.rm = TRUE) > 0), logical(1)), drop = FALSE] # constant features cannot be scaled
 
     validate(
       need(nrow(m) > 1, "Need at least 2 samples for PCA."),
@@ -351,7 +339,7 @@ server <- function(input, output, session) {
   tf_feature_data <- reactive({
     req(rv$res)
     sample_names <- rownames(deconv_data()) %||% rownames(rv$counts)
-    tf <- first_frame(rv$res$TFs_matrix)
+    tf <- all_frames(rv$res$TFs_matrix)
     orient_samples_features(tf, sample_names = sample_names)
   })
 
@@ -431,12 +419,17 @@ server <- function(input, output, session) {
 
   tme_long <- reactive({
     req(rv$res)
-    tme <- first_frame(rv$res$TME_states)
-    tme <- orient_samples_features(tme, sample_names = rownames(deconv_data()))
-    validate(
-      need(nrow(tme) > 0, "No TME state matrix found."),
-      need(ncol(tme) > 0, "No numeric TME state features found.")
-    )
+    tme <- as.data.frame(rv$res$Latent_spaces$Z, check.names = FALSE)
+    validate(need(nrow(tme) > 0 && ncol(tme) > 0, "No latent factor scores found."))
+    tme <- as.data.frame(scale(tme), check.names = FALSE) # each factor z-scored across samples for display
+    mapping <- rv$res$TME_states
+    if (!is.null(mapping) && nrow(mapping) > 0) {
+      lab <- ifelse(is.na(mapping$best_MP), mapping$factor,
+                    paste0(mapping$factor, " (", mapping$best_MP,
+                           if ("TME_subtype" %in% names(mapping)) paste0(", ", mapping$TME_subtype) else "", ")"))
+      idx <- match(colnames(tme), mapping$factor)
+      colnames(tme)[!is.na(idx)] <- lab[idx[!is.na(idx)]]
+    }
 
     samples <- rownames(tme)
     states <- colnames(tme)
@@ -465,7 +458,7 @@ server <- function(input, output, session) {
         axis.text.x = ggplot2::element_text(angle = 35, hjust = 1),
         panel.grid = ggplot2::element_blank()
       ) +
-      ggplot2::labs(x = "TME state", y = "Sample", fill = "Score")
+      ggplot2::labs(x = "Latent factor (meta-program, TME subtype)", y = "Sample", fill = "Factor score (z)")
   })
 
   output$tme_interaction <- renderPrint({
@@ -554,7 +547,7 @@ server <- function(input, output, session) {
   }
 
   download_data("download_deconv", "deconvolution", function(x) x$Deconvolution)
-  download_data("download_tfs", "tf_activity", function(x) x$TFs_matrix)
+  download_data("download_tfs", "tf_activity", function(x) all_frames(x$TFs_matrix))
   download_data("download_tme", "tme_states", function(x) x$TME_states)
 
   output$download_groups <- downloadHandler(

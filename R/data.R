@@ -28,8 +28,9 @@
 #'
 #' Data frame with the clinical data across samples
 #'
-#' @format A data frame with 192 samples as rows and 3 traits as columns
-#'   (\code{Best.Confirmed.Overall.Response}, \code{binaryResponse} and \code{Enrollment.IC})
+#' @format A data frame with 192 samples as rows and 5 columns: \code{Best.Confirmed.Overall.Response},
+#'   \code{binaryResponse}, \code{Enrollment.IC}, and the overall survival \code{os} (months) and \code{censOS}
+#'   (1 = death, 0 = censored)
 #'
 #' @source Mariathasan et al. (2018), doi: https://doi.org/10.1038/nature25501
 #'
@@ -40,7 +41,8 @@
 
 #' TFs data
 #'
-#' Data frame with the inferred TFs activity across samples
+#' Data frame with the inferred TFs activity across samples: \code{compute.TFs.activity()} on \code{counts.norm.tuto}
+#' with its defaults (CollecTRI regulons, \code{"ulm"}, scaled). Built with \code{data-raw/tutorial_data.R}.
 #'
 #' @format A data frame with 192 samples as rows and 770 TFs as columns
 #'
@@ -65,11 +67,12 @@
 
 #' TF Network
 #'
-#' Network file obtained from compute.WTCNA()
+#' Network file obtained from \code{compute.WTCNA()} on \code{tfs.tuto} with its defaults (signed network, Spearman
+#' correlation, \code{"ward.D2"} clustering, \code{min_module_size = 5}). Built with \code{data-raw/tutorial_data.R}.
 #'
-#' @format A list of 5 elements (\code{TFs module matrix}, \code{TFs colors}, \code{TFs per module},
-#'   \code{Proportion of variance} and \code{TFs_matrix}), where the first element corresponds to the
-#'   TF modules scores per sample (192 samples x 10 modules)
+#' @format A list of 6 elements (\code{TFs module matrix}, \code{TFs colors}, \code{TFs per module},
+#'   \code{Proportion of variance}, \code{TFs_matrix} and \code{Network parameters}), where the first element corresponds
+#'   to the TF modules scores per sample (192 samples x 8 modules)
 #'
 #' @examples
 #' data(network.tuto)

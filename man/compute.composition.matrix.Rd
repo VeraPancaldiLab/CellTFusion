@@ -4,18 +4,14 @@
 \alias{compute.composition.matrix}
 \title{Compute a cell-type composition matrix from deconvolution subgroups}
 \usage{
-compute.composition.matrix(
-  deconvolution.subgroupped,
-  cell.groups,
-  cells_extra = NULL
-)
+compute.composition.matrix(dt, cell_groups, cells_extra = NULL)
 }
 \arguments{
-\item{deconvolution.subgroupped}{Deconvolution subgroups as returned by
+\item{dt}{Deconvolution subgroups as returned by
 \code{multideconv::compute.deconvolution.analysis()} (the elements \code{Deconvolution matrix} and
 \code{Deconvolution subgroups composition} are used).}
 
-\item{cell.groups}{The cell groups returned by \code{construct_cell_groups()}: its element \code{Composition} (the
+\item{cell_groups}{The cell groups returned by \code{construct_cell_groups()}: its element \code{Composition} (the
 features of each cell group) is used. An unnamed list whose second element holds the composition is also accepted.}
 
 \item{cells_extra}{Optional character vector of additional cell type names, added to the vocabulary used to

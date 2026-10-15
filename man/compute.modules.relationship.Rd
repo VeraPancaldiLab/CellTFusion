@@ -11,11 +11,11 @@ compute.modules.relationship(
   batch = NULL,
   pval = 0.05,
   padj = FALSE,
-  cor_type = "p",
-  vertical = F,
-  plot = T,
-  plot.grid = F,
-  ncol.grid = NULL
+  corr_type = "spearman",
+  vertical = FALSE,
+  return = TRUE,
+  plot_grid = FALSE,
+  ncol_grid = NULL
 )
 }
 \arguments{
@@ -27,7 +27,7 @@ compute.modules.relationship(
 If \code{NULL} (default), no figure is saved.}
 
 \item{batch}{Optional vector indicating batch assignment for samples (no missing values). If it has two or more
-levels, partial correlations (\code{ppcor::pcor.test()}, Pearson or Spearman according to \code{cor_type}) are
+levels, partial correlations (\code{ppcor::pcor.test()}, Pearson or Spearman according to \code{corr_type}) are
 computed controlling for batch. Batch is treated as categorical (one dummy variable per level beyond the first).}
 
 \item{pval}{A numeric threshold for the p-value to define significance (p-value, or adjusted p-value with
@@ -37,20 +37,20 @@ computed controlling for batch. Batch is treated as categorical (one dummy varia
 across the columns of \code{matB} for each column of \code{matA}, and the adjusted p-values are used to define
 significance (in \code{significant} and in the figures). Default is FALSE.}
 
-\item{cor_type}{Type of correlation to compute: "p" (Pearson) or "s" (Spearman). Default is "p". It also sets
+\item{corr_type}{Type of correlation to compute: "spearman" (default) or "pearson". It also sets
 the type of the partial correlations computed with \code{batch}.}
 
 \item{vertical}{Logical; if TRUE, modules are on the x-axis and the \code{matB} features on the y-axis.
 Otherwise (default), the \code{matB} features are on the x-axis and modules on the y-axis.}
 
-\item{plot}{Logical; if TRUE, saves the heatmap plot as a PDF (\code{file_name} is needed). Default is TRUE.}
+\item{return}{Logical; if TRUE, saves the heatmap plot as a PDF (\code{file_name} is needed). Default is TRUE.}
 
-\item{plot.grid}{Logical; if TRUE, generates per-pair scatter grid plots for significant associations, saved to
+\item{plot_grid}{Logical; if TRUE, generates per-pair scatter grid plots for significant associations, saved to
 "Results/<file_name>_scatter_grid.svg" (the 100 strongest pairs at most). With Spearman, the ranks of the values
 are shown, as the correlation is computed on them. With \code{batch}, the values shown are
 corrected for batch, as the correlations are. Default is FALSE.}
 
-\item{ncol.grid}{Integer number of columns used in scatter grid layout. If NULL (default), it is set to
+\item{ncol_grid}{Integer number of columns used in scatter grid layout. If NULL (default), it is set to
 the ceiling of the square root of the number of panels.}
 }
 \value{
@@ -63,7 +63,7 @@ correlated with it (p-value, or adjusted p-value with \code{padj = TRUE}, <= \co
 \item \code{p_adjusted}: the matrix of Benjamini-Hochberg adjusted p-values (equal to \code{p_value} with
 \code{padj = FALSE}).
 }
-If \code{plot = TRUE} and \code{file_name} is given, a heatmap of the correlations is saved to
+If \code{return = TRUE} and \code{file_name} is given, a heatmap of the correlations is saved to
 "Results/<file_name>.pdf" (the ".pdf" extension is added if missing). Its size is computed from the number of
 features. With up to 40 features per axis, the significant cells show the correlation and its significance
 (* < 0.05, ** < 0.01, *** < 0.001, **** < 0.0001); with more, they are marked with an asterisk.
@@ -86,7 +86,7 @@ data("network.tuto")
 data("deconv_subgroups.tuto")
 corr = compute.modules.relationship(network.tuto[[1]],
                                     deconv_subgroups.tuto[[1]],
-                                    plot = FALSE,
+                                    return = FALSE,
                                     pval = 0.01)
 corr$correlation[1:3, 1:3]
 corr$significant[[1]]

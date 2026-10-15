@@ -5,15 +5,15 @@
 \title{Map study factors to TCGA meta-programs}
 \usage{
 map_factors_to_metaprograms(
-  gsea_study,
+  gsea_results,
   cancer_type,
   mp_file = NULL,
-  plot = TRUE,
+  return = TRUE,
   file_name = NULL
 )
 }
 \arguments{
-\item{gsea_study}{Output from compute_factor_gsea() on study cohort.}
+\item{gsea_results}{Output from compute_factor_gsea() on study cohort.}
 
 \item{cancer_type}{Character. TCGA cancer type abbreviation identifying which pre-built
 TCGA meta-program reference shipped with the package to use. Available: \code{"blca"},
@@ -24,7 +24,7 @@ TCGA meta-program reference shipped with the package to use. Available: \code{"b
 \code{hallmarks}) or the path to an RData file containing such an object, which must be named
 \code{meta_programs}. If NULL, the pre-built reference for \code{cancer_type} is used.}
 
-\item{plot}{Logical. If TRUE (default), saves a barplot of factor-to-meta-program scores
+\item{return}{Logical. If TRUE (default), saves a barplot of factor-to-meta-program scores
 to \code{Results/Factor_MP_mapping_<file_name>.pdf} (\code{Results/Factor_MP_mapping.pdf} if
 \code{file_name} is \code{NULL}).}
 
@@ -50,7 +50,7 @@ meta-program reference has a \code{TME_subtype} column (see
 }
 \examples{
 \dontrun{
-gsea <- compute_factor_gsea(RNA.tpm = counts.norm, features_df = res$Latent_spaces$Z, plot_dot = FALSE)
+gsea <- compute_factor_gsea(counts_norm = counts.norm, scores = res$Latent_spaces$Z, return = FALSE)
 mapping <- map_factors_to_metaprograms(gsea, cancer_type = "blca")
 mapping$factor_mapping
 }

@@ -8,9 +8,9 @@ scores.stat.analysis(
   scores,
   coldata,
   trait,
-  method = c("fisher", "wilcox", "anova", "kruskal", "ttest"),
+  test = c("fisher", "wilcox", "anova", "kruskal", "ttest"),
   pval = 0.05,
-  p_adjust = "none"
+  padj = FALSE
 )
 }
 \arguments{
@@ -26,7 +26,7 @@ without sample names, they must be in the order of the scores. Samples with a mi
 \item{trait}{Character. The name of the column in \code{coldata} representing the clinical
 or experimental trait to test against (e.g., response, subtype, etc.). It must be categorical.}
 
-\item{method}{Character. Statistical test to perform. One of:
+\item{test}{Character. Statistical test to perform. One of:
 \itemize{
 \item \code{"fisher"} - Fisher's exact test (scores binarised at median)
 \item \code{"wilcox"} - Wilcoxon rank-sum test (non-parametric, binary traits)
@@ -39,8 +39,8 @@ Only one can be used per call; defaults to the first one (\code{"fisher"}).}
 \item{pval}{Numeric. Threshold for significance: a feature is significant if its (adjusted) p-value is
 \code{<= pval} (default: 0.05).}
 
-\item{p_adjust}{Character. Method to correct the p-values for multiple testing across the features (see
-\code{stats::p.adjust()}, e.g. \code{"BH"}). Default \code{"none"}.}
+\item{padj}{Logical; if TRUE, the p-values are corrected for multiple testing across the features with the
+Benjamini-Hochberg method, and the adjusted p-values are compared with the threshold. Default FALSE.}
 }
 \value{
 A list whose first element is the score matrix restricted to the significant features (no column if none
@@ -56,7 +56,7 @@ clinical/experimental trait. Accepts cell group scores, NMF latent factors
 }
 \details{
 The function automatically calls the corresponding statistical test function
-based on the \code{method} argument:
+based on the \code{test} argument:
 \itemize{
 \item \code{scores.fisher.test()}
 \item \code{scores.wilcox.test()}
@@ -75,7 +75,7 @@ data("deconv_subgroups.tuto")
 data("traitdata.tuto")
 cell_groups <- construct_cell_groups(network.tuto, deconv_subgroups.tuto)
 sig <- scores.stat.analysis(cell_groups, traitdata.tuto, trait = "Enrollment.IC",
-                            method = "kruskal", pval = 0.05, p_adjust = "BH")
+                            test = "kruskal", pval = 0.05, padj = TRUE)
 head(sig$Statistics)
 names(sig$Composition)
 

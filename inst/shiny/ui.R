@@ -131,7 +131,7 @@ ui <- fluidPage(
         fileInput("counts", "Upload raw counts (CSV)", accept = ".csv"),
         fileInput("coldata", "Upload metadata/coldata (CSV)", accept = ".csv"),
         fileInput("deconv_file", "Upload deconvolution matrix (optional, CSV)", accept = ".csv"),
-        checkboxInput("normalized", "Normalize counts (TPM + log2)", value = TRUE),
+        checkboxInput("normalized", "Counts are raw (untick if already TPM)", value = TRUE),
         actionButton("load_demo", "Load tutorial data", class = "btn-demo")
       ),
 
@@ -153,13 +153,16 @@ ui <- fluidPage(
         class = "control-card",
         div(class = "section-title", "Model Parameters"),
         selectInput("TF.collection", "TF collection", choices = c("CollecTRI", "Dorothea", "ARACNE"), selected = "CollecTRI"),
-        numericInput("min_targets_size", "Minimum TF targets", value = 3, min = 1),
-        numericInput("minMod", "Minimum module size", value = 10, min = 2),
+        selectInput("cancer_type", "Cancer type (TCGA meta-programs for TME states)", choices = c("none", "blca", "luad", "skcm"), selected = "none"),
+        selectInput("method", "TF and pathway scoring statistic", choices = c("ulm", "mlm", "wsum", "consensus"), selected = "ulm"),
+        numericInput("min_targets_size", "Minimum TF targets", value = 5, min = 1),
+        numericInput("min_module_size", "Minimum module size", value = 5, min = 2),
         sliderInput("corr_mod", "Module merge correlation", min = 0, max = 1, value = 0.9, step = 0.01),
         sliderInput("corr", "Deconvolution grouping correlation", min = 0, max = 1, value = 0.7, step = 0.01),
         selectInput("corr_type", "Correlation type", choices = c("spearman", "pearson"), selected = "spearman"),
+        selectInput("clustering_method", "Clustering method", choices = c("ward.D2", "average", "complete", "single", "mcquitty", "median", "centroid", "ward.D"), selected = "ward.D2"),
         numericInput("pval", "P-value threshold", value = 0.05, min = 0, max = 1, step = 0.01),
-        sliderInput("high_corr_groups", "High-correlation cutoff", min = 0, max = 1, value = 0.8, step = 0.01),
+        checkboxInput("padj", "Adjust p-values (Benjamini-Hochberg)", value = FALSE),
         textInput("cells_extra", "Additional cell labels (comma separated)", value = "")
       ),
 
@@ -167,7 +170,9 @@ ui <- fluidPage(
         class = "control-card",
         div(class = "section-title", "Advanced"),
         checkboxInput("batch", "Use batch-aware analysis", value = FALSE),
-        textInput("batch_id", "Batch column in coldata", value = "")
+        textInput("batch_id", "Batch column in coldata", value = ""),
+        sliderInput("consensus_quantile", "Consensus quantile (batch mode)", min = 0, max = 1, value = 0, step = 0.05),
+        numericInput("seed", "Random seed", value = 123, min = 1)
       ),
 
       actionButton("run_all", "Run CellTFusion", class = "btn-run")
@@ -228,7 +233,7 @@ ui <- fluidPage(
           div(class = "main-card", tags$h4("Cell Groups (summary)"), tableOutput("cell_groups_out")),
           div(
             class = "main-card",
-            tags$h4("Interactive TME States Heatmap"),
+            tags$h4("Latent factor scores (labelled with their TME state)"),
             plotOutput(
               "tme_heatmap_plot",
               height = "380px",
@@ -237,7 +242,7 @@ ui <- fluidPage(
             ),
             verbatimTextOutput("tme_interaction")
           ),
-          div(class = "main-card", tags$h4("TME States (preview)"), tableOutput("tme_out")),
+          div(class = "main-card", tags$h4("TME states: factor to meta-program mapping"), tableOutput("tme_out")),
           div(class = "main-card", tags$h4("TF Network Structure"), verbatimTextOutput("network_out"))
         ),
         tabPanel(

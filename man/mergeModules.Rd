@@ -4,16 +4,16 @@
 \alias{mergeModules}
 \title{Merge highly correlated TF modules}
 \usage{
-mergeModules(data, colors, corr, method = "spearman")
+mergeModules(data, colors, corr_mod, corr_type = "spearman")
 }
 \arguments{
 \item{data}{A data frame of TF module eigengenes (samples x modules), with columns named \code{ME<color>}.}
 
 \item{colors}{A character vector with the module color label of each TF.}
 
-\item{corr}{Numeric. Correlation threshold above which two modules are merged.}
+\item{corr_mod}{Numeric. Correlation threshold above which two modules are merged.}
 
-\item{method}{Character. Correlation used: "pearson" or "spearman" (default).}
+\item{corr_type}{Character. Correlation used: "pearson" or "spearman" (default).}
 }
 \value{
 A list of two elements:
@@ -24,7 +24,7 @@ A list of two elements:
 }
 \description{
 Merges TF modules whose scores (eigengenes) are too similar, repeating until no pair of modules has a correlation
-above \code{corr}: at each step the most correlated pair above \code{corr} is merged, and the correlations are
+above \code{corr_mod}: at each step the most correlated pair above \code{corr_mod} is merged, and the correlations are
 computed again. The merged module keeps the name and color of the first module of the pair; its score is the mean
 of the scores of all the original modules it contains, scaled (mean 0, standard deviation 1).
 }

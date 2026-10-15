@@ -5,7 +5,7 @@
 \title{Compute latent factors from cell group scores using NMF}
 \usage{
 compute.latent_factors(
-  X,
+  scores,
   rank = NULL,
   seed = 123,
   file_name = NULL,
@@ -13,7 +13,7 @@ compute.latent_factors(
 )
 }
 \arguments{
-\item{X}{Numeric matrix of size samples x cell groups (signed CCA composite scores).}
+\item{scores}{Numeric matrix of size samples x cell groups (signed CCA composite scores).}
 
 \item{rank}{Integer; number of NMF factors. If NULL, estimated automatically
 at the elbow of the reconstruction MSE across ranks 2:8 (the rank with the largest

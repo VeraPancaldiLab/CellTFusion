@@ -4,32 +4,25 @@
 \alias{calculate_dendrogram_cuts}
 \title{Calculate dendrogram cluster assignments}
 \usage{
-calculate_dendrogram_cuts(
-  cell.group.dendrogram,
-  deep_split = TRUE,
-  min_cluster_size = 3
-)
+calculate_dendrogram_cuts(cell_dendrograms, min_cluster_size = 3)
 }
 \arguments{
-\item{cell.group.dendrogram}{A list of \code{hclust} objects (or objects convertible to \code{hclust}),
+\item{cell_dendrograms}{A list of \code{hclust} objects (or objects convertible to \code{hclust}),
 one per TF module, as returned by \code{identify.cell.groups()}.}
-
-\item{deep_split}{Logical. Passed to \code{dynamicTreeCut::cutreeDynamic()}'s
-\code{deepSplit} argument. With \code{method = "tree"} it is a switch, not a level: \code{TRUE}
-(default; any non-zero number has the same effect) splits clusters more finely than \code{FALSE}.}
 
 \item{min_cluster_size}{Integer. Minimum number of features per cluster: passed to
 \code{dynamicTreeCut::cutreeDynamic()}'s \code{minClusterSize} argument, and used in step 2. Default is 3.}
 }
 \value{
 A list of integer cluster label vectors, one per dendrogram, in the
-same order as \code{cell.group.dendrogram} and named like it, each in the order of the dendrogram labels
+same order as \code{cell_dendrograms} and named like it, each in the order of the dendrogram labels
 (label \code{0} marks unassigned elements).
 }
 \description{
 Cuts each cell-type dendrogram into clusters (the cell groups of a TF module) in two steps:
 \enumerate{
-\item the dendrogram is cut with dynamic tree cutting (\code{dynamicTreeCut::cutreeDynamic()}, \code{method = "tree"});
+\item the dendrogram is cut with dynamic tree cutting (\code{dynamicTreeCut::cutreeDynamic()}, \code{method = "tree"},
+\code{deepSplit = TRUE}, which splits clusters more finely than \code{FALSE});
 \item each cluster is made to cover a single range of correlation values with the module. With \code{method = "tree"},
 a cluster can be a branch from which smaller branches were split off as other clusters, so its features can lie in
 separated ranges of correlation (e.g. 0.14, 0.17-0.19 and 0.26-0.39, with other clusters in between). The assigned
