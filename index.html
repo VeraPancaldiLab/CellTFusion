@@ -113,16 +113,16 @@
 <p>If you want to run the full pipeline in one step — including normalization, deconvolution, TF activity scoring, module construction, and pathway scoring — use the <code><a href="reference/CellTFusion.html">CellTFusion()</a></code> wrapper function.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/CellTFusion.html">CellTFusion</a></span><span class="op">(</span></span>
-<span>  raw.counts <span class="op">=</span> <span class="va">raw.counts</span>,</span>
+<span>  raw_counts <span class="op">=</span> <span class="va">raw.counts</span>,</span>
 <span>  normalized <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  deconv_methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Quantiseq"</span>, <span class="st">"DeconRNASeq"</span><span class="op">)</span>, <span class="co"># Choose from Quantiseq, Epidish, DeconRNASeq, DWLS, CBSX</span></span>
-<span>  cbsx.mail <span class="op">=</span> <span class="st">"your_email"</span>,       <span class="co"># Needed to run CBSX (CIBERSORTx)</span></span>
-<span>  cbsx.token <span class="op">=</span> <span class="st">"your_token"</span>,      <span class="co"># Needed to run CBSX (CIBERSORTx)</span></span>
+<span>  cbsx_mail <span class="op">=</span> <span class="st">"your_email"</span>,       <span class="co"># Needed to run CBSX (CIBERSORTx)</span></span>
+<span>  cbsx_token <span class="op">=</span> <span class="st">"your_token"</span>,      <span class="co"># Needed to run CBSX (CIBERSORTx)</span></span>
 <span>  TF.collection <span class="op">=</span> <span class="st">"CollecTRI"</span>,    <span class="co"># "CollecTRI", "Dorothea", or "ARACNE"</span></span>
 <span>  cancer_type <span class="op">=</span> <span class="st">"skcm"</span>,           <span class="co"># TCGA cancer type, used for meta-program mapping</span></span>
 <span>  file_name <span class="op">=</span> <span class="st">"TestRun"</span>,</span>
 <span>  min_targets_size <span class="op">=</span> <span class="fl">5</span>,</span>
-<span>  minMod <span class="op">=</span> <span class="fl">5</span>,</span>
+<span>  min_module_size <span class="op">=</span> <span class="fl">5</span>,</span>
 <span>  corr_mod <span class="op">=</span> <span class="fl">0.9</span>,                 <span class="co"># modules whose scores correlate above 0.9 are merged</span></span>
 <span>  corr <span class="op">=</span> <span class="fl">0.7</span>,</span>
 <span>  pval <span class="op">=</span> <span class="fl">0.05</span>,</span>
@@ -131,18 +131,18 @@
 <p>If cell subgroups (<code>dt</code>), TF activity (<code>tfs</code>), and/or pathway activity (<code>pathways</code>) have already been computed — e.g. from a previous <code><a href="reference/CellTFusion.html">CellTFusion()</a></code> run — you can pass them back in to skip recomputing those steps. Once all three are supplied, the pipeline proceeds to the TF modules and cell group construction:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res2</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/CellTFusion.html">CellTFusion</a></span><span class="op">(</span></span>
-<span>  raw.counts <span class="op">=</span> <span class="va">raw.counts</span>,</span>
+<span>  raw_counts <span class="op">=</span> <span class="va">raw.counts</span>,</span>
 <span>  normalized <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  dt <span class="op">=</span> <span class="va">res</span><span class="op">$</span><span class="va">Processed_deconvolution</span>,</span>
 <span>  tfs <span class="op">=</span> <span class="va">res</span><span class="op">$</span><span class="va">TFs_matrix</span>,</span>
 <span>  pathways <span class="op">=</span> <span class="va">res</span><span class="op">$</span><span class="va">Pathways_scores</span>,</span>
 <span>  file_name <span class="op">=</span> <span class="st">"TestRun_rerun"</span>,</span>
-<span>  minMod <span class="op">=</span> <span class="fl">5</span>,</span>
+<span>  min_module_size <span class="op">=</span> <span class="fl">5</span>,</span>
 <span>  corr_mod <span class="op">=</span> <span class="fl">0.9</span>,</span>
 <span>  pval <span class="op">=</span> <span class="fl">0.05</span>,</span>
 <span>  return <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p><strong>NOTE</strong>: <code>CIBERSORTx</code> (<code>"CBSX"</code>) is one of the default deconvolution methods, but it is not an open-source program. It is only run when you provide your email and token with the <code>cbsx.mail</code> and <code>cbsx.token</code> parameters (request a token at <a href="https://cibersortx.stanford.edu/register.php" class="external-link">CIBERSORTx</a>); without them it is skipped with a message.</p>
+<p><strong>NOTE</strong>: <code>CIBERSORTx</code> (<code>"CBSX"</code>) is one of the default deconvolution methods, but it is not an open-source program. It is only run when you provide your email and token with the <code>cbsx_mail</code> and <code>cbsx_token</code> parameters (request a token at <a href="https://cibersortx.stanford.edu/register.php" class="external-link">CIBERSORTx</a>); without them it is skipped with a message.</p>
 </div>
 <div class="section level2">
 <h2 id="output-structure">Output structure<a class="anchor" aria-label="anchor" href="#output-structure"></a>
@@ -160,10 +160,10 @@
 <p>Use this function to apply the trained cell groups to an external test set and calculate group-specific composite scores. To directly obtain the latent factors of new samples, use <code>project_test_factors(res, deconv_test)</code> (see the <a href="https://VeraPancaldiLab.github.io/CellTFusion/articles/a5_machine_learning.html" class="external-link">Machine learning workflows</a> article).</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">test_scores</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/compute.test.set.html">compute.test.set</a></span><span class="op">(</span></span>
-<span>  deconv_res <span class="op">=</span> <span class="va">res</span><span class="op">$</span><span class="va">Processed_deconvolution</span>,        <span class="co"># deconvolution subgroups of the training set</span></span>
+<span>  dt <span class="op">=</span> <span class="va">res</span><span class="op">$</span><span class="va">Processed_deconvolution</span>,        <span class="co"># deconvolution subgroups of the training set</span></span>
 <span>  cell_groups <span class="op">=</span> <span class="va">res</span><span class="op">$</span><span class="va">Cell_groups</span>,                   <span class="co"># trained cell groups</span></span>
 <span>  features <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">Cell_groups</span><span class="op">$</span><span class="va">Composition</span><span class="op">)</span>,   <span class="co"># cell groups to replicate</span></span>
-<span>  deconvolution_test <span class="op">=</span> <span class="va">deconv_test</span>                 <span class="co"># deconvolution matrix of the test set (before subgrouping)</span></span>
+<span>  deconv_test <span class="op">=</span> <span class="va">deconv_test</span>                 <span class="co"># deconvolution matrix of the test set (before subgrouping)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
@@ -178,7 +178,7 @@
 <span>  trait.positive <span class="op">=</span> <span class="st">"R"</span>,</span>
 <span>  metric <span class="op">=</span> <span class="st">"AUROC"</span>,</span>
 <span>  fold_construction_fun <span class="op">=</span> <span class="va">prepare_celltfusion_folds</span>,</span>
-<span>  fold_construction_args_fixed <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>deconv <span class="op">=</span> <span class="va">deconv</span>, raw.counts <span class="op">=</span> <span class="va">raw.counts</span><span class="op">)</span></span>
+<span>  fold_construction_args_fixed <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>deconv <span class="op">=</span> <span class="va">deconv</span>, raw_counts <span class="op">=</span> <span class="va">raw.counts</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Features of new samples, projected onto the final model</span></span>

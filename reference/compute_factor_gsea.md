@@ -1,7 +1,7 @@
 # Run multivariate feature-based GSEA using limma and Hallmark gene sets
 
 This function fits a multivariate linear model for each gene using all
-features in `features_df` as continuous covariates (each feature
+features in `scores` as continuous covariates (each feature
 standardized, and the cohort added when `batch` is given). For each
 feature, it extracts the moderated t-statistics and p-values, ranks
 genes, and performs GSEA (`fgsea`) using the human Hallmark gene sets
@@ -12,9 +12,9 @@ saved as PDFs.
 
 ``` r
 compute_factor_gsea(
-  RNA.tpm,
-  features_df,
-  plot_dot = TRUE,
+  counts_norm,
+  scores,
+  return = TRUE,
   top_n = 10,
   file_name = NULL,
   width = 8,
@@ -26,21 +26,21 @@ compute_factor_gsea(
 
 ## Arguments
 
-- RNA.tpm:
+- counts_norm:
 
   A numeric matrix or data frame of log-normalized gene expression
   values (e.g. log2(TPM + 1); genes as rows, gene symbols as row names,
   samples as columns).
 
-- features_df:
+- scores:
 
   A data frame of continuous features (samples in rows, features in
   columns) to be modeled as covariates. Rows must be the same samples,
-  in the same order, as the columns of `RNA.tpm` (checked by name; an
-  error is raised otherwise). Features without variation are left out
+  in the same order, as the columns of `counts_norm` (checked by name;
+  an error is raised otherwise). Features without variation are left out
   with a message.
 
-- plot_dot:
+- return:
 
   Logical; if TRUE, generates and saves dotplots of top enriched
   Hallmark pathways for each feature. Default is TRUE.
@@ -67,10 +67,10 @@ compute_factor_gsea(
 - batch:
 
   Optional vector with the cohort of each sample (in the row order of
-  `features_df`, or named by sample). With two or more cohorts, the
-  cohort is added to the model as a categorical covariate, so that
-  expression differences between cohorts are not attributed to the
-  features. Default `NULL`.
+  `scores`, or named by sample). With two or more cohorts, the cohort is
+  added to the model as a categorical covariate, so that expression
+  differences between cohorts are not attributed to the features.
+  Default `NULL`.
 
 - seed:
 
@@ -129,9 +129,9 @@ The function works as follows:
 
 ``` r
 if (FALSE) { # \dontrun{
-  results <- compute_factor_gsea(RNA.tpm = expression_matrix,
-                              features_df = feature_table,
-                              plot_dot = TRUE,
+  results <- compute_factor_gsea(counts_norm = expression_matrix,
+                              scores = feature_table,
+                              return = TRUE,
                               top_n = 10,
                               file_name = "Feature1_vs_all")
 } # }

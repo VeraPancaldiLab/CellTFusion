@@ -61,7 +61,7 @@ NMF latent space.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">project_test_factors</span><span class="op">(</span><span class="va">train_processed</span>, <span class="va">test_deconv</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">project_test_factors</span><span class="op">(</span><span class="va">train_processed</span>, <span class="va">deconv_test</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -74,17 +74,17 @@ at minimum <code>Processed_deconvolution</code>, <code>Cell_groups</code>, and
 <code>Latent_spaces</code>.</p></dd>
 
 
-<dt id="arg-test-deconv">test_deconv<a class="anchor" aria-label="anchor" href="#arg-test-deconv"></a></dt>
+<dt id="arg-deconv-test">deconv_test<a class="anchor" aria-label="anchor" href="#arg-deconv-test"></a></dt>
 <dd><p>A numeric matrix or data frame of the deconvolution features of the test samples before
 subgrouping (samples x features; the same kind of matrix as given to <code><a href="CellTFusion.html">CellTFusion()</a></code> as <code>deconv</code>),
 with the column names used during training. If the model was trained with batch correction, the test samples are
-centred on their own means (as each training cohort was), so they should come from a single cohort.</p></dd>
+z-scored on their own means and SDs (as each training cohort was), so they should come from a single cohort.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A numeric matrix (test samples x NMF factors) of non-negative
-projected factor scores. Cell groups with features missing in <code>test_deconv</code> are skipped by
+projected factor scores. Cell groups with features missing in <code>deconv_test</code> are skipped by
 <code><a href="compute.test.set.html">compute.test.set()</a></code> (with a warning), and the projection uses the other cell groups.</p>
     </div>
 

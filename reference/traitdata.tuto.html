@@ -51,8 +51,9 @@
 
     <div class="section level2">
     <h2 id="format">Format<a class="anchor" aria-label="anchor" href="#format"></a></h2>
-    <p>A data frame with 192 samples as rows and 3 traits as columns
-(<code>Best.Confirmed.Overall.Response</code>, <code>binaryResponse</code> and <code>Enrollment.IC</code>)</p>
+    <p>A data frame with 192 samples as rows and 5 columns: <code>Best.Confirmed.Overall.Response</code>,
+<code>binaryResponse</code>, <code>Enrollment.IC</code>, and the overall survival <code>os</code> (months) and <code>censOS</code>
+(1 = death, 0 = censored)</p>
     </div>
     <div class="section level2">
     <h2 id="source">Source<a class="anchor" aria-label="anchor" href="#source"></a></h2>
@@ -70,6 +71,13 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span> SAMcc4675f394a1                              PD          SD/PD           IC0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> SAM49f9b2e57aa5                              PD          SD/PD           IC0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> SAM2e7aa8fa0ab3                              PD          SD/PD           IC1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                        os censOS</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SAM7f0d9cc7f001  4.632444      1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SAM4305ab968b90  1.412731      1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SAMcf018fee2acd 16.229979      1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SAMcc4675f394a1  3.121150      1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SAM49f9b2e57aa5  7.457906      1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SAM2e7aa8fa0ab3  7.720739      1</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

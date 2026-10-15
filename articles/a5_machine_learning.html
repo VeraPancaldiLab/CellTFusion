@@ -136,14 +136,14 @@ samples.</p>
 <code>deconv</code> — deconvolution of the training samples, in the
 same order as <code>features_train</code>.</li>
 <li>
-<code>raw.counts</code> — count matrix of the training samples,
+<code>raw_counts</code> — count matrix of the training samples,
 matched to the samples of <code>deconv</code> by name (an error is
 raised if they differ). <code>pipeML</code> converts gene names with
 <code><a href="https://rdrr.io/r/base/make.names.html" class="external-link">make.names()</a></code> (e.g. <code>HLA-A</code> becomes
 <code>HLA.A</code>); passing the counts keeps the original gene
 symbols.</li>
 <li>any other <code><a href="../reference/CellTFusion.html">CellTFusion()</a></code> argument,
-e.g. <code>TF.collection</code>, <code>minMod</code> or
+e.g. <code>TF.collection</code>, <code>min_module_size</code> or
 <code>corr</code>.</li>
 </ul>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
@@ -158,7 +158,7 @@ e.g. <code>TF.collection</code>, <code>minMod</code> or
 <span>  ncores         <span class="op">=</span> <span class="fl">2</span>,</span>
 <span>  fold_construction_fun        <span class="op">=</span> <span class="va">prepare_celltfusion_folds</span>,</span>
 <span>  fold_construction_args_fixed <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>deconv     <span class="op">=</span> <span class="va">deconv_train</span>,</span>
-<span>                                      raw.counts <span class="op">=</span> <span class="va">raw.counts_train</span>,</span>
+<span>                                      raw_counts <span class="op">=</span> <span class="va">raw.counts_train</span>,</span>
 <span>                                      TF.collection <span class="op">=</span> <span class="st">"CollecTRI"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p>The final model is trained on the latent factors learned on all the
@@ -189,20 +189,20 @@ returned in <code>ml_res$Custom_output</code>.</p>
 <strong>Survival outcomes</strong><a class="anchor" aria-label="anchor" href="#survival-outcomes"></a>
 </h2>
 <p>The same function is used for survival models, with the follow-up
-time and event of each sample (the tutorial <code>traitdata</code> does
-not include them: the example assumes <code>PFS</code> and
-<code>PFS_event</code> columns in your clinical data):</p>
+time and event of each sample (the tutorial <code>traitdata</code>
+includes the overall survival: <code>os</code> and
+<code>censOS</code>):</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">surv_res</span> <span class="op">&lt;-</span> <span class="fu">pipeML</span><span class="fu">::</span><span class="fu">compute_features.training.ML</span><span class="op">(</span></span>
 <span>  features_train <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">raw.counts_train</span><span class="op">)</span>,</span>
 <span>  task_type      <span class="op">=</span> <span class="st">"survival"</span>,</span>
-<span>  time_var       <span class="op">=</span> <span class="va">traitdata_train</span><span class="op">$</span><span class="va">PFS</span>,</span>
-<span>  event_var      <span class="op">=</span> <span class="va">traitdata_train</span><span class="op">$</span><span class="va">PFS_event</span>,</span>
+<span>  time_var       <span class="op">=</span> <span class="va">traitdata_train</span><span class="op">$</span><span class="va">os</span>,</span>
+<span>  event_var      <span class="op">=</span> <span class="va">traitdata_train</span><span class="op">$</span><span class="va">censOS</span>,</span>
 <span>  k_folds        <span class="op">=</span> <span class="fl">5</span>,</span>
 <span>  n_rep          <span class="op">=</span> <span class="fl">5</span>,</span>
 <span>  ncores         <span class="op">=</span> <span class="fl">2</span>,</span>
 <span>  fold_construction_fun        <span class="op">=</span> <span class="va">prepare_celltfusion_folds</span>,</span>
-<span>  fold_construction_args_fixed <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>deconv <span class="op">=</span> <span class="va">deconv_train</span>, raw.counts <span class="op">=</span> <span class="va">raw.counts_train</span><span class="op">)</span></span>
+<span>  fold_construction_args_fixed <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>deconv <span class="op">=</span> <span class="va">deconv_train</span>, raw_counts <span class="op">=</span> <span class="va">raw.counts_train</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">features_test</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="fu"><a href="../reference/project_test_factors.html">project_test_factors</a></span><span class="op">(</span><span class="va">surv_res</span><span class="op">$</span><span class="va">Custom_output</span>, <span class="va">deconv_test</span><span class="op">)</span><span class="op">)</span></span>
@@ -211,8 +211,8 @@ not include them: the example assumes <code>PFS</code> and
 <span>  model     <span class="op">=</span> <span class="va">surv_res</span><span class="op">$</span><span class="va">Model</span>,</span>
 <span>  test_data <span class="op">=</span> <span class="va">features_test</span>,</span>
 <span>  task_type <span class="op">=</span> <span class="st">"survival"</span>,</span>
-<span>  time_var  <span class="op">=</span> <span class="va">traitdata_test</span><span class="op">$</span><span class="va">PFS</span>,</span>
-<span>  event_var <span class="op">=</span> <span class="va">traitdata_test</span><span class="op">$</span><span class="va">PFS_event</span></span>
+<span>  time_var  <span class="op">=</span> <span class="va">traitdata_test</span><span class="op">$</span><span class="va">os</span>,</span>
+<span>  event_var <span class="op">=</span> <span class="va">traitdata_test</span><span class="op">$</span><span class="va">censOS</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">surv_pred</span><span class="op">$</span><span class="va">c_index</span></span></code></pre></div>
@@ -225,9 +225,9 @@ not include them: the example assumes <code>PFS</code> and
 of each training sample, in the same order as
 <code>features_train</code>. <code><a href="../reference/CellTFusion.html">CellTFusion()</a></code> then corrects
 for cohort in each fold (see <a href="a6_batch_analysis.html">Multi-cohort analysis</a>), and the test
-samples of each cohort are projected separately, centered on their own
-means. A cohort with fewer than 10 test samples in a fold gives a
-warning, as its scores are then centered on few samples. With
+samples of each cohort are projected separately, z-scored on their own
+means and SDs. A cohort with fewer than 10 test samples in a fold gives
+a warning, as its scores are then based on few samples. With
 <code>LODO = TRUE</code>, <code>pipeML</code> leaves one cohort out in
 each fold:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
@@ -241,16 +241,17 @@ each fold:</p>
 <span>  batch_var      <span class="op">=</span> <span class="va">coldata_train</span><span class="op">$</span><span class="va">Cohort</span>,</span>
 <span>  fold_construction_fun        <span class="op">=</span> <span class="va">prepare_celltfusion_folds</span>,</span>
 <span>  fold_construction_args_fixed <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>deconv     <span class="op">=</span> <span class="va">deconv_train</span>,</span>
-<span>                                      raw.counts <span class="op">=</span> <span class="va">raw.counts_train</span>,</span>
+<span>                                      raw_counts <span class="op">=</span> <span class="va">raw.counts_train</span>,</span>
 <span>                                      batch      <span class="op">=</span> <span class="va">coldata_train</span><span class="op">$</span><span class="va">Cohort</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p>For a model trained with <code>batch</code>, project each new cohort
 separately with <code><a href="../reference/project_test_factors.html">project_test_factors()</a></code>, as its samples are
-centered on their own means; a warning is given with fewer than 10
-samples, and a single sample cannot be scored this way (all its scores
-would be 0).</p>
+z-scored on their own means and SDs; a warning is given with fewer than
+10 samples, and a single sample cannot be scored this way (all its
+scores would be 0).</p>
 <p><strong>Note:</strong> <code><a href="../reference/prepare_celltfusion_folds.html">prepare_celltfusion_folds()</a></code> runs
-<code><a href="../reference/CellTFusion.html">CellTFusion()</a></code> in every fold. Use <code>ncores</code> in
+<code><a href="../reference/CellTFusion.html">CellTFusion()</a></code> in every fold. Use
+<code>do_parallel = TRUE</code> (and <code>workers</code>) in
 <code>fold_construction_args_fixed</code> to compute several folds in
 parallel (the package must be installed).</p>
 </div>

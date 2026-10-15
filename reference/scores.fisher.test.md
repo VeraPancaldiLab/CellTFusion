@@ -10,7 +10,7 @@ otherwise).
 ## Usage
 
 ``` r
-scores.fisher.test(scores, coldata, trait, pval = 0.05, p_adjust = "none")
+scores.fisher.test(scores, coldata, trait, pval = 0.05, padj = FALSE)
 ```
 
 ## Arguments
@@ -41,12 +41,11 @@ scores.fisher.test(scores, coldata, trait, pval = 0.05, p_adjust = "none")
   Numeric. Threshold for significance: a feature is significant if its
   (adjusted) p-value is `<= pval` (default = 0.05).
 
-- p_adjust:
+- padj:
 
-  Character. Method to correct the p-values for multiple testing across
-  the features (see
-  [`stats::p.adjust()`](https://rdrr.io/r/stats/p.adjust.html), e.g.
-  `"BH"`). Default `"none"`.
+  Logical; if TRUE, the p-values are corrected for multiple testing
+  across the features with the Benjamini-Hochberg method, and the
+  adjusted p-values are compared with the threshold. Default FALSE.
 
 ## Value
 
@@ -60,20 +59,29 @@ data("network.tuto")
 data("deconv_subgroups.tuto")
 data("traitdata.tuto")
 cell_groups <- construct_cell_groups(network.tuto, deconv_subgroups.tuto)
-#> 20 of 764 features were not assigned to any cluster by the tree cut and are not part of any cell group (blue: 6, pink: 2, red: 2, yellow: 8, black: 2)
+#> Warning: Length of color vector was shorter than the number of clusters - color vector was recycled
+#> Warning: Length of color vector was shorter than the number of clusters - color vector was recycled
+#> Warning: Length of color vector was shorter than the number of clusters - color vector was recycled
+#> Warning: Length of color vector was shorter than the number of clusters - color vector was recycled
+#> Warning: Length of color vector was shorter than the number of clusters - color vector was recycled
+#> Warning: Length of color vector was shorter than the number of clusters - color vector was recycled
+#> Warning: Length of color vector was shorter than the number of clusters - color vector was recycled
+#> Warning: Length of color vector was shorter than the number of clusters - color vector was recycled
+#> Dendrogram plots saved to: Results/Dendrogram_color_clusters.pdf
+#> 44 of 897 features were not assigned to any cluster by the tree cut and are not part of any cell group (pink: 2, yellow: 8, red: 2, blue: 6, brown: 4, turquoise: 12, black: 4, green: 6)
 res <- scores.fisher.test(cell_groups$Cell_groups[, 1:5], traitdata.tuto, "binaryResponse")
-#> 2 significant feature(s) after Fisher's exact test (p-value <= 0.05): Dendrogram_brown_group_3, Dendrogram_brown_group_4
+#> 1 significant feature(s) after Fisher's exact test (p-value <= 0.05): Dendrogram_pink_group_3
 res$Statistics
-#>                    feature                test statistic_name statistic
-#> 1 Dendrogram_brown_group_1 Fisher's exact test     odds ratio 1.3173848
-#> 2 Dendrogram_brown_group_2 Fisher's exact test     odds ratio 0.9125264
-#> 3 Dendrogram_brown_group_3 Fisher's exact test     odds ratio 2.9182035
-#> 4 Dendrogram_brown_group_4 Fisher's exact test     odds ratio 3.6773730
-#> 5 Dendrogram_brown_group_5 Fisher's exact test     odds ratio 1.9267619
-#>       p_value  p_adjusted significant
-#> 1 0.668698278 0.668698278       FALSE
-#> 2 1.000000000 1.000000000       FALSE
-#> 3 0.030394972 0.030394972        TRUE
-#> 4 0.008973261 0.008973261        TRUE
-#> 5 0.197518211 0.197518211       FALSE
+#>                   feature                test statistic_name statistic
+#> 1 Dendrogram_pink_group_1 Fisher's exact test     odds ratio 2.3567205
+#> 2 Dendrogram_pink_group_2 Fisher's exact test     odds ratio 2.3567205
+#> 3 Dendrogram_pink_group_3 Fisher's exact test     odds ratio 2.9182035
+#> 4 Dendrogram_pink_group_4 Fisher's exact test     odds ratio 1.9267619
+#> 5 Dendrogram_pink_group_5 Fisher's exact test     odds ratio 0.7590797
+#>      p_value p_adjusted significant
+#> 1 0.08469494 0.08469494       FALSE
+#> 2 0.08469494 0.08469494       FALSE
+#> 3 0.03039497 0.03039497        TRUE
+#> 4 0.19751821 0.19751821       FALSE
+#> 5 0.66869828 0.66869828       FALSE
 ```

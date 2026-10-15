@@ -70,14 +70,14 @@ as `fold_construction_fun`, and its arguments through
 
 - `deconv` — deconvolution of the training samples, in the same order as
   `features_train`.
-- `raw.counts` — count matrix of the training samples, matched to the
+- `raw_counts` — count matrix of the training samples, matched to the
   samples of `deconv` by name (an error is raised if they differ).
   `pipeML` converts gene names with
   [`make.names()`](https://rdrr.io/r/base/make.names.html) (e.g. `HLA-A`
   becomes `HLA.A`); passing the counts keeps the original gene symbols.
 - any other
   [`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md)
-  argument, e.g. `TF.collection`, `minMod` or `corr`.
+  argument, e.g. `TF.collection`, `min_module_size` or `corr`.
 
 ``` r
 
@@ -92,7 +92,7 @@ ml_res <- pipeML::compute_features.training.ML(
   ncores         = 2,
   fold_construction_fun        = prepare_celltfusion_folds,
   fold_construction_args_fixed = list(deconv     = deconv_train,
-                                      raw.counts = raw.counts_train,
+                                      raw_counts = raw.counts_train,
                                       TF.collection = "CollecTRI")
 )
 ```
@@ -125,22 +125,21 @@ pred$AUC$AUROC
 ## **Survival outcomes**
 
 The same function is used for survival models, with the follow-up time
-and event of each sample (the tutorial `traitdata` does not include
-them: the example assumes `PFS` and `PFS_event` columns in your clinical
-data):
+and event of each sample (the tutorial `traitdata` includes the overall
+survival: `os` and `censOS`):
 
 ``` r
 
 surv_res <- pipeML::compute_features.training.ML(
   features_train = t(raw.counts_train),
   task_type      = "survival",
-  time_var       = traitdata_train$PFS,
-  event_var      = traitdata_train$PFS_event,
+  time_var       = traitdata_train$os,
+  event_var      = traitdata_train$censOS,
   k_folds        = 5,
   n_rep          = 5,
   ncores         = 2,
   fold_construction_fun        = prepare_celltfusion_folds,
-  fold_construction_args_fixed = list(deconv = deconv_train, raw.counts = raw.counts_train)
+  fold_construction_args_fixed = list(deconv = deconv_train, raw_counts = raw.counts_train)
 )
 
 features_test <- data.frame(project_test_factors(surv_res$Custom_output, deconv_test))
@@ -149,8 +148,8 @@ surv_pred <- pipeML::compute_prediction(
   model     = surv_res$Model,
   test_data = features_test,
   task_type = "survival",
-  time_var  = traitdata_test$PFS,
-  event_var = traitdata_test$PFS_event
+  time_var  = traitdata_test$os,
+  event_var = traitdata_test$censOS
 )
 
 surv_pred$c_index
@@ -163,10 +162,10 @@ training sample, in the same order as `features_train`.
 [`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md)
 then corrects for cohort in each fold (see [Multi-cohort
 analysis](https://verapancaldilab.github.io/CellTFusion/articles/a6_batch_analysis.md)),
-and the test samples of each cohort are projected separately, centered
-on their own means. A cohort with fewer than 10 test samples in a fold
-gives a warning, as its scores are then centered on few samples. With
-`LODO = TRUE`, `pipeML` leaves one cohort out in each fold:
+and the test samples of each cohort are projected separately, z-scored
+on their own means and SDs. A cohort with fewer than 10 test samples in
+a fold gives a warning, as its scores are then based on few samples.
+With `LODO = TRUE`, `pipeML` leaves one cohort out in each fold:
 
 ``` r
 
@@ -180,7 +179,7 @@ ml_res <- pipeML::compute_features.training.ML(
   batch_var      = coldata_train$Cohort,
   fold_construction_fun        = prepare_celltfusion_folds,
   fold_construction_args_fixed = list(deconv     = deconv_train,
-                                      raw.counts = raw.counts_train,
+                                      raw_counts = raw.counts_train,
                                       batch      = coldata_train$Cohort)
 )
 ```
@@ -188,13 +187,14 @@ ml_res <- pipeML::compute_features.training.ML(
 For a model trained with `batch`, project each new cohort separately
 with
 [`project_test_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/project_test_factors.md),
-as its samples are centered on their own means; a warning is given with
-fewer than 10 samples, and a single sample cannot be scored this way
-(all its scores would be 0).
+as its samples are z-scored on their own means and SDs; a warning is
+given with fewer than 10 samples, and a single sample cannot be scored
+this way (all its scores would be 0).
 
 **Note:**
 [`prepare_celltfusion_folds()`](https://verapancaldilab.github.io/CellTFusion/reference/prepare_celltfusion_folds.md)
 runs
 [`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md)
-in every fold. Use `ncores` in `fold_construction_args_fixed` to compute
-several folds in parallel (the package must be installed).
+in every fold. Use `do_parallel = TRUE` (and `workers`) in
+`fold_construction_args_fixed` to compute several folds in parallel (the
+package must be installed).

@@ -63,11 +63,12 @@ projected onto them with <code><a href="project_test_factors.html">project_test_
 <span>  folds <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  bestune <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">deconv</span>,</span>
-<span>  raw.counts <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  raw_counts <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  batch <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  ncores <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>  return <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  verbose <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  do_parallel <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  workers <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  return <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  verbose <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -98,40 +99,45 @@ computed independently for each sample, so computing it once for all samples doe
 between folds.</p></dd>
 
 
-<dt id="arg-raw-counts">raw.counts<a class="anchor" aria-label="anchor" href="#arg-raw-counts"></a></dt>
+<dt id="arg-raw-counts">raw_counts<a class="anchor" aria-label="anchor" href="#arg-raw-counts"></a></dt>
 <dd><p>Optional count matrix (genes x samples; TPM values if <code>normalized = FALSE</code> is passed
 to <code><a href="CellTFusion.html">CellTFusion()</a></code>) with the samples of <code>data</code>. Its columns are matched to the samples of
 <code>deconv</code> by name (an error is raised if they are not the same samples); without column names, they must be
 in the same order as <code>data</code>.
 <code>pipeML</code> converts the column names of <code>features_train</code> with <code><a href="https://rdrr.io/r/base/make.names.html" class="external-link">make.names()</a></code> (e.g.
 <code>"HLA-A"</code> becomes <code>"HLA.A"</code>), so gene symbols in <code>data</code> may no longer match TF regulons and
-gene sets; passing <code>raw.counts</code> keeps the original gene symbols. If <code>NULL</code> (default),
+gene sets; passing <code>raw_counts</code> keeps the original gene symbols. If <code>NULL</code> (default),
 <code>t(data)</code> is used.</p></dd>
 
 
 <dt id="arg-batch">batch<a class="anchor" aria-label="anchor" href="#arg-batch"></a></dt>
 <dd><p>Optional vector with the cohort of each sample, in the same order as <code>data</code> (e.g.
 <code>coldata$Cohort</code>). If given, <code><a href="CellTFusion.html">CellTFusion()</a></code> runs in multi-cohort mode (see <code><a href="CellTFusion.html">CellTFusion()</a></code>)
-and the test samples of each cohort are projected separately, centered on their own means. Default
+and the test samples of each cohort are projected separately, z-scored on their own means and SDs. Default
 <code>NULL</code> (single cohort).</p></dd>
 
 
-<dt id="arg-ncores">ncores<a class="anchor" aria-label="anchor" href="#arg-ncores"></a></dt>
-<dd><p>Integer. Number of folds computed in parallel. Default 1 (sequential).</p></dd>
+<dt id="arg-do-parallel">do_parallel<a class="anchor" aria-label="anchor" href="#arg-do-parallel"></a></dt>
+<dd><p>Logical; whether to compute the folds in parallel. Default is FALSE (one after the other).</p></dd>
+
+
+<dt id="arg-workers">workers<a class="anchor" aria-label="anchor" href="#arg-workers"></a></dt>
+<dd><p>(Optional) Number of parallel workers when <code>do_parallel = TRUE</code>. If <code>NULL</code> (default),
+the number of available cores minus one is used.</p></dd>
 
 
 <dt id="arg-return">return<a class="anchor" aria-label="anchor" href="#arg-return"></a></dt>
 <dd><p>Logical; in final mode, whether <code><a href="CellTFusion.html">CellTFusion()</a></code> saves its outputs and plots in
-<code>Results/</code>. Outputs are never saved for the folds. Default FALSE.</p></dd>
+<code>Results/</code>. Outputs are never saved for the folds. Default TRUE.</p></dd>
 
 
 <dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>
-<dd><p>Logical; whether <code><a href="CellTFusion.html">CellTFusion()</a></code> prints its progress messages. Default FALSE.</p></dd>
+<dd><p>Logical; whether <code><a href="CellTFusion.html">CellTFusion()</a></code> prints its progress messages. Default TRUE.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>Other arguments passed to <code><a href="CellTFusion.html">CellTFusion()</a></code> (e.g. <code>normalized</code>, <code>TF.collection</code>,
-<code>min_targets_size</code>, <code>minMod</code>, <code>corr_mod</code>, <code>corr</code>, <code>pval</code>, <code>cancer_type</code>).
+<code>min_targets_size</code>, <code>min_module_size</code>, <code>corr_mod</code>, <code>corr</code>, <code>pval</code>, <code>cancer_type</code>).
 <code>dt</code>, <code>tfs</code> and <code>pathways</code> are not allowed, as they must be computed within each fold.</p></dd>
 
 </dl></div>
@@ -152,9 +158,11 @@ the outcome columns, (2) the <code><a href="CellTFusion.html">CellTFusion()</a><
 </ul></div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>Pass the fixed arguments (<code>deconv</code>, and optionally <code>raw.counts</code>, <code>batch</code>
+    <p>Pass the fixed arguments (<code>deconv</code>, and optionally <code>raw_counts</code>, <code>batch</code>
 and any <code><a href="CellTFusion.html">CellTFusion()</a></code> argument) through <code>fold_construction_args_fixed</code>. Tunable
-arguments (<code>fold_construction_args_tunable</code>) are not supported. With <code>ncores &gt; 1</code>, the first fold is
+arguments (<code>fold_construction_args_tunable</code>) are not supported. With <code>batch</code>, a warning names the folds and cohorts
+with fewer than 10 test samples (their test samples are z-scored on their own means and SDs, which is unreliable with
+few samples; leave-one-cohort-out folds avoid it). With <code>do_parallel = TRUE</code>, the first fold is
 computed before the others start in parallel, so that the TF and pathway collections cached in
 <code>Results/</code> are downloaded only once; the package must be installed for the parallel workers.</p>
     </div>
@@ -162,13 +170,13 @@ computed before the others start in parallel, so that the TF and pathway collect
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
-<span class="r-in"><span><span class="va">raw.counts</span> <span class="op">&lt;-</span> <span class="fu">CellTFusion</span><span class="fu">::</span><span class="va"><a href="raw.counts.tuto.html">raw.counts.tuto</a></span></span></span>
+<span class="r-in"><span><span class="va">raw_counts</span> <span class="op">&lt;-</span> <span class="fu">CellTFusion</span><span class="fu">::</span><span class="va"><a href="raw.counts.tuto.html">raw.counts.tuto</a></span></span></span>
 <span class="r-in"><span><span class="va">traitdata</span>  <span class="op">&lt;-</span> <span class="fu">CellTFusion</span><span class="fu">::</span><span class="va"><a href="traitdata.tuto.html">traitdata.tuto</a></span></span></span>
 <span class="r-in"><span><span class="va">deconv</span>     <span class="op">&lt;-</span> <span class="fu">CellTFusion</span><span class="fu">::</span><span class="va"><a href="deconv.tuto.html">deconv.tuto</a></span>  <span class="co"># deconvolution of all the samples</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Classification</span></span></span>
 <span class="r-in"><span><span class="va">ml_res</span> <span class="op">&lt;-</span> <span class="fu">pipeML</span><span class="fu">::</span><span class="fu">compute_features.training.ML</span><span class="op">(</span></span></span>
-<span class="r-in"><span>  features_train <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">raw.counts</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  features_train <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">raw_counts</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>  task_type      <span class="op">=</span> <span class="st">"classification"</span>,</span></span>
 <span class="r-in"><span>  target_var     <span class="op">=</span> <span class="va">traitdata</span><span class="op">$</span><span class="va">Best.Confirmed.Overall.Response</span>,</span></span>
 <span class="r-in"><span>  trait.positive <span class="op">=</span> <span class="st">"PD"</span>,</span></span>
@@ -176,7 +184,7 @@ computed before the others start in parallel, so that the TF and pathway collect
 <span class="r-in"><span>  k_folds        <span class="op">=</span> <span class="fl">5</span>,</span></span>
 <span class="r-in"><span>  n_rep          <span class="op">=</span> <span class="fl">1</span>,</span></span>
 <span class="r-in"><span>  fold_construction_fun        <span class="op">=</span> <span class="va">prepare_celltfusion_folds</span>,</span></span>
-<span class="r-in"><span>  fold_construction_args_fixed <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>deconv <span class="op">=</span> <span class="va">deconv</span>, raw.counts <span class="op">=</span> <span class="va">raw.counts</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  fold_construction_args_fixed <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>deconv <span class="op">=</span> <span class="va">deconv</span>, raw_counts <span class="op">=</span> <span class="va">raw_counts</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Features of new samples: projected onto the model trained on all the training samples</span></span></span>
@@ -184,14 +192,14 @@ computed before the others start in parallel, so that the TF and pathway collect
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Survival (time and event of each sample)</span></span></span>
 <span class="r-in"><span><span class="va">surv_res</span> <span class="op">&lt;-</span> <span class="fu">pipeML</span><span class="fu">::</span><span class="fu">compute_features.training.ML</span><span class="op">(</span></span></span>
-<span class="r-in"><span>  features_train <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">raw.counts</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  features_train <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">raw_counts</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>  task_type      <span class="op">=</span> <span class="st">"survival"</span>,</span></span>
 <span class="r-in"><span>  time_var       <span class="op">=</span> <span class="va">time</span>,</span></span>
 <span class="r-in"><span>  event_var      <span class="op">=</span> <span class="va">event</span>,</span></span>
 <span class="r-in"><span>  k_folds        <span class="op">=</span> <span class="fl">5</span>,</span></span>
 <span class="r-in"><span>  n_rep          <span class="op">=</span> <span class="fl">1</span>,</span></span>
 <span class="r-in"><span>  fold_construction_fun        <span class="op">=</span> <span class="va">prepare_celltfusion_folds</span>,</span></span>
-<span class="r-in"><span>  fold_construction_args_fixed <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>deconv <span class="op">=</span> <span class="va">deconv</span>, raw.counts <span class="op">=</span> <span class="va">raw.counts</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  fold_construction_args_fixed <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>deconv <span class="op">=</span> <span class="va">deconv</span>, raw_counts <span class="op">=</span> <span class="va">raw_counts</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>

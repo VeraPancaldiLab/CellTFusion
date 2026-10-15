@@ -12,21 +12,21 @@ from the `dorothea` package), or read from an ARACNe-inferred network.
 
 ``` r
 compute.TFs.activity(
-  RNA.counts,
+  counts_norm,
   TF.collection = "CollecTRI",
   min_targets_size = 5,
   universe = NULL,
-  cancer.type = NULL,
+  cancer_type = NULL,
   method = "ulm",
   scale = TRUE,
   return = TRUE,
-  file.name = NULL
+  file_name = NULL
 )
 ```
 
 ## Arguments
 
-- RNA.counts:
+- counts_norm:
 
   A gene expression matrix with genes (symbols) as rows and samples as
   columns, with unique sample names. The matrix should be log-normalized
@@ -50,16 +50,16 @@ compute.TFs.activity(
 
   - `"ARACNE"` reads a tab-separated network file with `Regulator` and
     `Target` columns from
-    `input/ARACNE/<cancer.type>/network/network.txt` (relative to the
+    `input/ARACNE/<cancer_type>/network/network.txt` (relative to the
     working directory). The mode of regulation of each edge is read from
     a `mor` column of the file (1 activation, -1 repression), which
     should be the sign of the Spearman correlation between TF and target
     computed on the cohort used to build the network. If the file has no
     `mor` column, a warning is given and the signs are computed as the
     sign of the Spearman correlation between TF and target in the
-    samples of `RNA.counts`; they then depend on the samples given (e.g.
-    they can differ between cohorts, or between a training and a test
-    set).
+    samples of `counts_norm`; they then depend on the samples given
+    (e.g. they can differ between cohorts, or between a training and a
+    test set).
 
 - min_targets_size:
 
@@ -76,7 +76,7 @@ compute.TFs.activity(
   network is fetched based on `TF.collection`. Ignored when
   `TF.collection = "ARACNE"`.
 
-- cancer.type:
+- cancer_type:
 
   Optional character. TCGA cancer type abbreviation used to locate the
   ARACNe network (only used when `TF.collection = "ARACNE"`). If `NULL`,
@@ -103,10 +103,10 @@ compute.TFs.activity(
 
   Logical; if TRUE, saves matrix in Results/ folder. Default is TRUE.
 
-- file.name:
+- file_name:
 
   Optional character suffix used when writing the TF activity matrix to
-  disk (`Results/TF_matrix_<file.name>.csv`; without it,
+  disk (`Results/TF_matrix_<file_name>.csv`; without it,
   `Results/TF_matrix.csv`).
 
 ## Value

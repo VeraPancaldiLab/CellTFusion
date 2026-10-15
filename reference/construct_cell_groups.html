@@ -6,18 +6,18 @@ each TF module is correlated with every deconvolution feature (compute.modules.r
 for each module, the significantly correlated features are clustered on their correlation with the
 module (identify.cell.groups());
 each dendrogram is cut into cell groups, and each cell group gets one score per sample from a CCA with the
-TFs of its module (cell.groups.computation()).
-Samples are matched by name: the module scores and TF activities of network are put in the sample order of
-the deconvolution matrix, which may contain only part of the samples of the network."><meta property="og:description" content="A cell group is a set of deconvolution features with a similar biological activity: features related to the
+score of its TF module (cell.groups.computation()).
+The deconvolution matrix and network must have the same samples (matched by name; their order can differ): the
+module scores of network are put in the sample order of the deconvolution matrix."><meta property="og:description" content="A cell group is a set of deconvolution features with a similar biological activity: features related to the
 same TF module to the same degree (similar correlation with the module score). The features of a cell group
 do not need to vary together across samples. The cell groups are built in three steps:
 each TF module is correlated with every deconvolution feature (compute.modules.relationship());
 for each module, the significantly correlated features are clustered on their correlation with the
 module (identify.cell.groups());
 each dendrogram is cut into cell groups, and each cell group gets one score per sample from a CCA with the
-TFs of its module (cell.groups.computation()).
-Samples are matched by name: the module scores and TF activities of network are put in the sample order of
-the deconvolution matrix, which may contain only part of the samples of the network."><meta property="og:image" content="https://verapancaldilab.github.io/CellTFusion/logo.png"></head><body>
+score of its TF module (cell.groups.computation()).
+The deconvolution matrix and network must have the same samples (matched by name; their order can differ): the
+module scores of network are put in the sample order of the deconvolution matrix."><meta property="og:image" content="https://verapancaldilab.github.io/CellTFusion/logo.png"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -65,9 +65,9 @@ do not need to vary together across samples. The cell groups are built in three 
 <li><p>for each module, the significantly correlated features are clustered on their correlation with the
 module (<code><a href="identify.cell.groups.html">identify.cell.groups()</a></code>);</p></li>
 <li><p>each dendrogram is cut into cell groups, and each cell group gets one score per sample from a CCA with the
-TFs of its module (<code><a href="cell.groups.computation.html">cell.groups.computation()</a></code>).</p></li>
-</ol><p>Samples are matched by name: the module scores and TF activities of <code>network</code> are put in the sample order of
-the deconvolution matrix, which may contain only part of the samples of the network.</p>
+score of its TF module (<code><a href="cell.groups.computation.html">cell.groups.computation()</a></code>).</p></li>
+</ol><p>The deconvolution matrix and <code>network</code> must have the same samples (matched by name; their order can differ): the
+module scores of <code>network</code> are put in the sample order of the deconvolution matrix.</p>
     </div>
 
     <div class="section level2">
@@ -78,11 +78,10 @@ the deconvolution matrix, which may contain only part of the samples of the netw
 <span>  batch <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  pval <span class="op">=</span> <span class="fl">0.05</span>,</span>
 <span>  padj <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  cor_type <span class="op">=</span> <span class="st">"p"</span>,</span>
-<span>  clustering.method <span class="op">=</span> <span class="st">"ward.D2"</span>,</span>
-<span>  dendrogram_file <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  return_dendrogram <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  return <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  corr_type <span class="op">=</span> <span class="st">"spearman"</span>,</span>
+<span>  clustering_method <span class="op">=</span> <span class="st">"ward.D2"</span>,</span>
+<span>  file_name <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  return <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  min_cluster_size <span class="op">=</span> <span class="fl">3</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -92,18 +91,17 @@ the deconvolution matrix, which may contain only part of the samples of the netw
 
 
 <dl><dt id="arg-network">network<a class="anchor" aria-label="anchor" href="#arg-network"></a></dt>
-<dd><p>A TF module network as returned by <code><a href="compute.WTCNA.html">compute.WTCNA()</a></code> (its module scores, TF activities and
-TFs per module are used).</p></dd>
+<dd><p>A TF module network as returned by <code><a href="compute.WTCNA.html">compute.WTCNA()</a></code> (its module scores are used).</p></dd>
 
 
 <dt id="arg-dt">dt<a class="anchor" aria-label="anchor" href="#arg-dt"></a></dt>
 <dd><p>Deconvolution subgroups as returned by <code><a href="https://verapancaldilab.github.io/multideconv/reference/compute.deconvolution.analysis.html" class="external-link">multideconv::compute.deconvolution.analysis()</a></code>; its element
-<code>Deconvolution matrix</code> (samples x features) is used. Every sample must be in <code>network</code>.</p></dd>
+<code>Deconvolution matrix</code> (samples x features) is used. It must have the same samples as <code>network</code>.</p></dd>
 
 
 <dt id="arg-batch">batch<a class="anchor" aria-label="anchor" href="#arg-batch"></a></dt>
 <dd><p>Optional vector with the cohort of each sample: in the row order of the deconvolution matrix, or named by
-sample. Required when <code>network</code> was built with <code>compute.WTCNA(batch = TRUE)</code>. With two or more cohorts,
+sample. Required when <code>network</code> was built with <code><a href="compute.WTCNA.html">compute.WTCNA()</a></code> with <code>batch</code>. With two or more cohorts,
 correlations and scores are corrected for cohort.</p></dd>
 
 
@@ -118,31 +116,25 @@ deconvolution features (Benjamini-Hochberg, see <code><a href="compute.modules.r
 significant features. Default: FALSE.</p></dd>
 
 
-<dt id="arg-cor-type">cor_type<a class="anchor" aria-label="anchor" href="#arg-cor-type"></a></dt>
+<dt id="arg-corr-type">corr_type<a class="anchor" aria-label="anchor" href="#arg-corr-type"></a></dt>
 <dd><p>Correlation used between the TF modules and the deconvolution features (passed to
-<code><a href="compute.modules.relationship.html">compute.modules.relationship()</a></code>): <code>"p"</code> (Pearson, default) or <code>"s"</code> (Spearman). It is used to
+<code><a href="compute.modules.relationship.html">compute.modules.relationship()</a></code>): <code>"spearman"</code> (default) or <code>"pearson"</code>. It is used to
 select the significant features and to cluster them.</p></dd>
 
 
-<dt id="arg-clustering-method">clustering.method<a class="anchor" aria-label="anchor" href="#arg-clustering-method"></a></dt>
+<dt id="arg-clustering-method">clustering_method<a class="anchor" aria-label="anchor" href="#arg-clustering-method"></a></dt>
 <dd><p>Linkage method of the hierarchical clustering of the deconvolution features of each module
 on their correlation with it (see <code><a href="identify.cell.groups.html">identify.cell.groups()</a></code>). Default: "ward.D2".</p></dd>
 
 
-<dt id="arg-dendrogram-file">dendrogram_file<a class="anchor" aria-label="anchor" href="#arg-dendrogram-file"></a></dt>
-<dd><p>Optional character. Suffix of the output file names (see <code>return_dendrogram</code>
-and <code>return</code>).</p></dd>
-
-
-<dt id="arg-return-dendrogram">return_dendrogram<a class="anchor" aria-label="anchor" href="#arg-return-dendrogram"></a></dt>
-<dd><p>Logical. If TRUE, saves a PDF of the colored cell-group dendrograms to
-<code>Results/Dendrogram_color_clusters_&lt;dendrogram_file&gt;.pdf</code> (only when <code>dendrogram_file</code> is set). Default FALSE.</p></dd>
+<dt id="arg-file-name">file_name<a class="anchor" aria-label="anchor" href="#arg-file-name"></a></dt>
+<dd><p>Optional character. Suffix of the output file names (see <code>return</code>).</p></dd>
 
 
 <dt id="arg-return">return<a class="anchor" aria-label="anchor" href="#arg-return"></a></dt>
-<dd><p>Logical. If TRUE, saves the composition and the scores of the cell groups to
-<code>Results/Cell.groups.composition_&lt;dendrogram_file&gt;.csv</code> and
-<code>Results/Cell.groups.scores_&lt;dendrogram_file&gt;.csv</code>. Default FALSE.</p></dd>
+<dd><p>Logical. If TRUE (default), saves a PDF of the colored cell-group dendrograms
+(<code>Results/Dendrogram_color_clusters_&lt;file_name&gt;.pdf</code>) and the composition and the scores of the cell groups
+(<code>Results/Cell.groups.composition_&lt;file_name&gt;.csv</code> and <code>Results/Cell.groups.scores_&lt;file_name&gt;.csv</code>).</p></dd>
 
 
 <dt id="arg-min-cluster-size">min_cluster_size<a class="anchor" aria-label="anchor" href="#arg-min-cluster-size"></a></dt>
@@ -162,7 +154,8 @@ it is on the inactive side.</p></dd>
 
 <dt>Weights</dt>
 <dd><p>A named list of CCA projection parameters (<code>xcoef</code>, <code>train_means</code>, <code>train_sds</code>) for each group.
-With <code>batch</code>, <code>train_means</code> is <code>NULL</code>: test data are centred on their own means.</p></dd>
+With <code>batch</code>, only <code>xcoef</code> is kept: test data are z-scored on their own means and SDs, as each training
+cohort was.</p></dd>
 
 
 </dl><p>Cell groups are named <code>Dendrogram_&lt;module&gt;_group_&lt;n&gt;</code>, where <code>n</code> is the cluster number shown in the
@@ -175,16 +168,25 @@ cell group (a message reports how many).</p>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"network.tuto"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"deconv_subgroups.tuto"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">cell_groups</span> <span class="op">&lt;-</span> <span class="fu">construct_cell_groups</span><span class="op">(</span><span class="va">network.tuto</span>, <span class="va">deconv_subgroups.tuto</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> 20 of 764 features were not assigned to any cluster by the tree cut and are not part of any cell group (blue: 6, pink: 2, red: 2, yellow: 8, black: 2)</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Length of color vector was shorter than the number of clusters - color vector was recycled</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Length of color vector was shorter than the number of clusters - color vector was recycled</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Length of color vector was shorter than the number of clusters - color vector was recycled</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Length of color vector was shorter than the number of clusters - color vector was recycled</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Length of color vector was shorter than the number of clusters - color vector was recycled</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Length of color vector was shorter than the number of clusters - color vector was recycled</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Length of color vector was shorter than the number of clusters - color vector was recycled</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Length of color vector was shorter than the number of clusters - color vector was recycled</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Dendrogram plots saved to: Results/Dendrogram_color_clusters.pdf</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> 44 of 897 features were not assigned to any cluster by the tree cut and are not part of any cell group (pink: 2, yellow: 8, red: 2, blue: 6, brown: 4, turquoise: 12, black: 4, green: 6)</span>
 <span class="r-in"><span><span class="va">cell_groups</span><span class="op">$</span><span class="va">Cell_groups</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">3</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">3</span><span class="op">]</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                 Dendrogram_brown_group_1 Dendrogram_brown_group_2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> SAM7f0d9cc7f001               0.03998411               0.06757056</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> SAM4305ab968b90              -0.13368092              -0.14208692</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> SAMcf018fee2acd              -0.02670350               0.03518956</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                 Dendrogram_brown_group_3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> SAM7f0d9cc7f001               0.06172535</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> SAM4305ab968b90              -0.15458310</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> SAMcf018fee2acd              -0.03169306</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                 Dendrogram_pink_group_1 Dendrogram_pink_group_2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SAM7f0d9cc7f001             -0.14044970             -0.05427430</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SAM4305ab968b90              0.05344901              0.06916341</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SAMcf018fee2acd             -0.10579244             -0.06208404</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                 Dendrogram_pink_group_3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SAM7f0d9cc7f001             -0.09753325</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SAM4305ab968b90              0.05193819</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SAMcf018fee2acd             -0.17637402</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

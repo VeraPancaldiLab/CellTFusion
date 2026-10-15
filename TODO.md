@@ -88,7 +88,13 @@ association (`signs[1]`).
 
 ### 2. Scores are arbitrary when there are as many variables as samples
 
-Handle cell groups whose CCA has at least as many variables as samples
+Handle cell groups whose CCA has at least as many variables as samples —
+**largely resolved 15 October 2026:** the CCA is now between the
+features of the cell group and the TF module score only (not the TFs of
+the module), so it has (number of features + 1) variables instead of
+(features + TFs of the module); it is the linear regression of the
+module score on the features. A cell group with as many features as
+samples would still be degenerate (rare).
 
 **What happens.** When a cell group’s deconvolution features plus the
 TFs of its module reach the number of samples, the CCA fits perfectly
@@ -151,10 +157,11 @@ measures that with a single number per feature: its correlation with the
 module score. Two features with the same value can still be related to
 different TFs of that module.
 
-Consider clustering the features of each module on their correlations
-with each TF of the module (one value per TF instead of one value per
-module), a finer measure of the same idea. It would change the cell
-groups and everything computed from them.
+(Closed 15 October 2026, not pursued.) Consider clustering the features
+of each module on their correlations with each TF of the module (one
+value per TF instead of one value per module), a finer measure of the
+same idea. It would change the cell groups and everything computed from
+them.
 
 ## Multiple testing in `compute.modules.relationship()` (noted 11 October 2026)
 
@@ -190,8 +197,8 @@ Benjamini-Hochberg across the features for each TF module; the adjusted
 p-values are returned as `p_adjusted`. With the default, results are
 unchanged.
 
-Decide whether `padj = TRUE` should become the default (changes the cell
-groups for every caller).
+Decide whether `padj = TRUE` should become the default: **no** (user, 15
+October 2026); it stays FALSE.
 
 ## Scaling of TF and pathway activity scores (noted 12 October 2026)
 
@@ -221,133 +228,210 @@ cohorts) are therefore not on the same scale. `scripts/src/utils.R` of
 the paper does this for training and test sets.
 
 [`compute.WTCNA()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.WTCNA.md)
-and
+assumes scaled TF activities (comment in the code: module eigengenes are
+computed with `scale = F` because the TF scores are already scaled).
+Since 15 October 2026
 [`compute_composite_score()`](https://verapancaldilab.github.io/CellTFusion/reference/compute_composite_score.md)
-assume scaled TF activities (comments in the code: module eigengenes are
-computed with `scale = F` because the TF scores are already scaled; the
-CCA uses the TF scores as they are).
+no longer uses the TF activities (its CCA uses the module score).
 
 Decide whether `scale = TRUE` stays the default, what to do for test
-sets and multi-cohort runs (TF activity is computed and scaled per
-cohort in batch mode), and whether the downstream steps should scale by
-themselves instead.
+sets and multi-cohort runs, and whether the downstream steps should
+scale by themselves instead. **Done 15 October 2026:**
+[`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md)
+has no `scale` argument (user’s decision): it returns raw TF and pathway
+scores in single-cohort mode (they do not depend on the other samples,
+e.g. for ML features scaled with the training parameters) and scores
+z-scored within each cohort with `batch` (correction of cohort shifts).
+[`compute.TFs.activity()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.TFs.activity.md)
+/
+[`compute.pathway.activity()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.pathway.activity.md)
+keep their own `scale` argument (default TRUE).
+[`compute.WTCNA()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.WTCNA.md)
+standardizes the TFs itself for the module eigengenes and
+[`identify_hub_TFs()`](https://verapancaldilab.github.io/CellTFusion/reference/identify_hub_TFs.md)
+standardizes them within each cohort for the membership, so modules, hub
+TFs, cell groups and factors are identical with either setting (checked
+on the tutorial data, single- and multi-cohort).
+
+(Closed 15 October 2026, not pursued.) Optional: a pipeML fold
+construction function, or a reference-scaling option, to scale TF /
+pathway scores used directly as ML features with the training samples of
+each fold.
 
 ## Consistency of parameters shared between functions (noted 14 October 2026)
 
-To check later: the same setting has different names, values and
-defaults in different functions, and some are hard-coded in one place
-and settable in another. Inventory of `R/CellTFusion.R` on 14 October
-2026 (`*` = internal function):
+**Done 15 October 2026** (user’s decisions):
 
-**Correlation type.**
+**Correlation type.** One argument everywhere, `corr_type`, with the
+values `"spearman"` (default everywhere) or `"pearson"`:
+[`compute.WTCNA()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.WTCNA.md),
+[`compute.modules.relationship()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.modules.relationship.md),
+[`construct_cell_groups()`](https://verapancaldilab.github.io/CellTFusion/reference/construct_cell_groups.md),
+[`compute.metadata.association()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.metadata.association.md)
+(was `corr_method`), `mergeModules()*` (was `method`). In
+[`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md),
+the single `corr_type` drives the deconvolution subgroups, the TF
+network and the cell groups (`cor_type_groups` / `cor_type_modules`
+removed). The TF modules and cell groups change with the new Spearman
+default (`corr_type = "pearson"` reproduces the previous cell groups).
+Spearman is available in multi-cohort mode too.
 
-- Names: `cor_type`
-  ([`compute.WTCNA()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.WTCNA.md),
-  [`compute.modules.relationship()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.modules.relationship.md),
-  [`construct_cell_groups()`](https://verapancaldilab.github.io/CellTFusion/reference/construct_cell_groups.md)),
-  `corr_type`
-  ([`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md),
-  passed to
-  [`multideconv::compute.deconvolution.analysis()`](https://verapancaldilab.github.io/multideconv/reference/compute.deconvolution.analysis.html)),
-  `corr_method`
-  ([`compute.metadata.association()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.metadata.association.md)),
-  `method` (`mergeModules()*`, where `method` means the scoring
-  statistic in
-  [`compute.TFs.activity()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.TFs.activity.md)
-  /
-  [`compute.pathway.activity()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.pathway.activity.md)).
-- Values: `"p"` / `"s"` in most functions, but `"spearman"` /
-  `"pearson"` in `corr_type` and `mergeModules()*`.
-- Defaults: Pearson everywhere except the deconvolution subgroups
-  (Spearman).
-- Hard-coded:
-  - [`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md)
-    passes `cor_type = "p"` to
-    [`compute.WTCNA()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.WTCNA.md).
-    The `cor_type` of
-    [`construct_cell_groups()`](https://verapancaldilab.github.io/CellTFusion/reference/construct_cell_groups.md)
-    (added 14 October 2026) is exposed in
-    [`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md)
-    as `cor_type_groups`, next to `corr_type` (deconvolution subgroups).
-  - The ARACNe signs without a `mor` column use Spearman.
-- Threshold names: `corr`
-  ([`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md):
-  deconvolution subgroups; `mergeModules()*`: module merging),
-  `corr_mod`
-  ([`compute.WTCNA()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.WTCNA.md)).
+**Tree cut (deep split).** Never a user parameter: `deepSplit = 2`
+(hybrid cut of the TF modules) and `deepSplit = TRUE` (tree cut of the
+cell groups) are hard-coded where `cutreeDynamic()` is called;
+`calculate_dendrogram_cuts()*` no longer has the argument.
 
-**Tree cut (deep split).**
-
-- [`compute.WTCNA()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.WTCNA.md)
-  hard-codes `deepSplit = 2`, the hybrid method’s 0-4 scale, in both
-  single- and multi-cohort mode.
-- The cell groups always use `deep_split = TRUE`, a switch in
-  `method = "tree"`. Since 14 October 2026 it is no longer a parameter
-  of
-  [`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md),
-  [`construct_cell_groups()`](https://verapancaldilab.github.io/CellTFusion/reference/construct_cell_groups.md)
-  or
-  [`cell.groups.computation()`](https://verapancaldilab.github.io/CellTFusion/reference/cell.groups.computation.md);
-  `calculate_dendrogram_cuts()*` keeps it.
-- Decide whether this stays hard-coded in both places, and document that
-  the two values have different meanings.
-
-**Minimum sizes.**
-
-- `minMod` (TF modules): default 15 in
-  [`compute.WTCNA()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.WTCNA.md)
-  but 5 in
-  [`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md).
-- `min_cluster_size` (cell groups), `min_targets_size` (regulons),
-  `min_genes` (`module_enrich()*`).
-
-**Clustering method.** `clustering.method` is `"average"` in
+**Minimum sizes.** `minMod` renamed `min_module_size`, default 5 in
 [`compute.WTCNA()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.WTCNA.md)
-and `"ward.D2"` in
-[`identify.cell.groups()`](https://verapancaldilab.github.io/CellTFusion/reference/identify.cell.groups.md)
-/
-[`construct_cell_groups()`](https://verapancaldilab.github.io/CellTFusion/reference/construct_cell_groups.md);
+(was 15) and
+[`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md);
+`min_cluster_size` and `min_targets_size` unchanged.
+
+**Clustering method.** One argument, `clustering_method`, default
+`"ward.D2"` everywhere
+([`compute.WTCNA()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.WTCNA.md)
+was `"average"`, so the TF modules change), exposed in
 [`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md)
-hard-codes both.
+and used for both the TF modules and the cell groups.
 
-**Other common parameters.**
+**Multiple-testing correction.** `padj` (TRUE / FALSE,
+Benjamini-Hochberg, default FALSE) everywhere: also
+[`compute.metadata.association()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.metadata.association.md),
+[`compute.survival.analysis()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.survival.analysis.md),
+the `scores.*` tests and
+[`scores.stat.analysis()`](https://verapancaldilab.github.io/CellTFusion/reference/scores.stat.analysis.md)
+(was `p_adjust`).
 
-- **Output file:** `file_name` vs `file.name` vs `dendrogram_file`.
-- **Saving and plots:**
-  - `return` defaults to `TRUE` in most functions but `FALSE` in
-    [`construct_cell_groups()`](https://verapancaldilab.github.io/CellTFusion/reference/construct_cell_groups.md)
-    and
-    [`prepare_celltfusion_folds()`](https://verapancaldilab.github.io/CellTFusion/reference/prepare_celltfusion_folds.md).
-  - Plots are switched by `plot`, `plot_dot`, `plot_grid`, `plot.grid`
-    or `return_dendrogram`.
-- **`verbose`:** default `TRUE` in
-  [`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md),
-  `FALSE` in
-  [`compute.WTCNA()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.WTCNA.md)
-  and
-  [`prepare_celltfusion_folds()`](https://verapancaldilab.github.io/CellTFusion/reference/prepare_celltfusion_folds.md).
-- **`batch`:** a cohort vector everywhere except
-  [`compute.WTCNA()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.WTCNA.md)
-  (logical).
-- **Multiple-testing correction:** `p_adjust` (any
-  [`stats::p.adjust()`](https://rdrr.io/r/stats/p.adjust.html) method,
-  default `"none"`) in
-  [`compute.metadata.association()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.metadata.association.md),
-  [`compute.survival.analysis()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.survival.analysis.md)
-  and the `scores.*` tests, but `padj` (TRUE / FALSE, always
-  Benjamini-Hochberg) in
-  [`compute.modules.relationship()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.modules.relationship.md),
-  [`construct_cell_groups()`](https://verapancaldilab.github.io/CellTFusion/reference/construct_cell_groups.md)
-  and
-  [`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md)
-  since 14 October 2026.
-- **`seed`:** only in
-  [`compute.latent_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.latent_factors.md)
-  and
-  [`compute_factor_gsea()`](https://verapancaldilab.github.io/CellTFusion/reference/compute_factor_gsea.md).
+**Setting arguments in snake_case.** `file.name` and `dendrogram_file`
+-\> `file_name`; `cancer.type` and `cancer_name`
+([`map_factors_to_TME()`](https://verapancaldilab.github.io/CellTFusion/reference/map_factors_to_TME.md))
+-\> `cancer_type`; `softPower` -\> `soft_power`; `network.type` -\>
+`network_type`; `plot.grid` -\> `plot_grid`; `ncol.grid` and `ncol`
+([`compute.metadata.association()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.metadata.association.md))
+-\> `ncol_grid`; `plot_dot` -\> `plot`
+([`compute_factor_gsea()`](https://verapancaldilab.github.io/CellTFusion/reference/compute_factor_gsea.md));
+`MM_thresh` -\> `mm_thresh`; `cbsx.mail` / `cbsx.token` -\> `cbsx_mail`
+/ `cbsx_token`; `doParallel` -\> `do_parallel`
+([`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md));
+`p.value` -\> `pval`
+([`compute.survival.analysis()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.survival.analysis.md)).
+Data inputs (`RNA.tpm`, `TFs.matrix`, `raw.counts`, …) and
+`TF.collection` keep their names. The vignettes, README and Shiny app
+were updated.
 
-Renaming or changing defaults breaks callers (MCP server, paper scripts,
-Shiny app): list them before deciding.
+**Scoring method in
+[`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md).**
+`method` (default `"ulm"`) passed to
+[`compute.TFs.activity()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.TFs.activity.md)
+and
+[`compute.pathway.activity()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.pathway.activity.md).
+
+Done 15 October 2026 (second pass):
+
+**Saving:** one switch `return` (default `TRUE`) everywhere saves a
+function’s tables and figures. `plot` was renamed `return` in
+[`compute.modules.relationship()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.modules.relationship.md),
+[`compute_factor_gsea()`](https://verapancaldilab.github.io/CellTFusion/reference/compute_factor_gsea.md),
+[`derive_meta_programs()`](https://verapancaldilab.github.io/CellTFusion/reference/derive_meta_programs.md),
+[`map_factors_to_metaprograms()`](https://verapancaldilab.github.io/CellTFusion/reference/map_factors_to_metaprograms.md)
+and
+[`map_factors_to_TME()`](https://verapancaldilab.github.io/CellTFusion/reference/map_factors_to_TME.md);
+`return_dendrogram` was folded into `return`
+([`construct_cell_groups()`](https://verapancaldilab.github.io/CellTFusion/reference/construct_cell_groups.md),
+[`cell.groups.computation()`](https://verapancaldilab.github.io/CellTFusion/reference/cell.groups.computation.md));
+[`construct_cell_groups()`](https://verapancaldilab.github.io/CellTFusion/reference/construct_cell_groups.md)
+and
+[`prepare_celltfusion_folds()`](https://verapancaldilab.github.io/CellTFusion/reference/prepare_celltfusion_folds.md)
+now default to `TRUE`. Optional extra figures keep `plot_grid`.
+
+**`verbose`:** default `TRUE` everywhere
+([`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md),
+[`compute.WTCNA()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.WTCNA.md),
+[`prepare_celltfusion_folds()`](https://verapancaldilab.github.io/CellTFusion/reference/prepare_celltfusion_folds.md)).
+
+**`batch`:** a cohort vector everywhere;
+[`compute.WTCNA()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.WTCNA.md)
+now takes one samples x TFs matrix plus the cohort vector (was a list of
+matrices with `batch = TRUE`) and returns the module scores in the input
+row order.
+
+**`seed`:** only where something is random:
+[`compute.latent_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.latent_factors.md)
+(NMF),
+[`compute_factor_gsea()`](https://verapancaldilab.github.io/CellTFusion/reference/compute_factor_gsea.md)
+(fgsea permutations) and
+[`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md)
+(new `seed`, default 123, passed to both and used for the deconvolution
+methods with random steps). TF and pathway scoring are deterministic
+(decoupleR fixes its own seed for `wsum`/`consensus`); the
+`geom_jitter()` of the `scores.*` and ANOVA boxplots only moves the
+plotted points.
+
+**Threshold names:** `corr` now only means the deconvolution subgroup
+threshold; the module merging threshold is `corr_mod` everywhere
+(`mergeModules()*` too).
+
+**Other:** `scores.stat.analysis(method)` renamed `test` (`method`
+always means the decoupleR statistic);
+`compute.survival.analysis(thres)` renamed `quantile_cutoff`;
+[`compute.metadata.association()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.metadata.association.md)
+`file_name` optional (default `NULL`, as everywhere) and `ncol_grid`
+default `NULL` (automatic, as in
+[`compute.modules.relationship()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.modules.relationship.md));
+`T`/`F` defaults written `TRUE`/`FALSE`.
+
+Still open:
+
+**Data inputs: one name per object** (done 15 October 2026):
+`raw.counts` -\> `raw_counts`; log expression `RNA.tpm` / `RNA.counts` /
+`tpm.counts*` -\> `counts_norm`; `TFs.matrix` -\> `tfs`;
+[`compute.WTCNA()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.WTCNA.md)
+output `tfs.module.network` / `TF.network` -\> `network`; deconvolution
+matrix `deconvolution` -\> `deconv`; test deconvolution
+`deconvolution_test` / `test_deconv` -\> `deconv_test`; deconvolution
+analysis output `deconv_res` / `deconvolution.subgroupped` -\> `dt`;
+`cell.groups` -\> `cell_groups`; dendrograms `cell.dendrograms` /
+`cell.group.dendrogram*` -\> `cell_dendrograms`; `latent_spaces` -\>
+`latent_factors`
+([`project_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/project_factors.md));
+score matrices `X` / `scores_test` / `features` / `features_df` / `Z` /
+`tfs.modules` -\> `scores`; `survival.data` -\> `coldata`; `PFS` /
+`PFS_event` -\> `time_column` / `event_column`; `gsea_study` -\>
+`gsea_results`; `features` -\> `relationship`
+([`identify.cell.groups()`](https://verapancaldilab.github.io/CellTFusion/reference/identify.cell.groups.md))
+and `group_names`
+([`compute.test.set()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.test.set.md));
+`groups` -\> `features`
+([`extract_cells()`](https://verapancaldilab.github.io/CellTFusion/reference/extract_cells.md));
+`module_group` -\> `module`; `hub_genes*` / `tfs_universe*` -\>
+`hub_tfs` / `universe`. Output element names (e.g. `Latent_spaces`) and
+`matA` / `matB` unchanged.
+
+**Parallel workers:**
+[`prepare_celltfusion_folds()`](https://verapancaldilab.github.io/CellTFusion/reference/prepare_celltfusion_folds.md)
+has `do_parallel` (default FALSE) and `workers` (NULL = available cores
+minus one), with the same meaning as in
+[`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md);
+`ncores` removed.
+
+**Correlations not controlled by `corr_type`** (decided 15 October
+2026): the CCA of
+[`compute_composite_score()`](https://verapancaldilab.github.io/CellTFusion/reference/compute_composite_score.md)
+and its orientation stay Pearson (user’s decision: a rank-based CCA
+would make scores depend on the other samples, so single samples could
+not be projected);
+[`identify_hub_TFs()`](https://verapancaldilab.github.io/CellTFusion/reference/identify_hub_TFs.md)
+module membership now follows the network’s `corr_type`.
+
+(Closed 15 October 2026: kept as a known behaviour, user’s decision.)
+**Batch-mode TF modules depend on which cohort comes first** (noted 15
+October 2026): the first cohort is the calibration reference of the
+consensus TOM (as in WGCNA); with tutorial data, cohort B first gave 8
+modules instead of 9. The user chose not to change it.
+
+**External callers to update** (not in this repository): MCP server
+(`mcp-tme-servers`) and paper scripts (`CellTFusion_paper/scripts`), see
+the lists given on 15 October 2026.
 
 ## Deferred: to do after the review of `CellTFusion()` (noted October 2026)
 
@@ -363,19 +447,36 @@ rank limited to the number of cell groups, GSEA with the cohort
 covariate and a fixed seed. The current blca reference labels 5 of its 7
 meta-programs as IE.
 
-**Shiny app.** Launch and test it after the changes to `batch`,
-`normalized` and the removed arguments; remove the unused
-“High-correlation cutoff” slider; update the “Minimum TF targets”
-default (3, package default is 5) and the “Normalize counts (TPM +
-log2)” label (unticked now means the input is TPM).
+**Shiny app.** Done 15 October 2026: new controls (scoring method,
+clustering method, BH adjustment, consensus quantile, seed, cancer
+type), defaults 5 / 5, the unused slider removed, the counts checkbox
+relabelled; the cell group table and the TME panel (latent factor scores
+labelled with meta-program and TME subtype) rewritten for the current
+results; TF activities of all cohorts shown in batch mode; the
+deconvolution PCA no longer fails on constant features. Tested with
+shiny::testServer() (outputs and a full run on the demo data). Original
+note: Launch and test it after the changes to `batch`, `normalized` and
+the removed arguments; remove the unused “High-correlation cutoff”
+slider; update the “Minimum TF targets” default (3, package default is
+5) and the “Normalize counts (TPM + log2)” label (unticked now means the
+input is TPM).
 
-**Vignettes.** Regenerate the figures of cell groups, latent factors,
-niches and TME states (made before the cell group fix).
+**Vignettes.** Done 15 October 2026 (figures regenerated from
+CellTFusion() on the tutorial data with the current defaults; the
+meta-program mapping figure still uses the TCGA references to be
+rebuilt). Original note: Regenerate the figures of cell groups, latent
+factors, niches and TME states (made before the cell group fix).
 
-**Data.** Regenerate `deconv.tuto` with multideconv \>= 0.2.0 naming;
-add survival columns to the tutorial data, or a small survival example,
-so the survival examples can run. `tfs.tuto` and `network.tuto` were
-computed before the default scoring method of
+**Data.** Done 15 October 2026: `traitdata.tuto` has the overall
+survival (`os`, `censOS`) of the same study, `tfs.tuto` and
+`network.tuto` were rebuilt with the current defaults
+(`data-raw/tutorial_data.R`); `deconv.tuto` did not need rebuilding (raw
+feature names are unchanged in multideconv 0.2.0;
+`deconv_subgroups.tuto` was already rebuilt). Original note: Regenerate
+`deconv.tuto` with multideconv \>= 0.2.0 naming; add survival columns to
+the tutorial data, or a small survival example, so the survival examples
+can run. `tfs.tuto` and `network.tuto` were computed before the default
+scoring method of
 [`compute.TFs.activity()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.TFs.activity.md)
 changed from the decoupleR consensus to `"ulm"` (11 October 2026) and
 before
@@ -385,19 +486,23 @@ October 2026): regenerate them too.
 
 **Docs.** Review them again once the items above are done.
 
-**Tests.** Add unit tests (`tests/testthat/` does not exist yet).
+**Tests.** Done 15 October 2026: `tests/testthat/` with 21 test blocks
+(77 expectations, offline, about 5 minutes): TF modules (defaults,
+independence from TF scaling, batch cohort vector), cell groups and
+their projection (single cohort and batch), latent factors and niches,
+statistics (`padj`, `test`), survival on the tutorial overall survival,
+raw TF scores and batch pathway scores.
 
-**Plot of cell group scores with their relation to the TF module.** To
-decide later (noted 9 October 2026). Four alternatives were drafted and
-discarded for now: (A) heatmap of all cell groups x samples annotated
-with module and relation; (B) one page per module, samples ordered by
-module activity, one row per cell group labelled “more”/“fewer” with its
-cell types; (C) cell groups as points left/right of zero by their
-correlation with the module, labelled with cell types; (D) one sample,
-its strongest cell groups per module coloured by more/fewer cells.
+(Closed 15 October 2026, not pursued.) **`scores.*` tests always save
+their plots** (noted 15 October 2026):
+[`scores.stat.analysis()`](https://verapancaldilab.github.io/CellTFusion/reference/scores.stat.analysis.md)
+and the `scores.*` tests have no `return` argument and fail if
+`Results/` does not exist, unlike the other functions (`return = TRUE`
+by default).
 
 **Scoring method in
 [`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md).**
+Done 15 October 2026 (`method` argument).
 [`compute.TFs.activity()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.TFs.activity.md)
 and
 [`compute.pathway.activity()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.pathway.activity.md)
@@ -409,7 +514,9 @@ to add the argument to
 (noted 11 October 2026).
 
 Check behavior across all pipeline when batch is set to TRUE (noted 12
-October 2026).
+October 2026). Closed 15 October 2026: consensus modules, per-cohort TF
+and pathway scores, within-cohort z-scoring before the CCA, projection
+of new cohorts and the small-cohort warning were reviewed and fixed.
 
 **Revise
 [`calculate_dendrogram_cuts()`](https://verapancaldilab.github.io/CellTFusion/reference/calculate_dendrogram_cuts.md)

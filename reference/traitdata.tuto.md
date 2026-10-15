@@ -10,9 +10,10 @@ traitdata.tuto
 
 ## Format
 
-A data frame with 192 samples as rows and 3 traits as columns
-(`Best.Confirmed.Overall.Response`, `binaryResponse` and
-`Enrollment.IC`)
+A data frame with 192 samples as rows and 5 columns:
+`Best.Confirmed.Overall.Response`, `binaryResponse`, `Enrollment.IC`,
+and the overall survival `os` (months) and `censOS` (1 = death, 0 =
+censored)
 
 ## Source
 
@@ -30,4 +31,11 @@ head(traitdata.tuto)
 #> SAMcc4675f394a1                              PD          SD/PD           IC0
 #> SAM49f9b2e57aa5                              PD          SD/PD           IC0
 #> SAM2e7aa8fa0ab3                              PD          SD/PD           IC1
+#>                        os censOS
+#> SAM7f0d9cc7f001  4.632444      1
+#> SAM4305ab968b90  1.412731      1
+#> SAMcf018fee2acd 16.229979      1
+#> SAMcc4675f394a1  3.121150      1
+#> SAM49f9b2e57aa5  7.457906      1
+#> SAM2e7aa8fa0ab3  7.720739      1
 ```

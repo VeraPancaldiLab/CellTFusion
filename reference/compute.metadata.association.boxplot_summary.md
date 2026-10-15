@@ -8,18 +8,18 @@ and saves a multi-panel SVG boxplot grid to `Results/`.
 
 ``` r
 compute.metadata.association.boxplot_summary(
-  tfs.modules,
+  scores,
   coldata,
   pval = 0.05,
-  file.name,
-  ncol = 5,
-  p_adjust = "none"
+  file_name = NULL,
+  ncol_grid = NULL,
+  padj = FALSE
 )
 ```
 
 ## Arguments
 
-- tfs.modules:
+- scores:
 
   A numeric matrix or data frame of TF module scores (samples x
   modules), typically the first element (`TFs module matrix`) of the
@@ -38,26 +38,25 @@ compute.metadata.association.boxplot_summary(
   Numeric. ANOVA (adjusted) p-value threshold for significance
   (`<= pval`). Default 0.05.
 
-- file.name:
+- file_name:
 
   Character. Base name appended to output SVG file names
-  (`Results/ANOVA_boxplot_summary_<file.name>_<trait>.svg`, or
-  `Results/ANOVA_boxplot_summary_<trait>.svg` without `file.name`). In
+  (`Results/ANOVA_boxplot_summary_<file_name>_<trait>.svg`, or
+  `Results/ANOVA_boxplot_summary_<trait>.svg` without `file_name`). In
   `<trait>`, characters other than letters, digits, ".", "*", "-" and
   spaces (e.g. "/") are replaced by "*".
 
-- ncol:
+- ncol_grid:
 
-  Integer. Number of columns in the boxplot facet grid. Default 5. The
+  Integer. Number of columns in the boxplot facet grid; if `NULL`
+  (default), the ceiling of the square root of the number of panels. The
   size of the figure is computed from the number of panels, and the
   y-axis of each panel from its data.
 
-- p_adjust:
+- padj:
 
-  Character. Method of
-  [`stats::p.adjust()`](https://rdrr.io/r/stats/p.adjust.html) to
-  correct the ANOVA p-values across the modules, for each trait. Default
-  `"none"`.
+  Logical. If TRUE, the ANOVA p-values are corrected across the modules,
+  for each trait, with the Benjamini-Hochberg method. Default FALSE.
 
 ## Value
 

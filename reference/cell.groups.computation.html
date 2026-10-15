@@ -50,13 +50,12 @@ using deconvolution features and TF module networks, and optionally exports the 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">cell.groups.computation</span><span class="op">(</span></span>
-<span>  <span class="va">deconvolution</span>,</span>
-<span>  <span class="va">cell.dendrograms</span>,</span>
-<span>  <span class="va">tfs.module.network</span>,</span>
+<span>  <span class="va">deconv</span>,</span>
+<span>  <span class="va">cell_dendrograms</span>,</span>
+<span>  <span class="va">network</span>,</span>
 <span>  batch <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  return <span class="op">=</span> <span class="cn">T</span>,</span>
-<span>  dendrogram_file <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  return_dendrogram <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  return <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  file_name <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  min_cluster_size <span class="op">=</span> <span class="fl">3</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -65,21 +64,20 @@ using deconvolution features and TF module networks, and optionally exports the 
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
 
 
-<dl><dt id="arg-deconvolution">deconvolution<a class="anchor" aria-label="anchor" href="#arg-deconvolution"></a></dt>
+<dl><dt id="arg-deconv">deconv<a class="anchor" aria-label="anchor" href="#arg-deconv"></a></dt>
 <dd><p>A data frame with deconvolution features (samples as rows, cell-type features as columns).
 This is usually the first element returned by <code><a href="https://verapancaldilab.github.io/multideconv/reference/compute.deconvolution.analysis.html" class="external-link">multideconv::compute.deconvolution.analysis()</a></code>. It must
-contain all the features of <code>cell.dendrograms</code>.</p></dd>
+contain all the features of <code>cell_dendrograms</code>.</p></dd>
 
 
-<dt id="arg-cell-dendrograms">cell.dendrograms<a class="anchor" aria-label="anchor" href="#arg-cell-dendrograms"></a></dt>
+<dt id="arg-cell-dendrograms">cell_dendrograms<a class="anchor" aria-label="anchor" href="#arg-cell-dendrograms"></a></dt>
 <dd><p>A named list of dendrogram (<code>hclust</code>) objects, each corresponding to a TF module, typically
 returned by <code><a href="identify.cell.groups.html">identify.cell.groups()</a></code>.</p></dd>
 
 
-<dt id="arg-tfs-module-network">tfs.module.network<a class="anchor" aria-label="anchor" href="#arg-tfs-module-network"></a></dt>
+<dt id="arg-network">network<a class="anchor" aria-label="anchor" href="#arg-network"></a></dt>
 <dd><p>A list containing network information of transcription factor (TF) modules, as
-obtained from <code><a href="compute.WTCNA.html">compute.WTCNA()</a></code> (the elements <code>TFs module matrix</code>, <code>TFs per module</code> and
-<code>TFs_matrix</code> are used).</p></dd>
+obtained from <code><a href="compute.WTCNA.html">compute.WTCNA()</a></code> (the module scores, element <code>TFs module matrix</code>, are used).</p></dd>
 
 
 <dt id="arg-batch">batch<a class="anchor" aria-label="anchor" href="#arg-batch"></a></dt>
@@ -87,18 +85,13 @@ obtained from <code><a href="compute.WTCNA.html">compute.WTCNA()</a></code> (the
 
 
 <dt id="arg-return">return<a class="anchor" aria-label="anchor" href="#arg-return"></a></dt>
-<dd><p>Logical; if TRUE (default), writes CSV files with cell group compositions and scores
-to the "Results/" folder (named with <code>dendrogram_file</code>; the folder is created if needed).</p></dd>
+<dd><p>Logical; if TRUE (default), saves a PDF of the colored cell-group dendrograms
+(<code>Results/Dendrogram_color_clusters_&lt;file_name&gt;.pdf</code>) and CSV files with cell group compositions and scores
+to the "Results/" folder (the folder is created if needed).</p></dd>
 
 
-<dt id="arg-dendrogram-file">dendrogram_file<a class="anchor" aria-label="anchor" href="#arg-dendrogram-file"></a></dt>
-<dd><p>Optional character. Suffix of the output file names: the dendrogram PDF (see
-<code>return_dendrogram</code>) and the CSV files (see <code>return</code>).</p></dd>
-
-
-<dt id="arg-return-dendrogram">return_dendrogram<a class="anchor" aria-label="anchor" href="#arg-return-dendrogram"></a></dt>
-<dd><p>Logical. If TRUE, saves a PDF of the colored cell-group dendrograms to
-<code>Results/Dendrogram_color_clusters_&lt;dendrogram_file&gt;.pdf</code> (only when <code>dendrogram_file</code> is set). Default FALSE.</p></dd>
+<dt id="arg-file-name">file_name<a class="anchor" aria-label="anchor" href="#arg-file-name"></a></dt>
+<dd><p>Optional character. Suffix of the output file names (see <code>return</code>).</p></dd>
 
 
 <dt id="arg-min-cluster-size">min_cluster_size<a class="anchor" aria-label="anchor" href="#arg-min-cluster-size"></a></dt>
@@ -111,14 +104,15 @@ dynamic tree cut of each dendrogram). Default is 3.</p></dd>
     <p>An unnamed list of three elements:</p><ul><li><p><code>[[1]]</code>: A data frame with the composite scores of all identified cell groups across samples. A
 positive score means that the sample is on the active side of the TF module of that cell group.</p></li>
 <li><p><code>[[2]]</code>: A named list of vectors indicating the composition (original features) of each cell group.</p></li>
-<li><p><code>[[3]]</code>: A named list of CCA projection parameters (<code>xcoef</code>, <code>train_means</code>, <code>train_sds</code>) for each cell group.</p></li>
+<li><p><code>[[3]]</code>: A named list of CCA projection parameters (<code>xcoef</code>, <code>train_means</code>, <code>train_sds</code>; only
+<code>xcoef</code> with <code>batch</code>) for each cell group.</p></li>
 </ul><p>Cell groups are named <code>Dendrogram_&lt;module&gt;_group_&lt;n&gt;</code>, where <code>n</code> is the cluster number of the
 dendrogram of that module (the number shown in the dendrogram PDF); the three elements use the same names.
 An error is raised if no cluster is found in any module. Features that the tree cut does not assign to any cluster
 are not part of any cell group: a message reports how many there are per module.
-If <code>return=TRUE</code>, two CSV files will be created:</p><ul><li><p><code>Results/Cell.groups.composition_&lt;dendrogram_file&gt;.csv</code>: A table showing the composition of each cell group.</p></li>
-<li><p><code>Results/Cell.groups.scores_&lt;dendrogram_file&gt;.csv</code>: A matrix of cell group scores across samples.</p></li>
-</ul><p>Without <code>dendrogram_file</code>, they are named <code>Cell.groups.composition.csv</code> and <code>Cell.groups.scores.csv</code>.</p>
+If <code>return=TRUE</code>, two CSV files will be created:</p><ul><li><p><code>Results/Cell.groups.composition_&lt;file_name&gt;.csv</code>: A table showing the composition of each cell group.</p></li>
+<li><p><code>Results/Cell.groups.scores_&lt;file_name&gt;.csv</code>: A matrix of cell group scores across samples.</p></li>
+</ul><p>Without <code>file_name</code>, they are named <code>Cell.groups.composition.csv</code> and <code>Cell.groups.scores.csv</code>.</p>
     </div>
 
     <div class="section level2">
@@ -129,9 +123,9 @@ If <code>return=TRUE</code>, two CSV files will be created:</p><ul><li><p><code>
 <span class="r-in"><span><span class="va">dendrograms</span> <span class="op">&lt;-</span> <span class="fu"><a href="identify.cell.groups.html">identify.cell.groups</a></span><span class="op">(</span><span class="va">...</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">cell.groups</span> <span class="op">&lt;-</span> <span class="fu">cell.groups.computation</span><span class="op">(</span></span></span>
-<span class="r-in"><span>  deconvolution <span class="op">=</span> <span class="va">deconv_results</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>,</span></span>
-<span class="r-in"><span>  cell.dendrograms <span class="op">=</span> <span class="va">dendrograms</span>,</span></span>
-<span class="r-in"><span>  tfs.module.network <span class="op">=</span> <span class="va">tf_network</span>,</span></span>
+<span class="r-in"><span>  deconv <span class="op">=</span> <span class="va">deconv_results</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>,</span></span>
+<span class="r-in"><span>  cell_dendrograms <span class="op">=</span> <span class="va">dendrograms</span>,</span></span>
+<span class="r-in"><span>  network <span class="op">=</span> <span class="va">tf_network</span>,</span></span>
 <span class="r-in"><span>  return <span class="op">=</span> <span class="cn">TRUE</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>

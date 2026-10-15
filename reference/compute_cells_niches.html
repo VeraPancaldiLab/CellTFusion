@@ -58,7 +58,7 @@ Saves a star-network PDF per factor and returns the weighted cell-type associati
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">compute_cells_niches</span><span class="op">(</span></span>
 <span>  <span class="va">latent_factors</span>,</span>
 <span>  <span class="va">dt</span>,</span>
-<span>  <span class="va">cell.groups</span>,</span>
+<span>  <span class="va">cell_groups</span>,</span>
 <span>  enrich_thresh <span class="op">=</span> <span class="fl">1.5</span>,</span>
 <span>  quantile_cutoff <span class="op">=</span> <span class="fl">0.7</span>,</span>
 <span>  cells_extra <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -81,7 +81,7 @@ containing <code>W</code> (features x factors) and the NMF model object.</p></dd
 the cell-group composition matrix via <code><a href="compute.composition.matrix.html">compute.composition.matrix()</a></code>.</p></dd>
 
 
-<dt id="arg-cell-groups">cell.groups<a class="anchor" aria-label="anchor" href="#arg-cell-groups"></a></dt>
+<dt id="arg-cell-groups">cell_groups<a class="anchor" aria-label="anchor" href="#arg-cell-groups"></a></dt>
 <dd><p>A list of cell group definitions as returned by
 <code><a href="construct_cell_groups.html">construct_cell_groups()</a></code>.</p></dd>
 
@@ -133,27 +133,35 @@ the factor, without saying whether the factor has more or fewer of it.</p>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"network.tuto"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"deconv_subgroups.tuto"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">cell_groups</span> <span class="op">&lt;-</span> <span class="fu"><a href="construct_cell_groups.html">construct_cell_groups</a></span><span class="op">(</span><span class="va">network.tuto</span>, <span class="va">deconv_subgroups.tuto</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> 20 of 764 features were not assigned to any cluster by the tree cut and are not part of any cell group (blue: 6, pink: 2, red: 2, yellow: 8, black: 2)</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Length of color vector was shorter than the number of clusters - color vector was recycled</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Length of color vector was shorter than the number of clusters - color vector was recycled</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Length of color vector was shorter than the number of clusters - color vector was recycled</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Length of color vector was shorter than the number of clusters - color vector was recycled</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Length of color vector was shorter than the number of clusters - color vector was recycled</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Length of color vector was shorter than the number of clusters - color vector was recycled</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Length of color vector was shorter than the number of clusters - color vector was recycled</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Length of color vector was shorter than the number of clusters - color vector was recycled</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Dendrogram plots saved to: Results/Dendrogram_color_clusters.pdf</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> 44 of 897 features were not assigned to any cluster by the tree cut and are not part of any cell group (pink: 2, yellow: 8, red: 2, blue: 6, brown: 4, turquoise: 12, black: 4, green: 6)</span>
 <span class="r-in"><span><span class="va">latent</span> <span class="op">&lt;-</span> <span class="fu"><a href="compute.latent_factors.html">compute.latent_factors</a></span><span class="op">(</span><span class="va">cell_groups</span><span class="op">$</span><span class="va">Cell_groups</span>, return <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Estimating optimal rank via elbow on reconstruction MSE (ranks 2:8)...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> MSE by rank: k2=0.00127  k3=0.000964  k4=0.000838  k5=0.000756  k6=0.00071  k7=0.000675  k8=0.000632</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> MSE by rank: k2=0.00129  k3=0.00114  k4=0.00105  k5=0.000978  k6=0.000933  k7=0.000893  k8=0.000857</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Selected rank (elbow): 3</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Running RcppML NMF with rank = 3...</span>
 <span class="r-in"><span><span class="va">niches</span> <span class="op">&lt;-</span> <span class="fu">compute_cells_niches</span><span class="op">(</span><span class="va">latent</span>, <span class="va">deconv_subgroups.tuto</span>, <span class="va">cell_groups</span>, return <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Cell types not present in any cell group (left out of the composition matrix): T.cells.gamma.delta</span>
 <span class="r-in"><span><span class="va">niches</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $Factor1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                  CAF               Plasma           NK.resting </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           0.14005451           0.08621658           0.07939530 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Mast.activated.cells          Eosinophils </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           0.04995649           0.03483520 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         Cancer      NKT.cells         Plasma     NK.resting T.cells.helper </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     0.23016502     0.08820450     0.07970784     0.05736662     0.05649637 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $Factor2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Mast.activated.cells </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           0.05231772 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            Cancer Macrophages.cells    T.cells.helper       Eosinophils </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        0.20564591        0.09154775        0.06090095        0.03824595 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $Factor3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             B.cells T.cells.gamma.delta </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          0.35303595          0.02312485 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> CD4.memory.activated       B.memory.cells             Myocytes </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           0.06358580           0.06054229           0.02153581 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

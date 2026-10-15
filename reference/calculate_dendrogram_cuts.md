@@ -5,7 +5,8 @@ module) in two steps:
 
 1.  the dendrogram is cut with dynamic tree cutting
     ([`dynamicTreeCut::cutreeDynamic()`](https://rdrr.io/pkg/dynamicTreeCut/man/cutreeDynamic.html),
-    `method = "tree"`);
+    `method = "tree"`, `deepSplit = TRUE`, which splits clusters more
+    finely than `FALSE`);
 
 2.  each cluster is made to cover a single range of correlation values
     with the module. With `method = "tree"`, a cluster can be a branch
@@ -29,28 +30,16 @@ for dendrograms without them, only step 1 is done (with a message).
 ## Usage
 
 ``` r
-calculate_dendrogram_cuts(
-  cell.group.dendrogram,
-  deep_split = TRUE,
-  min_cluster_size = 3
-)
+calculate_dendrogram_cuts(cell_dendrograms, min_cluster_size = 3)
 ```
 
 ## Arguments
 
-- cell.group.dendrogram:
+- cell_dendrograms:
 
   A list of `hclust` objects (or objects convertible to `hclust`), one
   per TF module, as returned by
   [`identify.cell.groups()`](https://verapancaldilab.github.io/CellTFusion/reference/identify.cell.groups.md).
-
-- deep_split:
-
-  Logical. Passed to
-  [`dynamicTreeCut::cutreeDynamic()`](https://rdrr.io/pkg/dynamicTreeCut/man/cutreeDynamic.html)'s
-  `deepSplit` argument. With `method = "tree"` it is a switch, not a
-  level: `TRUE` (default; any non-zero number has the same effect)
-  splits clusters more finely than `FALSE`.
 
 - min_cluster_size:
 
@@ -61,5 +50,5 @@ calculate_dendrogram_cuts(
 ## Value
 
 A list of integer cluster label vectors, one per dendrogram, in the same
-order as `cell.group.dendrogram` and named like it, each in the order of
-the dendrogram labels (label `0` marks unassigned elements).
+order as `cell_dendrograms` and named like it, each in the order of the
+dendrogram labels (label `0` marks unassigned elements).

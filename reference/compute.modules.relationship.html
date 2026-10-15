@@ -62,11 +62,11 @@ variables (e.g. clinical groups), use <code><a href="compute.metadata.associatio
 <span>  batch <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  pval <span class="op">=</span> <span class="fl">0.05</span>,</span>
 <span>  padj <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  cor_type <span class="op">=</span> <span class="st">"p"</span>,</span>
-<span>  vertical <span class="op">=</span> <span class="cn">F</span>,</span>
-<span>  plot <span class="op">=</span> <span class="cn">T</span>,</span>
-<span>  plot.grid <span class="op">=</span> <span class="cn">F</span>,</span>
-<span>  ncol.grid <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  corr_type <span class="op">=</span> <span class="st">"spearman"</span>,</span>
+<span>  vertical <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  return <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  plot_grid <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  ncol_grid <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -89,7 +89,7 @@ If <code>NULL</code> (default), no figure is saved.</p></dd>
 
 <dt id="arg-batch">batch<a class="anchor" aria-label="anchor" href="#arg-batch"></a></dt>
 <dd><p>Optional vector indicating batch assignment for samples (no missing values). If it has two or more
-levels, partial correlations (<code><a href="https://rdrr.io/pkg/ppcor/man/pcor.test.html" class="external-link">ppcor::pcor.test()</a></code>, Pearson or Spearman according to <code>cor_type</code>) are
+levels, partial correlations (<code><a href="https://rdrr.io/pkg/ppcor/man/pcor.test.html" class="external-link">ppcor::pcor.test()</a></code>, Pearson or Spearman according to <code>corr_type</code>) are
 computed controlling for batch. Batch is treated as categorical (one dummy variable per level beyond the first).</p></dd>
 
 
@@ -104,8 +104,8 @@ across the columns of <code>matB</code> for each column of <code>matA</code>, an
 significance (in <code>significant</code> and in the figures). Default is FALSE.</p></dd>
 
 
-<dt id="arg-cor-type">cor_type<a class="anchor" aria-label="anchor" href="#arg-cor-type"></a></dt>
-<dd><p>Type of correlation to compute: "p" (Pearson) or "s" (Spearman). Default is "p". It also sets
+<dt id="arg-corr-type">corr_type<a class="anchor" aria-label="anchor" href="#arg-corr-type"></a></dt>
+<dd><p>Type of correlation to compute: "spearman" (default) or "pearson". It also sets
 the type of the partial correlations computed with <code>batch</code>.</p></dd>
 
 
@@ -114,18 +114,18 @@ the type of the partial correlations computed with <code>batch</code>.</p></dd>
 Otherwise (default), the <code>matB</code> features are on the x-axis and modules on the y-axis.</p></dd>
 
 
-<dt id="arg-plot">plot<a class="anchor" aria-label="anchor" href="#arg-plot"></a></dt>
+<dt id="arg-return">return<a class="anchor" aria-label="anchor" href="#arg-return"></a></dt>
 <dd><p>Logical; if TRUE, saves the heatmap plot as a PDF (<code>file_name</code> is needed). Default is TRUE.</p></dd>
 
 
-<dt id="arg-plot-grid">plot.grid<a class="anchor" aria-label="anchor" href="#arg-plot-grid"></a></dt>
+<dt id="arg-plot-grid">plot_grid<a class="anchor" aria-label="anchor" href="#arg-plot-grid"></a></dt>
 <dd><p>Logical; if TRUE, generates per-pair scatter grid plots for significant associations, saved to
 "Results/&lt;file_name&gt;_scatter_grid.svg" (the 100 strongest pairs at most). With Spearman, the ranks of the values
 are shown, as the correlation is computed on them. With <code>batch</code>, the values shown are
 corrected for batch, as the correlations are. Default is FALSE.</p></dd>
 
 
-<dt id="arg-ncol-grid">ncol.grid<a class="anchor" aria-label="anchor" href="#arg-ncol-grid"></a></dt>
+<dt id="arg-ncol-grid">ncol_grid<a class="anchor" aria-label="anchor" href="#arg-ncol-grid"></a></dt>
 <dd><p>Integer number of columns used in scatter grid layout. If NULL (default), it is set to
 the ceiling of the square root of the number of panels.</p></dd>
 
@@ -138,7 +138,7 @@ correlated with it (p-value, or adjusted p-value with <code>padj = TRUE</code>, 
 <li><p><code>p_value</code>: the matrix of p-values.</p></li>
 <li><p><code>p_adjusted</code>: the matrix of Benjamini-Hochberg adjusted p-values (equal to <code>p_value</code> with
 <code>padj = FALSE</code>).</p></li>
-</ul><p>If <code>plot = TRUE</code> and <code>file_name</code> is given, a heatmap of the correlations is saved to
+</ul><p>If <code>return = TRUE</code> and <code>file_name</code> is given, a heatmap of the correlations is saved to
 "Results/&lt;file_name&gt;.pdf" (the ".pdf" extension is added if missing). Its size is computed from the number of
 features. With up to 40 features per axis, the significant cells show the correlation and its significance
 (* &lt; 0.05, ** &lt; 0.01, *** &lt; 0.001, **** &lt; 0.0001); with more, they are marked with an asterisk.</p>
@@ -158,74 +158,75 @@ must be unique within each matrix.</p>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"deconv_subgroups.tuto"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">corr</span> <span class="op">=</span> <span class="fu">compute.modules.relationship</span><span class="op">(</span><span class="va">network.tuto</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>,</span></span>
 <span class="r-in"><span>                                    <span class="va">deconv_subgroups.tuto</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>,</span></span>
-<span class="r-in"><span>                                    plot <span class="op">=</span> <span class="cn">FALSE</span>,</span></span>
+<span class="r-in"><span>                                    return <span class="op">=</span> <span class="cn">FALSE</span>,</span></span>
 <span class="r-in"><span>                                    pval <span class="op">=</span> <span class="fl">0.01</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">corr</span><span class="op">$</span><span class="va">correlation</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">3</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">3</span><span class="op">]</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>        Quantiseq_B.cells DeconRNASeq_CBSX.Melanoma.scRNAseq_B.cells</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> brown         0.02792722                                -0.04395709</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> purple       -0.06263770                                -0.03061520</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> blue         -0.06526158                                -0.05794571</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> pink          -0.3092277                                 0.05039945</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> yellow         0.3771651                                -0.12406919</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> red            0.1006260                                -0.23509345</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>        DeconRNASeq_CBSX.NSCLC.PBMCs.scRNAseq_B.cells</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> brown                                     0.05627460</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> purple                                   -0.06805893</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> blue                                      0.04245497</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> pink                                     -0.05170327</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> yellow                                    0.27144427</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> red                                       0.16008769</span>
 <span class="r-in"><span><span class="va">corr</span><span class="op">$</span><span class="va">significant</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [1] "B.cells_Subgroup.4"                                  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [2] "DeconRNASeq_CBSX.Melanoma.scRNAseq_Macrophages.cells"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [3] "Macrophages.cells_Subgroup.1"                        </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [4] "Macrophages.M0_Subgroup.1"                           </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [5] "Macrophages.M0_Subgroup.2"                           </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [6] "Quantiseq_Macrophages.M1"                            </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [7] "Macrophages.M1_Subgroup.1"                           </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [8] "Macrophages.M1_Subgroup.2"                           </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [9] "Macrophages.M1_Subgroup.4"                           </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [10] "Macrophages.M1_Subgroup.5"                           </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [11] "Quantiseq_Macrophages.M2"                            </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [12] "CBSX_CCLE.TIL10_Macrophages.M2"                      </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [13] "DeconRNASeq_LM22_Macrophages.M2"                     </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [14] "Macrophages.M2_Subgroup.2"                           </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [15] "Macrophages.M2_Subgroup.3"                           </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [16] "Macrophages.M2_Subgroup.4"                           </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [17] "Macrophages.M2_Subgroup.5"                           </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [18] "Monocytes_Subgroup.1"                                </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [19] "Monocytes_Subgroup.4"                                </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [20] "CBSX_BPRNACanProMet_Neutrophils"                     </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [21] "CBSX_TIL10_Neutrophils"                              </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [22] "Neutrophils_Subgroup.1"                              </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [23] "Neutrophils_Subgroup.7"                              </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [24] "Neutrophils_Subgroup.8"                              </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [25] "Quantiseq_NK.cells"                                  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [26] "DeconRNASeq_CBSX.Melanoma.scRNAseq_NK.cells"         </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [27] "CBSX_TIL10_NK.cells"                                 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [28] "NK.cells_Subgroup.1"                                 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [29] "DeconRNASeq_LM22_NK.resting"                         </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [30] "DeconRNASeq_CBSX.NSCLC.PBMCs.scRNAseq_NKT.cells"     </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [31] "Epidish_CBSX.NSCLC.PBMCs.scRNAseq_NKT.cells"         </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [32] "DeconRNASeq_BPRNACan_CD4.cells"                      </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [33] "DeconRNASeq_CBSX.Melanoma.scRNAseq_CD4.cells"        </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [34] "DeconRNASeq_CBSX.NSCLC.PBMCs.scRNAseq_CD4.cells"     </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [35] "CD4.memory.resting_Subgroup.1"                       </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [36] "CD4.naive_Subgroup.1"                                </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [37] "DeconRNASeq_BPRNACan_CD8.cells"                      </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [38] "DeconRNASeq_CBSX.HNSCC.scRNAseq_CD8.cells"           </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [39] "DeconRNASeq_CBSX.Melanoma.scRNAseq_CD8.cells"        </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [40] "DeconRNASeq_CBSX.NSCLC.PBMCs.scRNAseq_CD8.cells"     </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [41] "DeconRNASeq_LM22_T.cells.helper"                     </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [42] "DeconRNASeq_CCLE.TIL10_Cancer"                       </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [43] "DeconRNASeq_CBSX.Melanoma.scRNAseq_Cancer"           </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [44] "Epidish_CBSX.Melanoma.scRNAseq_Cancer"               </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [45] "Cancer_Subgroup.1"                                   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [46] "Cancer_Subgroup.3"                                   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [47] "Cancer_Subgroup.4"                                   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [48] "DeconRNASeq_CBSX.Melanoma.scRNAseq_Endothelial"      </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [49] "Endothelial_Subgroup.2"                              </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [50] "DeconRNASeq_LM22_Eosinophils"                        </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [51] "DeconRNASeq_LM22_Plasma.cells"                       </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [52] "Plasma_Subgroup.1"                                   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [53] "DeconRNASeq_CBSX.HNSCC.scRNAseq_Myocytes"            </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [54] "DeconRNASeq_CBSX.HNSCC.scRNAseq_CAF"                 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [55] "DeconRNASeq_CBSX.Melanoma.scRNAseq_CAF"              </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [56] "CAF_Subgroup.1"                                      </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [1] "Quantiseq_B.cells"                              </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [2] "DWLS_CCLE.TIL10_B.cells"                        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [3] "CBSX_CBSX.NSCLC.PBMCs.scRNAseq_B.cells"         </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [4] "CBSX_CCLE.TIL10_B.cells"                        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [5] "B.cells_Subgroup.6"                             </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [6] "DeconRNASeq_LM22_B.naive.cells"                 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [7] "Epidish_LM22_B.memory.cells"                    </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [8] "CBSX_LM22_B.memory.cells"                       </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [9] "Macrophages.cells_Subgroup.2"                   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [10] "Macrophages.M0_Subgroup.2"                      </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [11] "DeconRNASeq_LM22_Macrophages.M1"                </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [12] "Macrophages.M1_Subgroup.2"                      </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [13] "Macrophages.M1_Subgroup.3"                      </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [14] "Quantiseq_Macrophages.M2"                       </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [15] "CBSX_CCLE.TIL10_Macrophages.M2"                 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [16] "Macrophages.M2_Subgroup.5"                      </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [17] "DeconRNASeq_CBSX.NSCLC.PBMCs.scRNAseq_Monocytes"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [18] "CBSX_CCLE.TIL10_Monocytes"                      </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [19] "Monocytes_Subgroup.2"                           </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [20] "Monocytes_Subgroup.5"                           </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [21] "Monocytes_Subgroup.6"                           </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [22] "Neutrophils_Subgroup.1"                         </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [23] "Quantiseq_NK.cells"                             </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [24] "Epidish_BPRNACanProMet_NK.cells"                </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [25] "DeconRNASeq_CBSX.Melanoma.scRNAseq_NK.cells"    </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [26] "DeconRNASeq_CBSX.NSCLC.PBMCs.scRNAseq_NK.cells" </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [27] "Epidish_CCLE.TIL10_NK.cells"                    </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [28] "DWLS_CCLE.TIL10_NK.cells"                       </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [29] "CBSX_BPRNACanProMet_NK.cells"                   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [30] "NK.activated_Subgroup.1"                        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [31] "DeconRNASeq_CBSX.NSCLC.PBMCs.scRNAseq_NKT.cells"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [32] "Epidish_CCLE.TIL10_CD4.cells"                   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [33] "DWLS_CCLE.TIL10_CD4.cells"                      </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [34] "CBSX_CCLE.TIL10_CD4.cells"                      </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [35] "CD4.memory.resting_Subgroup.1"                  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [36] "DeconRNASeq_LM22_CD4.naive"                     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [37] "DeconRNASeq_BPRNACan_CD8.cells"                 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [38] "DeconRNASeq_CBSX.HNSCC.scRNAseq_CD8.cells"      </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [39] "DeconRNASeq_CCLE.TIL10_CD8.cells"               </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [40] "Epidish_LM22_CD8.cells"                         </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [41] "DWLS_TIL10_CD8.cells"                           </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [42] "DeconRNASeq_LM22_T.cells.helper"                </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [43] "CBSX_LM22_T.cells.helper"                       </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [44] "T.cells.helper_Subgroup.1"                      </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [45] "Dendritic.activated.cells_Subgroup.1"           </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [46] "Dendritic.resting.cells_Subgroup.1"             </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [47] "DeconRNASeq_CCLE.TIL10_Cancer"                  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [48] "Cancer_Subgroup.1"                              </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [49] "Cancer_Subgroup.3"                              </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [50] "Endothelial_Subgroup.2"                         </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [51] "DeconRNASeq_CBSX.HNSCC.scRNAseq_Myocytes"       </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [52] "DeconRNASeq_LM22_Mast.activated.cells"          </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [53] "Mast.activated.cells_Subgroup.1"                </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [54] "DeconRNASeq_LM22_Mast.resting.cells"            </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [55] "Mast.resting.cells_Subgroup.1"                  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [56] "DeconRNASeq_CBSX.HNSCC.scRNAseq_CAF"            </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [57] "CAF_Subgroup.1"                                 </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
 <span class="r-in"><span><span class="co"># TF modules vs PROGENy pathways (downloads the PROGENy model from OmniPath)</span></span></span>

@@ -11,12 +11,12 @@ multideconv \< 0.2.0) is removed. Vocabulary names are matched literally
 ## Usage
 
 ``` r
-extract_cells(groups, cells_extra = NULL)
+extract_cells(features, cells_extra = NULL)
 ```
 
 ## Arguments
 
-- groups:
+- features:
 
   A character vector of deconvolution feature names: raw features
   (`<method>_<signature>_<cell type>`, or `<method>_<cell type>`) or

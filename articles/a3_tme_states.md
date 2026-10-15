@@ -54,9 +54,9 @@ reproducible.
 ``` r
 
 gsea_results <- compute_factor_gsea(
-  RNA.tpm     = counts.norm,
-  features_df = latent_spaces$Z,
-  plot_dot    = TRUE,
+  counts_norm     = counts.norm,
+  scores = latent_spaces$Z,
+  return    = TRUE,
   top_n       = 10,
   file_name   = "Tutorial"
 )
@@ -67,7 +67,7 @@ gsea_results <- compute_factor_gsea(
 | `$DE_results` | Named list of `limma` results, one per factor (logFC per standard deviation of the factor) |
 | `$GSEA_results` | Named list of `fgsea` results, one per factor |
 
-With `plot_dot = TRUE`, a dot plot of the top Hallmarks is saved per
+With `return = TRUE`, a dot plot of the top Hallmarks is saved per
 factor (dot size = significance, color = normalized enrichment score,
 NES):
 
@@ -110,9 +110,9 @@ signature resemble most?*
 ``` r
 
 mp_mapping <- map_factors_to_metaprograms(
-  gsea_study  = gsea_results,
+  gsea_results  = gsea_results,
   cancer_type = "skcm",
-  plot        = TRUE,
+  return        = TRUE,
   file_name   = "Tutorial"
 )
 ```
@@ -126,7 +126,7 @@ A custom reference can be used with `mp_file`, either a data frame like
 `$reference` or the path to an `.RData` file containing an object named
 `meta_programs`.
 
-With `plot = TRUE`, each panel shows a study factor: grey bars are the
+With `return = TRUE`, each panel shows a study factor: grey bars are the
 mean NES for every meta-program, and the best-matching one is colored by
 its TME subtype:
 
@@ -150,9 +150,9 @@ uses the TCGA annotations of Bagaev et al. ([Bagaev et al.
 These subtypes are associated with response to immune checkpoint
 blockade. For a TCGA cancer type,
 [`map_factors_to_TME()`](https://verapancaldilab.github.io/CellTFusion/reference/map_factors_to_TME.md)
-matches the TCGA patients in `Z` to their MFP subtype and tests each
-factor across the four subtypes with a Kruskal-Wallis test. Factors with
-p \< 0.05 are labeled with the subtype that has the highest median
+matches the TCGA patients in `scores` to their MFP subtype and tests
+each factor across the four subtypes with a Kruskal-Wallis test. Factors
+with p \< 0.05 are labeled with the subtype that has the highest median
 score; the others are labeled `"uncharacterized"`. This is how the TME
 subtypes of the TCGA meta-program references were assigned
 ([`annotate_metaprograms_TME()`](https://verapancaldilab.github.io/CellTFusion/reference/annotate_metaprograms_TME.md)).
@@ -160,9 +160,9 @@ subtypes of the TCGA meta-program references were assigned
 ``` r
 
 tme_annotation <- map_factors_to_TME(
-  cancer_name = "skcm",
-  Z           = latent_spaces$Z,   # TCGA samples x factors
-  plot        = TRUE,
+  cancer_type = "skcm",
+  scores           = latent_spaces$Z,   # TCGA samples x factors
+  return        = TRUE,
   file_name   = "Tutorial"
 )
 ```
@@ -182,7 +182,7 @@ meta_programs <- derive_meta_programs(
   gsea_results = gsea_results,
   k            = NULL,
   file_name    = "Tutorial",
-  plot         = TRUE
+  return         = TRUE
 )
 
 # Several cohorts (gsea_A, gsea_B: outputs of compute_factor_gsea())
@@ -203,7 +203,7 @@ unsupported cancer type) and `res$TME_states` is `NULL`:
 
 ``` r
 
-res <- CellTFusion(raw.counts = raw.counts, cancer_type = "blca")  # the example data are bladder cancer samples
+res <- CellTFusion(raw_counts = raw.counts, cancer_type = "blca")  # the example data are bladder cancer samples
 
 res$TME_states              # factor-to-meta-program mapping
 res$Metaprograms_reference  # meta-program reference used

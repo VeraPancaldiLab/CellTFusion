@@ -4,27 +4,27 @@ Applies the positive-negative split to new samples and projects them
 onto the latent space learned during training using the Moore-Penrose
 pseudoinverse of the scaled basis matrix W. Negative values of the
 projection are set to 0 (on the tutorial data the result is the same as
-an exact non-negative projection). Cell groups missing in `scores_test`
-are tolerated with a warning naming them: the projection uses the other
-cell groups (on the tutorial data, with 20 of 144 cell groups missing,
-the factors still correlate 0.999 with the full projection).
+an exact non-negative projection). Cell groups missing in `scores` are
+tolerated with a warning naming them: the projection uses the other cell
+groups (on the tutorial data, with 20 of 144 cell groups missing, the
+factors still correlate 0.999 with the full projection).
 
 ## Usage
 
 ``` r
-project_factors(latent_spaces, scores_test)
+project_factors(latent_factors, scores)
 ```
 
 ## Arguments
 
-- latent_spaces:
+- latent_factors:
 
   A list returned by
   [`compute.latent_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.latent_factors.md),
   containing at minimum `W` (features x rank) and the RcppML model
   object with the `nmf_model$d` scaling vector.
 
-- scores_test:
+- scores:
 
   A samples x cell groups matrix of signed CCA composite scores for the
   test cohort. Column names must match those used in training (before
@@ -48,19 +48,28 @@ wrong scale.
 data("network.tuto")
 data("deconv_subgroups.tuto")
 cell_groups <- construct_cell_groups(network.tuto, deconv_subgroups.tuto)
-#> 20 of 764 features were not assigned to any cluster by the tree cut and are not part of any cell group (blue: 6, pink: 2, red: 2, yellow: 8, black: 2)
+#> Warning: Length of color vector was shorter than the number of clusters - color vector was recycled
+#> Warning: Length of color vector was shorter than the number of clusters - color vector was recycled
+#> Warning: Length of color vector was shorter than the number of clusters - color vector was recycled
+#> Warning: Length of color vector was shorter than the number of clusters - color vector was recycled
+#> Warning: Length of color vector was shorter than the number of clusters - color vector was recycled
+#> Warning: Length of color vector was shorter than the number of clusters - color vector was recycled
+#> Warning: Length of color vector was shorter than the number of clusters - color vector was recycled
+#> Warning: Length of color vector was shorter than the number of clusters - color vector was recycled
+#> Dendrogram plots saved to: Results/Dendrogram_color_clusters.pdf
+#> 44 of 897 features were not assigned to any cluster by the tree cut and are not part of any cell group (pink: 2, yellow: 8, red: 2, blue: 6, brown: 4, turquoise: 12, black: 4, green: 6)
 latent <- compute.latent_factors(cell_groups$Cell_groups, return = FALSE)
 #> Estimating optimal rank via elbow on reconstruction MSE (ranks 2:8)...
-#> MSE by rank: k2=0.00127  k3=0.000964  k4=0.000838  k5=0.000756  k6=0.00071  k7=0.000675  k8=0.000632
+#> MSE by rank: k2=0.00129  k3=0.00114  k4=0.00105  k5=0.000978  k6=0.000933  k7=0.000893  k8=0.000857
 #> Selected rank (elbow): 3
 #> Running RcppML NMF with rank = 3...
 projected <- project_factors(latent, cell_groups$Cell_groups[1:10, ])
 head(projected)
-#>                     Factor1     Factor2      Factor3
-#> SAM7f0d9cc7f001 0.000000000 0.007094249 9.496681e-03
-#> SAM4305ab968b90 0.019944131 0.000000000 1.019721e-05
-#> SAMcf018fee2acd 0.003743711 0.002179128 5.920653e-03
-#> SAMcc4675f394a1 0.007208812 0.007875054 0.000000e+00
-#> SAM49f9b2e57aa5 0.008377438 0.000000000 2.906892e-03
-#> SAM2e7aa8fa0ab3 0.003268215 0.003791681 0.000000e+00
+#>                      Factor1      Factor2     Factor3
+#> SAM7f0d9cc7f001 0.0001801689 0.0083329667 0.005554023
+#> SAM4305ab968b90 0.0197346289 0.0000000000 0.000000000
+#> SAMcf018fee2acd 0.0018939304 0.0063142198 0.005344026
+#> SAMcc4675f394a1 0.0048871177 0.0087565089 0.000000000
+#> SAM49f9b2e57aa5 0.0086966300 0.0006169756 0.001544994
+#> SAM2e7aa8fa0ab3 0.0046110226 0.0017782760 0.001931307
 ```

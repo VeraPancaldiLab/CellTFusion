@@ -32,7 +32,7 @@ columns. Missing Hallmark-factor combinations are set to 0.
 
 ``` r
 if (FALSE) { # \dontrun{
-gsea <- compute_factor_gsea(RNA.tpm = counts.norm, features_df = res$Latent_spaces$Z, plot_dot = FALSE)
+gsea <- compute_factor_gsea(counts_norm = counts.norm, scores = res$Latent_spaces$Z, return = FALSE)
 nes <- build_nes_matrix(gsea)
 } # }
 ```

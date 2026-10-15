@@ -56,14 +56,14 @@ Optionally, it also performs Gene Set Variation Analysis (GSVA) using hallmark s
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">compute.pathway.activity</span><span class="op">(</span></span>
-<span>  <span class="va">RNA.tpm</span>,</span>
+<span>  <span class="va">counts_norm</span>,</span>
 <span>  gene_sets <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  paths <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  method <span class="op">=</span> <span class="st">"ulm"</span>,</span>
 <span>  scale <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  batch <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  return <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  file.name <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  file_name <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -71,7 +71,7 @@ Optionally, it also performs Gene Set Variation Analysis (GSVA) using hallmark s
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
 
 
-<dl><dt id="arg-rna-tpm">RNA.tpm<a class="anchor" aria-label="anchor" href="#arg-rna-tpm"></a></dt>
+<dl><dt id="arg-counts-norm">counts_norm<a class="anchor" aria-label="anchor" href="#arg-counts-norm"></a></dt>
 <dd><p>A numeric matrix of log-normalized gene expression values (e.g. log2(TPM + 1)) with genes (symbols) as
 rows and samples as columns. A warning is given if it has values above 20, which log2(TPM + 1) cannot reach.</p></dd>
 
@@ -103,10 +103,10 @@ not scaled (a message is given).</p></dd>
 
 
 <dt id="arg-batch">batch<a class="anchor" aria-label="anchor" href="#arg-batch"></a></dt>
-<dd><p>Optional vector with the cohort of each sample, in the column order of <code>RNA.tpm</code> (if it is named,
+<dd><p>Optional vector with the cohort of each sample, in the column order of <code>counts_norm</code> (if it is named,
 it is matched to the samples by name instead). It is always treated as categorical. If given, the samples are split
 by cohort, the pathway activities (PROGENy and, if requested, GSVA) are computed and scaled (see <code>scale</code>)
-separately in each cohort, and the results are joined in the sample order of <code>RNA.tpm</code>; the output has the same
+separately in each cohort, and the results are joined in the sample order of <code>counts_norm</code>; the output has the same
 form as without <code>batch</code>. Pathways or gene sets that cannot be scored in every cohort are left out (with a message).
 Default is <code>NULL</code> (single cohort); a vector with only one cohort is treated the same way.</p></dd>
 
@@ -115,9 +115,9 @@ Default is <code>NULL</code> (single cohort); a vector with only one cohort is t
 <dd><p>Logical; if TRUE, saves the score matrices in Results/ folder. Default is TRUE.</p></dd>
 
 
-<dt id="arg-file-name">file.name<a class="anchor" aria-label="anchor" href="#arg-file-name"></a></dt>
+<dt id="arg-file-name">file_name<a class="anchor" aria-label="anchor" href="#arg-file-name"></a></dt>
 <dd><p>Optional character suffix used when writing output CSV files
-(<code>Results/Pathway_matrix_PROGENy_&lt;file.name&gt;.csv</code> and <code>Results/Pathway_matrix_GSVA_&lt;file.name&gt;.csv</code>;
+(<code>Results/Pathway_matrix_PROGENy_&lt;file_name&gt;.csv</code> and <code>Results/Pathway_matrix_GSVA_&lt;file_name&gt;.csv</code>;
 without it, <code>Results/Pathway_matrix_PROGENy.csv</code> and <code>Results/Pathway_matrix_GSVA.csv</code>).</p></dd>
 
 </dl></div>

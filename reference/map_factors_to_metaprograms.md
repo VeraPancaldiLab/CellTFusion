@@ -15,17 +15,17 @@ it is appended to the output.
 
 ``` r
 map_factors_to_metaprograms(
-  gsea_study,
+  gsea_results,
   cancer_type,
   mp_file = NULL,
-  plot = TRUE,
+  return = TRUE,
   file_name = NULL
 )
 ```
 
 ## Arguments
 
-- gsea_study:
+- gsea_results:
 
   Output from compute_factor_gsea() on study cohort.
 
@@ -46,7 +46,7 @@ map_factors_to_metaprograms(
   file containing such an object, which must be named `meta_programs`.
   If NULL, the pre-built reference for `cancer_type` is used.
 
-- plot:
+- return:
 
   Logical. If TRUE (default), saves a barplot of factor-to-meta-program
   scores to `Results/Factor_MP_mapping_<file_name>.pdf`
@@ -72,7 +72,7 @@ A list with:
 
 ``` r
 if (FALSE) { # \dontrun{
-gsea <- compute_factor_gsea(RNA.tpm = counts.norm, features_df = res$Latent_spaces$Z, plot_dot = FALSE)
+gsea <- compute_factor_gsea(counts_norm = counts.norm, scores = res$Latent_spaces$Z, return = FALSE)
 mapping <- map_factors_to_metaprograms(gsea, cancer_type = "blca")
 mapping$factor_mapping
 } # }

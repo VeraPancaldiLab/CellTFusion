@@ -56,7 +56,7 @@
 <span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://devtools.r-lib.org/reference/test.html" class="external-link">test</a></span><span class="op">(</span><span class="op">)</span>          <span class="co"># Run unit tests (testthat)</span></span>
 <span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://devtools.r-lib.org/reference/install.html" class="external-link">install</a></span><span class="op">(</span><span class="op">)</span>       <span class="co"># Install package locally</span></span>
 <span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://devtools.r-lib.org/reference/build.html" class="external-link">build</a></span><span class="op">(</span><span class="op">)</span>         <span class="co"># Build source tarball</span></span></code></pre></div>
-<p>There is currently no <code>tests/testthat/</code> directory in the repo (no unit tests exist yet), even though <code>testthat</code> (edition 3) is configured in <code>DESCRIPTION</code> and listed in <code>Suggests</code>. Once tests are added, run a single file with:</p>
+<p>Unit tests (<code>testthat</code>, edition 3) are in <code>tests/testthat/</code>: they use the tutorial data, need no download and take about 5 minutes (<code>helper-data.R</code> builds the shared objects). Run a single file with:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">testthat</span><span class="fu">::</span><span class="fu"><a href="https://testthat.r-lib.org/reference/test_file.html" class="external-link">test_file</a></span><span class="op">(</span><span class="st">"tests/testthat/test-&lt;name&gt;.R"</span><span class="op">)</span></span></code></pre></div>
 <p>Launch the Shiny app (there is no exported <code>launch_app()</code> wrapper — run it directly):</p>
@@ -152,7 +152,7 @@
 </div>
 <div class="section level3">
 <h3 id="tutorial-data-in-data">Tutorial Data (in <code>data/</code>)<a class="anchor" aria-label="anchor" href="#tutorial-data-in-data"></a></h3>
-<p>Pre-built <code>.rda</code> objects for examples and testing: <code>raw.counts.tuto</code>, <code>counts.norm.tuto</code>, <code>traitdata.tuto</code>, <code>tfs.tuto</code>, <code>network.tuto</code>, <code>deconv.tuto</code>, <code>deconv_subgroups.tuto</code>.</p>
+<p>Pre-built <code>.rda</code> objects for examples and testing: <code>raw.counts.tuto</code>, <code>counts.norm.tuto</code>, <code>traitdata.tuto</code>, <code>tfs.tuto</code>, <code>network.tuto</code>, <code>deconv.tuto</code>, <code>deconv_subgroups.tuto</code>. <code>data-raw/tutorial_data.R</code> rebuilds the ones that depend on the package defaults (<code>traitdata.tuto</code> with overall survival, <code>tfs.tuto</code>, <code>network.tuto</code>).</p>
 </div>
 </div>
 <div class="section level2">

@@ -7,7 +7,7 @@ with a table of the tests of all features.
 ## Usage
 
 ``` r
-finish_trait_test(input, statistic, p, test, statistic_name, pval, p_adjust)
+finish_trait_test(input, statistic, p, test, statistic_name, pval, padj)
 ```
 
 ## Arguments
@@ -37,10 +37,10 @@ finish_trait_test(input, statistic, p, test, statistic_name, pval, p_adjust)
 
   Numeric. Significance threshold for the adjusted p-values.
 
-- p_adjust:
+- padj:
 
-  Character. Method of
-  [`stats::p.adjust()`](https://rdrr.io/r/stats/p.adjust.html).
+  Logical. If TRUE, the p-values are adjusted with the
+  Benjamini-Hochberg method.
 
 ## Value
 

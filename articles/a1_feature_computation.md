@@ -53,7 +53,7 @@ samples x method-signature-cell type features.
 
 Key arguments:
 
-- `raw.counts` — count matrix (genes x samples).
+- `raw_counts` — count matrix (genes x samples).
 - `methods` — deconvolution methods to run.
 - `normalized` — whether to TPM-normalize the counts before
   deconvolution.
@@ -83,7 +83,7 @@ also available.
 
 Key arguments:
 
-- `RNA.counts` — log-normalized expression matrix (genes x samples),
+- `counts_norm` — log-normalized expression matrix (genes x samples),
   typically log2(TPM + 1).
 - `TF.collection` — source of the regulon:
   - `"CollecTRI"` (default) ([Müller-Dott et al.
@@ -98,7 +98,7 @@ Key arguments:
     expression profiles across a cohort and removes indirect
     interactions. This is useful for a large, homogeneous cohort in
     which curated interactions may not hold. The network is read from
-    `input/ARACNE/<cancer.type>/network/network.txt` (relative to the
+    `input/ARACNE/<cancer_type>/network/network.txt` (relative to the
     working directory), a tab-separated file with `Regulator` and
     `Target` columns and a `mor` column with the sign of each
     interaction (1 activation, -1 repression). The sign should be
@@ -121,7 +121,7 @@ Key arguments:
 ``` r
 
 tfs <- compute.TFs.activity(
-  RNA.counts       = counts.norm,
+  counts_norm       = counts.norm,
   TF.collection    = "CollecTRI",
   min_targets_size = 5,
   return           = TRUE
@@ -141,9 +141,9 @@ To use a cohort-specific ARACNe network:
 ``` r
 
 tfs_aracne <- compute.TFs.activity(
-  RNA.counts    = counts.norm,
+  counts_norm    = counts.norm,
   TF.collection = "ARACNE",
-  cancer.type   = "skcm"   # reads input/ARACNE/skcm/network/network.txt
+  cancer_type   = "skcm"   # reads input/ARACNE/skcm/network/network.txt
 )
 ```
 
@@ -158,29 +158,29 @@ eigengene.
 
 Key arguments:
 
-- `TFs.matrix` — TF activity matrix (samples x TFs), or a list of
-  per-cohort matrices when `batch = TRUE` (see [Multi-cohort
+- `tfs` — TF activity matrix (samples x TFs); with `batch` (cohort of
+  each sample), the TF activities of all the cohorts (see [Multi-cohort
   analysis](https://verapancaldilab.github.io/CellTFusion/articles/a6_batch_analysis.md)).
-- `network.type` — `"signed"` (default) or `"unsigned"`. In a signed
+- `network_type` — `"signed"` (default) or `"unsigned"`. In a signed
   network, TFs with negatively correlated activities are not connected.
-- `clustering.method` — linkage of the hierarchical clustering of the
-  TFs on their TOM dissimilarity; `"average"` (default, as in WGCNA)
-  joins two groups of TFs according to the average dissimilarity between
-  their TFs.
-- `minMod` — minimum number of TFs per module. TFs that fit no module
-  (grey) are left out, with a message.
-- `corr_mod` — correlation (of type `cor_type`) above which module
+- `clustering_method` — linkage of the hierarchical clustering of the
+  TFs on their TOM dissimilarity; `"ward.D2"` by default (WGCNA uses
+  `"average"`, which joins two groups of TFs according to the average
+  dissimilarity between their TFs).
+- `min_module_size` — minimum number of TFs per module. TFs that fit no
+  module (grey) are left out, with a message.
+- `corr_mod` — correlation (of type `corr_type`) above which module
   eigengenes are merged, in single- and multi-cohort mode.
-- `cor_type` — `"p"` (Pearson, default) or `"s"` (Spearman;
-  single-cohort mode only).
+- `corr_type` — `"spearman"` (default) or `"pearson"`, in single- and
+  multi-cohort mode.
 
 ``` r
 
 network <- compute.WTCNA(
-  TFs.matrix        = tfs,
-  network.type      = "signed",
-  clustering.method = "average",
-  minMod            = 15,
+  tfs        = tfs,
+  network_type      = "signed",
+  clustering_method = "average",
+  min_module_size            = 15,
   corr_mod          = 0.9,
   return            = TRUE
 )
@@ -214,7 +214,7 @@ If a list of gene sets is given, GSVA scores are computed as well.
 
 Key arguments:
 
-- `RNA.tpm` — log-normalized expression matrix, e.g. log2(TPM + 1)
+- `counts_norm` — log-normalized expression matrix, e.g. log2(TPM + 1)
   (genes x samples).
 - `gene_sets` — optional named list of gene sets; if provided, GSVA
   scores are returned in addition to PROGENy.
@@ -227,7 +227,7 @@ Key arguments:
 ``` r
 
 pathways <- compute.pathway.activity(
-  RNA.tpm = counts.norm,
+  counts_norm = counts.norm,
   return  = TRUE
 )
 ```
@@ -273,7 +273,7 @@ characterizes TME states:
 ``` r
 
 res <- CellTFusion(
-  raw.counts     = raw.counts,
+  raw_counts     = raw.counts,
   normalized     = TRUE,
   deconv_methods = c("Quantiseq", "Epidish"),
   TF.collection  = "CollecTRI",
@@ -290,7 +290,7 @@ A few defaults worth knowing:
 
 - `deconv_methods` runs Quantiseq, CIBERSORTx (`"CBSX"`), Epidish,
   DeconRNASeq and DWLS by default. CIBERSORTx is only run when
-  `cbsx.mail` and `cbsx.token` are given; without them it is skipped
+  `cbsx_mail` and `cbsx_token` are given; without them it is skipped
   with a message.
 - `cancer_type` selects the TCGA meta-program reference (`"blca"`,
   `"luad"` or `"skcm"`); if `NULL`, the meta-program mapping step is

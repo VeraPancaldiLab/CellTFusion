@@ -37,10 +37,11 @@ separated ranges are split, and pieces smaller than `min_cluster_size`
 are joined to the neighbouring group with the closest correlation. Each
 cell group gets a composite score per sample: the first canonical
 component of a canonical correlation analysis (CCA) between the group’s
-deconvolution features and the TFs of its module. The score is oriented
-to be aligned with the TF module: a positive score means that the sample
-is on the active side of the module for that cell group, a negative
-score that it is on the inactive side.
+deconvolution features and the score of its TF module, i.e. the
+combination of the features that correlates most with the module score.
+The score is oriented to be aligned with the TF module: a positive score
+means that the sample is on the active side of the module for that cell
+group, a negative score that it is on the inactive side.
 
 Key arguments:
 
@@ -49,13 +50,12 @@ Key arguments:
   analysis](https://verapancaldilab.github.io/CellTFusion/articles/a6_batch_analysis.md)).
 - `pval` — p-value threshold to select the deconvolution features
   significantly correlated with each module.
-- `dendrogram_file` / `return_dendrogram` — with
-  `return_dendrogram = TRUE`, the colored dendrograms are saved to
-  `Results/Dendrogram_color_clusters_<dendrogram_file>.pdf`.
-- `return` — if `TRUE`, the composition and the scores of the cell
-  groups are saved to
-  `Results/Cell.groups.composition_<dendrogram_file>.csv` and
-  `Results/Cell.groups.scores_<dendrogram_file>.csv`.
+- `file_name` / `return` — with `return = TRUE` (default), the colored
+  dendrograms are saved to
+  `Results/Dendrogram_color_clusters_<file_name>.pdf`, and the
+  composition and the scores of the cell groups to
+  `Results/Cell.groups.composition_<file_name>.csv` and
+  `Results/Cell.groups.scores_<file_name>.csv`.
 
 ``` r
 
@@ -63,9 +63,8 @@ cell_groups <- construct_cell_groups(
   network           = network,
   dt                = dt,
   pval              = 0.05,
-  clustering.method = "ward.D2",
-  dendrogram_file   = "Tutorial",
-  return_dendrogram = TRUE
+  clustering_method = "ward.D2",
+  file_name         = "Tutorial"
 )
 ```
 
@@ -88,7 +87,7 @@ returns a named list:
 |----|----|
 | `Cell_groups` | Data frame of composite scores (samples x cell groups) |
 | `Composition` | Deconvolution features in each cell group |
-| `Weights` | CCA projection parameters of each group (`xcoef`, `train_means`, `train_sds`), used to score new samples |
+| `Weights` | CCA projection parameters of each group (`xcoef`, `train_means`, `train_sds`; only `xcoef` with `batch`), used to score new samples |
 
 ### Re-running with precomputed features
 
@@ -102,13 +101,13 @@ recomputing the features:
 ``` r
 
 res_rerun <- CellTFusion(
-  raw.counts = raw.counts,
+  raw_counts = raw.counts,
   normalized = TRUE,
   dt         = res$Processed_deconvolution,
   tfs        = res$TFs_matrix,
   pathways   = res$Pathways_scores,
   corr_mod   = 0.8,    # e.g. merge modules more readily than the default 0.9
-  minMod     = 10,
+  min_module_size     = 10,
   pval       = 0.05,
   return     = TRUE
 )
@@ -129,7 +128,7 @@ used, and `rank = 1` with a single cell group).
 ``` r
 
 latent_spaces <- compute.latent_factors(
-  X         = cell_groups$Cell_groups,
+  scores    = cell_groups$Cell_groups,
   rank      = NULL,
   seed      = 123,
   file_name = "Tutorial",
@@ -166,7 +165,7 @@ groups are added together).
 cells_niches <- compute_cells_niches(
   latent_factors  = latent_spaces,
   dt              = dt,
-  cell.groups     = cell_groups,
+  cell_groups     = cell_groups,
   enrich_thresh   = 1.5,
   quantile_cutoff = 0.7,
   return          = TRUE,

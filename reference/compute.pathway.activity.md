@@ -11,20 +11,20 @@ gene sets.
 
 ``` r
 compute.pathway.activity(
-  RNA.tpm,
+  counts_norm,
   gene_sets = NULL,
   paths = NULL,
   method = "ulm",
   scale = TRUE,
   batch = NULL,
   return = TRUE,
-  file.name = NULL
+  file_name = NULL
 )
 ```
 
 ## Arguments
 
-- RNA.tpm:
+- counts_norm:
 
   A numeric matrix of log-normalized gene expression values (e.g.
   log2(TPM + 1)) with genes (symbols) as rows and samples as columns. A
@@ -69,26 +69,26 @@ compute.pathway.activity(
 - batch:
 
   Optional vector with the cohort of each sample, in the column order of
-  `RNA.tpm` (if it is named, it is matched to the samples by name
+  `counts_norm` (if it is named, it is matched to the samples by name
   instead). It is always treated as categorical. If given, the samples
   are split by cohort, the pathway activities (PROGENy and, if
   requested, GSVA) are computed and scaled (see `scale`) separately in
   each cohort, and the results are joined in the sample order of
-  `RNA.tpm`; the output has the same form as without `batch`. Pathways
-  or gene sets that cannot be scored in every cohort are left out (with
-  a message). Default is `NULL` (single cohort); a vector with only one
-  cohort is treated the same way.
+  `counts_norm`; the output has the same form as without `batch`.
+  Pathways or gene sets that cannot be scored in every cohort are left
+  out (with a message). Default is `NULL` (single cohort); a vector with
+  only one cohort is treated the same way.
 
 - return:
 
   Logical; if TRUE, saves the score matrices in Results/ folder. Default
   is TRUE.
 
-- file.name:
+- file_name:
 
   Optional character suffix used when writing output CSV files
-  (`Results/Pathway_matrix_PROGENy_<file.name>.csv` and
-  `Results/Pathway_matrix_GSVA_<file.name>.csv`; without it,
+  (`Results/Pathway_matrix_PROGENy_<file_name>.csv` and
+  `Results/Pathway_matrix_GSVA_<file_name>.csv`; without it,
   `Results/Pathway_matrix_PROGENy.csv` and
   `Results/Pathway_matrix_GSVA.csv`).
 

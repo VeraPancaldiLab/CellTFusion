@@ -17,73 +17,70 @@ log-rank test are returned.
 
 ``` r
 compute.survival.analysis(
-  survival.data,
-  PFS,
-  PFS_event,
+  coldata,
+  time_column,
+  event_column,
   file_name = NULL,
-  features = NULL,
-  p.value = 0.05,
-  thres = 0.5,
+  scores = NULL,
+  pval = 0.05,
+  quantile_cutoff = 0.5,
   group_column = NULL,
-  p_adjust = "none"
+  padj = FALSE
 )
 ```
 
 ## Arguments
 
-- survival.data:
+- coldata:
 
   A data frame (or tibble) of clinical/survival metadata, with samples
   as rows.
 
-- PFS:
+- time_column:
 
-  Character. Column name in `survival.data` with the survival/follow-up
-  time.
+  Character. Column name in `coldata` with the survival/follow-up time.
 
-- PFS_event:
+- event_column:
 
-  Character. Column name in `survival.data` with the event indicator (1
-  = event occurred, 0 = censored).
+  Character. Column name in `coldata` with the event indicator (1 =
+  event occurred, 0 = censored).
 
 - file_name:
 
   Optional character. Suffix used when saving Kaplan-Meier plots to
   `Results/`.
 
-- features:
+- scores:
 
   Optional. A samples x features numeric matrix or data frame (e.g.
   `latent_spaces$Z`). If provided (and `group_column` is `NULL`), each
   feature is tested individually. Rows must be the same samples, in the
-  same order, as the rows of `survival.data` (checked by name). Mutually
+  same order, as the rows of `coldata` (checked by name). Mutually
   exclusive with `group_column`.
 
-- p.value:
+- pval:
 
   Numeric. Log-rank test threshold used to keep a feature as significant
-  when `features` is used: (adjusted) p-value `<= p.value`. Default is
-  0.05.
+  when `scores` is used: (adjusted) p-value `<= pval`. Default is 0.05.
 
-- thres:
+- quantile_cutoff:
 
   Numeric between 0 and 1. Quantile cutoff used to split each feature
-  into High/Low groups when `features` is used (High = at or above the
+  into High/Low groups when `scores` is used (High = at or above the
   cutoff). Default is 0.5 (median split).
 
 - group_column:
 
-  Optional character. Column name in `survival.data` defining a
-  predefined categorical grouping (e.g. cell group membership, cluster,
-  or trait class). Samples without a value are left out (with a
-  message). Mutually exclusive with `features`.
+  Optional character. Column name in `coldata` defining a predefined
+  categorical grouping (e.g. cell group membership, cluster, or trait
+  class). Samples without a value are left out (with a message).
+  Mutually exclusive with `scores`.
 
-- p_adjust:
+- padj:
 
-  Character. Method to correct the log-rank p-values for multiple
-  testing across the features (see
-  [`stats::p.adjust()`](https://rdrr.io/r/stats/p.adjust.html), e.g.
-  `"BH"`), when `features` is used. Default `"none"`.
+  Logical; if TRUE, the log-rank p-values are corrected for multiple
+  testing across the features with the Benjamini-Hochberg method, when
+  `scores` is used. Default FALSE.
 
 ## Value
 
@@ -108,7 +105,7 @@ If `group_column` is provided, a list with:
 
   Median follow-up time (reverse Kaplan-Meier).
 
-If `features` is provided, a named list with one `Surv() ~ feature`
+If `scores` is provided, a named list with one `Surv() ~ feature`
 formula per significant feature, and a last element `Statistics`: a data
 frame with the test of every feature (`feature`, `cutoff`, `n_high`,
 `n_low`, `p_value`, `p_adjusted`, `significant`). When no feature is
@@ -118,8 +115,7 @@ A Kaplan-Meier plot (with risk table) is saved as an SVG file to
 `Results/SurvPlot_<group-or-feature>_<file_name>.svg`
 (`Results/SurvPlot_<group-or-feature>.svg` without `file_name`;
 characters not allowed in file names, e.g. "/", replaced by "\_"):
-always for `group_column`, and one per significant feature for
-`features`.
+always for `group_column`, and one per significant feature for `scores`.
 
 ## Details
 
@@ -130,26 +126,26 @@ Requires the `survival`, `survminer`, and `gridExtra` packages (see
 
 ``` r
 if (FALSE) { # \dontrun{
-# traitdata: clinical data with the survival columns (here "PFS" and "PFS_event");
-# the tutorial data (traitdata.tuto) does not include them
+# Overall survival of the tutorial data (os: months, censOS: 1 = death)
+data("traitdata.tuto")
 
-# Predefined clinical/cell groups
+# Predefined clinical groups
 compute.survival.analysis(
-  survival.data = traitdata,
-  PFS           = "PFS",
-  PFS_event     = "PFS_event",
+  coldata       = traitdata.tuto,
+  time_column   = "os",
+  event_column  = "censOS",
   group_column  = "Best.Confirmed.Overall.Response",
   file_name     = "Tutorial"
 )
 
-# Automatic screening of latent factor scores
+# Automatic screening of latent factor scores (res: output of CellTFusion() on the tutorial data)
 compute.survival.analysis(
-  survival.data = traitdata,
-  PFS           = "PFS",
-  PFS_event     = "PFS_event",
-  features      = res$Latent_spaces$Z,
-  p.value       = 0.05,
-  thres         = 0.5,
+  coldata       = traitdata.tuto,
+  time_column   = "os",
+  event_column  = "censOS",
+  scores        = res$Latent_spaces$Z,
+  pval          = 0.05,
+  quantile_cutoff = 0.5,
   file_name     = "Tutorial"
 )
 } # }

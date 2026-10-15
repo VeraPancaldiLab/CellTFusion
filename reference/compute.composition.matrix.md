@@ -14,23 +14,19 @@ deconvolution subgroups.
 ## Usage
 
 ``` r
-compute.composition.matrix(
-  deconvolution.subgroupped,
-  cell.groups,
-  cells_extra = NULL
-)
+compute.composition.matrix(dt, cell_groups, cells_extra = NULL)
 ```
 
 ## Arguments
 
-- deconvolution.subgroupped:
+- dt:
 
   Deconvolution subgroups as returned by
   [`multideconv::compute.deconvolution.analysis()`](https://verapancaldilab.github.io/multideconv/reference/compute.deconvolution.analysis.html)
   (the elements `Deconvolution matrix` and
   `Deconvolution subgroups composition` are used).
 
-- cell.groups:
+- cell_groups:
 
   The cell groups returned by
   [`construct_cell_groups()`](https://verapancaldilab.github.io/CellTFusion/reference/construct_cell_groups.md):
@@ -60,17 +56,31 @@ group are dropped, and cell groups whose cell types are not recognised
 data("network.tuto")
 data("deconv_subgroups.tuto")
 cell_groups <- construct_cell_groups(network.tuto, deconv_subgroups.tuto)
-#> 20 of 764 features were not assigned to any cluster by the tree cut and are not part of any cell group (blue: 6, pink: 2, red: 2, yellow: 8, black: 2)
+#> Warning: Length of color vector was shorter than the number of clusters - color vector was recycled
+#> Warning: Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.
+#> ℹ Please use `linewidth` instead.
+#> ℹ The deprecated feature was likely used in the dendextend package.
+#>   Please report the issue at <https://github.com/talgalili/dendextend/issues>.
+#> Warning: Length of color vector was shorter than the number of clusters - color vector was recycled
+#> Warning: Length of color vector was shorter than the number of clusters - color vector was recycled
+#> Warning: Length of color vector was shorter than the number of clusters - color vector was recycled
+#> Warning: Length of color vector was shorter than the number of clusters - color vector was recycled
+#> Warning: Length of color vector was shorter than the number of clusters - color vector was recycled
+#> Warning: Length of color vector was shorter than the number of clusters - color vector was recycled
+#> Warning: Length of color vector was shorter than the number of clusters - color vector was recycled
+#> Dendrogram plots saved to: Results/Dendrogram_color_clusters.pdf
+#> 44 of 897 features were not assigned to any cluster by the tree cut and are not part of any cell group (pink: 2, yellow: 8, red: 2, blue: 6, brown: 4, turquoise: 12, black: 4, green: 6)
 composition <- compute.composition.matrix(deconv_subgroups.tuto, cell_groups)
+#> Cell types not present in any cell group (left out of the composition matrix): T.cells.gamma.delta
 composition[1:4, 1:5]
-#>                              B.cells B.naive.cells B.memory.cells
-#> Dendrogram_brown_group_1_pos       1             0              0
-#> Dendrogram_brown_group_1_neg       1             0              0
-#> Dendrogram_brown_group_2_pos       0             0              0
-#> Dendrogram_brown_group_2_neg       0             0              0
-#>                              Macrophages.cells Macrophages.M0
-#> Dendrogram_brown_group_1_pos                 0              0
-#> Dendrogram_brown_group_1_neg                 0              0
-#> Dendrogram_brown_group_2_pos                 0              0
-#> Dendrogram_brown_group_2_neg                 0              0
+#>                             B.cells B.naive.cells B.memory.cells
+#> Dendrogram_pink_group_1_pos       0             0              0
+#> Dendrogram_pink_group_1_neg       0             0              0
+#> Dendrogram_pink_group_2_pos       1             0              0
+#> Dendrogram_pink_group_2_neg       1             0              0
+#>                             Macrophages.cells Macrophages.M0
+#> Dendrogram_pink_group_1_pos                 0              0
+#> Dendrogram_pink_group_1_neg                 0              0
+#> Dendrogram_pink_group_2_pos                 0              0
+#> Dendrogram_pink_group_2_neg                 0              0
 ```

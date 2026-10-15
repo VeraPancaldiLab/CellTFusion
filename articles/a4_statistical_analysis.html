@@ -89,7 +89,7 @@ groups — and clinical variables. It uses the result of
 <span><span class="va">traitdata</span>  <span class="op">&lt;-</span> <span class="fu">CellTFusion</span><span class="fu">::</span><span class="va"><a href="../reference/traitdata.tuto.html">traitdata.tuto</a></span></span>
 <span></span>
 <span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/CellTFusion.html">CellTFusion</a></span><span class="op">(</span></span>
-<span>  raw.counts  <span class="op">=</span> <span class="va">raw.counts</span>,</span>
+<span>  raw_counts  <span class="op">=</span> <span class="va">raw.counts</span>,</span>
 <span>  normalized  <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  cancer_type <span class="op">=</span> <span class="st">"blca"</span>,   <span class="co"># the example data are bladder cancer samples</span></span>
 <span>  return      <span class="op">=</span> <span class="cn">TRUE</span></span>
@@ -108,7 +108,7 @@ the rows of <code>coldata</code> by row name (without row names in
 <code>coldata</code>, its rows must be in the order of the scores), and
 samples with a missing trait are left out. The trait must be
 categorical.</p>
-<p>Available tests (<code>method</code>):</p>
+<p>Available tests (<code>test</code>):</p>
 <ul>
 <li>
 <code>"wilcox"</code> — Wilcoxon rank-sum test (two groups).</li>
@@ -130,16 +130,16 @@ the median into High/Low.</li>
 <span>  scores  <span class="op">=</span> <span class="va">res</span><span class="op">$</span><span class="va">Latent_spaces</span>,</span>
 <span>  coldata <span class="op">=</span> <span class="va">traitdata</span>,</span>
 <span>  trait   <span class="op">=</span> <span class="st">"Best.Confirmed.Overall.Response"</span>,</span>
-<span>  method  <span class="op">=</span> <span class="st">"wilcox"</span>,</span>
+<span>  test    <span class="op">=</span> <span class="st">"wilcox"</span>,</span>
 <span>  pval    <span class="op">=</span> <span class="fl">0.05</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p>The result keeps only the significant features (its first element has
 no column if none is significant), and its element
 <code>Statistics</code> gives the test of every feature (statistic,
-p-value, adjusted p-value). Use <code>p_adjust</code>
-(e.g. <code>"BH"</code>) to correct the p-values for the number of
-features tested; it is <code>"none"</code> by default. The individual
-tests (<code><a href="../reference/scores.wilcox.test.html">scores.wilcox.test()</a></code>, <code><a href="../reference/scores.ttest.html">scores.ttest()</a></code>,
+p-value, adjusted p-value). Use <code>padj = TRUE</code> to correct the
+p-values for the number of features tested (Benjamini-Hochberg); it is
+<code>FALSE</code> by default. The individual tests
+(<code><a href="../reference/scores.wilcox.test.html">scores.wilcox.test()</a></code>, <code><a href="../reference/scores.ttest.html">scores.ttest()</a></code>,
 <code><a href="../reference/scores.kruskal.test.html">scores.kruskal.test()</a></code>, <code><a href="../reference/scores.anova.test.html">scores.anova.test()</a></code>,
 <code><a href="../reference/scores.fisher.test.html">scores.fisher.test()</a></code>) can also be called directly with a
 list whose first element is the score matrix.</p>
@@ -160,8 +160,8 @@ be the same samples, in the same order, as the rows of the module matrix
 <ul>
 <li>
 <strong>Numeric traits</strong> are correlated with each module
-(Pearson by default, <code>corr_method = "s"</code> for Spearman) and
-shown in a heatmap, annotated for p-values at or below
+(Spearman by default, <code>corr_type = "pearson"</code> for Pearson)
+and shown in a heatmap, annotated for p-values at or below
 <code>pval</code>. For traits with missing values, each p-value uses the
 number of samples with both values. Numeric columns are treated as
 continuous: convert number-coded categories (e.g. a stage coded 1 to 4)
@@ -175,14 +175,14 @@ per significant module.</li>
 <p>Traits that cannot be tested are skipped with a message: numeric
 traits without variation, and categorical traits with a single level or
 with one value per sample (e.g. a sample identifier). Use
-<code>p_adjust</code> (e.g. <code>"BH"</code>) to correct the p-values
-for multiple testing across the modules, for each trait.</p>
+<code>padj = TRUE</code> to correct the p-values for multiple testing
+across the modules, for each trait (Benjamini-Hochberg).</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">assoc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute.metadata.association.html">compute.metadata.association</a></span><span class="op">(</span></span>
-<span>  tfs.modules <span class="op">=</span> <span class="va">res</span><span class="op">$</span><span class="va">TF_network</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>,</span>
+<span>  scores <span class="op">=</span> <span class="va">res</span><span class="op">$</span><span class="va">TF_network</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>,</span>
 <span>  coldata     <span class="op">=</span> <span class="va">traitdata</span>,</span>
 <span>  pval        <span class="op">=</span> <span class="fl">0.05</span>,</span>
-<span>  file.name   <span class="op">=</span> <span class="st">"Tutorial"</span>,</span>
+<span>  file_name   <span class="op">=</span> <span class="st">"Tutorial"</span>,</span>
 <span>  plot_grid   <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span>
 <span></span>
@@ -196,11 +196,11 @@ for multiple testing across the modules, for each trait.</p>
 </h2>
 <p><code><a href="../reference/compute.modules.relationship.html">compute.modules.relationship()</a></code> correlates two matrices
 of continuous features over the same samples, for example TF modules and
-pathway activities (Pearson by default, <code>cor_type = "s"</code> for
-Spearman), and saves a heatmap of the significant correlations. It is
-for numeric variables only; use
+pathway activities (Spearman by default,
+<code>corr_type = "pearson"</code> for Pearson), and saves a heatmap of
+the significant correlations. It is for numeric variables only; use
 <code><a href="../reference/compute.metadata.association.html">compute.metadata.association()</a></code> for categorical ones. With
-<code>plot.grid = TRUE</code>, a scatter plot is also drawn for the
+<code>plot_grid = TRUE</code>, a scatter plot is also drawn for the
 significant pairs (the 100 strongest at most).</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rel</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute.modules.relationship.html">compute.modules.relationship</a></span><span class="op">(</span></span>
@@ -227,42 +227,42 @@ modes:</p>
 e.g. a clinical risk group or a cluster assignment in the clinical
 data.</li>
 <li>
-<strong>Feature screening</strong> (<code>features</code>) —
+<strong>Feature screening</strong> (<code>scores</code>) —
 e.g. <code>res$Latent_spaces$Z</code>. Each feature is split into
-High/Low at a quantile (<code>thres</code>), and the features with a
-significant log-rank test (<code>p.value</code>, optionally corrected
-with <code>p_adjust</code>) are returned, with a <code>Statistics</code>
-table giving the test of every feature. Samples without a value for
-<code>group_column</code> are left out. The rows of
+High/Low at a quantile (<code>quantile_cutoff</code>), and the features
+with a significant log-rank test (<code>pval</code>, optionally
+corrected with <code>padj = TRUE</code>) are returned, with a
+<code>Statistics</code> table giving the test of every feature. Samples
+without a value for <code>group_column</code> are left out. The rows of
 <code>features</code> must be the same samples, in the same order, as
 the rows of the clinical data.</li>
 </ol>
 <p>Both modes need a time-to-event column and an event column (1 =
 event, 0 = censored) in the clinical data. The tutorial
-<code>traitdata</code> does not include them: the examples below assume
-your clinical data has <code>PFS</code> and <code>PFS_event</code>
-columns.</p>
+<code>traitdata</code> includes the overall survival of the patients:
+<code>os</code> (months) and <code>censOS</code> (1 = death, 0 =
+censored).</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Predefined groups</span></span>
 <span><span class="va">surv_group</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute.survival.analysis.html">compute.survival.analysis</a></span><span class="op">(</span></span>
-<span>  survival.data <span class="op">=</span> <span class="va">traitdata</span>,</span>
-<span>  PFS           <span class="op">=</span> <span class="st">"PFS"</span>,</span>
-<span>  PFS_event     <span class="op">=</span> <span class="st">"PFS_event"</span>,</span>
+<span>  coldata       <span class="op">=</span> <span class="va">traitdata</span>,</span>
+<span>  time_column   <span class="op">=</span> <span class="st">"os"</span>,</span>
+<span>  event_column  <span class="op">=</span> <span class="st">"censOS"</span>,</span>
 <span>  group_column  <span class="op">=</span> <span class="st">"Best.Confirmed.Overall.Response"</span>,</span>
 <span>  file_name     <span class="op">=</span> <span class="st">"Tutorial"</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">surv_group</span><span class="op">$</span><span class="va">p_value</span>     <span class="co"># log-rank p-value</span></span>
-<span><span class="va">surv_group</span><span class="op">$</span><span class="va">median_PFS</span>  <span class="co"># median survival per group</span></span></code></pre></div>
+<span><span class="va">surv_group</span><span class="op">$</span><span class="va">median_PFS</span>  <span class="co"># median survival per group (column name kept from the function output)</span></span></code></pre></div>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Feature screening on latent factors</span></span>
 <span><span class="va">surv_factors</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute.survival.analysis.html">compute.survival.analysis</a></span><span class="op">(</span></span>
-<span>  survival.data <span class="op">=</span> <span class="va">traitdata</span>,</span>
-<span>  PFS           <span class="op">=</span> <span class="st">"PFS"</span>,</span>
-<span>  PFS_event     <span class="op">=</span> <span class="st">"PFS_event"</span>,</span>
-<span>  features      <span class="op">=</span> <span class="va">res</span><span class="op">$</span><span class="va">Latent_spaces</span><span class="op">$</span><span class="va">Z</span>,</span>
-<span>  p.value       <span class="op">=</span> <span class="fl">0.05</span>,</span>
-<span>  thres         <span class="op">=</span> <span class="fl">0.5</span>,   <span class="co"># median split; e.g. 0.75 for top quartile vs rest</span></span>
+<span>  coldata       <span class="op">=</span> <span class="va">traitdata</span>,</span>
+<span>  time_column   <span class="op">=</span> <span class="st">"os"</span>,</span>
+<span>  event_column  <span class="op">=</span> <span class="st">"censOS"</span>,</span>
+<span>  scores        <span class="op">=</span> <span class="va">res</span><span class="op">$</span><span class="va">Latent_spaces</span><span class="op">$</span><span class="va">Z</span>,</span>
+<span>  pval          <span class="op">=</span> <span class="fl">0.05</span>,</span>
+<span>  quantile_cutoff <span class="op">=</span> <span class="fl">0.5</span>,   <span class="co"># median split; e.g. 0.75 for top quartile vs rest</span></span>
 <span>  file_name     <span class="op">=</span> <span class="st">"Tutorial"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p>A Kaplan-Meier plot with a risk table is saved (always for predefined

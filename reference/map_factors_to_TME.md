@@ -1,7 +1,7 @@
 # Annotate NMF factors with Bagaev et al. (2021) MFP subtypes
 
 For a single cancer type, matches TCGA patients present in the NMF
-factor score matrix `Z` to the Bagaev et al. (2021) MFP annotation
+factor score matrix `scores` to the Bagaev et al. (2021) MFP annotation
 shipped with the package, then tests each factor across the four MFP
 subtypes (IE, IE/F, F, D) with a Kruskal-Wallis test. Factors with p \<
 0.05 (fixed threshold, not corrected for the number of factors) are
@@ -11,26 +11,26 @@ others are labelled `"uncharacterized"`.
 ## Usage
 
 ``` r
-map_factors_to_TME(cancer_name, Z, plot = TRUE, file_name = NULL)
+map_factors_to_TME(cancer_type, scores, return = TRUE, file_name = NULL)
 ```
 
 ## Arguments
 
-- cancer_name:
+- cancer_type:
 
   Character. Cancer type abbreviation matching the `TCGA_project` column
   of the internal annotation (case-insensitive, e.g. `"skcm"`).
 
-- Z:
+- scores:
 
   Numeric matrix. Samples x factors NMF score matrix (row names = TCGA
   barcodes).
 
-- plot:
+- return:
 
   Logical. If TRUE (default), saves violin/boxplots of factor scores by
-  MFP group to `Results/TME_factors_MFP_<cancer_name>_<file_name>.pdf`
-  (`cancer_name` in lower case).
+  MFP group to `Results/TME_factors_MFP_<cancer_type>_<file_name>.pdf`
+  (`cancer_type` in lower case).
 
 - file_name:
 
@@ -55,7 +55,7 @@ type code 01 to 09, e.g. `-01A`) is kept rather than a normal one (e.g.
 
 ``` r
 if (FALSE) { # \dontrun{
-# Z: latent factors of a TCGA cohort, samples named by their TCGA barcodes
-tme <- map_factors_to_TME(cancer_name = "BLCA", Z = res$Latent_spaces$Z)
+# scores: latent factors of a TCGA cohort, samples named by their TCGA barcodes
+tme <- map_factors_to_TME(cancer_type = "BLCA", scores = res$Latent_spaces$Z)
 } # }
 ```

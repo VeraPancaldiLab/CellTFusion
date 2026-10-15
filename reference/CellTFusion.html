@@ -53,41 +53,42 @@ TME state characterization (Hallmark GSEA per factor and mapping to TCGA meta-pr
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">CellTFusion</span><span class="op">(</span></span>
-<span>  <span class="va">raw.counts</span>,</span>
+<span>  <span class="va">raw_counts</span>,</span>
 <span>  deconv <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  dt <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  tfs <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  pathways <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  normalized <span class="op">=</span> <span class="cn">T</span>,</span>
+<span>  normalized <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  batch <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  deconv_methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Quantiseq"</span>, <span class="st">"CBSX"</span>, <span class="st">"Epidish"</span>, <span class="st">"DeconRNASeq"</span>, <span class="st">"DWLS"</span><span class="op">)</span>,</span>
-<span>  cbsx.mail <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  cbsx.token <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  doParallel <span class="op">=</span> <span class="cn">F</span>,</span>
+<span>  cbsx_mail <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  cbsx_token <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  do_parallel <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  workers <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  file_name <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  TF.collection <span class="op">=</span> <span class="st">"CollecTRI"</span>,</span>
+<span>  method <span class="op">=</span> <span class="st">"ulm"</span>,</span>
 <span>  min_targets_size <span class="op">=</span> <span class="fl">5</span>,</span>
 <span>  universe <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  paths <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  gene_sets <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  minMod <span class="op">=</span> <span class="fl">5</span>,</span>
+<span>  min_module_size <span class="op">=</span> <span class="fl">5</span>,</span>
 <span>  corr_mod <span class="op">=</span> <span class="fl">0.9</span>,</span>
-<span>  softPower <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  cor_type_modules <span class="op">=</span> <span class="st">"p"</span>,</span>
+<span>  soft_power <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  consensus_quantile <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  clustering_method <span class="op">=</span> <span class="st">"ward.D2"</span>,</span>
 <span>  corr <span class="op">=</span> <span class="fl">0.7</span>,</span>
 <span>  corr_type <span class="op">=</span> <span class="st">"spearman"</span>,</span>
 <span>  cells_extra <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  pval <span class="op">=</span> <span class="fl">0.05</span>,</span>
 <span>  padj <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  cor_type_groups <span class="op">=</span> <span class="st">"p"</span>,</span>
 <span>  min_cluster_size <span class="op">=</span> <span class="fl">3</span>,</span>
 <span>  enrich_thresh <span class="op">=</span> <span class="fl">1.5</span>,</span>
 <span>  quantile_cutoff <span class="op">=</span> <span class="fl">0.7</span>,</span>
 <span>  cancer_type <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  return <span class="op">=</span> <span class="cn">T</span>,</span>
-<span>  verbose <span class="op">=</span> <span class="cn">T</span></span>
+<span>  return <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  verbose <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  seed <span class="op">=</span> <span class="fl">123</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -95,7 +96,7 @@ TME state characterization (Hallmark GSEA per factor and mapping to TCGA meta-pr
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
 
 
-<dl><dt id="arg-raw-counts">raw.counts<a class="anchor" aria-label="anchor" href="#arg-raw-counts"></a></dt>
+<dl><dt id="arg-raw-counts">raw_counts<a class="anchor" aria-label="anchor" href="#arg-raw-counts"></a></dt>
 <dd><p>A matrix of raw gene expression counts (genes as rows, samples as columns). If
 <code>normalized = FALSE</code>, a matrix of TPM-normalized values instead (not log-transformed).
 Always required: even when <code>dt</code>, <code>tfs</code> and <code>pathways</code> are all supplied precomputed,
@@ -114,7 +115,7 @@ If <code>NULL</code> (default), it is computed with <code><a href="https://verap
 <code><a href="https://verapancaldilab.github.io/multideconv/reference/compute.deconvolution.analysis.html" class="external-link">multideconv::compute.deconvolution.analysis()</a></code> (or the <code>Processed_deconvolution</code> element
 returned by a previous <code>CellTFusion()</code> run). If supplied, cell-type deconvolution and the
 deconvolution analysis step are both skipped and the pipeline proceeds straight to cell group
-construction using this object.</p></dd>
+construction using this object. It must have the same samples as <code>raw_counts</code>.</p></dd>
 
 
 <dt id="arg-tfs">tfs<a class="anchor" aria-label="anchor" href="#arg-tfs"></a></dt>
@@ -131,9 +132,9 @@ If supplied, pathway activity inference is skipped.</p></dd>
 
 
 <dt id="arg-normalized">normalized<a class="anchor" aria-label="anchor" href="#arg-normalized"></a></dt>
-<dd><p>Logical; if TRUE (default), <code>raw.counts</code> are raw counts and are normalized to
+<dd><p>Logical; if TRUE (default), <code>raw_counts</code> are raw counts and are normalized to
 log2(TPM + 1) for the TF activity, pathway activity and GSEA steps (for deconvolution they are normalized to
-TPM only). If FALSE, <code>raw.counts</code> must already be TPM-normalized and <strong>not</strong> log-transformed: the
+TPM only). If FALSE, <code>raw_counts</code> must already be TPM-normalized and <strong>not</strong> log-transformed: the
 TPM values are used as they are for deconvolution and log2(TPM + 1) is computed internally for the other
 steps. Do not pass log-transformed values, as they would be log-transformed a second time (a warning is
 given when the values do not look like TPM, i.e. no value above 20 or negative values).</p></dd>
@@ -141,7 +142,7 @@ given when the values do not look like TPM, i.e. no value above 20 or negative v
 
 <dt id="arg-batch">batch<a class="anchor" aria-label="anchor" href="#arg-batch"></a></dt>
 <dd><p>(Optional) A vector with the cohort of each sample (e.g. <code>coldata$Cohort</code>), in the same order
-as the columns of <code>raw.counts</code>; if it is named, it is matched to the samples by name instead. It is
+as the columns of <code>raw_counts</code>; if it is named, it is matched to the samples by name instead. It is
 always treated as categorical. If given, the multi-cohort mode is run: TF and pathway activities are computed per
 cohort, TF modules are built from a consensus network across cohorts (see <code>consensus_quantile</code>), and the cohort is controlled for in the
 deconvolution analysis and cell group construction. Default is <code>NULL</code> (single cohort); a vector with
@@ -151,24 +152,24 @@ only one cohort is treated the same way.</p></dd>
 <dt id="arg-deconv-methods">deconv_methods<a class="anchor" aria-label="anchor" href="#arg-deconv-methods"></a></dt>
 <dd><p>A character vector of deconvolution methods to apply. Default is
 <code>c("Quantiseq", "CBSX", "Epidish", "DeconRNASeq", "DWLS")</code>. <code>"CBSX"</code> (CIBERSORTx) is only run
-when <code>cbsx.mail</code> and <code>cbsx.token</code> are given; otherwise it is skipped with a message.</p></dd>
+when <code>cbsx_mail</code> and <code>cbsx_token</code> are given; otherwise it is skipped with a message.</p></dd>
 
 
-<dt id="arg-cbsx-mail">cbsx.mail<a class="anchor" aria-label="anchor" href="#arg-cbsx-mail"></a></dt>
+<dt id="arg-cbsx-mail">cbsx_mail<a class="anchor" aria-label="anchor" href="#arg-cbsx-mail"></a></dt>
 <dd><p>(Optional) Email credential for CIBERSORTx. Needed to run "CBSX"; without it, CIBERSORTx is skipped.</p></dd>
 
 
-<dt id="arg-cbsx-token">cbsx.token<a class="anchor" aria-label="anchor" href="#arg-cbsx-token"></a></dt>
+<dt id="arg-cbsx-token">cbsx_token<a class="anchor" aria-label="anchor" href="#arg-cbsx-token"></a></dt>
 <dd><p>(Optional) Token credential for CIBERSORTx. Needed to run "CBSX"; without it, CIBERSORTx is skipped.</p></dd>
 
 
-<dt id="arg-doparallel">doParallel<a class="anchor" aria-label="anchor" href="#arg-doparallel"></a></dt>
+<dt id="arg-do-parallel">do_parallel<a class="anchor" aria-label="anchor" href="#arg-do-parallel"></a></dt>
 <dd><p>Logical; whether to run the deconvolution methods that support it (CIBERSORTx and DWLS) in
-parallel, one signature per worker (passed to <code><a href="https://verapancaldilab.github.io/multideconv/reference/compute.deconvolution.html" class="external-link">multideconv::compute.deconvolution()</a></code>). Default is FALSE.</p></dd>
+parallel, one signature per worker (passed to <code><a href="https://verapancaldilab.github.io/multideconv/reference/compute.deconvolution.html" class="external-link">multideconv::compute.deconvolution()</a></code> as <code>doParallel</code>). Default is FALSE.</p></dd>
 
 
 <dt id="arg-workers">workers<a class="anchor" aria-label="anchor" href="#arg-workers"></a></dt>
-<dd><p>(Optional) Number of parallel workers when <code>doParallel = TRUE</code>. If <code>NULL</code> (default),
+<dd><p>(Optional) Number of parallel workers when <code>do_parallel = TRUE</code>. If <code>NULL</code> (default),
 the number of available cores minus one is used.</p></dd>
 
 
@@ -183,6 +184,12 @@ and <code>return = TRUE</code>, <code>"CellTFusion"</code> is used.</p></dd>
 the sign of each interaction; see <code><a href="compute.TFs.activity.html">compute.TFs.activity()</a></code>) from
 <code>input/ARACNE/&lt;cancer_type&gt;/network/network.txt</code>.</p></li>
 </ul></dd>
+
+
+<dt id="arg-method">method<a class="anchor" aria-label="anchor" href="#arg-method"></a></dt>
+<dd><p>Character. The <code>decoupleR</code> statistic used to score the TFs and the PROGENy pathways: <code>"ulm"</code>
+(univariate linear model, default), <code>"mlm"</code> (multivariate linear model), <code>"wsum"</code> (weighted sum) or
+<code>"consensus"</code> (consensus of the three). Passed to <code><a href="compute.TFs.activity.html">compute.TFs.activity()</a></code> and <code><a href="compute.pathway.activity.html">compute.pathway.activity()</a></code>.</p></dd>
 
 
 <dt id="arg-min-targets-size">min_targets_size<a class="anchor" aria-label="anchor" href="#arg-min-targets-size"></a></dt>
@@ -204,7 +211,7 @@ the sign of each interaction; see <code><a href="compute.TFs.activity.html">comp
 <code><a href="compute.pathway.activity.html">compute.pathway.activity()</a></code>'s <code>gene_sets</code> argument for GSVA-based scoring. If <code>NULL</code>, only PROGENy is used.</p></dd>
 
 
-<dt id="arg-minmod">minMod<a class="anchor" aria-label="anchor" href="#arg-minmod"></a></dt>
+<dt id="arg-min-module-size">min_module_size<a class="anchor" aria-label="anchor" href="#arg-min-module-size"></a></dt>
 <dd><p>Integer; minimum module size for WGCNA module detection. Default is 5.</p></dd>
 
 
@@ -212,15 +219,10 @@ the sign of each interaction; see <code><a href="compute.TFs.activity.html">comp
 <dd><p>Numeric; correlation threshold for merging TF modules. Default is 0.9.</p></dd>
 
 
-<dt id="arg-softpower">softPower<a class="anchor" aria-label="anchor" href="#arg-softpower"></a></dt>
+<dt id="arg-soft-power">soft_power<a class="anchor" aria-label="anchor" href="#arg-soft-power"></a></dt>
 <dd><p>(Optional) Soft-thresholding power used to build the TF network, passed to
 <code><a href="compute.WTCNA.html">compute.WTCNA()</a></code>: one value, or one value per cohort (in the order the cohorts first appear in
 <code>batch</code>) in multi-cohort mode. If <code>NULL</code> (default), it is chosen automatically.</p></dd>
-
-
-<dt id="arg-cor-type-modules">cor_type_modules<a class="anchor" aria-label="anchor" href="#arg-cor-type-modules"></a></dt>
-<dd><p>Correlation used to build the TF network and merge TF modules: "p" (Pearson, default) or
-"s" (Spearman). Passed to <code><a href="compute.WTCNA.html">compute.WTCNA()</a></code> as <code>cor_type</code>.</p></dd>
 
 
 <dt id="arg-consensus-quantile">consensus_quantile<a class="anchor" aria-label="anchor" href="#arg-consensus-quantile"></a></dt>
@@ -229,12 +231,21 @@ overlaps of each pair of TFs across cohorts used as their consensus (0, the defa
 close only if they are close in every cohort; higher values are less strict). Passed to <code><a href="compute.WTCNA.html">compute.WTCNA()</a></code>.</p></dd>
 
 
+<dt id="arg-clustering-method">clustering_method<a class="anchor" aria-label="anchor" href="#arg-clustering-method"></a></dt>
+<dd><p>Linkage method of the hierarchical clusterings (<code><a href="https://rdrr.io/r/stats/hclust.html" class="external-link">stats::hclust()</a></code>): of the TFs, to
+build the TF modules (<code><a href="compute.WTCNA.html">compute.WTCNA()</a></code>), and of the deconvolution features of each TF module, to build the
+cell groups (<code><a href="construct_cell_groups.html">construct_cell_groups()</a></code>). Default is <code>"ward.D2"</code>.</p></dd>
+
+
 <dt id="arg-corr">corr<a class="anchor" aria-label="anchor" href="#arg-corr"></a></dt>
 <dd><p>Numeric; correlation threshold used in the deconvolution analysis. Default is 0.7.</p></dd>
 
 
 <dt id="arg-corr-type">corr_type<a class="anchor" aria-label="anchor" href="#arg-corr-type"></a></dt>
-<dd><p>Correlation type used in deconvolution analysis. Default is <code>"spearman"</code>.</p></dd>
+<dd><p>Correlation type used in every step that computes correlations: <code>"spearman"</code> (default) or
+<code>"pearson"</code>. Passed to <code><a href="https://verapancaldilab.github.io/multideconv/reference/compute.deconvolution.analysis.html" class="external-link">multideconv::compute.deconvolution.analysis()</a></code> (deconvolution subgroups),
+<code><a href="compute.WTCNA.html">compute.WTCNA()</a></code> (TF network and module merging) and <code><a href="construct_cell_groups.html">construct_cell_groups()</a></code> (correlation between TF
+modules and deconvolution features).</p></dd>
 
 
 <dt id="arg-cells-extra">cells_extra<a class="anchor" aria-label="anchor" href="#arg-cells-extra"></a></dt>
@@ -252,11 +263,6 @@ features significantly correlated with each TF module). Default is 0.05.</p></dd
 <dd><p>Logical; if TRUE, the p-values used when building cell groups are corrected for multiple testing
 (Benjamini-Hochberg, across the deconvolution features for each TF module) and compared with <code>pval</code>.
 Passed to <code><a href="construct_cell_groups.html">construct_cell_groups()</a></code>. Default is FALSE.</p></dd>
-
-
-<dt id="arg-cor-type-groups">cor_type_groups<a class="anchor" aria-label="anchor" href="#arg-cor-type-groups"></a></dt>
-<dd><p>Correlation used between the TF modules and the deconvolution features when building
-cell groups: "p" (Pearson, default) or "s" (Spearman). Passed to <code><a href="construct_cell_groups.html">construct_cell_groups()</a></code> as <code>cor_type</code>.</p></dd>
 
 
 <dt id="arg-min-cluster-size">min_cluster_size<a class="anchor" aria-label="anchor" href="#arg-min-cluster-size"></a></dt>
@@ -292,6 +298,11 @@ network is auto-detected when only one exists under <code>input/ARACNE/</code>.<
 <dd><p>Logical; whether to print the progress and the console output and messages of every step
 (warnings are always shown). Default is TRUE.</p></dd>
 
+
+<dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
+<dd><p>Integer. Random seed of the pipeline (deconvolution methods with random steps, NMF and the GSEA
+permutations), so that results are reproducible. Default is 123.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -299,14 +310,17 @@ network is auto-detected when only one exists under <code>input/ARACNE/</code>.<
 <dd><p>A matrix with cell-type proportions (samples as rows, cell types as columns); <code>NULL</code> if <code>dt</code> was supplied without <code>deconv</code>.</p></dd>
 
 <dt>TFs_matrix</dt>
-<dd><p>A matrix with TF activity scores (samples as rows, TFs as columns), or a list of matrices (one per cohort) when <code>batch</code> is given.</p></dd>
+<dd><p>A matrix with TF activity scores (samples as rows, TFs as columns), or a list of matrices (one per cohort) when <code>batch</code> is given.
+Single cohort: raw scores (not scaled), which do not depend on the other samples (e.g. for machine learning features,
+to be scaled with the training samples). With <code>batch</code>: scores z-scored within each cohort (correction of cohort shifts).</p></dd>
 
 <dt>TF_network</dt>
 <dd><p>The TF module network returned by <code><a href="compute.WTCNA.html">compute.WTCNA()</a></code>. Its module matrix is always
-in the sample order of <code>raw.counts</code> (also in multi-cohort mode).</p></dd>
+in the sample order of <code>raw_counts</code> (also in multi-cohort mode).</p></dd>
 
 <dt>Pathways_scores</dt>
-<dd><p>Pathway activity scores returned by <code><a href="compute.pathway.activity.html">compute.pathway.activity()</a></code>.</p></dd>
+<dd><p>Pathway activity scores returned by <code><a href="compute.pathway.activity.html">compute.pathway.activity()</a></code>: raw in single-cohort mode,
+z-scored within each cohort with <code>batch</code> (as <code>TFs_matrix</code>).</p></dd>
 
 <dt>Processed_deconvolution</dt>
 <dd><p>The processed deconvolution subgroups (output of <code><a href="https://verapancaldilab.github.io/multideconv/reference/compute.deconvolution.analysis.html" class="external-link">multideconv::compute.deconvolution.analysis()</a></code>).</p></dd>
@@ -330,7 +344,7 @@ in the sample order of <code>raw.counts</code> (also in multi-cohort mode).</p><
 </dl></div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>The pipeline runs with a fixed random seed (123) so results are reproducible; the caller's random
+    <p>The pipeline runs with a fixed random seed (<code>seed</code>) so results are reproducible; the caller's random
 number generator state is restored when the function returns. With <code>normalized = TRUE</code>, sample
 names are converted with <code><a href="https://rdrr.io/r/base/make.names.html" class="external-link">make.names()</a></code> (e.g. <code>"TCGA-XX-1234"</code> becomes <code>"TCGA.XX.1234"</code>),
 as <code><a href="https://verapancaldilab.github.io/multideconv/reference/compute.deconvolution.html" class="external-link">multideconv::compute.deconvolution()</a></code> also does; <code>deconv</code> rows are matched to the samples
@@ -344,12 +358,12 @@ in either form.</p>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"raw.counts.tuto"</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu">CellTFusion</span><span class="op">(</span></span></span>
-<span class="r-in"><span>  raw.counts <span class="op">=</span> <span class="va">raw.counts.tuto</span>,</span></span>
+<span class="r-in"><span>  raw_counts <span class="op">=</span> <span class="va">raw.counts.tuto</span>,</span></span>
 <span class="r-in"><span>  normalized <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
 <span class="r-in"><span>  deconv_methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Quantiseq"</span>, <span class="st">"DeconRNASeq"</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>  file_name <span class="op">=</span> <span class="st">"TestRun"</span>,</span></span>
 <span class="r-in"><span>  min_targets_size <span class="op">=</span> <span class="fl">15</span>,</span></span>
-<span class="r-in"><span>  minMod <span class="op">=</span> <span class="fl">20</span>,</span></span>
+<span class="r-in"><span>  min_module_size <span class="op">=</span> <span class="fl">20</span>,</span></span>
 <span class="r-in"><span>  corr_mod <span class="op">=</span> <span class="fl">0.25</span>,</span></span>
 <span class="r-in"><span>  corr <span class="op">=</span> <span class="fl">0.7</span>,</span></span>
 <span class="r-in"><span>  pval <span class="op">=</span> <span class="fl">0.05</span></span></span>
@@ -357,13 +371,13 @@ in either form.</p>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Re-run with previously computed features, skipping straight to cell group construction</span></span></span>
 <span class="r-in"><span><span class="va">res2</span> <span class="op">&lt;-</span> <span class="fu">CellTFusion</span><span class="op">(</span></span></span>
-<span class="r-in"><span>  raw.counts <span class="op">=</span> <span class="va">raw.counts.tuto</span>,</span></span>
+<span class="r-in"><span>  raw_counts <span class="op">=</span> <span class="va">raw.counts.tuto</span>,</span></span>
 <span class="r-in"><span>  dt <span class="op">=</span> <span class="va">res</span><span class="op">$</span><span class="va">Processed_deconvolution</span>,</span></span>
 <span class="r-in"><span>  tfs <span class="op">=</span> <span class="va">res</span><span class="op">$</span><span class="va">TFs_matrix</span>,</span></span>
 <span class="r-in"><span>  pathways <span class="op">=</span> <span class="va">res</span><span class="op">$</span><span class="va">Pathways_scores</span>,</span></span>
 <span class="r-in"><span>  normalized <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
 <span class="r-in"><span>  file_name <span class="op">=</span> <span class="st">"TestRun_rerun"</span>,</span></span>
-<span class="r-in"><span>  minMod <span class="op">=</span> <span class="fl">20</span>,</span></span>
+<span class="r-in"><span>  min_module_size <span class="op">=</span> <span class="fl">20</span>,</span></span>
 <span class="r-in"><span>  corr_mod <span class="op">=</span> <span class="fl">0.25</span>,</span></span>
 <span class="r-in"><span>  pval <span class="op">=</span> <span class="fl">0.05</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>

@@ -17,12 +17,12 @@ so the syntactic names returned by
 ## Usage
 
 ``` r
-module_enrich(tpm.counts, module_color, hub_genes, tfs_universe, min_genes = 5)
+module_enrich(counts_norm, module_color, hub_tfs, universe, min_genes = 5)
 ```
 
 ## Arguments
 
-- tpm.counts:
+- counts_norm:
 
   A numeric matrix of normalized expression values (genes x samples),
   with gene symbols as row names.
@@ -31,14 +31,14 @@ module_enrich(tpm.counts, module_color, hub_genes, tfs_universe, min_genes = 5)
 
   Character. Name of the TF module (color label) to analyze.
 
-- hub_genes:
+- hub_tfs:
 
   A list as returned by
   [`identify_hub_TFs()`](https://verapancaldilab.github.io/CellTFusion/reference/identify_hub_TFs.md),
   where the first element maps module names to vectors of hub TF gene
   symbols.
 
-- tfs_universe:
+- universe:
 
   A data frame of TF-target interactions with at minimum columns
   `source` (TF) and `target` (gene).
@@ -53,7 +53,7 @@ module_enrich(tpm.counts, module_color, hub_genes, tfs_universe, min_genes = 5)
 
 A `ReactomePA` enrichResult object restricted to pathways with adjusted
 p-value \< 0.05, or `NULL` if no enrichment is found, if none of the
-targets is in the row names of `tpm.counts`, or if fewer than
+targets is in the row names of `counts_norm`, or if fewer than
 `min_genes` genes would be tested.
 
 ## Details

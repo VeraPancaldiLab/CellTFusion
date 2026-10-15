@@ -17,7 +17,7 @@ uncolored.
 
 ``` r
 plot_dendrogram_clusters(
-  cell.group.dendrogram,
+  cell_dendrograms,
   cuts_per_dendrogram,
   file_name = NULL
 )
@@ -25,7 +25,7 @@ plot_dendrogram_clusters(
 
 ## Arguments
 
-- cell.group.dendrogram:
+- cell_dendrograms:
 
   A named list of `hclust` objects (or objects convertible to `hclust`),
   one per TF module, as returned by
@@ -42,8 +42,8 @@ plot_dendrogram_clusters(
 - file_name:
 
   Optional character. Suffix of the output file
-  (`Results/Dendrogram_color_clusters_<file_name>.pdf`). If `NULL`
-  (default), nothing is saved.
+  (`Results/Dendrogram_color_clusters_<file_name>.pdf`;
+  `Results/Dendrogram_color_clusters.pdf` if `NULL`, the default).
 
 ## Value
 

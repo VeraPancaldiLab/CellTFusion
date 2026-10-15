@@ -15,7 +15,7 @@ weighted cell-type associations.
 compute_cells_niches(
   latent_factors,
   dt,
-  cell.groups,
+  cell_groups,
   enrich_thresh = 1.5,
   quantile_cutoff = 0.7,
   cells_extra = NULL,
@@ -38,7 +38,7 @@ compute_cells_niches(
   cell-group composition matrix via
   [`compute.composition.matrix()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.composition.matrix.md).
 
-- cell.groups:
+- cell_groups:
 
   A list of cell group definitions as returned by
   [`construct_cell_groups()`](https://verapancaldilab.github.io/CellTFusion/reference/construct_cell_groups.md).
@@ -102,26 +102,34 @@ has more or fewer of it.
 data("network.tuto")
 data("deconv_subgroups.tuto")
 cell_groups <- construct_cell_groups(network.tuto, deconv_subgroups.tuto)
-#> 20 of 764 features were not assigned to any cluster by the tree cut and are not part of any cell group (blue: 6, pink: 2, red: 2, yellow: 8, black: 2)
+#> Warning: Length of color vector was shorter than the number of clusters - color vector was recycled
+#> Warning: Length of color vector was shorter than the number of clusters - color vector was recycled
+#> Warning: Length of color vector was shorter than the number of clusters - color vector was recycled
+#> Warning: Length of color vector was shorter than the number of clusters - color vector was recycled
+#> Warning: Length of color vector was shorter than the number of clusters - color vector was recycled
+#> Warning: Length of color vector was shorter than the number of clusters - color vector was recycled
+#> Warning: Length of color vector was shorter than the number of clusters - color vector was recycled
+#> Warning: Length of color vector was shorter than the number of clusters - color vector was recycled
+#> Dendrogram plots saved to: Results/Dendrogram_color_clusters.pdf
+#> 44 of 897 features were not assigned to any cluster by the tree cut and are not part of any cell group (pink: 2, yellow: 8, red: 2, blue: 6, brown: 4, turquoise: 12, black: 4, green: 6)
 latent <- compute.latent_factors(cell_groups$Cell_groups, return = FALSE)
 #> Estimating optimal rank via elbow on reconstruction MSE (ranks 2:8)...
-#> MSE by rank: k2=0.00127  k3=0.000964  k4=0.000838  k5=0.000756  k6=0.00071  k7=0.000675  k8=0.000632
+#> MSE by rank: k2=0.00129  k3=0.00114  k4=0.00105  k5=0.000978  k6=0.000933  k7=0.000893  k8=0.000857
 #> Selected rank (elbow): 3
 #> Running RcppML NMF with rank = 3...
 niches <- compute_cells_niches(latent, deconv_subgroups.tuto, cell_groups, return = FALSE)
+#> Cell types not present in any cell group (left out of the composition matrix): T.cells.gamma.delta
 niches
 #> $Factor1
-#>                  CAF               Plasma           NK.resting 
-#>           0.14005451           0.08621658           0.07939530 
-#> Mast.activated.cells          Eosinophils 
-#>           0.04995649           0.03483520 
+#>         Cancer      NKT.cells         Plasma     NK.resting T.cells.helper 
+#>     0.23016502     0.08820450     0.07970784     0.05736662     0.05649637 
 #> 
 #> $Factor2
-#> Mast.activated.cells 
-#>           0.05231772 
+#>            Cancer Macrophages.cells    T.cells.helper       Eosinophils 
+#>        0.20564591        0.09154775        0.06090095        0.03824595 
 #> 
 #> $Factor3
-#>             B.cells T.cells.gamma.delta 
-#>          0.35303595          0.02312485 
+#> CD4.memory.activated       B.memory.cells             Myocytes 
+#>           0.06358580           0.06054229           0.02153581 
 #> 
 ```

@@ -64,14 +64,14 @@ TF names are matched after <code><a href="https://rdrr.io/r/base/make.names.html
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">module_enrich</span><span class="op">(</span><span class="va">tpm.counts</span>, <span class="va">module_color</span>, <span class="va">hub_genes</span>, <span class="va">tfs_universe</span>, min_genes <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">module_enrich</span><span class="op">(</span><span class="va">counts_norm</span>, <span class="va">module_color</span>, <span class="va">hub_tfs</span>, <span class="va">universe</span>, min_genes <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
 
 
-<dl><dt id="arg-tpm-counts">tpm.counts<a class="anchor" aria-label="anchor" href="#arg-tpm-counts"></a></dt>
+<dl><dt id="arg-counts-norm">counts_norm<a class="anchor" aria-label="anchor" href="#arg-counts-norm"></a></dt>
 <dd><p>A numeric matrix of normalized expression values (genes x samples), with gene symbols as row names.</p></dd>
 
 
@@ -79,12 +79,12 @@ TF names are matched after <code><a href="https://rdrr.io/r/base/make.names.html
 <dd><p>Character. Name of the TF module (color label) to analyze.</p></dd>
 
 
-<dt id="arg-hub-genes">hub_genes<a class="anchor" aria-label="anchor" href="#arg-hub-genes"></a></dt>
+<dt id="arg-hub-tfs">hub_tfs<a class="anchor" aria-label="anchor" href="#arg-hub-tfs"></a></dt>
 <dd><p>A list as returned by <code><a href="identify_hub_TFs.html">identify_hub_TFs()</a></code>, where the first
 element maps module names to vectors of hub TF gene symbols.</p></dd>
 
 
-<dt id="arg-tfs-universe">tfs_universe<a class="anchor" aria-label="anchor" href="#arg-tfs-universe"></a></dt>
+<dt id="arg-universe">universe<a class="anchor" aria-label="anchor" href="#arg-universe"></a></dt>
 <dd><p>A data frame of TF-target interactions with at minimum columns
 <code>source</code> (TF) and <code>target</code> (gene).</p></dd>
 
@@ -98,7 +98,7 @@ computed and a message is given. Default is 5.</p></dd>
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A <code>ReactomePA</code> enrichResult object restricted to pathways with
 adjusted p-value &lt; 0.05, or <code>NULL</code> if no enrichment is found, if none of the
-targets is in the row names of <code>tpm.counts</code>, or if fewer than <code>min_genes</code> genes would be tested.</p>
+targets is in the row names of <code>counts_norm</code>, or if fewer than <code>min_genes</code> genes would be tested.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>

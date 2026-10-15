@@ -45,7 +45,7 @@ shipped with the package. Intermediate results and plots are saved in a
 library(CellTFusion)
 
 res <- CellTFusion(
-  raw.counts     = CellTFusion::raw.counts.tuto,
+  raw_counts     = CellTFusion::raw.counts.tuto,
   normalized     = TRUE,
   deconv_methods = c("Quantiseq", "Epidish"),
   cancer_type    = "blca",   # the example data are bladder cancer samples

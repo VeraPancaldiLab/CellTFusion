@@ -21,7 +21,7 @@ raw.counts <- CellTFusion::raw.counts.tuto
 traitdata  <- CellTFusion::traitdata.tuto
 
 res <- CellTFusion(
-  raw.counts  = raw.counts,
+  raw_counts  = raw.counts,
   normalized  = TRUE,
   cancer_type = "blca",   # the example data are bladder cancer samples
   return      = TRUE
@@ -41,7 +41,7 @@ matched to the rows of `coldata` by row name (without row names in
 `coldata`, its rows must be in the order of the scores), and samples
 with a missing trait are left out. The trait must be categorical.
 
-Available tests (`method`):
+Available tests (`test`):
 
 - `"wilcox"` — Wilcoxon rank-sum test (two groups).
 - `"ttest"` — Welch’s t-test (two groups, unequal variances).
@@ -58,7 +58,7 @@ sig_factors <- scores.stat.analysis(
   scores  = res$Latent_spaces,
   coldata = traitdata,
   trait   = "Best.Confirmed.Overall.Response",
-  method  = "wilcox",
+  test    = "wilcox",
   pval    = 0.05
 )
 ```
@@ -66,8 +66,8 @@ sig_factors <- scores.stat.analysis(
 The result keeps only the significant features (its first element has no
 column if none is significant), and its element `Statistics` gives the
 test of every feature (statistic, p-value, adjusted p-value). Use
-`p_adjust` (e.g. `"BH"`) to correct the p-values for the number of
-features tested; it is `"none"` by default. The individual tests
+`padj = TRUE` to correct the p-values for the number of features tested
+(Benjamini-Hochberg); it is `FALSE` by default. The individual tests
 ([`scores.wilcox.test()`](https://verapancaldilab.github.io/CellTFusion/reference/scores.wilcox.test.md),
 [`scores.ttest()`](https://verapancaldilab.github.io/CellTFusion/reference/scores.ttest.md),
 [`scores.kruskal.test()`](https://verapancaldilab.github.io/CellTFusion/reference/scores.kruskal.test.md),
@@ -91,8 +91,8 @@ relates TF module scores to all clinical variables at once. The rows of
 `coldata` must be the same samples, in the same order, as the rows of
 the module matrix (an error is raised otherwise):
 
-- **Numeric traits** are correlated with each module (Pearson by
-  default, `corr_method = "s"` for Spearman) and shown in a heatmap,
+- **Numeric traits** are correlated with each module (Spearman by
+  default, `corr_type = "pearson"` for Pearson) and shown in a heatmap,
   annotated for p-values at or below `pval`. For traits with missing
   values, each p-value uses the number of samples with both values.
   Numeric columns are treated as continuous: convert number-coded
@@ -105,17 +105,17 @@ the module matrix (an error is raised otherwise):
 
 Traits that cannot be tested are skipped with a message: numeric traits
 without variation, and categorical traits with a single level or with
-one value per sample (e.g. a sample identifier). Use `p_adjust`
-(e.g. `"BH"`) to correct the p-values for multiple testing across the
-modules, for each trait.
+one value per sample (e.g. a sample identifier). Use `padj = TRUE` to
+correct the p-values for multiple testing across the modules, for each
+trait (Benjamini-Hochberg).
 
 ``` r
 
 assoc <- compute.metadata.association(
-  tfs.modules = res$TF_network[[1]],
+  scores = res$TF_network[[1]],
   coldata     = traitdata,
   pval        = 0.05,
-  file.name   = "Tutorial",
+  file_name   = "Tutorial",
   plot_grid   = TRUE
 )
 
@@ -128,11 +128,11 @@ assoc$anova        # ANOVA of every module for every categorical trait
 
 [`compute.modules.relationship()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.modules.relationship.md)
 correlates two matrices of continuous features over the same samples,
-for example TF modules and pathway activities (Pearson by default,
-`cor_type = "s"` for Spearman), and saves a heatmap of the significant
-correlations. It is for numeric variables only; use
+for example TF modules and pathway activities (Spearman by default,
+`corr_type = "pearson"` for Pearson), and saves a heatmap of the
+significant correlations. It is for numeric variables only; use
 [`compute.metadata.association()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.metadata.association.md)
-for categorical ones. With `plot.grid = TRUE`, a scatter plot is also
+for categorical ones. With `plot_grid = TRUE`, a scatter plot is also
 drawn for the significant pairs (the 100 strongest at most).
 
 ``` r
@@ -156,44 +156,45 @@ compares Kaplan-Meier survival curves with a log-rank test (packages
 
 1.  **Predefined groups** (`group_column`) — e.g. a clinical risk group
     or a cluster assignment in the clinical data.
-2.  **Feature screening** (`features`) — e.g. `res$Latent_spaces$Z`.
-    Each feature is split into High/Low at a quantile (`thres`), and the
-    features with a significant log-rank test (`p.value`, optionally
-    corrected with `p_adjust`) are returned, with a `Statistics` table
-    giving the test of every feature. Samples without a value for
-    `group_column` are left out. The rows of `features` must be the same
-    samples, in the same order, as the rows of the clinical data.
+2.  **Feature screening** (`scores`) — e.g. `res$Latent_spaces$Z`. Each
+    feature is split into High/Low at a quantile (`quantile_cutoff`),
+    and the features with a significant log-rank test (`pval`,
+    optionally corrected with `padj = TRUE`) are returned, with a
+    `Statistics` table giving the test of every feature. Samples without
+    a value for `group_column` are left out. The rows of `features` must
+    be the same samples, in the same order, as the rows of the clinical
+    data.
 
 Both modes need a time-to-event column and an event column (1 = event, 0
-= censored) in the clinical data. The tutorial `traitdata` does not
-include them: the examples below assume your clinical data has `PFS` and
-`PFS_event` columns.
+= censored) in the clinical data. The tutorial `traitdata` includes the
+overall survival of the patients: `os` (months) and `censOS` (1 = death,
+0 = censored).
 
 ``` r
 
 # Predefined groups
 surv_group <- compute.survival.analysis(
-  survival.data = traitdata,
-  PFS           = "PFS",
-  PFS_event     = "PFS_event",
+  coldata       = traitdata,
+  time_column   = "os",
+  event_column  = "censOS",
   group_column  = "Best.Confirmed.Overall.Response",
   file_name     = "Tutorial"
 )
 
 surv_group$p_value     # log-rank p-value
-surv_group$median_PFS  # median survival per group
+surv_group$median_PFS  # median survival per group (column name kept from the function output)
 ```
 
 ``` r
 
 # Feature screening on latent factors
 surv_factors <- compute.survival.analysis(
-  survival.data = traitdata,
-  PFS           = "PFS",
-  PFS_event     = "PFS_event",
-  features      = res$Latent_spaces$Z,
-  p.value       = 0.05,
-  thres         = 0.5,   # median split; e.g. 0.75 for top quartile vs rest
+  coldata       = traitdata,
+  time_column   = "os",
+  event_column  = "censOS",
+  scores        = res$Latent_spaces$Z,
+  pval          = 0.05,
+  quantile_cutoff = 0.5,   # median split; e.g. 0.75 for top quartile vs rest
   file_name     = "Tutorial"
 )
 ```

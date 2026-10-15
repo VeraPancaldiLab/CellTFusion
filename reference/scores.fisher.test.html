@@ -55,7 +55,7 @@ ratio for a two-group trait (<code>NA</code> otherwise).</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">scores.fisher.test</span><span class="op">(</span><span class="va">scores</span>, <span class="va">coldata</span>, <span class="va">trait</span>, pval <span class="op">=</span> <span class="fl">0.05</span>, p_adjust <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">scores.fisher.test</span><span class="op">(</span><span class="va">scores</span>, <span class="va">coldata</span>, <span class="va">trait</span>, pval <span class="op">=</span> <span class="fl">0.05</span>, padj <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -83,9 +83,9 @@ scores. Samples with a missing trait are left out (with a message).</p></dd>
 <code>&lt;= pval</code> (default = 0.05).</p></dd>
 
 
-<dt id="arg-p-adjust">p_adjust<a class="anchor" aria-label="anchor" href="#arg-p-adjust"></a></dt>
-<dd><p>Character. Method to correct the p-values for multiple testing across the features (see
-<code><a href="https://rdrr.io/r/stats/p.adjust.html" class="external-link">stats::p.adjust()</a></code>, e.g. <code>"BH"</code>). Default <code>"none"</code>.</p></dd>
+<dt id="arg-padj">padj<a class="anchor" aria-label="anchor" href="#arg-padj"></a></dt>
+<dd><p>Logical; if TRUE, the p-values are corrected for multiple testing across the features with the
+Benjamini-Hochberg method, and the adjusted p-values are compared with the threshold. Default FALSE.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -99,22 +99,31 @@ scores. Samples with a missing trait are left out (with a message).</p></dd>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"deconv_subgroups.tuto"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"traitdata.tuto"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">cell_groups</span> <span class="op">&lt;-</span> <span class="fu"><a href="construct_cell_groups.html">construct_cell_groups</a></span><span class="op">(</span><span class="va">network.tuto</span>, <span class="va">deconv_subgroups.tuto</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> 20 of 764 features were not assigned to any cluster by the tree cut and are not part of any cell group (blue: 6, pink: 2, red: 2, yellow: 8, black: 2)</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Length of color vector was shorter than the number of clusters - color vector was recycled</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Length of color vector was shorter than the number of clusters - color vector was recycled</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Length of color vector was shorter than the number of clusters - color vector was recycled</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Length of color vector was shorter than the number of clusters - color vector was recycled</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Length of color vector was shorter than the number of clusters - color vector was recycled</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Length of color vector was shorter than the number of clusters - color vector was recycled</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Length of color vector was shorter than the number of clusters - color vector was recycled</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Length of color vector was shorter than the number of clusters - color vector was recycled</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Dendrogram plots saved to: Results/Dendrogram_color_clusters.pdf</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> 44 of 897 features were not assigned to any cluster by the tree cut and are not part of any cell group (pink: 2, yellow: 8, red: 2, blue: 6, brown: 4, turquoise: 12, black: 4, green: 6)</span>
 <span class="r-in"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu">scores.fisher.test</span><span class="op">(</span><span class="va">cell_groups</span><span class="op">$</span><span class="va">Cell_groups</span><span class="op">[</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">5</span><span class="op">]</span>, <span class="va">traitdata.tuto</span>, <span class="st">"binaryResponse"</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> 2 significant feature(s) after Fisher's exact test (p-value &lt;= 0.05): Dendrogram_brown_group_3, Dendrogram_brown_group_4</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> 1 significant feature(s) after Fisher's exact test (p-value &lt;= 0.05): Dendrogram_pink_group_3</span>
 <span class="r-in"><span><span class="va">res</span><span class="op">$</span><span class="va">Statistics</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                    feature                test statistic_name statistic</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 Dendrogram_brown_group_1 Fisher's exact test     odds ratio 1.3173848</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 Dendrogram_brown_group_2 Fisher's exact test     odds ratio 0.9125264</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3 Dendrogram_brown_group_3 Fisher's exact test     odds ratio 2.9182035</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4 Dendrogram_brown_group_4 Fisher's exact test     odds ratio 3.6773730</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5 Dendrogram_brown_group_5 Fisher's exact test     odds ratio 1.9267619</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       p_value  p_adjusted significant</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 0.668698278 0.668698278       FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 1.000000000 1.000000000       FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3 0.030394972 0.030394972        TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4 0.008973261 0.008973261        TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5 0.197518211 0.197518211       FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                   feature                test statistic_name statistic</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 Dendrogram_pink_group_1 Fisher's exact test     odds ratio 2.3567205</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 Dendrogram_pink_group_2 Fisher's exact test     odds ratio 2.3567205</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 Dendrogram_pink_group_3 Fisher's exact test     odds ratio 2.9182035</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 Dendrogram_pink_group_4 Fisher's exact test     odds ratio 1.9267619</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5 Dendrogram_pink_group_5 Fisher's exact test     odds ratio 0.7590797</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      p_value p_adjusted significant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 0.08469494 0.08469494       FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 0.08469494 0.08469494       FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 0.03039497 0.03039497        TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 0.19751821 0.19751821       FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5 0.66869828 0.66869828       FALSE</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

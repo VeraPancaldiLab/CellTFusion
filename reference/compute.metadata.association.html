@@ -59,14 +59,14 @@ boxplot grids. All plots are saved in the <code>Results/</code> directory, and t
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">compute.metadata.association</span><span class="op">(</span></span>
-<span>  <span class="va">tfs.modules</span>,</span>
+<span>  <span class="va">scores</span>,</span>
 <span>  <span class="va">coldata</span>,</span>
 <span>  pval <span class="op">=</span> <span class="fl">0.05</span>,</span>
-<span>  corr_method <span class="op">=</span> <span class="st">"p"</span>,</span>
-<span>  <span class="va">file.name</span>,</span>
-<span>  ncol <span class="op">=</span> <span class="fl">5</span>,</span>
-<span>  plot_grid <span class="op">=</span> <span class="cn">F</span>,</span>
-<span>  p_adjust <span class="op">=</span> <span class="st">"none"</span></span>
+<span>  corr_type <span class="op">=</span> <span class="st">"spearman"</span>,</span>
+<span>  file_name <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  ncol_grid <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  plot_grid <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  padj <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -74,14 +74,14 @@ boxplot grids. All plots are saved in the <code>Results/</code> directory, and t
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
 
 
-<dl><dt id="arg-tfs-modules">tfs.modules<a class="anchor" aria-label="anchor" href="#arg-tfs-modules"></a></dt>
+<dl><dt id="arg-scores">scores<a class="anchor" aria-label="anchor" href="#arg-scores"></a></dt>
 <dd><p>A numeric matrix or data frame of TF module scores across samples.
 Typically the first element (<code>TFs module matrix</code>) of the output from <code><a href="compute.WTCNA.html">compute.WTCNA()</a></code>. Rows represent samples, columns represent TF modules.</p></dd>
 
 
 <dt id="arg-coldata">coldata<a class="anchor" aria-label="anchor" href="#arg-coldata"></a></dt>
 <dd><p>A data frame containing clinical traits (both categorical and numerical) for the same samples.
-Rows must be the same samples, in the same order, as the rows of <code>tfs.modules</code> (checked by name; an
+Rows must be the same samples, in the same order, as the rows of <code>scores</code> (checked by name; an
 error is raised otherwise). Numeric columns are treated as continuous: convert number-coded categories
 (e.g. a stage coded 1 to 4) to factor to test them as groups.</p></dd>
 
@@ -92,39 +92,39 @@ error is raised otherwise). Numeric columns are treated as continuous: convert n
 Only associations with (adjusted) p-values below this threshold are annotated in the heatmap or drawn as boxplots.</p></dd>
 
 
-<dt id="arg-corr-method">corr_method<a class="anchor" aria-label="anchor" href="#arg-corr-method"></a></dt>
-<dd><p>Character string specifying the correlation method to use for continuous variables.
-Options are <code>"p"</code> for pearson and <code>"s"</code> for spearman. Default is <code>"p"</code>.</p></dd>
+<dt id="arg-corr-type">corr_type<a class="anchor" aria-label="anchor" href="#arg-corr-type"></a></dt>
+<dd><p>Correlation used for the numeric traits: <code>"spearman"</code> (default) or <code>"pearson"</code>.</p></dd>
 
 
-<dt id="arg-file-name">file.name<a class="anchor" aria-label="anchor" href="#arg-file-name"></a></dt>
-<dd><p>Character. Base file name for saving plots of results.</p></dd>
+<dt id="arg-file-name">file_name<a class="anchor" aria-label="anchor" href="#arg-file-name"></a></dt>
+<dd><p>Optional character suffix of the names of the saved plots (<code>NULL</code> by default: no suffix).</p></dd>
 
 
-<dt id="arg-ncol">ncol<a class="anchor" aria-label="anchor" href="#arg-ncol"></a></dt>
-<dd><p>Integer. Number of columns in the grid of association boxplots. Default is 5.</p></dd>
+<dt id="arg-ncol-grid">ncol_grid<a class="anchor" aria-label="anchor" href="#arg-ncol-grid"></a></dt>
+<dd><p>Integer. Number of columns in the grid of association boxplots. If <code>NULL</code> (default), it is set
+to the ceiling of the square root of the number of panels.</p></dd>
 
 
 <dt id="arg-plot-grid">plot_grid<a class="anchor" aria-label="anchor" href="#arg-plot-grid"></a></dt>
 <dd><p>Logical; if TRUE, tests categorical traits with ANOVA and saves boxplot grids. Default is FALSE.</p></dd>
 
 
-<dt id="arg-p-adjust">p_adjust<a class="anchor" aria-label="anchor" href="#arg-p-adjust"></a></dt>
-<dd><p>Character. Method to correct the p-values for multiple testing, applied across the modules for
-each trait (any method of <code><a href="https://rdrr.io/r/stats/p.adjust.html" class="external-link">stats::p.adjust()</a></code>, e.g. <code>"BH"</code> or <code>"bonferroni"</code>). Default is <code>"none"</code>.</p></dd>
+<dt id="arg-padj">padj<a class="anchor" aria-label="anchor" href="#arg-padj"></a></dt>
+<dd><p>Logical; if TRUE, the p-values are corrected for multiple testing with the Benjamini-Hochberg method,
+across the modules for each trait, and the adjusted p-values are compared with <code>pval</code>. Default is FALSE.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>Invisibly, a list with the results:</p><ul><li><p><code>correlation</code>: matrix of module-trait correlations for the numeric traits (modules x traits).</p></li>
 <li><p><code>p_value</code>: matrix of their p-values.</p></li>
-<li><p><code>p_adjusted</code>: matrix of their p-values adjusted with <code>p_adjust</code> (equal to <code>p_value</code> with <code>"none"</code>).</p></li>
+<li><p><code>p_adjusted</code>: matrix of their Benjamini-Hochberg adjusted p-values (equal to <code>p_value</code> with <code>padj = FALSE</code>).</p></li>
 <li><p><code>anova</code>: data frame with the ANOVA of every module for every categorical trait (<code>trait</code>,
 <code>module</code>, <code>F</code>, <code>p</code>, <code>p_adjusted</code>); <code>NULL</code> if <code>plot_grid = FALSE</code>.</p></li>
-</ul><p>The elements are <code>NULL</code> when there is no trait of that type. The following files are saved to the <code>Results/</code> directory:</p><ul><li><p><code>TF.modules_metadata_&lt;file.name&gt;.pdf</code>: a heatmap of module-trait correlations
+</ul><p>The elements are <code>NULL</code> when there is no trait of that type. The following files are saved to the <code>Results/</code> directory:</p><ul><li><p><code>TF.modules_metadata_&lt;file_name&gt;.pdf</code>: a heatmap of module-trait correlations
 for numeric traits (only associations with p-value &lt;= <code>pval</code> are annotated, with the correlation and
 its significance: * &lt; 0.05, ** &lt; 0.01, *** &lt; 0.001, **** &lt; 0.0001).</p></li>
-<li><p><code>ANOVA_boxplot_summary_&lt;file.name&gt;_&lt;trait&gt;.svg</code> (if <code>plot_grid = TRUE</code>): one boxplot
+<li><p><code>ANOVA_boxplot_summary_&lt;file_name&gt;_&lt;trait&gt;.svg</code> (if <code>plot_grid = TRUE</code>): one boxplot
 grid per categorical trait with the significant modules.</p></li>
 </ul></div>
     <div class="section level2">
@@ -144,18 +144,20 @@ panels for the boxplot grids), and the y-axis of each boxplot panel from its dat
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># The clinical traits of the tutorial data are categorical: they are tested with plot_grid = TRUE</span></span></span>
 <span class="r-in"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu">compute.metadata.association</span><span class="op">(</span></span></span>
-<span class="r-in"><span>  tfs.modules <span class="op">=</span> <span class="va">network.tuto</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>,</span></span>
+<span class="r-in"><span>  scores <span class="op">=</span> <span class="va">network.tuto</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>,</span></span>
 <span class="r-in"><span>  coldata <span class="op">=</span> <span class="va">traitdata.tuto</span>,</span></span>
 <span class="r-in"><span>  pval <span class="op">=</span> <span class="fl">0.05</span>,</span></span>
-<span class="r-in"><span>  file.name <span class="op">=</span> <span class="st">'Tutorial'</span>,</span></span>
+<span class="r-in"><span>  file_name <span class="op">=</span> <span class="st">'Tutorial'</span>,</span></span>
 <span class="r-in"><span>  plot_grid <span class="op">=</span> <span class="cn">TRUE</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> No module significantly associated with trait 'Best.Confirmed.Overall.Response'</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> No module significantly associated with trait 'binaryResponse'</span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in ggplot2::ggsave(paste0("Results/ANOVA_boxplot_summary", if (!is.null(file.name)) paste0("_",     file.name), "_", gsub("[^A-Za-z0-9._ -]", "_", tr), ".svg"),     plot = p, device = grDevices::svg, width = max(5, 3.2 * min(ncol,         n_panels) + 0.5), height = 3.4 * ceiling(n_panels/ncol) +         1.4, limitsize = FALSE):</span> Cannot find directory <span style="color: #0000BB;">Results</span>.</span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Please supply an existing directory or use `create.dir = TRUE`.</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">anova</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'res' not found</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                             trait module     F     p p_adjusted</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 Best.Confirmed.Overall.Response  black 4.404 0.037      0.037</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 Best.Confirmed.Overall.Response   blue 0.164 0.686      0.686</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 Best.Confirmed.Overall.Response  brown 0.954 0.330      0.330</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 Best.Confirmed.Overall.Response  green 0.807 0.370      0.370</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5 Best.Confirmed.Overall.Response   pink 8.859 0.003      0.003</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6 Best.Confirmed.Overall.Response    red 1.008 0.317      0.317</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

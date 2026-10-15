@@ -8,7 +8,7 @@ Dunn post-hoc tests (BH-adjusted), saved as
 ## Usage
 
 ``` r
-scores.kruskal.test(scores, coldata, trait, pval = 0.05, p_adjust = "none")
+scores.kruskal.test(scores, coldata, trait, pval = 0.05, padj = FALSE)
 ```
 
 ## Arguments
@@ -39,12 +39,11 @@ scores.kruskal.test(scores, coldata, trait, pval = 0.05, p_adjust = "none")
   Numeric. Threshold for significance: a feature is significant if its
   (adjusted) p-value is `<= pval` (default = 0.05).
 
-- p_adjust:
+- padj:
 
-  Character. Method to correct the p-values for multiple testing across
-  the features (see
-  [`stats::p.adjust()`](https://rdrr.io/r/stats/p.adjust.html), e.g.
-  `"BH"`). Default `"none"`.
+  Logical; if TRUE, the p-values are corrected for multiple testing
+  across the features with the Benjamini-Hochberg method, and the
+  adjusted p-values are compared with the threshold. Default FALSE.
 
 ## Value
 
@@ -58,20 +57,29 @@ data("network.tuto")
 data("deconv_subgroups.tuto")
 data("traitdata.tuto")
 cell_groups <- construct_cell_groups(network.tuto, deconv_subgroups.tuto)
-#> 20 of 764 features were not assigned to any cluster by the tree cut and are not part of any cell group (blue: 6, pink: 2, red: 2, yellow: 8, black: 2)
+#> Warning: Length of color vector was shorter than the number of clusters - color vector was recycled
+#> Warning: Length of color vector was shorter than the number of clusters - color vector was recycled
+#> Warning: Length of color vector was shorter than the number of clusters - color vector was recycled
+#> Warning: Length of color vector was shorter than the number of clusters - color vector was recycled
+#> Warning: Length of color vector was shorter than the number of clusters - color vector was recycled
+#> Warning: Length of color vector was shorter than the number of clusters - color vector was recycled
+#> Warning: Length of color vector was shorter than the number of clusters - color vector was recycled
+#> Warning: Length of color vector was shorter than the number of clusters - color vector was recycled
+#> Dendrogram plots saved to: Results/Dendrogram_color_clusters.pdf
+#> 44 of 897 features were not assigned to any cluster by the tree cut and are not part of any cell group (pink: 2, yellow: 8, red: 2, blue: 6, brown: 4, turquoise: 12, black: 4, green: 6)
 res <- scores.kruskal.test(cell_groups$Cell_groups[, 1:5], traitdata.tuto, "Enrollment.IC")
-#> 3 significant feature(s) after Kruskal-Wallis test (p-value <= 0.05): Dendrogram_brown_group_3, Dendrogram_brown_group_4, Dendrogram_brown_group_5
+#> 5 significant feature(s) after Kruskal-Wallis test (p-value <= 0.05): Dendrogram_pink_group_1, Dendrogram_pink_group_2, Dendrogram_pink_group_3, Dendrogram_pink_group_4, Dendrogram_pink_group_5
 res$Statistics
-#>                    feature                test statistic_name statistic
-#> 1 Dendrogram_brown_group_1 Kruskal-Wallis test              H  2.695207
-#> 2 Dendrogram_brown_group_2 Kruskal-Wallis test              H  2.612820
-#> 3 Dendrogram_brown_group_3 Kruskal-Wallis test              H 10.356225
-#> 4 Dendrogram_brown_group_4 Kruskal-Wallis test              H 12.480027
-#> 5 Dendrogram_brown_group_5 Kruskal-Wallis test              H 26.813980
+#>                   feature                test statistic_name statistic
+#> 1 Dendrogram_pink_group_1 Kruskal-Wallis test              H 10.091884
+#> 2 Dendrogram_pink_group_2 Kruskal-Wallis test              H  8.075064
+#> 3 Dendrogram_pink_group_3 Kruskal-Wallis test              H 29.615321
+#> 4 Dendrogram_pink_group_4 Kruskal-Wallis test              H 15.049547
+#> 5 Dendrogram_pink_group_5 Kruskal-Wallis test              H  8.563492
 #>        p_value   p_adjusted significant
-#> 1 2.598623e-01 2.598623e-01       FALSE
-#> 2 2.707904e-01 2.707904e-01       FALSE
-#> 3 5.638640e-03 5.638640e-03        TRUE
-#> 4 1.949829e-03 1.949829e-03        TRUE
-#> 5 1.504590e-06 1.504590e-06        TRUE
+#> 1 6.435395e-03 6.435395e-03        TRUE
+#> 2 1.764095e-02 1.764095e-02        TRUE
+#> 3 3.707787e-07 3.707787e-07        TRUE
+#> 4 5.395509e-04 5.395509e-04        TRUE
+#> 5 1.381852e-02 1.381852e-02        TRUE
 ```

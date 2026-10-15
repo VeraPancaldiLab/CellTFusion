@@ -9,7 +9,7 @@ components, then applying Non-negative Matrix Factorization via RcppML
 
 ``` r
 compute.latent_factors(
-  X,
+  scores,
   rank = NULL,
   seed = 123,
   file_name = NULL,
@@ -19,7 +19,7 @@ compute.latent_factors(
 
 ## Arguments
 
-- X:
+- scores:
 
   Numeric matrix of size samples x cell groups (signed CCA composite
   scores).
@@ -100,20 +100,29 @@ missing values.
 data("network.tuto")
 data("deconv_subgroups.tuto")
 cell_groups <- construct_cell_groups(network.tuto, deconv_subgroups.tuto)
-#> 20 of 764 features were not assigned to any cluster by the tree cut and are not part of any cell group (blue: 6, pink: 2, red: 2, yellow: 8, black: 2)
+#> Warning: Length of color vector was shorter than the number of clusters - color vector was recycled
+#> Warning: Length of color vector was shorter than the number of clusters - color vector was recycled
+#> Warning: Length of color vector was shorter than the number of clusters - color vector was recycled
+#> Warning: Length of color vector was shorter than the number of clusters - color vector was recycled
+#> Warning: Length of color vector was shorter than the number of clusters - color vector was recycled
+#> Warning: Length of color vector was shorter than the number of clusters - color vector was recycled
+#> Warning: Length of color vector was shorter than the number of clusters - color vector was recycled
+#> Warning: Length of color vector was shorter than the number of clusters - color vector was recycled
+#> Dendrogram plots saved to: Results/Dendrogram_color_clusters.pdf
+#> 44 of 897 features were not assigned to any cluster by the tree cut and are not part of any cell group (pink: 2, yellow: 8, red: 2, blue: 6, brown: 4, turquoise: 12, black: 4, green: 6)
 latent <- compute.latent_factors(cell_groups$Cell_groups, return = FALSE)
 #> Estimating optimal rank via elbow on reconstruction MSE (ranks 2:8)...
-#> MSE by rank: k2=0.00127  k3=0.000964  k4=0.000838  k5=0.000756  k6=0.00071  k7=0.000675  k8=0.000632
+#> MSE by rank: k2=0.00129  k3=0.00114  k4=0.00105  k5=0.000978  k6=0.000933  k7=0.000893  k8=0.000857
 #> Selected rank (elbow): 3
 #> Running RcppML NMF with rank = 3...
 head(latent$Z)
-#>                     Factor1     Factor2     Factor3
-#> SAM7f0d9cc7f001 0.000000000 0.007002944 0.009283874
-#> SAM4305ab968b90 0.019634032 0.000000000 0.000000000
-#> SAMcf018fee2acd 0.003737999 0.002203283 0.005899748
-#> SAMcc4675f394a1 0.007148875 0.007615527 0.000000000
-#> SAM49f9b2e57aa5 0.008341286 0.000000000 0.002867088
-#> SAM2e7aa8fa0ab3 0.003237255 0.003662716 0.000000000
+#>                      Factor1     Factor2     Factor3
+#> SAM7f0d9cc7f001 0.0001788103 0.008323831 0.005546469
+#> SAM4305ab968b90 0.0194986831 0.000000000 0.000000000
+#> SAMcf018fee2acd 0.0018946456 0.006329754 0.005301130
+#> SAMcc4675f394a1 0.0047871944 0.008222151 0.000000000
+#> SAM49f9b2e57aa5 0.0086963389 0.000615321 0.001548553
+#> SAM2e7aa8fa0ab3 0.0046124714 0.001796520 0.001894464
 latent$nmf_model$d # size of each factor
-#> [1] 615.4030 594.7220 311.0203
+#> [1] 811.4351 642.3944 383.9934
 ```

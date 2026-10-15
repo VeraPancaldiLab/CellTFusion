@@ -13,7 +13,7 @@ and (2) projects those scores onto the trained NMF latent space.
 ## Usage
 
 ``` r
-project_test_factors(train_processed, test_deconv)
+project_test_factors(train_processed, deconv_test)
 ```
 
 ## Arguments
@@ -25,21 +25,21 @@ project_test_factors(train_processed, test_deconv)
   containing at minimum `Processed_deconvolution`, `Cell_groups`, and
   `Latent_spaces`.
 
-- test_deconv:
+- deconv_test:
 
   A numeric matrix or data frame of the deconvolution features of the
   test samples before subgrouping (samples x features; the same kind of
   matrix as given to
   [`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md)
   as `deconv`), with the column names used during training. If the model
-  was trained with batch correction, the test samples are centred on
-  their own means (as each training cohort was), so they should come
-  from a single cohort.
+  was trained with batch correction, the test samples are z-scored on
+  their own means and SDs (as each training cohort was), so they should
+  come from a single cohort.
 
 ## Value
 
 A numeric matrix (test samples x NMF factors) of non-negative projected
-factor scores. Cell groups with features missing in `test_deconv` are
+factor scores. Cell groups with features missing in `deconv_test` are
 skipped by
 [`compute.test.set()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.test.set.md)
 (with a warning), and the projection uses the other cell groups.

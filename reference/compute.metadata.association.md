@@ -12,20 +12,20 @@ HSD post-hoc) and shown as boxplot grids. All plots are saved in the
 
 ``` r
 compute.metadata.association(
-  tfs.modules,
+  scores,
   coldata,
   pval = 0.05,
-  corr_method = "p",
-  file.name,
-  ncol = 5,
-  plot_grid = F,
-  p_adjust = "none"
+  corr_type = "spearman",
+  file_name = NULL,
+  ncol_grid = NULL,
+  plot_grid = FALSE,
+  padj = FALSE
 )
 ```
 
 ## Arguments
 
-- tfs.modules:
+- scores:
 
   A numeric matrix or data frame of TF module scores across samples.
   Typically the first element (`TFs module matrix`) of the output from
@@ -36,7 +36,7 @@ compute.metadata.association(
 
   A data frame containing clinical traits (both categorical and
   numerical) for the same samples. Rows must be the same samples, in the
-  same order, as the rows of `tfs.modules` (checked by name; an error is
+  same order, as the rows of `scores` (checked by name; an error is
   raised otherwise). Numeric columns are treated as continuous: convert
   number-coded categories (e.g. a stage coded 1 to 4) to factor to test
   them as groups.
@@ -48,32 +48,32 @@ compute.metadata.association(
   associations with (adjusted) p-values below this threshold are
   annotated in the heatmap or drawn as boxplots.
 
-- corr_method:
+- corr_type:
 
-  Character string specifying the correlation method to use for
-  continuous variables. Options are `"p"` for pearson and `"s"` for
-  spearman. Default is `"p"`.
+  Correlation used for the numeric traits: `"spearman"` (default) or
+  `"pearson"`.
 
-- file.name:
+- file_name:
 
-  Character. Base file name for saving plots of results.
+  Optional character suffix of the names of the saved plots (`NULL` by
+  default: no suffix).
 
-- ncol:
+- ncol_grid:
 
-  Integer. Number of columns in the grid of association boxplots.
-  Default is 5.
+  Integer. Number of columns in the grid of association boxplots. If
+  `NULL` (default), it is set to the ceiling of the square root of the
+  number of panels.
 
 - plot_grid:
 
   Logical; if TRUE, tests categorical traits with ANOVA and saves
   boxplot grids. Default is FALSE.
 
-- p_adjust:
+- padj:
 
-  Character. Method to correct the p-values for multiple testing,
-  applied across the modules for each trait (any method of
-  [`stats::p.adjust()`](https://rdrr.io/r/stats/p.adjust.html), e.g.
-  `"BH"` or `"bonferroni"`). Default is `"none"`.
+  Logical; if TRUE, the p-values are corrected for multiple testing with
+  the Benjamini-Hochberg method, across the modules for each trait, and
+  the adjusted p-values are compared with `pval`. Default is FALSE.
 
 ## Value
 
@@ -84,8 +84,8 @@ Invisibly, a list with the results:
 
 - `p_value`: matrix of their p-values.
 
-- `p_adjusted`: matrix of their p-values adjusted with `p_adjust` (equal
-  to `p_value` with `"none"`).
+- `p_adjusted`: matrix of their Benjamini-Hochberg adjusted p-values
+  (equal to `p_value` with `padj = FALSE`).
 
 - `anova`: data frame with the ANOVA of every module for every
   categorical trait (`trait`, `module`, `F`, `p`, `p_adjusted`); `NULL`
@@ -94,12 +94,12 @@ Invisibly, a list with the results:
 The elements are `NULL` when there is no trait of that type. The
 following files are saved to the `Results/` directory:
 
-- `TF.modules_metadata_<file.name>.pdf`: a heatmap of module-trait
+- `TF.modules_metadata_<file_name>.pdf`: a heatmap of module-trait
   correlations for numeric traits (only associations with p-value \<=
   `pval` are annotated, with the correlation and its significance: \* \<
   0.05, \*\* \< 0.01, \*\*\* \< 0.001, \*\*\*\* \< 0.0001).
 
-- `ANOVA_boxplot_summary_<file.name>_<trait>.svg` (if
+- `ANOVA_boxplot_summary_<file_name>_<trait>.svg` (if
   `plot_grid = TRUE`): one boxplot grid per categorical trait with the
   significant modules.
 
@@ -124,16 +124,18 @@ data("traitdata.tuto")
 
 # The clinical traits of the tutorial data are categorical: they are tested with plot_grid = TRUE
 res <- compute.metadata.association(
-  tfs.modules = network.tuto[[1]],
+  scores = network.tuto[[1]],
   coldata = traitdata.tuto,
   pval = 0.05,
-  file.name = 'Tutorial',
+  file_name = 'Tutorial',
   plot_grid = TRUE
 )
-#> No module significantly associated with trait 'Best.Confirmed.Overall.Response'
-#> No module significantly associated with trait 'binaryResponse'
-#> Error in ggplot2::ggsave(paste0("Results/ANOVA_boxplot_summary", if (!is.null(file.name)) paste0("_",     file.name), "_", gsub("[^A-Za-z0-9._ -]", "_", tr), ".svg"),     plot = p, device = grDevices::svg, width = max(5, 3.2 * min(ncol,         n_panels) + 0.5), height = 3.4 * ceiling(n_panels/ncol) +         1.4, limitsize = FALSE): Cannot find directory Results.
-#> ℹ Please supply an existing directory or use `create.dir = TRUE`.
 head(res$anova)
-#> Error: object 'res' not found
+#>                             trait module     F     p p_adjusted
+#> 1 Best.Confirmed.Overall.Response  black 4.404 0.037      0.037
+#> 2 Best.Confirmed.Overall.Response   blue 0.164 0.686      0.686
+#> 3 Best.Confirmed.Overall.Response  brown 0.954 0.330      0.330
+#> 4 Best.Confirmed.Overall.Response  green 0.807 0.370      0.370
+#> 5 Best.Confirmed.Overall.Response   pink 8.859 0.003      0.003
+#> 6 Best.Confirmed.Overall.Response    red 1.008 0.317      0.317
 ```

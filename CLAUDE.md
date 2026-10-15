@@ -24,10 +24,9 @@ devtools::install()       # Install package locally
 devtools::build()         # Build source tarball
 ```
 
-There is currently no `tests/testthat/` directory in the repo (no unit
-tests exist yet), even though `testthat` (edition 3) is configured in
-`DESCRIPTION` and listed in `Suggests`. Once tests are added, run a
-single file with:
+Unit tests (`testthat`, edition 3) are in `tests/testthat/`: they use
+the tutorial data, need no download and take about 5 minutes
+(`helper-data.R` builds the shared objects). Run a single file with:
 
 ``` r
 
@@ -150,7 +149,9 @@ etc.).
 
 Pre-built `.rda` objects for examples and testing: `raw.counts.tuto`,
 `counts.norm.tuto`, `traitdata.tuto`, `tfs.tuto`, `network.tuto`,
-`deconv.tuto`, `deconv_subgroups.tuto`.
+`deconv.tuto`, `deconv_subgroups.tuto`. `data-raw/tutorial_data.R`
+rebuilds the ones that depend on the package defaults (`traitdata.tuto`
+with overall survival, `tfs.tuto`, `network.tuto`).
 
 ## Dependencies
 

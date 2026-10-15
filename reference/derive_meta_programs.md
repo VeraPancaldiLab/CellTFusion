@@ -11,7 +11,7 @@ of the clusters and have no meaning of their own.
 ## Usage
 
 ``` r
-derive_meta_programs(gsea_results, k = NULL, file_name = NULL, plot = TRUE)
+derive_meta_programs(gsea_results, k = NULL, file_name = NULL, return = TRUE)
 ```
 
 ## Arguments
@@ -38,7 +38,7 @@ derive_meta_programs(gsea_results, k = NULL, file_name = NULL, plot = TRUE)
   (`Results/TCGA_meta_programs_<file_name>.pdf`, or
   `Results/TCGA_meta_programs.pdf` without it).
 
-- plot:
+- return:
 
   Logical. If `TRUE` (default), saves a clustering heatmap of the NES
   (Hallmarks x factors); NES beyond -3 and 3 are shown with the extreme
@@ -54,7 +54,7 @@ set names).
 
 ``` r
 if (FALSE) { # \dontrun{
-gsea <- compute_factor_gsea(RNA.tpm = counts.norm, features_df = res$Latent_spaces$Z, plot_dot = FALSE)
+gsea <- compute_factor_gsea(counts_norm = counts.norm, scores = res$Latent_spaces$Z, return = FALSE)
 meta_programs <- derive_meta_programs(gsea, file_name = "my_cohort")
 } # }
 ```

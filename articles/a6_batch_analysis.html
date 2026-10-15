@@ -110,13 +110,14 @@ builds a <strong>consensus TF network</strong>; the cohort vector is
 passed to every step below.</td>
 </tr>
 <tr class="even">
-<td><code>compute.WTCNA(batch = TRUE)</code></td>
-<td>Logical</td>
-<td>Takes a <strong>list</strong> of per-cohort TF matrices, picks a
-soft-thresholding power per cohort, combines the per-cohort topological
-overlaps into a consensus network (<code>consensus_quantile</code>,
-default 0: the minimum across cohorts) and builds the modules from it as
-in single-cohort mode.</td>
+<td><code>compute.WTCNA(batch = batch_vec)</code></td>
+<td>Cohort vector</td>
+<td>Takes the TF activities of all the samples (each cohort scored and
+scaled separately), splits them by cohort, picks a soft-thresholding
+power per cohort, combines the per-cohort topological overlaps into a
+consensus network (<code>consensus_quantile</code>, default 0: the
+minimum across cohorts) and builds the modules from it as in
+single-cohort mode.</td>
 </tr>
 <tr class="odd">
 <td><code>compute.deconvolution.analysis(batch = batch_vec)</code></td>
@@ -130,14 +131,14 @@ cohort.</td>
 <td>TF module-feature correlations are <strong>partial
 correlations</strong> controlling for cohort (one indicator variable per
 cohort beyond the first), Pearson or Spearman according to
-<code>cor_type</code>.</td>
+<code>corr_type</code>.</td>
 </tr>
 <tr class="odd">
 <td><code>construct_cell_groups(batch = batch_vec)</code></td>
 <td>Cohort vector</td>
 <td>Passes the cohort vector to the correlations and to the composite
 scores. Required for a network built with
-<code>compute.WTCNA(batch = TRUE)</code>; it can be named by
+<code>compute.WTCNA(batch = batch_vec)</code>; it can be named by
 sample.</td>
 </tr>
 <tr class="even">
@@ -187,9 +188,9 @@ fewer or larger than with pooled samples.</li>
 <strong>Common TFs.</strong> Only TFs present in every cohort are
 used to build the consensus network.</li>
 <li>
-<strong>Pearson only.</strong> Consensus modules support Pearson
-correlation; <code>cor_type = "s"</code> is only available for a single
-cohort.</li>
+<strong>Correlation type.</strong> <code>corr_type</code>
+(<code>"spearman"</code> by default, or <code>"pearson"</code>) is used
+in both single- and multi-cohort mode.</li>
 <li>
 <strong>Partial correlation vs. correction.</strong> Partial
 correlations only adjust a given correlation test, while the composite
@@ -197,9 +198,11 @@ scores of the cell groups are themselves cohort-corrected, and so are
 the latent factors built from them.</li>
 <li>
 <strong>Projection of new cohorts.</strong> For models trained with
-<code>batch</code>, new samples are centered on their own means (as each
-training cohort was), so each new cohort should be projected separately,
-with enough samples: a warning is given with fewer than 10 (see <a href="a5_machine_learning.html">Machine learning workflows</a>).</li>
+<code>batch</code>, the features of new samples are z-scored on their
+own means and SDs (as each training cohort was), so each new cohort
+should be projected separately, with enough samples: a warning is given
+with fewer than 10 (see <a href="a5_machine_learning.html">Machine
+learning workflows</a>).</li>
 </ul>
 </div>
 <div class="section level2">
@@ -210,7 +213,7 @@ with enough samples: a warning is given with fewer than 10 (see <a href="a5_mach
 <code class="sourceCode R"><span><span class="co"># batch: cohort of each sample, in the same order as the columns of raw.counts</span></span>
 <span><span class="co"># (or named by sample, in which case it is matched to the samples by name)</span></span>
 <span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/CellTFusion.html">CellTFusion</a></span><span class="op">(</span></span>
-<span>  raw.counts     <span class="op">=</span> <span class="va">raw.counts</span>,</span>
+<span>  raw_counts     <span class="op">=</span> <span class="va">raw.counts</span>,</span>
 <span>  normalized     <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  batch          <span class="op">=</span> <span class="va">coldata</span><span class="op">$</span><span class="va">Cohort</span>,</span>
 <span>  deconv_methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Quantiseq"</span>, <span class="st">"Epidish"</span><span class="op">)</span>,</span>
@@ -225,9 +228,12 @@ with enough samples: a warning is given with fewer than 10 (see <a href="a5_mach
 <p>Internally, this:</p>
 <ol style="list-style-type: decimal">
 <li>Splits the samples by cohort and runs
-<code><a href="../reference/compute.TFs.activity.html">compute.TFs.activity()</a></code> on each cohort, giving a list of TF
-activity matrices.</li>
-<li>Runs <code>compute.WTCNA(batch = TRUE)</code> on that list to get
+<code><a href="../reference/compute.TFs.activity.html">compute.TFs.activity()</a></code> (and
+<code><a href="../reference/compute.pathway.activity.html">compute.pathway.activity()</a></code>) on each cohort, then joins the
+TF activities of the TFs shared by all cohorts. TF and pathway scores
+are z-scored within each cohort (without <code>batch</code>,
+<code><a href="../reference/CellTFusion.html">CellTFusion()</a></code> returns them unscaled).</li>
+<li>Runs <code>compute.WTCNA(batch = batch_vec)</code> on them to get
 consensus TF modules.</li>
 <li>Passes the cohort vector to
 <code>compute.deconvolution.analysis()</code> and
@@ -250,20 +256,18 @@ per-cohort TF list and the cohort vector:</p>
 <span><span class="va">tfs_list</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">cohorts</span>, <span class="kw">function</span><span class="op">(</span><span class="va">idx</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="fu"><a href="../reference/compute.TFs.activity.html">compute.TFs.activity</a></span><span class="op">(</span><span class="va">counts.norm</span><span class="op">[</span>, <span class="va">idx</span>, drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span>, TF.collection <span class="op">=</span> <span class="st">"CollecTRI"</span><span class="op">)</span></span>
 <span><span class="op">}</span><span class="op">)</span></span>
+<span><span class="va">common_tfs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/funprog.html" class="external-link">Reduce</a></span><span class="op">(</span><span class="va">intersect</span>, <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">tfs_list</span>, <span class="va">colnames</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">tfs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">rbind</span>, <span class="fu"><a href="https://rdrr.io/r/base/unname.html" class="external-link">unname</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">tfs_list</span>, <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="va">x</span><span class="op">[</span>, <span class="va">common_tfs</span><span class="op">]</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">counts.norm</span><span class="op">)</span>, <span class="op">]</span></span>
 <span></span>
-<span><span class="va">network</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute.WTCNA.html">compute.WTCNA</a></span><span class="op">(</span>TFs.matrix <span class="op">=</span> <span class="va">tfs_list</span>, batch <span class="op">=</span> <span class="cn">TRUE</span>, minMod <span class="op">=</span> <span class="fl">15</span><span class="op">)</span></span>
+<span><span class="va">network</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute.WTCNA.html">compute.WTCNA</a></span><span class="op">(</span>tfs <span class="op">=</span> <span class="va">tfs</span>, batch <span class="op">=</span> <span class="va">batch_vec</span>, min_module_size <span class="op">=</span> <span class="fl">15</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">dt</span> <span class="op">&lt;-</span> <span class="fu">multideconv</span><span class="fu">::</span><span class="fu"><a href="https://verapancaldilab.github.io/multideconv/reference/compute.deconvolution.analysis.html" class="external-link">compute.deconvolution.analysis</a></span><span class="op">(</span><span class="va">deconv</span>, corr <span class="op">=</span> <span class="fl">0.7</span>, batch <span class="op">=</span> <span class="va">batch_vec</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">cell_groups</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/construct_cell_groups.html">construct_cell_groups</a></span><span class="op">(</span><span class="va">network</span>, <span class="va">dt</span>, batch <span class="op">=</span> <span class="va">batch_vec</span>, pval <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span></span></code></pre></div>
 <p><strong>Note:</strong> the module matrix returned by
-<code>compute.WTCNA(batch = TRUE)</code> (<code>network[[1]]</code>) is
-stacked cohort by cohort, so its rows are not in the original sample
-order unless the samples were sorted by cohort.
-<code><a href="../reference/construct_cell_groups.html">construct_cell_groups()</a></code> matches the samples by name, and
-<code><a href="../reference/CellTFusion.html">CellTFusion()</a></code> returns it in the sample order of the counts;
-reorder it by row name before combining it with other tables
-yourself.</p>
+<code><a href="../reference/compute.WTCNA.html">compute.WTCNA()</a></code> (<code>network[[1]]</code>) is in the row
+order of <code>tfs</code>, and <code><a href="../reference/construct_cell_groups.html">construct_cell_groups()</a></code>
+matches the samples by name.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

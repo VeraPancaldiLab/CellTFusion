@@ -14,12 +14,17 @@ dendrograms are cut into cell groups by
 
 ``` r
 # S3 method for class 'cell.groups'
-identify(features, clustering.method = "ward.D2", file_name = NULL, return = T)
+identify(
+  relationship,
+  clustering_method = "ward.D2",
+  file_name = NULL,
+  return = TRUE
+)
 ```
 
 ## Arguments
 
-- features:
+- relationship:
 
   The list returned by
   [`compute.modules.relationship()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.modules.relationship.md).
@@ -35,7 +40,7 @@ identify(features, clustering.method = "ward.D2", file_name = NULL, return = T)
 
   The correlations of each module are taken from the row with its name.
 
-- clustering.method:
+- clustering_method:
 
   Linkage method of the hierarchical clustering
   ([`stats::hclust()`](https://rdrr.io/r/stats/hclust.html)) of the
@@ -68,9 +73,9 @@ is returned if no module remains.
 ``` r
 data("network.tuto")
 data("deconv_subgroups.tuto")
-rel <- compute.modules.relationship(network.tuto[[1]], deconv_subgroups.tuto[[1]], plot = FALSE)
+rel <- compute.modules.relationship(network.tuto[[1]], deconv_subgroups.tuto[[1]], return = FALSE)
 dendrograms <- identify.cell.groups(rel, return = FALSE)
 names(dendrograms)
-#>  [1] "brown"     "purple"    "blue"      "pink"      "magenta"   "red"      
-#>  [7] "green"     "yellow"    "black"     "turquoise"
+#> [1] "pink"      "yellow"    "red"       "blue"      "brown"     "turquoise"
+#> [7] "black"     "green"    
 ```

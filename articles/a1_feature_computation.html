@@ -117,7 +117,7 @@ is a matrix of samples x method-signature-cell type features.</p>
 <p>Key arguments:</p>
 <ul>
 <li>
-<code>raw.counts</code> — count matrix (genes x samples).</li>
+<code>raw_counts</code> — count matrix (genes x samples).</li>
 <li>
 <code>methods</code> — deconvolution methods to run.</li>
 <li>
@@ -153,7 +153,7 @@ univariate linear model is used (<code>method = "ulm"</code>);
 <p>Key arguments:</p>
 <ul>
 <li>
-<code>RNA.counts</code> — log-normalized expression matrix (genes x
+<code>counts_norm</code> — log-normalized expression matrix (genes x
 samples), typically log2(TPM + 1).</li>
 <li>
 <code>TF.collection</code> — source of the regulon:
@@ -172,7 +172,7 @@ cohort-specific</strong> network inferred with ARACNe <span class="citation">(<a
 information between expression profiles across a cohort and removes
 indirect interactions. This is useful for a large, homogeneous cohort in
 which curated interactions may not hold. The network is read from
-<code>input/ARACNE/&lt;cancer.type&gt;/network/network.txt</code>
+<code>input/ARACNE/&lt;cancer_type&gt;/network/network.txt</code>
 (relative to the working directory), a tab-separated file with
 <code>Regulator</code> and <code>Target</code> columns and a
 <code>mor</code> column with the sign of each interaction (1 activation,
@@ -201,7 +201,7 @@ scores computed in separate calls.</li>
 </ul>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">tfs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute.TFs.activity.html">compute.TFs.activity</a></span><span class="op">(</span></span>
-<span>  RNA.counts       <span class="op">=</span> <span class="va">counts.norm</span>,</span>
+<span>  counts_norm       <span class="op">=</span> <span class="va">counts.norm</span>,</span>
 <span>  TF.collection    <span class="op">=</span> <span class="st">"CollecTRI"</span>,</span>
 <span>  min_targets_size <span class="op">=</span> <span class="fl">5</span>,</span>
 <span>  return           <span class="op">=</span> <span class="cn">TRUE</span></span>
@@ -213,9 +213,9 @@ scores computed in separate calls.</li>
 <p>To use a cohort-specific ARACNe network:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">tfs_aracne</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute.TFs.activity.html">compute.TFs.activity</a></span><span class="op">(</span></span>
-<span>  RNA.counts    <span class="op">=</span> <span class="va">counts.norm</span>,</span>
+<span>  counts_norm    <span class="op">=</span> <span class="va">counts.norm</span>,</span>
 <span>  TF.collection <span class="op">=</span> <span class="st">"ARACNE"</span>,</span>
-<span>  cancer.type   <span class="op">=</span> <span class="st">"skcm"</span>   <span class="co"># reads input/ARACNE/skcm/network/network.txt</span></span>
+<span>  cancer_type   <span class="op">=</span> <span class="st">"skcm"</span>   <span class="co"># reads input/ARACNE/skcm/network/network.txt</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
@@ -230,34 +230,36 @@ one score per sample, its eigengene.</p>
 <p>Key arguments:</p>
 <ul>
 <li>
-<code>TFs.matrix</code> — TF activity matrix (samples x TFs), or a
-list of per-cohort matrices when <code>batch = TRUE</code> (see <a href="a6_batch_analysis.html">Multi-cohort analysis</a>).</li>
+<code>tfs</code> — TF activity matrix (samples x TFs); with
+<code>batch</code> (cohort of each sample), the TF activities of all the
+cohorts (see <a href="a6_batch_analysis.html">Multi-cohort
+analysis</a>).</li>
 <li>
-<code>network.type</code> — <code>"signed"</code> (default) or
+<code>network_type</code> — <code>"signed"</code> (default) or
 <code>"unsigned"</code>. In a signed network, TFs with negatively
 correlated activities are not connected.</li>
 <li>
-<code>clustering.method</code> — linkage of the hierarchical
-clustering of the TFs on their TOM dissimilarity; <code>"average"</code>
-(default, as in WGCNA) joins two groups of TFs according to the average
-dissimilarity between their TFs.</li>
+<code>clustering_method</code> — linkage of the hierarchical
+clustering of the TFs on their TOM dissimilarity; <code>"ward.D2"</code>
+by default (WGCNA uses <code>"average"</code>, which joins two groups of
+TFs according to the average dissimilarity between their TFs).</li>
 <li>
-<code>minMod</code> — minimum number of TFs per module. TFs that fit
-no module (grey) are left out, with a message.</li>
+<code>min_module_size</code> — minimum number of TFs per module. TFs
+that fit no module (grey) are left out, with a message.</li>
 <li>
-<code>corr_mod</code> — correlation (of type <code>cor_type</code>)
+<code>corr_mod</code> — correlation (of type <code>corr_type</code>)
 above which module eigengenes are merged, in single- and multi-cohort
 mode.</li>
 <li>
-<code>cor_type</code> — <code>"p"</code> (Pearson, default) or
-<code>"s"</code> (Spearman; single-cohort mode only).</li>
+<code>corr_type</code> — <code>"spearman"</code> (default) or
+<code>"pearson"</code>, in single- and multi-cohort mode.</li>
 </ul>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">network</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute.WTCNA.html">compute.WTCNA</a></span><span class="op">(</span></span>
-<span>  TFs.matrix        <span class="op">=</span> <span class="va">tfs</span>,</span>
-<span>  network.type      <span class="op">=</span> <span class="st">"signed"</span>,</span>
-<span>  clustering.method <span class="op">=</span> <span class="st">"average"</span>,</span>
-<span>  minMod            <span class="op">=</span> <span class="fl">15</span>,</span>
+<span>  tfs        <span class="op">=</span> <span class="va">tfs</span>,</span>
+<span>  network_type      <span class="op">=</span> <span class="st">"signed"</span>,</span>
+<span>  clustering_method <span class="op">=</span> <span class="st">"average"</span>,</span>
+<span>  min_module_size            <span class="op">=</span> <span class="fl">15</span>,</span>
 <span>  corr_mod          <span class="op">=</span> <span class="fl">0.9</span>,</span>
 <span>  return            <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -285,7 +287,7 @@ GSVA scores are computed as well.</p>
 <p>Key arguments:</p>
 <ul>
 <li>
-<code>RNA.tpm</code> — log-normalized expression matrix,
+<code>counts_norm</code> — log-normalized expression matrix,
 e.g. log2(TPM + 1) (genes x samples).</li>
 <li>
 <code>gene_sets</code> — optional named list of gene sets; if
@@ -302,7 +304,7 @@ separate calls.</li>
 </ul>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pathways</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute.pathway.activity.html">compute.pathway.activity</a></span><span class="op">(</span></span>
-<span>  RNA.tpm <span class="op">=</span> <span class="va">counts.norm</span>,</span>
+<span>  counts_norm <span class="op">=</span> <span class="va">counts.norm</span>,</span>
 <span>  return  <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p>The result is a samples x pathways matrix (14 PROGENy pathways by
@@ -350,7 +352,7 @@ analysis</a>).</li>
 groups and latent factors and characterizes TME states:</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/CellTFusion.html">CellTFusion</a></span><span class="op">(</span></span>
-<span>  raw.counts     <span class="op">=</span> <span class="va">raw.counts</span>,</span>
+<span>  raw_counts     <span class="op">=</span> <span class="va">raw.counts</span>,</span>
 <span>  normalized     <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  deconv_methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Quantiseq"</span>, <span class="st">"Epidish"</span><span class="op">)</span>,</span>
 <span>  TF.collection  <span class="op">=</span> <span class="st">"CollecTRI"</span>,</span>
@@ -366,8 +368,8 @@ groups and latent factors and characterizes TME states:</p>
 <li>
 <code>deconv_methods</code> runs Quantiseq, CIBERSORTx
 (<code>"CBSX"</code>), Epidish, DeconRNASeq and DWLS by default.
-CIBERSORTx is only run when <code>cbsx.mail</code> and
-<code>cbsx.token</code> are given; without them it is skipped with a
+CIBERSORTx is only run when <code>cbsx_mail</code> and
+<code>cbsx_token</code> are given; without them it is skipped with a
 message.</li>
 <li>
 <code>cancer_type</code> selects the TCGA meta-program reference

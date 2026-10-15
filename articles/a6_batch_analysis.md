@@ -21,10 +21,10 @@ at each step and how to use it.
 | Function | `batch` | Effect |
 |----|----|----|
 | `CellTFusion(batch = batch_vec)` | Cohort vector | Computes **TF activity separately per cohort** and builds a **consensus TF network**; the cohort vector is passed to every step below. |
-| `compute.WTCNA(batch = TRUE)` | Logical | Takes a **list** of per-cohort TF matrices, picks a soft-thresholding power per cohort, combines the per-cohort topological overlaps into a consensus network (`consensus_quantile`, default 0: the minimum across cohorts) and builds the modules from it as in single-cohort mode. |
+| `compute.WTCNA(batch = batch_vec)` | Cohort vector | Takes the TF activities of all the samples (each cohort scored and scaled separately), splits them by cohort, picks a soft-thresholding power per cohort, combines the per-cohort topological overlaps into a consensus network (`consensus_quantile`, default 0: the minimum across cohorts) and builds the modules from it as in single-cohort mode. |
 | `compute.deconvolution.analysis(batch = batch_vec)` | Cohort vector | Correlations used to build deconvolution subgroups control for cohort. |
-| `compute.modules.relationship(batch = batch_vec)` | Cohort vector | TF module-feature correlations are **partial correlations** controlling for cohort (one indicator variable per cohort beyond the first), Pearson or Spearman according to `cor_type`. |
-| `construct_cell_groups(batch = batch_vec)` | Cohort vector | Passes the cohort vector to the correlations and to the composite scores. Required for a network built with `compute.WTCNA(batch = TRUE)`; it can be named by sample. |
+| `compute.modules.relationship(batch = batch_vec)` | Cohort vector | TF module-feature correlations are **partial correlations** controlling for cohort (one indicator variable per cohort beyond the first), Pearson or Spearman according to `corr_type`. |
+| `construct_cell_groups(batch = batch_vec)` | Cohort vector | Passes the cohort vector to the correlations and to the composite scores. Required for a network built with `compute.WTCNA(batch = batch_vec)`; it can be named by sample. |
 | `compute_composite_score(batch = batch_vec)` | Cohort vector | Removes each cohort’s mean from the cell group features and TF activities before the CCA, so composite scores are **corrected for cohort**. |
 | `compute_factor_gsea(batch = batch_vec)` | Cohort vector | Adds the cohort to the `limma` model of each gene, so that expression differences between cohorts are not attributed to the latent factors in the Hallmark GSEA. |
 
@@ -53,16 +53,17 @@ shared TME biology.
   larger than with pooled samples.
 - **Common TFs.** Only TFs present in every cohort are used to build the
   consensus network.
-- **Pearson only.** Consensus modules support Pearson correlation;
-  `cor_type = "s"` is only available for a single cohort.
+- **Correlation type.** `corr_type` (`"spearman"` by default, or
+  `"pearson"`) is used in both single- and multi-cohort mode.
 - **Partial correlation vs. correction.** Partial correlations only
   adjust a given correlation test, while the composite scores of the
   cell groups are themselves cohort-corrected, and so are the latent
   factors built from them.
-- **Projection of new cohorts.** For models trained with `batch`, new
-  samples are centered on their own means (as each training cohort was),
-  so each new cohort should be projected separately, with enough
-  samples: a warning is given with fewer than 10 (see [Machine learning
+- **Projection of new cohorts.** For models trained with `batch`, the
+  features of new samples are z-scored on their own means and SDs (as
+  each training cohort was), so each new cohort should be projected
+  separately, with enough samples: a warning is given with fewer than 10
+  (see [Machine learning
   workflows](https://verapancaldilab.github.io/CellTFusion/articles/a5_machine_learning.md)).
 
 ## **Example: multi-cohort pipeline**
@@ -72,7 +73,7 @@ shared TME biology.
 # batch: cohort of each sample, in the same order as the columns of raw.counts
 # (or named by sample, in which case it is matched to the samples by name)
 res <- CellTFusion(
-  raw.counts     = raw.counts,
+  raw_counts     = raw.counts,
   normalized     = TRUE,
   batch          = coldata$Cohort,
   deconv_methods = c("Quantiseq", "Epidish"),
@@ -90,8 +91,14 @@ Internally, this:
 
 1.  Splits the samples by cohort and runs
     [`compute.TFs.activity()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.TFs.activity.md)
-    on each cohort, giving a list of TF activity matrices.
-2.  Runs `compute.WTCNA(batch = TRUE)` on that list to get consensus TF
+    (and
+    [`compute.pathway.activity()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.pathway.activity.md))
+    on each cohort, then joins the TF activities of the TFs shared by
+    all cohorts. TF and pathway scores are z-scored within each cohort
+    (without `batch`,
+    [`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md)
+    returns them unscaled).
+2.  Runs `compute.WTCNA(batch = batch_vec)` on them to get consensus TF
     modules.
 3.  Passes the cohort vector to `compute.deconvolution.analysis()` and
     [`construct_cell_groups()`](https://verapancaldilab.github.io/CellTFusion/reference/construct_cell_groups.md),
@@ -115,19 +122,18 @@ cohorts   <- split(seq_len(ncol(counts.norm)), batch_vec)
 tfs_list <- lapply(cohorts, function(idx) {
   compute.TFs.activity(counts.norm[, idx, drop = FALSE], TF.collection = "CollecTRI")
 })
+common_tfs <- Reduce(intersect, lapply(tfs_list, colnames))
+tfs <- do.call(rbind, unname(lapply(tfs_list, function(x) x[, common_tfs])))[colnames(counts.norm), ]
 
-network <- compute.WTCNA(TFs.matrix = tfs_list, batch = TRUE, minMod = 15)
+network <- compute.WTCNA(tfs = tfs, batch = batch_vec, min_module_size = 15)
 
 dt <- multideconv::compute.deconvolution.analysis(deconv, corr = 0.7, batch = batch_vec)
 
 cell_groups <- construct_cell_groups(network, dt, batch = batch_vec, pval = 0.05)
 ```
 
-**Note:** the module matrix returned by `compute.WTCNA(batch = TRUE)`
-(`network[[1]]`) is stacked cohort by cohort, so its rows are not in the
-original sample order unless the samples were sorted by cohort.
+**Note:** the module matrix returned by
+[`compute.WTCNA()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.WTCNA.md)
+(`network[[1]]`) is in the row order of `tfs`, and
 [`construct_cell_groups()`](https://verapancaldilab.github.io/CellTFusion/reference/construct_cell_groups.md)
-matches the samples by name, and
-[`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md)
-returns it in the sample order of the counts; reorder it by row name
-before combining it with other tables yourself.
+matches the samples by name.

@@ -32,13 +32,15 @@ compute.test.score(cell_group, projection_params)
 
   train_means
 
-  :   Named numeric vector of training column means, or `NULL` if the
-      training used batch correction, in which case the test data are
-      centred on their own column means.
+  :   Named numeric vector of training column means.
 
   train_sds
 
   :   Named numeric vector of training column standard deviations.
+
+  `train_means` and `train_sds` are absent when the training used batch
+  correction: the test data are then z-scored on their own column means
+  and SDs (a constant feature is 0), as each training cohort was.
 
 ## Value
 

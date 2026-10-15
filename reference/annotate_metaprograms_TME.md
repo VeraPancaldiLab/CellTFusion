@@ -46,10 +46,11 @@ for the meta-program, the vote is tied, or the winning label is
 ``` r
 if (FALSE) { # \dontrun{
 # On a TCGA cohort: factors, their GSEA, meta-programs, and the MFP subtype of each factor
-gsea <- compute_factor_gsea(RNA.tpm = counts.norm, features_df = res$Latent_spaces$Z, plot_dot = FALSE)
+gsea <- compute_factor_gsea(counts_norm = counts.norm, scores = res$Latent_spaces$Z, return = FALSE)
 meta_programs <- derive_meta_programs(gsea)
-factors_mp <- map_factors_to_metaprograms(gsea, mp_file = meta_programs, plot = FALSE)$factor_mapping
-tme <- map_factors_to_TME(cancer_name = "BLCA", Z = res$Latent_spaces$Z)
+factors_mp <- map_factors_to_metaprograms(gsea, mp_file = meta_programs,
+                                          return = FALSE)$factor_mapping
+tme <- map_factors_to_TME(cancer_type = "BLCA", Z = res$Latent_spaces$Z)
 meta_programs <- annotate_metaprograms_TME(meta_programs, tme, factors_mp)
 } # }
 ```

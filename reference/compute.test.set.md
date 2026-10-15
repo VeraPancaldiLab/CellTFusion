@@ -21,12 +21,12 @@ scored (except for cell groups built with `batch`, see Details).
 ## Usage
 
 ``` r
-compute.test.set(deconv_res, cell_groups, features = NULL, deconvolution_test)
+compute.test.set(dt, cell_groups, group_names = NULL, deconv_test)
 ```
 
 ## Arguments
 
-- deconv_res:
+- dt:
 
   Deconvolution subgroups of the training set, as returned by
   [`multideconv::compute.deconvolution.analysis()`](https://verapancaldilab.github.io/multideconv/reference/compute.deconvolution.analysis.html)
@@ -42,14 +42,14 @@ compute.test.set(deconv_res, cell_groups, features = NULL, deconvolution_test)
   cell group) are used. Older unnamed lists, with these as second and
   third elements, are also accepted.
 
-- features:
+- group_names:
 
   Optional character vector with the names of the cell groups to score.
   If `NULL` (default), all cell groups are scored. Names that are not
   cell groups are ignored with a message; an error is raised if none of
   them is a cell group.
 
-- deconvolution_test:
+- deconv_test:
 
   A data frame or matrix with the deconvolution features of the test set
   before subgrouping (the same kind of matrix as given to
@@ -70,11 +70,11 @@ if no cell group can be scored.
 
 If the cell groups were built with batch correction (`batch` in
 [`construct_cell_groups()`](https://verapancaldilab.github.io/CellTFusion/reference/construct_cell_groups.md)),
-the test samples are centred on their own means (as each training cohort
-was), so `deconvolution_test` should contain a single cohort with
-several samples: the scores then describe each sample relative to the
-other test samples. A warning is given when such cell groups are scored
-with fewer than 10 test samples.
+the features of the test samples are z-scored on their own means and SDs
+(as each training cohort was), so `deconv_test` should contain a single
+cohort with several samples: the scores then describe each sample
+relative to the other test samples. A warning is given when such cell
+groups are scored with fewer than 10 test samples.
 
 ## Examples
 
@@ -83,15 +83,25 @@ data("network.tuto")
 data("deconv_subgroups.tuto")
 data("deconv.tuto")
 cell_groups <- construct_cell_groups(network.tuto, deconv_subgroups.tuto)
-#> 20 of 764 features were not assigned to any cluster by the tree cut and are not part of any cell group (blue: 6, pink: 2, red: 2, yellow: 8, black: 2)
-test_scores <- compute.test.set(deconv_subgroups.tuto, cell_groups, deconvolution_test = deconv.tuto[1:20, ])
+#> Warning: Length of color vector was shorter than the number of clusters - color vector was recycled
+#> Warning: Length of color vector was shorter than the number of clusters - color vector was recycled
+#> Warning: Length of color vector was shorter than the number of clusters - color vector was recycled
+#> Warning: Length of color vector was shorter than the number of clusters - color vector was recycled
+#> Warning: Length of color vector was shorter than the number of clusters - color vector was recycled
+#> Warning: Length of color vector was shorter than the number of clusters - color vector was recycled
+#> Warning: Length of color vector was shorter than the number of clusters - color vector was recycled
+#> Warning: Length of color vector was shorter than the number of clusters - color vector was recycled
+#> Dendrogram plots saved to: Results/Dendrogram_color_clusters.pdf
+#> 44 of 897 features were not assigned to any cluster by the tree cut and are not part of any cell group (pink: 2, yellow: 8, red: 2, blue: 6, brown: 4, turquoise: 12, black: 4, green: 6)
+test_scores <- compute.test.set(deconv_subgroups.tuto, cell_groups,
+                                deconv_test = deconv.tuto[1:20, ])
 test_scores[1:3, 1:3]
-#>                 Dendrogram_brown_group_1 Dendrogram_brown_group_2
-#> SAM7f0d9cc7f001               0.03998411               0.06757056
-#> SAM4305ab968b90              -0.13368092              -0.14208692
-#> SAMcf018fee2acd              -0.02670350               0.03518956
-#>                 Dendrogram_brown_group_3
-#> SAM7f0d9cc7f001               0.06172535
-#> SAM4305ab968b90              -0.15458310
-#> SAMcf018fee2acd              -0.03169306
+#>                 Dendrogram_pink_group_1 Dendrogram_pink_group_2
+#> SAM7f0d9cc7f001             -0.14044970             -0.05427430
+#> SAM4305ab968b90              0.05344901              0.06916341
+#> SAMcf018fee2acd             -0.10579244             -0.06208404
+#>                 Dendrogram_pink_group_3
+#> SAM7f0d9cc7f001             -0.09753325
+#> SAM4305ab968b90              0.05193819
+#> SAMcf018fee2acd             -0.17637402
 ```

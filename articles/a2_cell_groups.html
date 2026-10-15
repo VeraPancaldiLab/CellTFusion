@@ -110,10 +110,11 @@ split, and pieces smaller than <code>min_cluster_size</code> are joined
 to the neighbouring group with the closest correlation. Each cell group
 gets a composite score per sample: the first canonical component of a
 canonical correlation analysis (CCA) between the group’s deconvolution
-features and the TFs of its module. The score is oriented to be aligned
-with the TF module: a positive score means that the sample is on the
-active side of the module for that cell group, a negative score that it
-is on the inactive side.</p>
+features and the score of its TF module, i.e. the combination of the
+features that correlates most with the module score. The score is
+oriented to be aligned with the TF module: a positive score means that
+the sample is on the active side of the module for that cell group, a
+negative score that it is on the inactive side.</p>
 <p>Key arguments:</p>
 <ul>
 <li>
@@ -124,25 +125,20 @@ is on the inactive side.</p>
 <code>pval</code> — p-value threshold to select the deconvolution
 features significantly correlated with each module.</li>
 <li>
-<code>dendrogram_file</code> / <code>return_dendrogram</code> — with
-<code>return_dendrogram = TRUE</code>, the colored dendrograms are saved
-to
-<code>Results/Dendrogram_color_clusters_&lt;dendrogram_file&gt;.pdf</code>.</li>
-<li>
-<code>return</code> — if <code>TRUE</code>, the composition and the
-scores of the cell groups are saved to
-<code>Results/Cell.groups.composition_&lt;dendrogram_file&gt;.csv</code>
-and
-<code>Results/Cell.groups.scores_&lt;dendrogram_file&gt;.csv</code>.</li>
+<code>file_name</code> / <code>return</code> — with
+<code>return = TRUE</code> (default), the colored dendrograms are saved
+to <code>Results/Dendrogram_color_clusters_&lt;file_name&gt;.pdf</code>,
+and the composition and the scores of the cell groups to
+<code>Results/Cell.groups.composition_&lt;file_name&gt;.csv</code> and
+<code>Results/Cell.groups.scores_&lt;file_name&gt;.csv</code>.</li>
 </ul>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">cell_groups</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/construct_cell_groups.html">construct_cell_groups</a></span><span class="op">(</span></span>
 <span>  network           <span class="op">=</span> <span class="va">network</span>,</span>
 <span>  dt                <span class="op">=</span> <span class="va">dt</span>,</span>
 <span>  pval              <span class="op">=</span> <span class="fl">0.05</span>,</span>
-<span>  clustering.method <span class="op">=</span> <span class="st">"ward.D2"</span>,</span>
-<span>  dendrogram_file   <span class="op">=</span> <span class="st">"Tutorial"</span>,</span>
-<span>  return_dendrogram <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>  clustering_method <span class="op">=</span> <span class="st">"ward.D2"</span>,</span>
+<span>  file_name         <span class="op">=</span> <span class="st">"Tutorial"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p>One dendrogram is drawn per TF module, showing how its correlated
 deconvolution features cluster into cell groups. The leaves are drawn in
@@ -177,7 +173,8 @@ group:</p>
 <tr class="odd">
 <td><code>Weights</code></td>
 <td>CCA projection parameters of each group (<code>xcoef</code>,
-<code>train_means</code>, <code>train_sds</code>), used to score new
+<code>train_means</code>, <code>train_sds</code>; only
+<code>xcoef</code> with <code>batch</code>), used to score new
 samples</td>
 </tr>
 </tbody>
@@ -193,13 +190,13 @@ corresponding steps are then skipped, which is useful to try different
 module or cell group parameters without recomputing the features:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res_rerun</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/CellTFusion.html">CellTFusion</a></span><span class="op">(</span></span>
-<span>  raw.counts <span class="op">=</span> <span class="va">raw.counts</span>,</span>
+<span>  raw_counts <span class="op">=</span> <span class="va">raw.counts</span>,</span>
 <span>  normalized <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  dt         <span class="op">=</span> <span class="va">res</span><span class="op">$</span><span class="va">Processed_deconvolution</span>,</span>
 <span>  tfs        <span class="op">=</span> <span class="va">res</span><span class="op">$</span><span class="va">TFs_matrix</span>,</span>
 <span>  pathways   <span class="op">=</span> <span class="va">res</span><span class="op">$</span><span class="va">Pathways_scores</span>,</span>
 <span>  corr_mod   <span class="op">=</span> <span class="fl">0.8</span>,    <span class="co"># e.g. merge modules more readily than the default 0.9</span></span>
-<span>  minMod     <span class="op">=</span> <span class="fl">10</span>,</span>
+<span>  min_module_size     <span class="op">=</span> <span class="fl">10</span>,</span>
 <span>  pval       <span class="op">=</span> <span class="fl">0.05</span>,</span>
 <span>  return     <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -221,7 +218,7 @@ groups, <code>rank = 2</code> is used, and <code>rank = 1</code> with a
 single cell group).</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">latent_spaces</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute.latent_factors.html">compute.latent_factors</a></span><span class="op">(</span></span>
-<span>  X         <span class="op">=</span> <span class="va">cell_groups</span><span class="op">$</span><span class="va">Cell_groups</span>,</span>
+<span>  scores    <span class="op">=</span> <span class="va">cell_groups</span><span class="op">$</span><span class="va">Cell_groups</span>,</span>
 <span>  rank      <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  seed      <span class="op">=</span> <span class="fl">123</span>,</span>
 <span>  file_name <span class="op">=</span> <span class="st">"Tutorial"</span>,</span>
@@ -256,7 +253,7 @@ the factor has more or fewer of them (the <code>_pos</code> and
 <code class="sourceCode R"><span><span class="va">cells_niches</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute_cells_niches.html">compute_cells_niches</a></span><span class="op">(</span></span>
 <span>  latent_factors  <span class="op">=</span> <span class="va">latent_spaces</span>,</span>
 <span>  dt              <span class="op">=</span> <span class="va">dt</span>,</span>
-<span>  cell.groups     <span class="op">=</span> <span class="va">cell_groups</span>,</span>
+<span>  cell_groups     <span class="op">=</span> <span class="va">cell_groups</span>,</span>
 <span>  enrich_thresh   <span class="op">=</span> <span class="fl">1.5</span>,</span>
 <span>  quantile_cutoff <span class="op">=</span> <span class="fl">0.7</span>,</span>
 <span>  return          <span class="op">=</span> <span class="cn">TRUE</span>,</span>

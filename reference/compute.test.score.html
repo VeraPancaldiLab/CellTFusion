@@ -76,14 +76,14 @@ other columns are ignored.</p></dd>
 <dd><p>Named numeric matrix of CCA canonical weights (features x 1).</p></dd>
 
 <dt>train_means</dt>
-<dd><p>Named numeric vector of training column means, or <code>NULL</code> if the training used
-batch correction, in which case the test data are centred on their own column means.</p></dd>
+<dd><p>Named numeric vector of training column means.</p></dd>
 
 <dt>train_sds</dt>
 <dd><p>Named numeric vector of training column standard deviations.</p></dd>
 
 
-</dl></dd>
+</dl><p><code>train_means</code> and <code>train_sds</code> are absent when the training used batch correction: the test data are
+then z-scored on their own column means and SDs (a constant feature is 0), as each training cohort was.</p></dd>
 
 </dl></div>
     <div class="section level2">

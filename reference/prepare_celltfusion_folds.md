@@ -18,11 +18,12 @@ prepare_celltfusion_folds(
   folds = NULL,
   bestune = NULL,
   deconv,
-  raw.counts = NULL,
+  raw_counts = NULL,
   batch = NULL,
-  ncores = 1,
-  return = FALSE,
-  verbose = FALSE,
+  do_parallel = FALSE,
+  workers = NULL,
+  return = TRUE,
+  verbose = TRUE,
   ...
 )
 ```
@@ -53,7 +54,7 @@ prepare_celltfusion_folds(
   independently for each sample, so computing it once for all samples
   does not leak information between folds.
 
-- raw.counts:
+- raw_counts:
 
   Optional count matrix (genes x samples; TPM values if
   `normalized = FALSE` is passed to
@@ -64,7 +65,7 @@ prepare_celltfusion_folds(
   `data`. `pipeML` converts the column names of `features_train` with
   [`make.names()`](https://rdrr.io/r/base/make.names.html) (e.g.
   `"HLA-A"` becomes `"HLA.A"`), so gene symbols in `data` may no longer
-  match TF regulons and gene sets; passing `raw.counts` keeps the
+  match TF regulons and gene sets; passing `raw_counts` keeps the
   original gene symbols. If `NULL` (default), `t(data)` is used.
 
 - batch:
@@ -74,33 +75,40 @@ prepare_celltfusion_folds(
   [`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md)
   runs in multi-cohort mode (see
   [`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md))
-  and the test samples of each cohort are projected separately, centered
-  on their own means. Default `NULL` (single cohort).
+  and the test samples of each cohort are projected separately, z-scored
+  on their own means and SDs. Default `NULL` (single cohort).
 
-- ncores:
+- do_parallel:
 
-  Integer. Number of folds computed in parallel. Default 1 (sequential).
+  Logical; whether to compute the folds in parallel. Default is FALSE
+  (one after the other).
+
+- workers:
+
+  (Optional) Number of parallel workers when `do_parallel = TRUE`. If
+  `NULL` (default), the number of available cores minus one is used.
 
 - return:
 
   Logical; in final mode, whether
   [`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md)
   saves its outputs and plots in `Results/`. Outputs are never saved for
-  the folds. Default FALSE.
+  the folds. Default TRUE.
 
 - verbose:
 
   Logical; whether
   [`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md)
-  prints its progress messages. Default FALSE.
+  prints its progress messages. Default TRUE.
 
 - ...:
 
   Other arguments passed to
   [`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md)
-  (e.g. `normalized`, `TF.collection`, `min_targets_size`, `minMod`,
-  `corr_mod`, `corr`, `pval`, `cancer_type`). `dt`, `tfs` and `pathways`
-  are not allowed, as they must be computed within each fold.
+  (e.g. `normalized`, `TF.collection`, `min_targets_size`,
+  `min_module_size`, `corr_mod`, `corr`, `pval`, `cancer_type`). `dt`,
+  `tfs` and `pathways` are not allowed, as they must be computed within
+  each fold.
 
 ## Value
 
@@ -126,26 +134,30 @@ prepare_celltfusion_folds(
 
 ## Details
 
-Pass the fixed arguments (`deconv`, and optionally `raw.counts`, `batch`
+Pass the fixed arguments (`deconv`, and optionally `raw_counts`, `batch`
 and any
 [`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md)
 argument) through `fold_construction_args_fixed`. Tunable arguments
-(`fold_construction_args_tunable`) are not supported. With `ncores > 1`,
-the first fold is computed before the others start in parallel, so that
-the TF and pathway collections cached in `Results/` are downloaded only
-once; the package must be installed for the parallel workers.
+(`fold_construction_args_tunable`) are not supported. With `batch`, a
+warning names the folds and cohorts with fewer than 10 test samples
+(their test samples are z-scored on their own means and SDs, which is
+unreliable with few samples; leave-one-cohort-out folds avoid it). With
+`do_parallel = TRUE`, the first fold is computed before the others start
+in parallel, so that the TF and pathway collections cached in `Results/`
+are downloaded only once; the package must be installed for the parallel
+workers.
 
 ## Examples
 
 ``` r
 if (FALSE) { # \dontrun{
-raw.counts <- CellTFusion::raw.counts.tuto
+raw_counts <- CellTFusion::raw.counts.tuto
 traitdata  <- CellTFusion::traitdata.tuto
 deconv     <- CellTFusion::deconv.tuto  # deconvolution of all the samples
 
 # Classification
 ml_res <- pipeML::compute_features.training.ML(
-  features_train = t(raw.counts),
+  features_train = t(raw_counts),
   task_type      = "classification",
   target_var     = traitdata$Best.Confirmed.Overall.Response,
   trait.positive = "PD",
@@ -153,7 +165,7 @@ ml_res <- pipeML::compute_features.training.ML(
   k_folds        = 5,
   n_rep          = 1,
   fold_construction_fun        = prepare_celltfusion_folds,
-  fold_construction_args_fixed = list(deconv = deconv, raw.counts = raw.counts)
+  fold_construction_args_fixed = list(deconv = deconv, raw_counts = raw_counts)
 )
 
 # Features of new samples: projected onto the model trained on all the training samples
@@ -161,14 +173,14 @@ features_test <- project_test_factors(ml_res$Custom_output, deconv_test)
 
 # Survival (time and event of each sample)
 surv_res <- pipeML::compute_features.training.ML(
-  features_train = t(raw.counts),
+  features_train = t(raw_counts),
   task_type      = "survival",
   time_var       = time,
   event_var      = event,
   k_folds        = 5,
   n_rep          = 1,
   fold_construction_fun        = prepare_celltfusion_folds,
-  fold_construction_args_fixed = list(deconv = deconv, raw.counts = raw.counts)
+  fold_construction_args_fixed = list(deconv = deconv, raw_counts = raw_counts)
 )
 } # }
 ```

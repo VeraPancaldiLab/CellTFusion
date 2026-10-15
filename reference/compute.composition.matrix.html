@@ -61,24 +61,20 @@ the LM22 features <code>Plasma.cells</code> and <code>T.cells.CD4.memory.activat
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">compute.composition.matrix</span><span class="op">(</span></span>
-<span>  <span class="va">deconvolution.subgroupped</span>,</span>
-<span>  <span class="va">cell.groups</span>,</span>
-<span>  cells_extra <span class="op">=</span> <span class="cn">NULL</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">compute.composition.matrix</span><span class="op">(</span><span class="va">dt</span>, <span class="va">cell_groups</span>, cells_extra <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
 
 
-<dl><dt id="arg-deconvolution-subgroupped">deconvolution.subgroupped<a class="anchor" aria-label="anchor" href="#arg-deconvolution-subgroupped"></a></dt>
+<dl><dt id="arg-dt">dt<a class="anchor" aria-label="anchor" href="#arg-dt"></a></dt>
 <dd><p>Deconvolution subgroups as returned by
 <code><a href="https://verapancaldilab.github.io/multideconv/reference/compute.deconvolution.analysis.html" class="external-link">multideconv::compute.deconvolution.analysis()</a></code> (the elements <code>Deconvolution matrix</code> and
 <code>Deconvolution subgroups composition</code> are used).</p></dd>
 
 
-<dt id="arg-cell-groups">cell.groups<a class="anchor" aria-label="anchor" href="#arg-cell-groups"></a></dt>
+<dt id="arg-cell-groups">cell_groups<a class="anchor" aria-label="anchor" href="#arg-cell-groups"></a></dt>
 <dd><p>The cell groups returned by <code><a href="construct_cell_groups.html">construct_cell_groups()</a></code>: its element <code>Composition</code> (the
 features of each cell group) is used. An unnamed list whose second element holds the composition is also accepted.</p></dd>
 
@@ -102,19 +98,33 @@ are not recognised (their row is all zeros) are listed, each with a message.</p>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"network.tuto"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"deconv_subgroups.tuto"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">cell_groups</span> <span class="op">&lt;-</span> <span class="fu"><a href="construct_cell_groups.html">construct_cell_groups</a></span><span class="op">(</span><span class="va">network.tuto</span>, <span class="va">deconv_subgroups.tuto</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> 20 of 764 features were not assigned to any cluster by the tree cut and are not part of any cell group (blue: 6, pink: 2, red: 2, yellow: 8, black: 2)</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Length of color vector was shorter than the number of clusters - color vector was recycled</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Please use `linewidth` instead.</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> The deprecated feature was likely used in the <span style="color: #0000BB;">dendextend</span> package.</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span>   Please report the issue at <span style="color: #0000BB; font-style: italic;">&lt;https://github.com/talgalili/dendextend/issues&gt;</span>.</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Length of color vector was shorter than the number of clusters - color vector was recycled</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Length of color vector was shorter than the number of clusters - color vector was recycled</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Length of color vector was shorter than the number of clusters - color vector was recycled</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Length of color vector was shorter than the number of clusters - color vector was recycled</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Length of color vector was shorter than the number of clusters - color vector was recycled</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Length of color vector was shorter than the number of clusters - color vector was recycled</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Length of color vector was shorter than the number of clusters - color vector was recycled</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Dendrogram plots saved to: Results/Dendrogram_color_clusters.pdf</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> 44 of 897 features were not assigned to any cluster by the tree cut and are not part of any cell group (pink: 2, yellow: 8, red: 2, blue: 6, brown: 4, turquoise: 12, black: 4, green: 6)</span>
 <span class="r-in"><span><span class="va">composition</span> <span class="op">&lt;-</span> <span class="fu">compute.composition.matrix</span><span class="op">(</span><span class="va">deconv_subgroups.tuto</span>, <span class="va">cell_groups</span><span class="op">)</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Cell types not present in any cell group (left out of the composition matrix): T.cells.gamma.delta</span>
 <span class="r-in"><span><span class="va">composition</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">4</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">5</span><span class="op">]</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                              B.cells B.naive.cells B.memory.cells</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Dendrogram_brown_group_1_pos       1             0              0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Dendrogram_brown_group_1_neg       1             0              0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Dendrogram_brown_group_2_pos       0             0              0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Dendrogram_brown_group_2_neg       0             0              0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                              Macrophages.cells Macrophages.M0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Dendrogram_brown_group_1_pos                 0              0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Dendrogram_brown_group_1_neg                 0              0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Dendrogram_brown_group_2_pos                 0              0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Dendrogram_brown_group_2_neg                 0              0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                             B.cells B.naive.cells B.memory.cells</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Dendrogram_pink_group_1_pos       0             0              0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Dendrogram_pink_group_1_neg       0             0              0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Dendrogram_pink_group_2_pos       1             0              0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Dendrogram_pink_group_2_neg       1             0              0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                             Macrophages.cells Macrophages.M0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Dendrogram_pink_group_1_pos                 0              0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Dendrogram_pink_group_1_neg                 0              0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Dendrogram_pink_group_2_pos                 0              0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Dendrogram_pink_group_2_neg                 0              0</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

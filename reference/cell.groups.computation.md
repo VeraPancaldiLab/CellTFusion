@@ -8,39 +8,37 @@ module networks, and optionally exports the results.
 
 ``` r
 cell.groups.computation(
-  deconvolution,
-  cell.dendrograms,
-  tfs.module.network,
+  deconv,
+  cell_dendrograms,
+  network,
   batch = NULL,
-  return = T,
-  dendrogram_file = NULL,
-  return_dendrogram = FALSE,
+  return = TRUE,
+  file_name = NULL,
   min_cluster_size = 3
 )
 ```
 
 ## Arguments
 
-- deconvolution:
+- deconv:
 
   A data frame with deconvolution features (samples as rows, cell-type
   features as columns). This is usually the first element returned by
   [`multideconv::compute.deconvolution.analysis()`](https://verapancaldilab.github.io/multideconv/reference/compute.deconvolution.analysis.html).
-  It must contain all the features of `cell.dendrograms`.
+  It must contain all the features of `cell_dendrograms`.
 
-- cell.dendrograms:
+- cell_dendrograms:
 
   A named list of dendrogram (`hclust`) objects, each corresponding to a
   TF module, typically returned by
   [`identify.cell.groups()`](https://verapancaldilab.github.io/CellTFusion/reference/identify.cell.groups.md).
 
-- tfs.module.network:
+- network:
 
   A list containing network information of transcription factor (TF)
   modules, as obtained from
   [`compute.WTCNA()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.WTCNA.md)
-  (the elements `TFs module matrix`, `TFs per module` and `TFs_matrix`
-  are used).
+  (the module scores, element `TFs module matrix`, are used).
 
 - batch:
 
@@ -48,20 +46,14 @@ cell.groups.computation(
 
 - return:
 
-  Logical; if TRUE (default), writes CSV files with cell group
-  compositions and scores to the "Results/" folder (named with
-  `dendrogram_file`; the folder is created if needed).
+  Logical; if TRUE (default), saves a PDF of the colored cell-group
+  dendrograms (`Results/Dendrogram_color_clusters_<file_name>.pdf`) and
+  CSV files with cell group compositions and scores to the "Results/"
+  folder (the folder is created if needed).
 
-- dendrogram_file:
+- file_name:
 
-  Optional character. Suffix of the output file names: the dendrogram
-  PDF (see `return_dendrogram`) and the CSV files (see `return`).
-
-- return_dendrogram:
-
-  Logical. If TRUE, saves a PDF of the colored cell-group dendrograms to
-  `Results/Dendrogram_color_clusters_<dendrogram_file>.pdf` (only when
-  `dendrogram_file` is set). Default FALSE.
+  Optional character. Suffix of the output file names (see `return`).
 
 - min_cluster_size:
 
@@ -80,7 +72,8 @@ An unnamed list of three elements:
   features) of each cell group.
 
 - `[[3]]`: A named list of CCA projection parameters (`xcoef`,
-  `train_means`, `train_sds`) for each cell group.
+  `train_means`, `train_sds`; only `xcoef` with `batch`) for each cell
+  group.
 
 Cell groups are named `Dendrogram_<module>_group_<n>`, where `n` is the
 cluster number of the dendrogram of that module (the number shown in the
@@ -90,14 +83,14 @@ does not assign to any cluster are not part of any cell group: a message
 reports how many there are per module. If `return=TRUE`, two CSV files
 will be created:
 
-- `Results/Cell.groups.composition_<dendrogram_file>.csv`: A table
-  showing the composition of each cell group.
+- `Results/Cell.groups.composition_<file_name>.csv`: A table showing the
+  composition of each cell group.
 
-- `Results/Cell.groups.scores_<dendrogram_file>.csv`: A matrix of cell
-  group scores across samples.
+- `Results/Cell.groups.scores_<file_name>.csv`: A matrix of cell group
+  scores across samples.
 
-Without `dendrogram_file`, they are named `Cell.groups.composition.csv`
-and `Cell.groups.scores.csv`.
+Without `file_name`, they are named `Cell.groups.composition.csv` and
+`Cell.groups.scores.csv`.
 
 ## Examples
 
@@ -108,9 +101,9 @@ tf_network <- compute.WTCNA(...)
 dendrograms <- identify.cell.groups(...)
 
 cell.groups <- cell.groups.computation(
-  deconvolution = deconv_results[[1]],
-  cell.dendrograms = dendrograms,
-  tfs.module.network = tf_network,
+  deconv = deconv_results[[1]],
+  cell_dendrograms = dendrograms,
+  network = tf_network,
   return = TRUE
 )
 } # }

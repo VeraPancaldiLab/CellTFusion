@@ -80,16 +80,16 @@ wrapper function.
 ``` r
 
 res <- CellTFusion(
-  raw.counts = raw.counts,
+  raw_counts = raw.counts,
   normalized = TRUE,
   deconv_methods = c("Quantiseq", "DeconRNASeq"), # Choose from Quantiseq, Epidish, DeconRNASeq, DWLS, CBSX
-  cbsx.mail = "your_email",       # Needed to run CBSX (CIBERSORTx)
-  cbsx.token = "your_token",      # Needed to run CBSX (CIBERSORTx)
+  cbsx_mail = "your_email",       # Needed to run CBSX (CIBERSORTx)
+  cbsx_token = "your_token",      # Needed to run CBSX (CIBERSORTx)
   TF.collection = "CollecTRI",    # "CollecTRI", "Dorothea", or "ARACNE"
   cancer_type = "skcm",           # TCGA cancer type, used for meta-program mapping
   file_name = "TestRun",
   min_targets_size = 5,
-  minMod = 5,
+  min_module_size = 5,
   corr_mod = 0.9,                 # modules whose scores correlate above 0.9 are merged
   corr = 0.7,
   pval = 0.05,
@@ -107,13 +107,13 @@ group construction:
 ``` r
 
 res2 <- CellTFusion(
-  raw.counts = raw.counts,
+  raw_counts = raw.counts,
   normalized = TRUE,
   dt = res$Processed_deconvolution,
   tfs = res$TFs_matrix,
   pathways = res$Pathways_scores,
   file_name = "TestRun_rerun",
-  minMod = 5,
+  min_module_size = 5,
   corr_mod = 0.9,
   pval = 0.05,
   return = TRUE
@@ -122,7 +122,7 @@ res2 <- CellTFusion(
 
 **NOTE**: `CIBERSORTx` (`"CBSX"`) is one of the default deconvolution
 methods, but it is not an open-source program. It is only run when you
-provide your email and token with the `cbsx.mail` and `cbsx.token`
+provide your email and token with the `cbsx_mail` and `cbsx_token`
 parameters (request a token at
 [CIBERSORTx](https://cibersortx.stanford.edu/register.php)); without
 them it is skipped with a message.
@@ -162,10 +162,10 @@ article).
 ``` r
 
 test_scores <- compute.test.set(
-  deconv_res = res$Processed_deconvolution,        # deconvolution subgroups of the training set
+  dt = res$Processed_deconvolution,        # deconvolution subgroups of the training set
   cell_groups = res$Cell_groups,                   # trained cell groups
   features = names(res$Cell_groups$Composition),   # cell groups to replicate
-  deconvolution_test = deconv_test                 # deconvolution matrix of the test set (before subgrouping)
+  deconv_test = deconv_test                 # deconvolution matrix of the test set (before subgrouping)
 )
 ```
 
@@ -190,7 +190,7 @@ ml_res <- pipeML::compute_features.training.ML(
   trait.positive = "R",
   metric = "AUROC",
   fold_construction_fun = prepare_celltfusion_folds,
-  fold_construction_args_fixed = list(deconv = deconv, raw.counts = raw.counts)
+  fold_construction_args_fixed = list(deconv = deconv, raw_counts = raw.counts)
 )
 
 # Features of new samples, projected onto the final model

@@ -68,7 +68,7 @@ Unassigned features are left uncolored.</p>
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">plot_dendrogram_clusters</span><span class="op">(</span></span>
-<span>  <span class="va">cell.group.dendrogram</span>,</span>
+<span>  <span class="va">cell_dendrograms</span>,</span>
 <span>  <span class="va">cuts_per_dendrogram</span>,</span>
 <span>  file_name <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -78,7 +78,7 @@ Unassigned features are left uncolored.</p>
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
 
 
-<dl><dt id="arg-cell-group-dendrogram">cell.group.dendrogram<a class="anchor" aria-label="anchor" href="#arg-cell-group-dendrogram"></a></dt>
+<dl><dt id="arg-cell-dendrograms">cell_dendrograms<a class="anchor" aria-label="anchor" href="#arg-cell-dendrograms"></a></dt>
 <dd><p>A named list of <code>hclust</code> objects (or objects convertible to <code>hclust</code>),
 one per TF module, as returned by <code><a href="identify.cell.groups.html">identify.cell.groups()</a></code> (the correlations they store are used to order the
 leaves; without them, the leaves keep the order of the tree).</p></dd>
@@ -91,8 +91,8 @@ as returned by <code><a href="calculate_dendrogram_cuts.html">calculate_dendrogr
 
 <dt id="arg-file-name">file_name<a class="anchor" aria-label="anchor" href="#arg-file-name"></a></dt>
 <dd><p>Optional character. Suffix of the output file
-(<code>Results/Dendrogram_color_clusters_&lt;file_name&gt;.pdf</code>). If <code>NULL</code> (default),
-nothing is saved.</p></dd>
+(<code>Results/Dendrogram_color_clusters_&lt;file_name&gt;.pdf</code>; <code>Results/Dendrogram_color_clusters.pdf</code> if
+<code>NULL</code>, the default).</p></dd>
 
 </dl></div>
     <div class="section level2">

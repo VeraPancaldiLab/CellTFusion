@@ -8,7 +8,7 @@ differences and significance is visualized as annotated boxplots
 ## Usage
 
 ``` r
-scores.anova.test(scores, coldata, trait, pval = 0.05, p_adjust = "none")
+scores.anova.test(scores, coldata, trait, pval = 0.05, padj = FALSE)
 ```
 
 ## Arguments
@@ -39,12 +39,11 @@ scores.anova.test(scores, coldata, trait, pval = 0.05, p_adjust = "none")
   Numeric. Threshold for significance: a feature is significant if its
   (adjusted) p-value is `<= pval` (default = 0.05).
 
-- p_adjust:
+- padj:
 
-  Character. Method to correct the p-values for multiple testing across
-  the features (see
-  [`stats::p.adjust()`](https://rdrr.io/r/stats/p.adjust.html), e.g.
-  `"BH"`). Default `"none"`.
+  Logical; if TRUE, the p-values are corrected for multiple testing
+  across the features with the Benjamini-Hochberg method, and the
+  adjusted p-values are compared with the threshold. Default FALSE.
 
 ## Value
 
@@ -58,20 +57,29 @@ data("network.tuto")
 data("deconv_subgroups.tuto")
 data("traitdata.tuto")
 cell_groups <- construct_cell_groups(network.tuto, deconv_subgroups.tuto)
-#> 20 of 764 features were not assigned to any cluster by the tree cut and are not part of any cell group (blue: 6, pink: 2, red: 2, yellow: 8, black: 2)
+#> Warning: Length of color vector was shorter than the number of clusters - color vector was recycled
+#> Warning: Length of color vector was shorter than the number of clusters - color vector was recycled
+#> Warning: Length of color vector was shorter than the number of clusters - color vector was recycled
+#> Warning: Length of color vector was shorter than the number of clusters - color vector was recycled
+#> Warning: Length of color vector was shorter than the number of clusters - color vector was recycled
+#> Warning: Length of color vector was shorter than the number of clusters - color vector was recycled
+#> Warning: Length of color vector was shorter than the number of clusters - color vector was recycled
+#> Warning: Length of color vector was shorter than the number of clusters - color vector was recycled
+#> Dendrogram plots saved to: Results/Dendrogram_color_clusters.pdf
+#> 44 of 897 features were not assigned to any cluster by the tree cut and are not part of any cell group (pink: 2, yellow: 8, red: 2, blue: 6, brown: 4, turquoise: 12, black: 4, green: 6)
 res <- scores.anova.test(cell_groups$Cell_groups[, 1:5], traitdata.tuto, "Enrollment.IC")
-#> 3 significant feature(s) after one-way ANOVA (p-value <= 0.05): Dendrogram_brown_group_3, Dendrogram_brown_group_4, Dendrogram_brown_group_5
+#> 5 significant feature(s) after one-way ANOVA (p-value <= 0.05): Dendrogram_pink_group_1, Dendrogram_pink_group_2, Dendrogram_pink_group_3, Dendrogram_pink_group_4, Dendrogram_pink_group_5
 res$Statistics
-#>                    feature          test statistic_name statistic      p_value
-#> 1 Dendrogram_brown_group_1 one-way ANOVA              F  1.202048 3.028652e-01
-#> 2 Dendrogram_brown_group_2 one-way ANOVA              F  0.999210 3.701066e-01
-#> 3 Dendrogram_brown_group_3 one-way ANOVA              F  7.374671 8.242298e-04
-#> 4 Dendrogram_brown_group_4 one-way ANOVA              F  6.179003 2.515239e-03
-#> 5 Dendrogram_brown_group_5 one-way ANOVA              F 15.736599 4.769988e-07
+#>                   feature          test statistic_name statistic      p_value
+#> 1 Dendrogram_pink_group_1 one-way ANOVA              F  6.077982 2.765541e-03
+#> 2 Dendrogram_pink_group_2 one-way ANOVA              F  4.343054 1.431839e-02
+#> 3 Dendrogram_pink_group_3 one-way ANOVA              F 14.930184 9.546563e-07
+#> 4 Dendrogram_pink_group_4 one-way ANOVA              F  8.533203 2.831134e-04
+#> 5 Dendrogram_pink_group_5 one-way ANOVA              F  5.808542 3.563466e-03
 #>     p_adjusted significant
-#> 1 3.028652e-01       FALSE
-#> 2 3.701066e-01       FALSE
-#> 3 8.242298e-04        TRUE
-#> 4 2.515239e-03        TRUE
-#> 5 4.769988e-07        TRUE
+#> 1 2.765541e-03        TRUE
+#> 2 1.431839e-02        TRUE
+#> 3 9.546563e-07        TRUE
+#> 4 2.831134e-04        TRUE
+#> 5 3.563466e-03        TRUE
 ```

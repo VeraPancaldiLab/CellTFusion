@@ -9,85 +9,94 @@ the eigengene of the module.
 
 ``` r
 compute.WTCNA(
-  TFs.matrix,
-  batch = FALSE,
-  network.type = "signed",
-  clustering.method = "average",
-  minMod = 15,
+  tfs,
+  batch = NULL,
+  network_type = "signed",
+  clustering_method = "ward.D2",
+  min_module_size = 5,
   corr_mod = 0.9,
-  cor_type = "p",
-  verbose = F,
-  file.name = NULL,
-  softPower = NULL,
+  corr_type = "spearman",
+  verbose = TRUE,
+  file_name = NULL,
+  soft_power = NULL,
   consensus_quantile = 0,
-  return = T
+  return = TRUE
 )
 ```
 
 ## Arguments
 
-- TFs.matrix:
+- tfs:
 
-  Matrix of TF activity (samples x TFs). When `batch = TRUE`, a list of
-  such matrices, one per cohort.
+  Matrix of TF activity (samples x TFs), scaled or not: the TFs are
+  standardized (within each cohort with `batch`) to compute the module
+  eigengenes, and the other steps use correlations, which do not depend
+  on the scaling. With `batch`, the TF activities of all the cohorts,
+  each computed within its cohort (as
+  [`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md)
+  does).
 
 - batch:
 
-  Logical; if TRUE, builds consensus TF modules across cohorts provided
-  as a list of matrices (see Details). Module eigengenes are then
-  computed and scaled within each cohort.
+  (Optional) A vector with the cohort of each sample, in the row order
+  of `tfs`; if it is named, it is matched to the samples by name
+  instead. It is always treated as categorical. If given, consensus TF
+  modules are built across the cohorts (see Details) and module
+  eigengenes are computed and scaled within each cohort. Default is
+  `NULL` (single cohort); a vector with only one cohort is treated the
+  same way.
 
-- network.type:
+- network_type:
 
   Network type: "signed" (default) or "unsigned".
 
-- clustering.method:
+- clustering_method:
 
   Linkage method of the hierarchical clustering of the TFs
   ([`stats::hclust()`](https://rdrr.io/r/stats/hclust.html)), applied to
   the TOM dissimilarity (1 - topological overlap) between TFs, or to the
-  consensus TOM dissimilarity in batch mode. Default is "average", as in
-  WGCNA: two groups of TFs are joined according to the average
-  dissimilarity between their TFs.
+  consensus TOM dissimilarity in batch mode. Default is "ward.D2"
+  (WGCNA's own default is "average": two groups of TFs are joined
+  according to the average dissimilarity between their TFs).
 
-- minMod:
+- min_module_size:
 
-  Minimum number of TFs per module. Default is 15.
+  Minimum number of TFs per module. Default is 5.
 
 - corr_mod:
 
   Correlation threshold (0-1): modules whose eigengenes have a
-  correlation (of type `cor_type`) above it are merged. In batch mode,
+  correlation (of type `corr_type`) above it are merged. In batch mode,
   the correlation is computed on the eigengenes of all the samples,
   scaled within each cohort. Default is 0.9.
 
-- cor_type:
+- corr_type:
 
   Correlation used to pick the soft-threshold power, build the adjacency
   matrix, merge modules and compute the proportion of variance
-  explained: "p" (Pearson) or "s" (Spearman), in single-cohort and batch
-  mode. The module eigengene is always the first principal component of
-  the module's TF activities. Default is "p".
+  explained: "spearman" (default) or "pearson", in single-cohort and
+  batch mode. The module eigengene is always the first principal
+  component of the module's TF activities.
 
 - verbose:
 
-  Logical; whether to print the function messages. Default is FALSE.
+  Logical; whether to print the function messages. Default is TRUE.
 
-- file.name:
+- file_name:
 
   Optional character suffix used when writing WTCNA outputs (CSV files
   and, in single-cohort mode, the diagnostic plots
-  `Soft_Threshold_<file.name>.pdf`,
-  `Gene_dendrogram_and_module_colors_<file.name>.pdf` and
-  `Gene_dendrogram_and_module_colors_after_merging_<file.name>.pdf`).
+  `Soft_Threshold_<file_name>.pdf`,
+  `Gene_dendrogram_and_module_colors_<file_name>.pdf` and
+  `Gene_dendrogram_and_module_colors_after_merging_<file_name>.pdf`).
 
-- softPower:
+- soft_power:
 
   Optional numeric value specifying the soft-thresholding power used to
-  build the adjacency matrix (one value per cohort when `batch = TRUE`).
-  If `NULL`, the lowest power whose scale-free fit \\R^2\\ reaches 0.9
-  is chosen automatically (the power with the best fit if none reaches
-  0.9, with a message).
+  build the adjacency matrix (one value per cohort, in the order the
+  cohorts first appear in `batch`, in batch mode). If `NULL`, the lowest
+  power whose scale-free fit \\R^2\\ reaches 0.9 is chosen automatically
+  (the power with the best fit if none reaches 0.9, with a message).
 
 - consensus_quantile:
 
@@ -104,18 +113,17 @@ compute.WTCNA(
 - return:
 
   Logical, whether to save output plots, the module list
-  (`Results/TFs_modules_<file.name>.csv`) and the module matrix
-  (`Results/TF_module_matrix_<file.name>.csv`, with the sample names as
-  row names) to "Results/" (without `file.name`, `TFs_modules.csv` and
+  (`Results/TFs_modules_<file_name>.csv`) and the module matrix
+  (`Results/TF_module_matrix_<file_name>.csv`, with the sample names as
+  row names) to "Results/" (without `file_name`, `TFs_modules.csv` and
   `TF_module_matrix.csv`). Default is TRUE.
 
 ## Value
 
 A named list with:
 
-- `TFs module matrix`: Scaled module eigengenes (samples x modules). In
-  batch mode, samples are concatenated in cohort order (use the row
-  names to match them to other tables).
+- `TFs module matrix`: Scaled module eigengenes (samples x modules), in
+  the row order of `tfs`.
 
 - `TFs colors`: Vector of module colors assigned to each TF (`"grey"`
   for TFs not assigned to any module).
@@ -126,11 +134,12 @@ A named list with:
   mode only).
 
 - `TFs_matrix`: The TF activity matrix used (a list of per-cohort
-  matrices restricted to shared TFs in batch mode).
+  matrices in batch mode, in the order the cohorts first appear in
+  `batch`).
 
 - `Network parameters`: A list with the soft-thresholding power(s) used
-  (`softPower`, one per cohort in batch mode), `network.type` and
-  `cor_type`, used by
+  (`soft_power`, one per cohort in batch mode), `network_type` and
+  `corr_type`, used by
   [`identify_hub_TFs()`](https://verapancaldilab.github.io/CellTFusion/reference/identify_hub_TFs.md),
   and in batch mode `consensus_quantile`.
 
@@ -143,8 +152,8 @@ with a message.
 In batch mode, the modules are built with the same steps as in
 single-cohort mode, on a consensus network:
 
-1.  only the TFs shared by all cohorts are used, and a soft-thresholding
-    power is chosen for each cohort;
+1.  the samples are split by cohort, and a soft-thresholding power is
+    chosen for each cohort;
 
 2.  the adjacency and the topological overlap matrix (TOM) are computed
     in each cohort, with its own power;
@@ -157,7 +166,7 @@ single-cohort mode, on a consensus network:
 4.  the consensus TOM is, for each pair of TFs, the `consensus_quantile`
     quantile of its calibrated TOMs across cohorts;
 
-5.  the TFs are clustered on 1 - consensus TOM with `clustering.method`
+5.  the TFs are clustered on 1 - consensus TOM with `clustering_method`
     and the tree is cut with the same dynamic tree cut as in
     single-cohort mode;
 
@@ -183,5 +192,14 @@ https://doi.org/10.1186/1471-2105-9-559
 
 data("tfs.tuto")
 network <- compute.WTCNA(tfs.tuto, corr_mod = 0.9, return = FALSE)
+#> Creating weighted TF-coactivity network......................................................................
+#> 
 #> Warning: executing %dopar% sequentially: no parallel backend registered
+#> Automatically choosing 15 as soft-threshold......................................................................
+#> 
+#> Calculating nodes adjacency and topological overlapping nodes.................................................
+#> 
+#> Calculating eigenvectors from modules.................................................
+#> 
+#> [1] "Merging modules significantly correlated with 0.9........"
 ```
