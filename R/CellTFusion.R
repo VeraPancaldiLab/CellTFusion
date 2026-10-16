@@ -3,7 +3,8 @@ utils::globalVariables(c("Trait", "Value", ".", "tf", "Module", "values", ".data
                          "Regulator", "Target", "as.hclust", "condition", "feature_label", "group", "lm", "module",
                          "mor", "mtext", "order.dendrogram", "padj", "pathway", "proportion", "score", "score_level",
                          "setNames", "svg", "target", "n", "n_distinct", "yg", "x", "y", "coefficient", "feature",
-                         "weight", "top", "y0"))
+                         "weight", "top", "y0",
+                         "cell_group", "stable_distinct", "threshold"))
 
 #' @importFrom grDevices colorRampPalette svg
 #' @importFrom graphics mtext
@@ -3387,7 +3388,7 @@ scores.stat.analysis <- function(scores, coldata, trait,
 #'     on one factor at a time do not depend on this scale; to compare factors within a sample, multiply each column
 #'     by its \code{d}, as done for \code{patient_mixture}.}
 #'   \item{W}{Weights of the cell groups per factor (cell groups x rank). Non-negative.}
-#'   \item{nmf_input}{The matrix fed to NMF: the positive part of the cell group scores (samples x cell groups).
+#'   \item{nmf_input}{The matrix fed to NMF: the positive part of the cell group scores (samples x cell groups).}
 #'   \item{nmf_model}{The \code{RcppML::nmf()} model object (includes the scaling vector \code{d}).}
 #'   \item{patient_mixture}{Long-format data frame of per-sample factor proportions used for the mixture plot: the
 #'     factor scores multiplied by the size of each factor (\code{nmf_model$d}), divided by their sum in each sample.}
@@ -4001,7 +4002,8 @@ project_factors <- function(latent_factors, scores) {
 #' )
 #'
 #' # Features of new samples: scored on the cell groups learned on all the training samples
-#' features_test <- compute.test.set(ml_res$Custom_output$Processed_deconvolution, ml_res$Custom_output$Cell_groups,
+#' final <- ml_res$Custom_output
+#' features_test <- compute.test.set(final$Processed_deconvolution, final$Cell_groups,
 #'                                   deconv_test = deconv_test)
 #'
 #' # Survival (time and event of each sample)

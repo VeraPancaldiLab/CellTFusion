@@ -54,7 +54,7 @@ samples: the size of each factor is in \code{nmf_model$d} (the NMF is \code{W \%
 on one factor at a time do not depend on this scale; to compare factors within a sample, multiply each column
 by its \code{d}, as done for \code{patient_mixture}.}
 \item{W}{Weights of the cell groups per factor (cell groups x rank). Non-negative.}
-\item{nmf_input}{The matrix fed to NMF: the positive part of the cell group scores (samples x cell groups).
+\item{nmf_input}{The matrix fed to NMF: the positive part of the cell group scores (samples x cell groups).}
 \item{nmf_model}{The \code{RcppML::nmf()} model object (includes the scaling vector \code{d}).}
 \item{patient_mixture}{Long-format data frame of per-sample factor proportions used for the mixture plot: the
 factor scores multiplied by the size of each factor (\code{nmf_model$d}), divided by their sum in each sample.}

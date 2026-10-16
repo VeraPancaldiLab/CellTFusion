@@ -116,7 +116,8 @@ ml_res <- pipeML::compute_features.training.ML(
 )
 
 # Features of new samples: scored on the cell groups learned on all the training samples
-features_test <- compute.test.set(ml_res$Custom_output$Processed_deconvolution, ml_res$Custom_output$Cell_groups,
+final <- ml_res$Custom_output
+features_test <- compute.test.set(final$Processed_deconvolution, final$Cell_groups,
                                   deconv_test = deconv_test)
 
 # Survival (time and event of each sample)
