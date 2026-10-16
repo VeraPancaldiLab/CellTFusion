@@ -75,9 +75,10 @@ setwd('~/path/to/directory')
 library(CellTFusion)
 ```
 
-If you want to run the full pipeline in one step — including
-normalization, deconvolution, TF activity scoring, module construction,
-and pathway scoring — use the `CellTFusion()` wrapper function.
+If you want to run the full pipeline in one step — normalization,
+deconvolution, TF activity scoring, TF module construction, pathway
+scoring, cell groups, NMF latent factors and cell niches — use the
+`CellTFusion()` wrapper function.
 
 ``` r
 res <- CellTFusion(
@@ -130,9 +131,9 @@ them it is skipped with a message.
 
 `CellTFusion()` returns a named list with the outputs of each pipeline
 stage — cell-type deconvolution, TF activity, TF module network, pathway
-scores, cell groups, latent factors and cell niches.
-Cell groups are derived internally via `construct_cell_groups()` and are
-available at `res$Cell_groups`:
+scores, cell groups, latent factors and cell niches. Cell groups are
+derived internally via `construct_cell_groups()` and are available at
+`res$Cell_groups`:
 
 ``` r
 res$Cell_groups$Cell_groups  # data frame of cell group scores (samples x groups)
@@ -149,9 +150,10 @@ section.
 ## Replicate cell groups on an independent dataset
 
 Use this function to apply the trained cell groups to an external test
-set and calculate group-specific composite scores. To obtain the
-latent factors of new samples, project their cell group scores with
-`project_factors(res$Latent_spaces, test_scores)` (see the [Machine learning
+set and calculate group-specific composite scores. To obtain the latent
+factors of new samples, project their cell group scores with
+`project_factors(res$Latent_spaces, test_scores)` (see the [Machine
+learning
 workflows](https://VeraPancaldiLab.github.io/CellTFusion/articles/a5_machine_learning.html)
 article).
 
@@ -171,8 +173,7 @@ To use the cell group scores as features in
 leakage, pass `prepare_celltfusion_folds()` as the fold construction
 function: `CellTFusion()` is then run on the training samples of each
 cross-validation fold, and the test samples are scored on the resulting
-cell groups. It works for classification and survival
-tasks.
+cell groups. It works for classification and survival tasks.
 
 ``` r
 ml_res <- pipeML::compute_features.training.ML(

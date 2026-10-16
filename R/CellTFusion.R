@@ -562,7 +562,7 @@ cell.groups.computation = function(deconv, cell_dendrograms, network, batch = NU
 #' data("network.tuto")
 #' data("traitdata.tuto")
 #'
-#' # The clinical traits of the tutorial data are categorical: they are tested with plot_grid = TRUE
+#' # Categorical traits (response, Enrollment.IC) are tested with plot_grid = TRUE; os and censOS are numeric
 #' res <- compute.metadata.association(
 #'   scores = network.tuto[[1]],
 #'   coldata = traitdata.tuto,
@@ -3355,9 +3355,9 @@ scores.stat.analysis <- function(scores, coldata, trait,
 
 #' Compute latent factors from cell group scores using NMF
 #'
-#' Decomposes signed CCA composite scores into non-negative latent factors
-#' by splitting each score into its positive and negative direction components,
-#' then applying Non-negative Matrix Factorization via RcppML (fast C++ backend).
+#' Decomposes the cell group scores into non-negative latent factors with Non-negative Matrix Factorization (NMF,
+#' \code{RcppML::nmf()}), applied to the positive part of the scores (see Details). The number of factors is chosen
+#' by bootstrap NMF if \code{rank} is not given.
 #'
 #' @param scores Numeric matrix of size samples x cell groups (signed CCA composite scores).
 #' @param rank Integer; number of NMF factors. If NULL (default), chosen among \code{ranks} with bootstrap NMF (see
@@ -3841,10 +3841,12 @@ compute_cells_niches <- function(latent_factors, cell_groups, top_n = 5,
 #'
 #' Keeps the positive part of the cell group scores of new samples (as in training) and projects them
 #' onto the latent space learned during training using the Moore-Penrose
-#' pseudoinverse of the scaled basis matrix W. Negative values of the projection are set to 0 (on the tutorial data
-#' the result is the same as an exact non-negative projection). Cell groups missing in \code{scores} are
-#' tolerated with a warning naming them: the projection uses the other cell groups (on the tutorial data, with 20 of
-#' 144 cell groups missing, the factors still correlate 0.999 with the full projection).
+#' pseudoinverse of the scaled basis matrix \code{W \%*\% diag(d)}. Negative values of the projection (samples with
+#' little of a factor; about 30\% of the values on the tutorial data) are set to 0: on the tutorial data, the result
+#' correlates 0.998 with an exact non-negative least-squares projection, which reproduces the training \code{Z}. Cell
+#' groups missing in \code{scores} are tolerated with a warning naming them: the projection uses the other cell groups
+#' (on the tutorial data, with 24 of 171 cell groups missing, the factors still correlate 0.995 or more with the full
+#' projection).
 #'
 #' @param latent_factors A list returned by \code{compute.latent_factors()},
 #'   containing at minimum \code{W} (features x rank) and the RcppML model
@@ -3854,7 +3856,8 @@ compute_cells_niches <- function(latent_factors, cell_groups, top_n = 5,
 #'   the cell groups used in training.
 #'
 #' @return A non-negative matrix of size samples x rank containing the
-#'   projected NMF factor scores for the test cohort.
+#'   projected NMF factor scores for the test cohort, on the scale of \code{Z} (projecting the training samples gives
+#'   their \code{Z}, up to the clamping of negative values).
 #'
 #' @details
 #' The RcppML NMF decomposition is A = W %*% diag(d) %*% H, not A = W %*% H.
@@ -3905,7 +3908,7 @@ project_factors <- function(latent_factors, scores) {
   # H_test = pinv(W_sub) %*% Y_sub  ->  Z_test = t(H_test)
   Z_test <- t(MASS::ginv(W_sub) %*% Y_sub)             # samples x rank
 
-  # Clamp small negatives from numerical noise in pseudoinverse
+  # The least-squares solution can be negative for factors a sample has little of: set to 0 (non-negative scores)
   Z_test <- pmax(Z_test, 0)
 
   rownames(Z_test) <- rownames(scores)
@@ -3945,7 +3948,7 @@ project_factors <- function(latent_factors, scores) {
 #'   \code{t(data)} is used.
 #' @param batch Optional vector with the cohort of each sample, in the same order as \code{data} (e.g.
 #'   \code{coldata$Cohort}). If given, \code{CellTFusion()} runs in multi-cohort mode (see \code{CellTFusion()})
-#'   and the test samples of each cohort are projected separately, z-scored on their own means and SDs. Default
+#'   and the test samples of each cohort are scored separately, z-scored on their own means and SDs. Default
 #'   \code{NULL} (single cohort).
 #' @param do_parallel Logical; whether to compute the folds in parallel. Default is FALSE (one after the other).
 #' @param workers (Optional) Number of parallel workers when \code{do_parallel = TRUE}. If \code{NULL} (default),
@@ -3978,7 +3981,8 @@ project_factors <- function(latent_factors, scores) {
 #' and any \code{CellTFusion()} argument) through \code{fold_construction_args_fixed}. Tunable
 #' arguments (\code{fold_construction_args_tunable}) are not supported. With \code{batch}, a warning names the folds and cohorts
 #' with fewer than 10 test samples (their test samples are z-scored on their own means and SDs, which is unreliable with
-#' few samples; leave-one-cohort-out folds avoid it). With \code{do_parallel = TRUE}, the first fold is
+#' few samples; folds that hold out whole cohorts avoid it, whereas \code{pipeML}'s \code{LODO = TRUE} stratifies the
+#' folds by cohort, so every fold tests part of each cohort). With \code{do_parallel = TRUE}, the first fold is
 #' computed before the others start in parallel, so that the TF and pathway collections cached in
 #' \code{Results/} are downloaded only once; the package must be installed for the parallel workers.
 #'
@@ -4010,8 +4014,8 @@ project_factors <- function(latent_factors, scores) {
 #' surv_res <- pipeML::compute_features.training.ML(
 #'   features_train = t(raw_counts),
 #'   task_type      = "survival",
-#'   time_var       = time,
-#'   event_var      = event,
+#'   time_var       = traitdata$os,
+#'   event_var      = traitdata$censOS,
 #'   k_folds        = 5,
 #'   n_rep          = 1,
 #'   fold_construction_fun        = prepare_celltfusion_folds,

@@ -29,9 +29,9 @@ When samples come from several cohorts, batches or sequencing runs, cohort-level
 | `compute.deconvolution.analysis(batch = batch_vec)` | Cohort vector | Correlations used to build deconvolution subgroups control for cohort. |
 | `compute.modules.relationship(batch = batch_vec)` | Cohort vector | TF module-feature correlations are **partial correlations** controlling for cohort (one indicator variable per cohort beyond the first), Pearson or Spearman according to `corr_type`. |
 | `construct_cell_groups(batch = batch_vec)` | Cohort vector | Passes the cohort vector to the correlations and to the composite scores. Required for a network built with `compute.WTCNA(batch = batch_vec)`; it can be named by sample. |
-| `compute_composite_score(batch = batch_vec)` | Cohort vector | Removes each cohort's mean from the cell group features and TF activities before the CCA, so composite scores are **corrected for cohort**. |
+| `compute_composite_score(batch = batch_vec)` | Cohort vector | Z-scores the cell group features within each cohort before the CCA with the TF module score, so composite scores are **corrected for cohort**. Only the CCA weights (`xcoef`) are kept: new cohorts are z-scored on their own means and SDs. |
 
-In short, only in `compute.WTCNA()` is `batch` a logical switch (the cohorts are given by the list of TF matrices). Everywhere else, including `CellTFusion()`, `batch` is the cohort vector itself, used to split the samples and to remove cohort effects. Cohort is treated as categorical, and the samples do not need to be ordered by cohort.
+In every function, including `CellTFusion()`, `batch` is the cohort vector itself (one value per sample, or named by sample), used to split the samples and to remove cohort effects. Cohort is treated as categorical, and the samples do not need to be ordered by cohort.
 
 ## **When to use it**
 

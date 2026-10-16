@@ -17,15 +17,18 @@ the cell groups used in training.}
 }
 \value{
 A non-negative matrix of size samples x rank containing the
-projected NMF factor scores for the test cohort.
+projected NMF factor scores for the test cohort, on the scale of \code{Z} (projecting the training samples gives
+their \code{Z}, up to the clamping of negative values).
 }
 \description{
 Keeps the positive part of the cell group scores of new samples (as in training) and projects them
 onto the latent space learned during training using the Moore-Penrose
-pseudoinverse of the scaled basis matrix W. Negative values of the projection are set to 0 (on the tutorial data
-the result is the same as an exact non-negative projection). Cell groups missing in \code{scores} are
-tolerated with a warning naming them: the projection uses the other cell groups (on the tutorial data, with 20 of
-144 cell groups missing, the factors still correlate 0.999 with the full projection).
+pseudoinverse of the scaled basis matrix \code{W \%*\% diag(d)}. Negative values of the projection (samples with
+little of a factor; about 30\\% of the values on the tutorial data) are set to 0: on the tutorial data, the result
+correlates 0.998 with an exact non-negative least-squares projection, which reproduces the training \code{Z}. Cell
+groups missing in \code{scores} are tolerated with a warning naming them: the projection uses the other cell groups
+(on the tutorial data, with 24 of 171 cell groups missing, the factors still correlate 0.995 or more with the full
+projection).
 }
 \details{
 The RcppML NMF decomposition is A = W \%\emph{\% diag(d) \%}\% H, not A = W \%*\% H.

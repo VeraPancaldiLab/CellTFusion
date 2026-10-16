@@ -69,9 +69,9 @@ and \code{stable_distinct} (all factors robust and none redundant).}
 }
 }
 \description{
-Decomposes signed CCA composite scores into non-negative latent factors
-by splitting each score into its positive and negative direction components,
-then applying Non-negative Matrix Factorization via RcppML (fast C++ backend).
+Decomposes the cell group scores into non-negative latent factors with Non-negative Matrix Factorization (NMF,
+\code{RcppML::nmf()}), applied to the positive part of the scores (see Details). The number of factors is chosen
+by bootstrap NMF if \code{rank} is not given.
 }
 \details{
 Only the positive part of the signed cell group scores is used: \code{max(score, 0)}, how far the sample is on the

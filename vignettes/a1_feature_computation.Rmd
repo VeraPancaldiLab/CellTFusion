@@ -43,7 +43,7 @@ Cell type proportions are estimated with `compute.deconvolution()` from the comp
 
 Key arguments:
 
-- `raw_counts` — count matrix (genes x samples).
+- `raw.counts` — count matrix (genes x samples).
 - `methods` — deconvolution methods to run.
 - `normalized` — whether to TPM-normalize the counts before deconvolution.
 - `credentials.mail` / `credentials.token` — CIBERSORTx credentials, only needed if `"CBSX"` is in `methods`.

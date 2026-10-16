@@ -44,7 +44,7 @@ gene sets; passing \code{raw_counts} keeps the original gene symbols. If \code{N
 
 \item{batch}{Optional vector with the cohort of each sample, in the same order as \code{data} (e.g.
 \code{coldata$Cohort}). If given, \code{CellTFusion()} runs in multi-cohort mode (see \code{CellTFusion()})
-and the test samples of each cohort are projected separately, z-scored on their own means and SDs. Default
+and the test samples of each cohort are scored separately, z-scored on their own means and SDs. Default
 \code{NULL} (single cohort).}
 
 \item{do_parallel}{Logical; whether to compute the folds in parallel. Default is FALSE (one after the other).}
@@ -92,7 +92,8 @@ Pass the fixed arguments (\code{deconv}, and optionally \code{raw_counts}, \code
 and any \code{CellTFusion()} argument) through \code{fold_construction_args_fixed}. Tunable
 arguments (\code{fold_construction_args_tunable}) are not supported. With \code{batch}, a warning names the folds and cohorts
 with fewer than 10 test samples (their test samples are z-scored on their own means and SDs, which is unreliable with
-few samples; leave-one-cohort-out folds avoid it). With \code{do_parallel = TRUE}, the first fold is
+few samples; folds that hold out whole cohorts avoid it, whereas \code{pipeML}'s \code{LODO = TRUE} stratifies the
+folds by cohort, so every fold tests part of each cohort). With \code{do_parallel = TRUE}, the first fold is
 computed before the others start in parallel, so that the TF and pathway collections cached in
 \code{Results/} are downloaded only once; the package must be installed for the parallel workers.
 }
@@ -124,8 +125,8 @@ features_test <- compute.test.set(final$Processed_deconvolution, final$Cell_grou
 surv_res <- pipeML::compute_features.training.ML(
   features_train = t(raw_counts),
   task_type      = "survival",
-  time_var       = time,
-  event_var      = event,
+  time_var       = traitdata$os,
+  event_var      = traitdata$censOS,
   k_folds        = 5,
   n_rep          = 1,
   fold_construction_fun        = prepare_celltfusion_folds,
