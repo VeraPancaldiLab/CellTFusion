@@ -1,13 +1,19 @@
 # Prepare CellTFusion cross-validation folds for pipeML
 
 Fold construction function for `pipeML::compute_features.training.ML()`
-(argument `fold_construction_fun`) that computes `CellTFusion` latent
-factors within each cross-validation fold, without information leakage:
-cell groups and latent factors are learned with
+(argument `fold_construction_fun`) that computes `CellTFusion` cell
+group scores within each cross-validation fold, without information
+leakage: cell groups are learned with
 [`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md)
 on the training samples of each fold only, and the test samples of the
-fold are projected onto them with
-[`project_test_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/project_test_factors.md).
+fold are scored on them with
+[`compute.test.set()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.test.set.md).
+The features of the models are the cell group scores; the latent factors
+are a downstream characterization: they are not computed in the folds,
+and are computed in final mode (unless `compute_factors = FALSE` is
+passed) for the characterization of the final model; new samples can be
+projected onto them with
+[`project_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/project_factors.md).
 It works for classification and survival tasks.
 
 ## Usage
@@ -114,22 +120,23 @@ prepare_celltfusion_folds(
 
 - In fold mode (`bestune = NULL`): each fold is saved to
   `Results/fold_<fold name>.rds`, which `pipeML` reads back, as a list
-  with `train_data` (latent factors of the training samples plus the
-  outcome columns), `test_data` (latent factors of the test samples,
+  with `train_data` (cell group scores of the training samples plus the
+  outcome columns), `test_data` (cell group scores of the test samples,
   plus `time` and `event` for survival), `obs_test` (observed outcome of
   the test samples), `rowIndex` (rows of the test samples) and
   `fold_name`. The list of folds is returned invisibly. If
   [`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md)
   fails in a fold (e.g. no cell groups are found on its training
-  samples), that fold is skipped with a warning and is not saved; an
-  error is raised only if all the folds fail.
+  samples, or a cell group cannot be scored in the test samples), that
+  fold is skipped with a warning and is not saved; an error is raised
+  only if all the folds fail.
 
-- In final mode (`bestune` provided): a list with (1) the latent factors
-  of all the samples plus the outcome columns, (2) the
+- In final mode (`bestune` provided): a list with (1) the cell group
+  scores of all the samples plus the outcome columns, (2) the
   [`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md)
   result on all the samples, available as `Custom_output` in the
   `pipeML` result and used to compute the features of new samples with
-  [`project_test_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/project_test_factors.md),
+  [`compute.test.set()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.test.set.md),
   and (3) `bestune`.
 
 ## Details
@@ -168,8 +175,9 @@ ml_res <- pipeML::compute_features.training.ML(
   fold_construction_args_fixed = list(deconv = deconv, raw_counts = raw_counts)
 )
 
-# Features of new samples: projected onto the model trained on all the training samples
-features_test <- project_test_factors(ml_res$Custom_output, deconv_test)
+# Features of new samples: scored on the cell groups learned on all the training samples
+features_test <- compute.test.set(ml_res$Custom_output$Processed_deconvolution, ml_res$Custom_output$Cell_groups,
+                                  deconv_test = deconv_test)
 
 # Survival (time and event of each sample)
 surv_res <- pipeML::compute_features.training.ML(

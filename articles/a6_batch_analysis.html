@@ -40,7 +40,6 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="../articles/a1_feature_computation.html">Feature computation</a></li>
     <li><a class="dropdown-item" href="../articles/a2_cell_groups.html">Cell groups and latent factors</a></li>
-    <li><a class="dropdown-item" href="../articles/a3_tme_states.html">TME state characterization</a></li>
     <li><a class="dropdown-item" href="../articles/a4_statistical_analysis.html">Statistical analysis</a></li>
     <li><a class="dropdown-item" href="../articles/a5_machine_learning.html">Machine learning workflows</a></li>
     <li><a class="dropdown-item" href="../articles/a6_batch_analysis.html">Multi-cohort analysis</a></li>
@@ -148,13 +147,6 @@ sample.</td>
 activities before the CCA, so composite scores are <strong>corrected for
 cohort</strong>.</td>
 </tr>
-<tr class="odd">
-<td><code>compute_factor_gsea(batch = batch_vec)</code></td>
-<td>Cohort vector</td>
-<td>Adds the cohort to the <code>limma</code> model of each gene, so
-that expression differences between cohorts are not attributed to the
-latent factors in the Hallmark GSEA.</td>
-</tr>
 </tbody>
 </table>
 <p>In short, only in <code><a href="../reference/compute.WTCNA.html">compute.WTCNA()</a></code> is <code>batch</code>
@@ -218,7 +210,6 @@ learning workflows</a>).</li>
 <span>  batch          <span class="op">=</span> <span class="va">coldata</span><span class="op">$</span><span class="va">Cohort</span>,</span>
 <span>  deconv_methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Quantiseq"</span>, <span class="st">"Epidish"</span><span class="op">)</span>,</span>
 <span>  TF.collection  <span class="op">=</span> <span class="st">"CollecTRI"</span>,</span>
-<span>  cancer_type    <span class="op">=</span> <span class="st">"skcm"</span>,</span>
 <span>  corr           <span class="op">=</span> <span class="fl">0.7</span>,</span>
 <span>  corr_mod       <span class="op">=</span> <span class="fl">0.9</span>,</span>
 <span>  pval           <span class="op">=</span> <span class="fl">0.05</span>,</span>
@@ -239,8 +230,6 @@ consensus TF modules.</li>
 <code>compute.deconvolution.analysis()</code> and
 <code><a href="../reference/construct_cell_groups.html">construct_cell_groups()</a></code>, so subgroups, module-feature
 correlations and cell group scores are all cohort-corrected.</li>
-<li>Passes it to <code><a href="../reference/compute_factor_gsea.html">compute_factor_gsea()</a></code>, so the Hallmark
-GSEA of each latent factor is corrected for cohort.</li>
 </ol>
 </div>
 <div class="section level2">

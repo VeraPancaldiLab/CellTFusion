@@ -42,13 +42,12 @@ compute.composition.matrix(dt, cell_groups, cells_extra = NULL)
 ## Value
 
 A binary matrix (data.frame) where rows are cell groups and columns are
-cell types (1 = present, 0 = absent). Each cell group appears twice, as
-`<group>_pos` and `<group>_neg`, to match the feature names used by
-[`compute.latent_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.latent_factors.md);
-both rows have the same composition (the direction of the relation with
-the TF module is not represented). Cell types not present in any cell
-group are dropped, and cell groups whose cell types are not recognised
-(their row is all zeros) are listed, each with a message.
+cell types (1 = present, 0 = absent). Rows are named as the cell groups,
+as the features of
+[`compute.latent_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.latent_factors.md).
+Cell types not present in any cell group are dropped, and cell groups
+whose cell types are not recognised (their row is all zeros) are listed,
+each with a message.
 
 ## Examples
 
@@ -73,14 +72,14 @@ cell_groups <- construct_cell_groups(network.tuto, deconv_subgroups.tuto)
 composition <- compute.composition.matrix(deconv_subgroups.tuto, cell_groups)
 #> Cell types not present in any cell group (left out of the composition matrix): T.cells.gamma.delta
 composition[1:4, 1:5]
-#>                             B.cells B.naive.cells B.memory.cells
-#> Dendrogram_pink_group_1_pos       0             0              0
-#> Dendrogram_pink_group_1_neg       0             0              0
-#> Dendrogram_pink_group_2_pos       1             0              0
-#> Dendrogram_pink_group_2_neg       1             0              0
-#>                             Macrophages.cells Macrophages.M0
-#> Dendrogram_pink_group_1_pos                 0              0
-#> Dendrogram_pink_group_1_neg                 0              0
-#> Dendrogram_pink_group_2_pos                 0              0
-#> Dendrogram_pink_group_2_neg                 0              0
+#>                         B.cells B.naive.cells B.memory.cells Macrophages.cells
+#> Dendrogram_pink_group_1       0             0              0                 0
+#> Dendrogram_pink_group_2       1             0              0                 0
+#> Dendrogram_pink_group_3       1             1              0                 0
+#> Dendrogram_pink_group_4       1             0              1                 0
+#>                         Macrophages.M0
+#> Dendrogram_pink_group_1              0
+#> Dendrogram_pink_group_2              0
+#> Dendrogram_pink_group_3              1
+#> Dendrogram_pink_group_4              0
 ```

@@ -40,7 +40,6 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="../articles/a1_feature_computation.html">Feature computation</a></li>
     <li><a class="dropdown-item" href="../articles/a2_cell_groups.html">Cell groups and latent factors</a></li>
-    <li><a class="dropdown-item" href="../articles/a3_tme_states.html">TME state characterization</a></li>
     <li><a class="dropdown-item" href="../articles/a4_statistical_analysis.html">Statistical analysis</a></li>
     <li><a class="dropdown-item" href="../articles/a5_machine_learning.html">Machine learning workflows</a></li>
     <li><a class="dropdown-item" href="../articles/a6_batch_analysis.html">Multi-cohort analysis</a></li>
@@ -207,15 +206,30 @@ module or cell group parameters without recomputing the features:</p>
 <strong>Latent factors</strong><a class="anchor" aria-label="anchor" href="#latent-factors"></a>
 </h2>
 <p><code><a href="../reference/compute.latent_factors.html">compute.latent_factors()</a></code> decomposes the cell group
-scores into non-negative latent factors with NMF. Each score is first
-split into a positive and a negative part (<code>_pos</code> and
-<code>_neg</code> columns: samples on the active and on the inactive
-side of the group’s TF module), so that both directions can contribute
-to the factors. If <code>rank = NULL</code>, the number of factors is
-chosen at the elbow of the reconstruction error across ranks 2 to 8,
-never more than the number of cell groups (with fewer than 4 cell
-groups, <code>rank = 2</code> is used, and <code>rank = 1</code> with a
-single cell group).</p>
+scores into non-negative latent factors with NMF. Only the positive part
+of each score is used, <code>max(score, 0)</code>: how far the sample is
+on the active side of the group’s TF module (negative scores become 0),
+so the factors describe the high-activity direction of the cell groups.
+If <code>rank = NULL</code>, the number of factors is chosen among
+<code>ranks</code> (2 to 15 by default, never more than the number of
+cell groups) with bootstrap NMF: for each rank, NMF is fitted on all the
+patients and on <code>n_boot</code> (100) bootstrap samples of the
+patients, and the factors of each run are matched to the reference
+factors by the cosine similarity of their profiles (their weights on the
+cell groups). Each factor gets its recovery frequency (proportion of
+runs in which it is found, similarity &gt;=
+<code>similarity_thresh</code>) and its mean similarity; a factor is
+robust when both pass the thresholds (<code>recovery_thresh = 0.7</code>
+and <code>similarity_thresh = 0.8</code> by default, starting points
+rather than universal cutoffs). Two factors of the same rank with very
+similar profiles are flagged as redundant. The selected rank is the
+largest one whose factors are all robust and none redundant: as many
+factors as the data support reliably (low ranks capture the dominant
+patterns and are almost always stable, so the smallest stable rank would
+favour 2). <code>rank_selection</code> reports every candidate rank and
+<code>stability</code> the factors of the selected one; when two
+adjacent ranks are similarly good, check whether the main factors
+persist at the neighbouring rank.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">latent_spaces</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute.latent_factors.html">compute.latent_factors</a></span><span class="op">(</span></span>
 <span>  scores    <span class="op">=</span> <span class="va">cell_groups</span><span class="op">$</span><span class="va">Cell_groups</span>,</span>
@@ -225,16 +239,25 @@ single cell group).</p>
 <span>  return    <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">latent_spaces</span><span class="op">$</span><span class="va">Z</span><span class="op">)</span>  <span class="co"># samples x factors</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">latent_spaces</span><span class="op">$</span><span class="va">Z</span><span class="op">)</span>          <span class="co"># samples x factors</span></span>
+<span><span class="va">latent_spaces</span><span class="op">$</span><span class="va">rank_selection</span>   <span class="co"># stability and redundancy of each candidate rank</span></span>
+<span><span class="va">latent_spaces</span><span class="op">$</span><span class="va">stability</span>        <span class="co"># recovery and mean similarity of each factor</span></span></code></pre></div>
+<p>With <code>return = TRUE</code>, the stability of each candidate rank
+is plotted
+(<code>Results/NMF_rank_stability_&lt;file_name&gt;.pdf</code>, followed
+by a page with the recovery and mean similarity of each factor of the
+selected rank). On the tutorial data, ranks 2 to 5 have all their
+factors robust and none redundant, and stability drops from rank 6, so 5
+factors are kept:</p>
+<p><img src="figures/nmf_rank_stability.png" class="r-plt" alt="Lowest recovery, lowest mean similarity and highest similarity between factors of each candidate NMF rank, with the thresholds and the selected rank" width="95%" style="display: block; margin: auto;"></p>
 <p>The result contains <code>Z</code> (factor scores, samples x factors
 — the input for statistics and machine learning), <code>W</code>
-(weights of each cell group part in each factor),
-<code>nmf_input</code>, the NMF model and the per-sample factor
-proportions. Each factor (column of <code>Z</code>) sums to 1 over the
-samples; the size of each factor is in <code>nmf_model$d</code>. The
-factor proportions of each sample take these sizes into account. With
-<code>return = TRUE</code>, the mixture of factors in each sample is
-plotted:</p>
+(weights of each cell group in each factor), <code>nmf_input</code>, the
+NMF model and the per-sample factor proportions. Each factor (column of
+<code>Z</code>) sums to 1 over the samples; the size of each factor is
+in <code>nmf_model$d</code>. The factor proportions of each sample take
+these sizes into account. With <code>return = TRUE</code>, the mixture
+of factors in each sample is plotted:</p>
 <p><img src="figures/nmf_patient_mixture.png" class="r-plt" alt="Stacked bar plot of latent factor proportions per sample" width="90%" style="display: block; margin: auto;"></p>
 </div>
 <div class="section level2">
@@ -242,36 +265,46 @@ plotted:</p>
 <strong>Cell niches</strong><a class="anchor" aria-label="anchor" href="#cell-niches"></a>
 </h2>
 <p><code><a href="../reference/compute_cells_niches.html">compute_cells_niches()</a></code> characterizes each latent factor
-by the cell types enriched among the cell groups that contribute most to
-it: the top-weighted cell groups are selected
-(<code>quantile_cutoff</code>) and cell types more frequent in them than
-in all cell groups (<code>enrich_thresh</code>) are kept. A niche lists
-the cell types associated with the factor; it does not yet say whether
-the factor has more or fewer of them (the <code>_pos</code> and
-<code>_neg</code> parts of the cell groups are added together).</p>
+by the cell groups that contribute most to it: the <code>top_n</code>
+cell groups with the highest weight in the factor (<code>W</code>),
+described by their deconvolution features and the CCA coefficients of
+these features in the cell group scores. The deconvolution features are
+kept as they are (subgroups are not expanded into their members).</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">cells_niches</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute_cells_niches.html">compute_cells_niches</a></span><span class="op">(</span></span>
-<span>  latent_factors  <span class="op">=</span> <span class="va">latent_spaces</span>,</span>
-<span>  dt              <span class="op">=</span> <span class="va">dt</span>,</span>
-<span>  cell_groups     <span class="op">=</span> <span class="va">cell_groups</span>,</span>
-<span>  enrich_thresh   <span class="op">=</span> <span class="fl">1.5</span>,</span>
-<span>  quantile_cutoff <span class="op">=</span> <span class="fl">0.7</span>,</span>
-<span>  return          <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  file_name       <span class="op">=</span> <span class="st">"Tutorial"</span></span>
+<span>  latent_factors <span class="op">=</span> <span class="va">latent_spaces</span>,</span>
+<span>  cell_groups    <span class="op">=</span> <span class="va">cell_groups</span>,</span>
+<span>  top_n          <span class="op">=</span> <span class="fl">5</span>,</span>
+<span>  return         <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  file_name      <span class="op">=</span> <span class="st">"Tutorial"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p>For each factor, a star network of its enriched cell types is saved
-(edge width reflects the weight of the cell type in the factor):</p>
-<p><img src="figures/niche_network_factor1.png" class="r-plt" alt="Star network of the cell types enriched in latent factor 1" width="70%" style="display: block; margin: auto;"></p>
+<p>The result has one row per factor, cell group and feature
+(<code>factor</code>, <code>cell_group</code>, <code>module</code>,
+<code>weight</code>, <code>feature</code>, <code>coefficient</code>).
+For each factor, a tree network is saved (one page per factor): the
+factor on the left, its top cell groups in the middle (coloured by their
+TF module) and their features listed on the right. Edges are the CCA
+coefficients: red when the feature is higher in samples where the cell
+group is active, blue when it is lower; coefficients close to zero are
+thin. Features correlated with each other (e.g. several estimates of the
+same cell type) share their weight, so a single small edge with the
+opposite colour of its cell group should be read together with the rest
+of the group.</p>
+<p><img src="figures/niche_network_factor1.png" class="r-plt" alt="Tree network of the top cell groups of latent factor 1 and their deconvolution features" width="80%" style="display: block; margin: auto;"></p>
+<p>A heatmap shows the NMF weights of all the cell groups in all factors
+(cell groups ordered by the factor where their weight is highest;
+outlined: the top cell groups of each factor), so that cell groups
+shared between factors can be seen:</p>
+<p><img src="figures/niche_weights_heatmap.png" class="r-plt" alt="Heatmap of the NMF weights of the top cell groups in each latent factor" width="60%" style="display: block; margin: auto;"></p>
 </div>
 <div class="section level2">
 <h2 id="next-steps">
 <strong>Next steps</strong><a class="anchor" aria-label="anchor" href="#next-steps"></a>
 </h2>
-<p>With the latent factors you can:</p>
+<p>With the cell group scores and the latent factors you can:</p>
 <ul>
-<li>characterize TME states with Hallmark GSEA and meta-programs — <a href="a3_tme_states.html">TME state characterization</a>;</li>
 <li>test associations with clinical variables — <a href="a4_statistical_analysis.html">Statistical analysis</a>;</li>
-<li>use them as features for prediction — <a href="a5_machine_learning.html">Machine learning workflows</a>.</li>
+<li>use the cell group scores as features for prediction — <a href="a5_machine_learning.html">Machine learning workflows</a>.</li>
 </ul>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

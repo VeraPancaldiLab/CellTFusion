@@ -6,7 +6,6 @@
 <url><loc>https://verapancaldilab.github.io/CellTFusion/articles/CellTFusion.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/articles/a1_feature_computation.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/articles/a2_cell_groups.html</loc></url>
-<url><loc>https://verapancaldilab.github.io/CellTFusion/articles/a3_tme_states.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/articles/a4_statistical_analysis.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/articles/a5_machine_learning.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/articles/a6_batch_analysis.html</loc></url>
@@ -15,8 +14,6 @@
 <url><loc>https://verapancaldilab.github.io/CellTFusion/index.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion-package.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.html</loc></url>
-<url><loc>https://verapancaldilab.github.io/CellTFusion/reference/annotate_metaprograms_TME.html</loc></url>
-<url><loc>https://verapancaldilab.github.io/CellTFusion/reference/build_nes_matrix.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/calculate_dendrogram_cuts.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/cell.groups.computation.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/compute.TFs.activity.html</loc></url>
@@ -33,12 +30,10 @@
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/compute.test.set.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/compute_cells_niches.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/compute_composite_score.html</loc></url>
-<url><loc>https://verapancaldilab.github.io/CellTFusion/reference/compute_factor_gsea.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/construct_cell_groups.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/counts.norm.tuto.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/deconv.tuto.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/deconv_subgroups.tuto.html</loc></url>
-<url><loc>https://verapancaldilab.github.io/CellTFusion/reference/derive_meta_programs.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/extract_cells.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/extract_contributing_features.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/finish_trait_test.html</loc></url>
@@ -46,8 +41,6 @@
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/identify.cell.groups.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/identify_hub_TFs.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/index.html</loc></url>
-<url><loc>https://verapancaldilab.github.io/CellTFusion/reference/map_factors_to_TME.html</loc></url>
-<url><loc>https://verapancaldilab.github.io/CellTFusion/reference/map_factors_to_metaprograms.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/mergeModules.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/module_enrich.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/network.tuto.html</loc></url>
@@ -56,7 +49,6 @@
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/prepare_celltfusion_folds.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/prepare_trait_test.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/project_factors.html</loc></url>
-<url><loc>https://verapancaldilab.github.io/CellTFusion/reference/project_test_factors.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/raw.counts.tuto.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/scores.anova.test.html</loc></url>
 <url><loc>https://verapancaldilab.github.io/CellTFusion/reference/scores.fisher.test.html</loc></url>

@@ -43,7 +43,6 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="articles/a1_feature_computation.html">Feature computation</a></li>
     <li><a class="dropdown-item" href="articles/a2_cell_groups.html">Cell groups and latent factors</a></li>
-    <li><a class="dropdown-item" href="articles/a3_tme_states.html">TME state characterization</a></li>
     <li><a class="dropdown-item" href="articles/a4_statistical_analysis.html">Statistical analysis</a></li>
     <li><a class="dropdown-item" href="articles/a5_machine_learning.html">Machine learning workflows</a></li>
     <li><a class="dropdown-item" href="articles/a6_batch_analysis.html">Multi-cohort analysis</a></li>
@@ -119,7 +118,7 @@
 <span>  cbsx_mail <span class="op">=</span> <span class="st">"your_email"</span>,       <span class="co"># Needed to run CBSX (CIBERSORTx)</span></span>
 <span>  cbsx_token <span class="op">=</span> <span class="st">"your_token"</span>,      <span class="co"># Needed to run CBSX (CIBERSORTx)</span></span>
 <span>  TF.collection <span class="op">=</span> <span class="st">"CollecTRI"</span>,    <span class="co"># "CollecTRI", "Dorothea", or "ARACNE"</span></span>
-<span>  cancer_type <span class="op">=</span> <span class="st">"skcm"</span>,           <span class="co"># TCGA cancer type, used for meta-program mapping</span></span>
+<span>  cancer_type <span class="op">=</span> <span class="cn">NULL</span>,             <span class="co"># only used with TF.collection = "ARACNE" (input/ARACNE/&lt;cancer_type&gt;/)</span></span>
 <span>  file_name <span class="op">=</span> <span class="st">"TestRun"</span>,</span>
 <span>  min_targets_size <span class="op">=</span> <span class="fl">5</span>,</span>
 <span>  min_module_size <span class="op">=</span> <span class="fl">5</span>,</span>
@@ -147,7 +146,7 @@
 <div class="section level2">
 <h2 id="output-structure">Output structure<a class="anchor" aria-label="anchor" href="#output-structure"></a>
 </h2>
-<p><code><a href="reference/CellTFusion.html">CellTFusion()</a></code> returns a named list with the outputs of each pipeline stage — cell-type deconvolution, TF activity, TF module network, pathway scores, cell groups, latent factors, cell niches, and TME state mapping. Cell groups are derived internally via <code><a href="reference/construct_cell_groups.html">construct_cell_groups()</a></code> and are available at <code>res$Cell_groups</code>:</p>
+<p><code><a href="reference/CellTFusion.html">CellTFusion()</a></code> returns a named list with the outputs of each pipeline stage — cell-type deconvolution, TF activity, TF module network, pathway scores, cell groups, latent factors and cell niches. Cell groups are derived internally via <code><a href="reference/construct_cell_groups.html">construct_cell_groups()</a></code> and are available at <code>res$Cell_groups</code>:</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res</span><span class="op">$</span><span class="va">Cell_groups</span><span class="op">$</span><span class="va">Cell_groups</span>  <span class="co"># data frame of cell group scores (samples x groups)</span></span>
 <span><span class="va">res</span><span class="op">$</span><span class="va">Cell_groups</span><span class="op">$</span><span class="va">Composition</span>  <span class="co"># deconvolution features of each group</span></span>
@@ -157,7 +156,7 @@
 <div class="section level2">
 <h2 id="replicate-cell-groups-on-an-independent-dataset">Replicate cell groups on an independent dataset<a class="anchor" aria-label="anchor" href="#replicate-cell-groups-on-an-independent-dataset"></a>
 </h2>
-<p>Use this function to apply the trained cell groups to an external test set and calculate group-specific composite scores. To directly obtain the latent factors of new samples, use <code>project_test_factors(res, deconv_test)</code> (see the <a href="https://VeraPancaldiLab.github.io/CellTFusion/articles/a5_machine_learning.html" class="external-link">Machine learning workflows</a> article).</p>
+<p>Use this function to apply the trained cell groups to an external test set and calculate group-specific composite scores. To obtain the latent factors of new samples, project their cell group scores with <code>project_factors(res$Latent_spaces, test_scores)</code> (see the <a href="https://VeraPancaldiLab.github.io/CellTFusion/articles/a5_machine_learning.html" class="external-link">Machine learning workflows</a> article).</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">test_scores</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/compute.test.set.html">compute.test.set</a></span><span class="op">(</span></span>
 <span>  dt <span class="op">=</span> <span class="va">res</span><span class="op">$</span><span class="va">Processed_deconvolution</span>,        <span class="co"># deconvolution subgroups of the training set</span></span>
@@ -181,8 +180,9 @@
 <span>  fold_construction_args_fixed <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>deconv <span class="op">=</span> <span class="va">deconv</span>, raw_counts <span class="op">=</span> <span class="va">raw.counts</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Features of new samples, projected onto the final model</span></span>
-<span><span class="va">features_test</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/project_test_factors.html">project_test_factors</a></span><span class="op">(</span><span class="va">ml_res</span><span class="op">$</span><span class="va">Custom_output</span>, <span class="va">deconv_test</span><span class="op">)</span></span></code></pre></div>
+<span><span class="co"># Features of new samples: cell group scores on the cell groups of the final model</span></span>
+<span><span class="va">features_test</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/compute.test.set.html">compute.test.set</a></span><span class="op">(</span><span class="va">ml_res</span><span class="op">$</span><span class="va">Custom_output</span><span class="op">$</span><span class="va">Processed_deconvolution</span>, <span class="va">ml_res</span><span class="op">$</span><span class="va">Custom_output</span><span class="op">$</span><span class="va">Cell_groups</span>,</span>
+<span>                                  deconv_test <span class="op">=</span> <span class="va">deconv_test</span><span class="op">)</span></span></code></pre></div>
 <p>See the <a href="https://VeraPancaldiLab.github.io/CellTFusion/articles/a5_machine_learning.html" class="external-link">Machine learning workflows</a> article for details.</p>
 </div>
 <div class="section level2">

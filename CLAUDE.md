@@ -81,22 +81,16 @@ mapping):
     NMF-based latent factors;
     [`compute_cells_niches()`](https://verapancaldilab.github.io/CellTFusion/reference/compute_cells_niches.md)
     for cell niche derivation
-8.  **TME state characterisation** — Hallmark GSEA per factor
-    ([`compute_factor_gsea()`](https://verapancaldilab.github.io/CellTFusion/reference/compute_factor_gsea.md)),
-    meta-program derivation/mapping
-    ([`derive_meta_programs()`](https://verapancaldilab.github.io/CellTFusion/reference/derive_meta_programs.md),
-    [`map_factors_to_metaprograms()`](https://verapancaldilab.github.io/CellTFusion/reference/map_factors_to_metaprograms.md)),
-    and TME subtype annotation against Bagaev et al. (2021) MFP subtypes
-    ([`map_factors_to_TME()`](https://verapancaldilab.github.io/CellTFusion/reference/map_factors_to_TME.md),
-    [`annotate_metaprograms_TME()`](https://verapancaldilab.github.io/CellTFusion/reference/annotate_metaprograms_TME.md))
-9.  **Statistical analysis** — clinical trait association
+8.  **Statistical analysis** — clinical trait association
     ([`scores.stat.analysis()`](https://verapancaldilab.github.io/CellTFusion/reference/scores.stat.analysis.md)
     and the `scores.*` family), survival analysis
     ([`compute.survival.analysis()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.survival.analysis.md))
-10. **Test-set / batch projection** — apply a trained model to new data
-    ([`compute.test.set()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.test.set.md),
-    [`project_test_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/project_test_factors.md)),
-    run leakage-aware cross-validation with `pipeML`
+9.  **Test-set / batch projection** — apply a trained model to new data
+    ([`compute.test.set()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.test.set.md)
+    for cell group scores;
+    [`project_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/project_factors.md)
+    to project those scores onto trained NMF factors), run leakage-aware
+    cross-validation with `pipeML`
     ([`prepare_celltfusion_folds()`](https://verapancaldilab.github.io/CellTFusion/reference/prepare_celltfusion_folds.md)),
     or run multi-cohort analysis via `batch` (cohort of each sample) in
     [`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md)
@@ -109,11 +103,12 @@ mapping):
 - `vignettes/CellTFusion.Rmd` — Getting-started overview (installation,
   quick start, pipeline step table, tutorial list)
 - `vignettes/a1_feature_computation.Rmd` … `a6_batch_analysis.Rmd` —
-  In-depth tutorials (feature computation, cell groups, TME states,
-  statistical analysis, machine learning, multi-cohort). They are
-  package vignettes (same layout as `multideconv`); heavy code chunks
-  use `eval = FALSE` and figures live in `vignettes/figures/`. The
-  pkgdown article menu is defined in `_pkgdown.yml`.
+  In-depth tutorials (feature computation, cell groups, statistical
+  analysis, machine learning, multi-cohort; there is no `a3` since the
+  TME state functions were removed on 2026-10-16). They are package
+  vignettes (same layout as `multideconv`); heavy code chunks use
+  `eval = FALSE` and figures live in `vignettes/figures/`. The pkgdown
+  article menu is defined in `_pkgdown.yml`.
 
 ### Main Exported Functions
 
@@ -125,12 +120,9 @@ mapping):
 | [`compute.pathway.activity()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.pathway.activity.md) | PROGENy pathway scoring |
 | [`construct_cell_groups()`](https://verapancaldilab.github.io/CellTFusion/reference/construct_cell_groups.md) | Cell group construction and composite scores |
 | [`compute.latent_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.latent_factors.md) | NMF-based latent factor extraction from cell group scores |
-| [`compute.test.set()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.test.set.md) / [`project_test_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/project_test_factors.md) | Apply a trained model / project a test set onto trained NMF factors |
-| [`prepare_celltfusion_folds()`](https://verapancaldilab.github.io/CellTFusion/reference/prepare_celltfusion_folds.md) | `pipeML` fold construction function (`fold_construction_fun`): runs [`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md) within each CV fold and projects the test samples (classification and survival) |
+| [`compute.test.set()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.test.set.md) / [`project_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/project_factors.md) | Score new samples on trained cell groups / project cell group scores onto trained NMF factors |
+| [`prepare_celltfusion_folds()`](https://verapancaldilab.github.io/CellTFusion/reference/prepare_celltfusion_folds.md) | `pipeML` fold construction function (`fold_construction_fun`): runs [`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md) within each CV fold (cell groups only, `compute_factors = FALSE`) and scores the test samples with [`compute.test.set()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.test.set.md); the ML features are the cell group scores (classification and survival) |
 | [`identify_hub_TFs()`](https://verapancaldilab.github.io/CellTFusion/reference/identify_hub_TFs.md) | Identify driver TFs from modules |
-| [`compute_factor_gsea()`](https://verapancaldilab.github.io/CellTFusion/reference/compute_factor_gsea.md) | Hallmark GSEA on latent factors |
-| [`derive_meta_programs()`](https://verapancaldilab.github.io/CellTFusion/reference/derive_meta_programs.md) / [`map_factors_to_metaprograms()`](https://verapancaldilab.github.io/CellTFusion/reference/map_factors_to_metaprograms.md) | Derive and map latent factors to TCGA meta-programs |
-| [`map_factors_to_TME()`](https://verapancaldilab.github.io/CellTFusion/reference/map_factors_to_TME.md) / [`annotate_metaprograms_TME()`](https://verapancaldilab.github.io/CellTFusion/reference/annotate_metaprograms_TME.md) | Annotate factors/meta-programs with Bagaev et al. (2021) TME (MFP) subtypes |
 | [`compute.metadata.association()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.metadata.association.md) | Clinical trait association + visualization |
 | [`compute.survival.analysis()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.survival.analysis.md) | Kaplan-Meier / log-rank survival analysis (requires `survival`, `survminer`, `gridExtra`) |
 | [`compute.modules.relationship()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.modules.relationship.md) | Correlate TF modules with other continuous features (pathways, deconvolution features); returns correlations, p-values and significant pairs |
@@ -156,9 +148,9 @@ with overall survival, `tfs.tuto`, `network.tuto`).
 ## Dependencies
 
 Heavy dependencies are in `Imports` (always loaded): `multideconv`,
-`decoupleR`, `WGCNA`, `limma`, `GSVA`, `ggplot2`, and several tidyverse
-packages (`dplyr`, `tidyr`, `tibble`, `purrr`). `multideconv` functions
-are imported via `@importFrom` in `R/CellTFusion.R`; reference data in
+`decoupleR`, `WGCNA`, `GSVA`, `ggplot2`, and several tidyverse packages
+(`dplyr`, `tidyr`, `tibble`, `purrr`). `multideconv` functions are
+imported via `@importFrom` in `R/CellTFusion.R`; reference data in
 `inst/extdata/` is always located with
 [`system.file()`](https://rdrr.io/r/base/system.file.html) (never
 hardcoded paths).

@@ -30,7 +30,6 @@ CD4.memory.activated, as in the names of the deconvolution subgroups."><meta pro
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/a1_feature_computation.html">Feature computation</a></li>
     <li><a class="dropdown-item" href="../articles/a2_cell_groups.html">Cell groups and latent factors</a></li>
-    <li><a class="dropdown-item" href="../articles/a3_tme_states.html">TME state characterization</a></li>
     <li><a class="dropdown-item" href="../articles/a4_statistical_analysis.html">Statistical analysis</a></li>
     <li><a class="dropdown-item" href="../articles/a5_machine_learning.html">Machine learning workflows</a></li>
     <li><a class="dropdown-item" href="../articles/a6_batch_analysis.html">Multi-cohort analysis</a></li>
@@ -87,10 +86,9 @@ recognise cell types in the feature names.</p></dd>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A binary matrix (data.frame) where rows are cell groups and columns are cell types (1 = present, 0 = absent).
-Each cell group appears twice, as <code>&lt;group&gt;_pos</code> and <code>&lt;group&gt;_neg</code>, to match the feature names used by
-<code><a href="compute.latent_factors.html">compute.latent_factors()</a></code>; both rows have the same composition (the direction of the relation with the TF
-module is not represented). Cell types not present in any cell group are dropped, and cell groups whose cell types
-are not recognised (their row is all zeros) are listed, each with a message.</p>
+Rows are named as the cell groups, as the features of <code><a href="compute.latent_factors.html">compute.latent_factors()</a></code>. Cell types not present in
+any cell group are dropped, and cell groups whose cell types are not recognised (their row is all zeros) are
+listed, each with a message.</p>
     </div>
 
     <div class="section level2">
@@ -115,16 +113,16 @@ are not recognised (their row is all zeros) are listed, each with a message.</p>
 <span class="r-in"><span><span class="va">composition</span> <span class="op">&lt;-</span> <span class="fu">compute.composition.matrix</span><span class="op">(</span><span class="va">deconv_subgroups.tuto</span>, <span class="va">cell_groups</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Cell types not present in any cell group (left out of the composition matrix): T.cells.gamma.delta</span>
 <span class="r-in"><span><span class="va">composition</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">4</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">5</span><span class="op">]</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                             B.cells B.naive.cells B.memory.cells</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Dendrogram_pink_group_1_pos       0             0              0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Dendrogram_pink_group_1_neg       0             0              0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Dendrogram_pink_group_2_pos       1             0              0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Dendrogram_pink_group_2_neg       1             0              0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                             Macrophages.cells Macrophages.M0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Dendrogram_pink_group_1_pos                 0              0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Dendrogram_pink_group_1_neg                 0              0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Dendrogram_pink_group_2_pos                 0              0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Dendrogram_pink_group_2_neg                 0              0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                         B.cells B.naive.cells B.memory.cells Macrophages.cells</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Dendrogram_pink_group_1       0             0              0                 0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Dendrogram_pink_group_2       1             0              0                 0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Dendrogram_pink_group_3       1             1              0                 0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Dendrogram_pink_group_4       1             0              1                 0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                         Macrophages.M0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Dendrogram_pink_group_1              0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Dendrogram_pink_group_2              0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Dendrogram_pink_group_3              1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Dendrogram_pink_group_4              0</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

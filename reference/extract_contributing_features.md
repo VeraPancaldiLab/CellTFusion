@@ -1,14 +1,13 @@
 # Extract top-contributing features from NMF latent factors
 
-For each NMF factor (column of the W basis matrix), selects the features
-(cell group parts `<group>_pos` and `<group>_neg`) whose weight is at or
-above the specified quantile of the factor's positive weights (zero
-weights are left out before computing the quantile).
+For each NMF factor (column of the W basis matrix), selects the `top_n`
+cell groups with the highest weight (cell groups with zero weight are
+never selected).
 
 ## Usage
 
 ``` r
-extract_contributing_features(latent_factors, quantile_cutoff = 0.7)
+extract_contributing_features(latent_factors, top_n = 5)
 ```
 
 ## Arguments
@@ -20,13 +19,12 @@ extract_contributing_features(latent_factors, quantile_cutoff = 0.7)
   containing at minimum a matrix `W` (features x factors) of NMF basis
   weights.
 
-- quantile_cutoff:
+- top_n:
 
-  Numeric between 0 and 1. Features with weight at or above this
-  quantile of the factor's positive weights are retained. Default 0.7.
+  Integer. Number of cell groups selected per factor. Default 5.
 
 ## Value
 
 A named list (one element per factor) of named numeric vectors, where
-names are feature names (with their `_pos` / `_neg` suffix) and values
-are their NMF basis weights, sorted descending.
+names are cell group names and values are their NMF basis weights,
+sorted descending.

@@ -20,17 +20,22 @@ package:
 pak::pkg_install("VeraPancaldiLab/pipeML")
 ```
 
-Latent factors are learned from the data (cell groups, TF modules, NMF),
-so they must be learned **within each cross-validation fold**: learning
-them on all the training samples before cross-validation would let the
-test samples of each fold influence the features and overestimate
-performance.
+The features of the models are the cell group scores. Cell groups are
+learned from the data (TF modules, correlations with the deconvolution
+features, CCA weights), so they must be learned **within each
+cross-validation fold**: learning them on all the training samples
+before cross-validation would let the test samples of each fold
+influence the features and overestimate performance.
 [`prepare_celltfusion_folds()`](https://verapancaldilab.github.io/CellTFusion/reference/prepare_celltfusion_folds.md)
 does this for `pipeML`: in each fold,
 [`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md)
-is run on the training samples only, and the test samples are projected
-onto the resulting latent factors with
-[`project_test_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/project_test_factors.md).
+is run on the training samples only, and the test samples are scored on
+the resulting cell groups with
+[`compute.test.set()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.test.set.md).
+The latent factors are a downstream characterization and are not used as
+features
+([`project_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/project_factors.md)
+projects the cell group scores of new samples onto them when needed).
 
 ## **Input data**
 
@@ -104,12 +109,13 @@ result is returned in `ml_res$Custom_output`.
 
 ## **Prediction on an independent cohort**
 
-Project the test samples onto the latent factors of
-`ml_res$Custom_output`, then predict:
+Score the test samples on the cell groups of `ml_res$Custom_output`,
+then predict:
 
 ``` r
 
-features_test <- data.frame(project_test_factors(ml_res$Custom_output, deconv_test))
+features_test <- data.frame(compute.test.set(ml_res$Custom_output$Processed_deconvolution, ml_res$Custom_output$Cell_groups,
+                                              deconv_test = deconv_test))
 
 pred <- pipeML::compute_prediction(
   model          = ml_res$Model,
@@ -142,7 +148,8 @@ surv_res <- pipeML::compute_features.training.ML(
   fold_construction_args_fixed = list(deconv = deconv_train, raw_counts = raw.counts_train)
 )
 
-features_test <- data.frame(project_test_factors(surv_res$Custom_output, deconv_test))
+features_test <- data.frame(compute.test.set(surv_res$Custom_output$Processed_deconvolution, surv_res$Custom_output$Cell_groups,
+                                              deconv_test = deconv_test))
 
 surv_pred <- pipeML::compute_prediction(
   model     = surv_res$Model,
@@ -184,9 +191,8 @@ ml_res <- pipeML::compute_features.training.ML(
 )
 ```
 
-For a model trained with `batch`, project each new cohort separately
-with
-[`project_test_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/project_test_factors.md),
+For a model trained with `batch`, score each new cohort separately with
+[`compute.test.set()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.test.set.md),
 as its samples are z-scored on their own means and SDs; a warning is
 given with fewer than 10 samples, and a single sample cannot be scored
 this way (all its scores would be 0).

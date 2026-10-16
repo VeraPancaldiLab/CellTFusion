@@ -40,7 +40,6 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="../articles/a1_feature_computation.html">Feature computation</a></li>
     <li><a class="dropdown-item" href="../articles/a2_cell_groups.html">Cell groups and latent factors</a></li>
-    <li><a class="dropdown-item" href="../articles/a3_tme_states.html">TME state characterization</a></li>
     <li><a class="dropdown-item" href="../articles/a4_statistical_analysis.html">Statistical analysis</a></li>
     <li><a class="dropdown-item" href="../articles/a5_machine_learning.html">Machine learning workflows</a></li>
     <li><a class="dropdown-item" href="../articles/a6_batch_analysis.html">Multi-cohort analysis</a></li>
@@ -86,15 +85,19 @@ package:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># install.packages("pak")</span></span>
 <span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pkg_install.html" class="external-link">pkg_install</a></span><span class="op">(</span><span class="st">"VeraPancaldiLab/pipeML"</span><span class="op">)</span></span></code></pre></div>
-<p>Latent factors are learned from the data (cell groups, TF modules,
-NMF), so they must be learned <strong>within each cross-validation
-fold</strong>: learning them on all the training samples before
-cross-validation would let the test samples of each fold influence the
-features and overestimate performance.
+<p>The features of the models are the cell group scores. Cell groups are
+learned from the data (TF modules, correlations with the deconvolution
+features, CCA weights), so they must be learned <strong>within each
+cross-validation fold</strong>: learning them on all the training
+samples before cross-validation would let the test samples of each fold
+influence the features and overestimate performance.
 <code><a href="../reference/prepare_celltfusion_folds.html">prepare_celltfusion_folds()</a></code> does this for
 <code>pipeML</code>: in each fold, <code><a href="../reference/CellTFusion.html">CellTFusion()</a></code> is run on
-the training samples only, and the test samples are projected onto the
-resulting latent factors with <code><a href="../reference/project_test_factors.html">project_test_factors()</a></code>.</p>
+the training samples only, and the test samples are scored on the
+resulting cell groups with <code><a href="../reference/compute.test.set.html">compute.test.set()</a></code>. The latent
+factors are a downstream characterization and are not used as features
+(<code><a href="../reference/project_factors.html">project_factors()</a></code> projects the cell group scores of new
+samples onto them when needed).</p>
 <div class="section level2">
 <h2 id="input-data">
 <strong>Input data</strong><a class="anchor" aria-label="anchor" href="#input-data"></a>
@@ -169,10 +172,11 @@ returned in <code>ml_res$Custom_output</code>.</p>
 <h2 id="prediction-on-an-independent-cohort">
 <strong>Prediction on an independent cohort</strong><a class="anchor" aria-label="anchor" href="#prediction-on-an-independent-cohort"></a>
 </h2>
-<p>Project the test samples onto the latent factors of
+<p>Score the test samples on the cell groups of
 <code>ml_res$Custom_output</code>, then predict:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">features_test</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="fu"><a href="../reference/project_test_factors.html">project_test_factors</a></span><span class="op">(</span><span class="va">ml_res</span><span class="op">$</span><span class="va">Custom_output</span>, <span class="va">deconv_test</span><span class="op">)</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">features_test</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="fu"><a href="../reference/compute.test.set.html">compute.test.set</a></span><span class="op">(</span><span class="va">ml_res</span><span class="op">$</span><span class="va">Custom_output</span><span class="op">$</span><span class="va">Processed_deconvolution</span>, <span class="va">ml_res</span><span class="op">$</span><span class="va">Custom_output</span><span class="op">$</span><span class="va">Cell_groups</span>,</span>
+<span>                                              deconv_test <span class="op">=</span> <span class="va">deconv_test</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">pred</span> <span class="op">&lt;-</span> <span class="fu">pipeML</span><span class="fu">::</span><span class="fu">compute_prediction</span><span class="op">(</span></span>
 <span>  model          <span class="op">=</span> <span class="va">ml_res</span><span class="op">$</span><span class="va">Model</span>,</span>
@@ -205,7 +209,8 @@ includes the overall survival: <code>os</code> and
 <span>  fold_construction_args_fixed <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>deconv <span class="op">=</span> <span class="va">deconv_train</span>, raw_counts <span class="op">=</span> <span class="va">raw.counts_train</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">features_test</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="fu"><a href="../reference/project_test_factors.html">project_test_factors</a></span><span class="op">(</span><span class="va">surv_res</span><span class="op">$</span><span class="va">Custom_output</span>, <span class="va">deconv_test</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">features_test</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="fu"><a href="../reference/compute.test.set.html">compute.test.set</a></span><span class="op">(</span><span class="va">surv_res</span><span class="op">$</span><span class="va">Custom_output</span><span class="op">$</span><span class="va">Processed_deconvolution</span>, <span class="va">surv_res</span><span class="op">$</span><span class="va">Custom_output</span><span class="op">$</span><span class="va">Cell_groups</span>,</span>
+<span>                                              deconv_test <span class="op">=</span> <span class="va">deconv_test</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">surv_pred</span> <span class="op">&lt;-</span> <span class="fu">pipeML</span><span class="fu">::</span><span class="fu">compute_prediction</span><span class="op">(</span></span>
 <span>  model     <span class="op">=</span> <span class="va">surv_res</span><span class="op">$</span><span class="va">Model</span>,</span>
@@ -244,8 +249,8 @@ each fold:</p>
 <span>                                      raw_counts <span class="op">=</span> <span class="va">raw.counts_train</span>,</span>
 <span>                                      batch      <span class="op">=</span> <span class="va">coldata_train</span><span class="op">$</span><span class="va">Cohort</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p>For a model trained with <code>batch</code>, project each new cohort
-separately with <code><a href="../reference/project_test_factors.html">project_test_factors()</a></code>, as its samples are
+<p>For a model trained with <code>batch</code>, score each new cohort
+separately with <code><a href="../reference/compute.test.set.html">compute.test.set()</a></code>, as its samples are
 z-scored on their own means and SDs; a warning is given with fewer than
 10 samples, and a single sample cannot be scored this way (all its
 scores would be 0).</p>

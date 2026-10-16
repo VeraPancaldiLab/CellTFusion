@@ -267,8 +267,8 @@ dt <- multideconv::compute.deconvolution.analysis(
 ## **Running the full pipeline**
 
 [`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md)
-runs all the steps above, then builds cell groups and latent factors and
-characterizes TME states:
+runs all the steps above, then builds cell groups, latent factors and
+cell niches:
 
 ``` r
 
@@ -277,7 +277,6 @@ res <- CellTFusion(
   normalized     = TRUE,
   deconv_methods = c("Quantiseq", "Epidish"),
   TF.collection  = "CollecTRI",
-  cancer_type    = "blca",   # the example data are bladder cancer samples
   corr           = 0.7,
   corr_mod       = 0.9,
   pval           = 0.05,
@@ -292,17 +291,16 @@ A few defaults worth knowing:
   DeconRNASeq and DWLS by default. CIBERSORTx is only run when
   `cbsx_mail` and `cbsx_token` are given; without them it is skipped
   with a message.
-- `cancer_type` selects the TCGA meta-program reference (`"blca"`,
-  `"luad"` or `"skcm"`); if `NULL`, the meta-program mapping step is
-  skipped.
+- `cancer_type` is only used with `TF.collection = "ARACNE"`, to locate
+  the ARACNe network.
 - Precomputed `deconv`, `dt`, `tfs` and `pathways` can be passed to skip
   the corresponding steps (see [Cell groups and latent
   factors](https://verapancaldilab.github.io/CellTFusion/articles/a2_cell_groups.md)).
 
 `res` contains every intermediate object: `$Deconvolution`,
 `$TFs_matrix`, `$TF_network`, `$Pathways_scores`,
-`$Processed_deconvolution`, `$Cell_groups`, `$Latent_spaces`,
-`$Cells_niches`, `$TME_states` and `$Metaprograms_reference`.
+`$Processed_deconvolution`, `$Cell_groups`, `$Latent_spaces` and
+`$Cells_niches`.
 
 Next: [Cell groups and latent
 factors](https://verapancaldilab.github.io/CellTFusion/articles/a2_cell_groups.md).

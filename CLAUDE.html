@@ -20,7 +20,6 @@
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="articles/a1_feature_computation.html">Feature computation</a></li>
     <li><a class="dropdown-item" href="articles/a2_cell_groups.html">Cell groups and latent factors</a></li>
-    <li><a class="dropdown-item" href="articles/a3_tme_states.html">TME state characterization</a></li>
     <li><a class="dropdown-item" href="articles/a4_statistical_analysis.html">Statistical analysis</a></li>
     <li><a class="dropdown-item" href="articles/a5_machine_learning.html">Machine learning workflows</a></li>
     <li><a class="dropdown-item" href="articles/a6_batch_analysis.html">Multi-cohort analysis</a></li>
@@ -86,11 +85,9 @@
 <li>
 <strong>Latent factor extraction</strong> — <code><a href="reference/compute.latent_factors.html">compute.latent_factors()</a></code>: NMF-based latent factors; <code><a href="reference/compute_cells_niches.html">compute_cells_niches()</a></code> for cell niche derivation</li>
 <li>
-<strong>TME state characterisation</strong> — Hallmark GSEA per factor (<code><a href="reference/compute_factor_gsea.html">compute_factor_gsea()</a></code>), meta-program derivation/mapping (<code><a href="reference/derive_meta_programs.html">derive_meta_programs()</a></code>, <code><a href="reference/map_factors_to_metaprograms.html">map_factors_to_metaprograms()</a></code>), and TME subtype annotation against Bagaev et al. (2021) MFP subtypes (<code><a href="reference/map_factors_to_TME.html">map_factors_to_TME()</a></code>, <code><a href="reference/annotate_metaprograms_TME.html">annotate_metaprograms_TME()</a></code>)</li>
-<li>
 <strong>Statistical analysis</strong> — clinical trait association (<code><a href="reference/scores.stat.analysis.html">scores.stat.analysis()</a></code> and the <code>scores.*</code> family), survival analysis (<code><a href="reference/compute.survival.analysis.html">compute.survival.analysis()</a></code>)</li>
 <li>
-<strong>Test-set / batch projection</strong> — apply a trained model to new data (<code><a href="reference/compute.test.set.html">compute.test.set()</a></code>, <code><a href="reference/project_test_factors.html">project_test_factors()</a></code>), run leakage-aware cross-validation with <code>pipeML</code> (<code><a href="reference/prepare_celltfusion_folds.html">prepare_celltfusion_folds()</a></code>), or run multi-cohort analysis via <code>batch</code> (cohort of each sample) in <code><a href="reference/CellTFusion.html">CellTFusion()</a></code>
+<strong>Test-set / batch projection</strong> — apply a trained model to new data (<code><a href="reference/compute.test.set.html">compute.test.set()</a></code> for cell group scores; <code><a href="reference/project_factors.html">project_factors()</a></code> to project those scores onto trained NMF factors), run leakage-aware cross-validation with <code>pipeML</code> (<code><a href="reference/prepare_celltfusion_folds.html">prepare_celltfusion_folds()</a></code>), or run multi-cohort analysis via <code>batch</code> (cohort of each sample) in <code><a href="reference/CellTFusion.html">CellTFusion()</a></code>
 </li>
 </ol></div>
 <div class="section level3">
@@ -102,7 +99,7 @@
 <li>
 <code>vignettes/CellTFusion.Rmd</code> — Getting-started overview (installation, quick start, pipeline step table, tutorial list)</li>
 <li>
-<code>vignettes/a1_feature_computation.Rmd</code> … <code>a6_batch_analysis.Rmd</code> — In-depth tutorials (feature computation, cell groups, TME states, statistical analysis, machine learning, multi-cohort). They are package vignettes (same layout as <code>multideconv</code>); heavy code chunks use <code>eval = FALSE</code> and figures live in <code>vignettes/figures/</code>. The pkgdown article menu is defined in <code>_pkgdown.yml</code>.</li>
+<code>vignettes/a1_feature_computation.Rmd</code> … <code>a6_batch_analysis.Rmd</code> — In-depth tutorials (feature computation, cell groups, statistical analysis, machine learning, multi-cohort; there is no <code>a3</code> since the TME state functions were removed on 2026-10-16). They are package vignettes (same layout as <code>multideconv</code>); heavy code chunks use <code>eval = FALSE</code> and figures live in <code>vignettes/figures/</code>. The pkgdown article menu is defined in <code>_pkgdown.yml</code>.</li>
 </ul></div>
 <div class="section level3">
 <h3 id="main-exported-functions">Main Exported Functions<a class="anchor" aria-label="anchor" href="#main-exported-functions"></a></h3>
@@ -122,24 +119,14 @@
 </tr><tr><td><code><a href="reference/compute.latent_factors.html">compute.latent_factors()</a></code></td>
 <td>NMF-based latent factor extraction from cell group scores</td>
 </tr><tr><td>
-<code><a href="reference/compute.test.set.html">compute.test.set()</a></code> / <code><a href="reference/project_test_factors.html">project_test_factors()</a></code>
+<code><a href="reference/compute.test.set.html">compute.test.set()</a></code> / <code><a href="reference/project_factors.html">project_factors()</a></code>
 </td>
-<td>Apply a trained model / project a test set onto trained NMF factors</td>
+<td>Score new samples on trained cell groups / project cell group scores onto trained NMF factors</td>
 </tr><tr><td><code><a href="reference/prepare_celltfusion_folds.html">prepare_celltfusion_folds()</a></code></td>
 <td>
-<code>pipeML</code> fold construction function (<code>fold_construction_fun</code>): runs <code><a href="reference/CellTFusion.html">CellTFusion()</a></code> within each CV fold and projects the test samples (classification and survival)</td>
+<code>pipeML</code> fold construction function (<code>fold_construction_fun</code>): runs <code><a href="reference/CellTFusion.html">CellTFusion()</a></code> within each CV fold (cell groups only, <code>compute_factors = FALSE</code>) and scores the test samples with <code><a href="reference/compute.test.set.html">compute.test.set()</a></code>; the ML features are the cell group scores (classification and survival)</td>
 </tr><tr><td><code><a href="reference/identify_hub_TFs.html">identify_hub_TFs()</a></code></td>
 <td>Identify driver TFs from modules</td>
-</tr><tr><td><code><a href="reference/compute_factor_gsea.html">compute_factor_gsea()</a></code></td>
-<td>Hallmark GSEA on latent factors</td>
-</tr><tr><td>
-<code><a href="reference/derive_meta_programs.html">derive_meta_programs()</a></code> / <code><a href="reference/map_factors_to_metaprograms.html">map_factors_to_metaprograms()</a></code>
-</td>
-<td>Derive and map latent factors to TCGA meta-programs</td>
-</tr><tr><td>
-<code><a href="reference/map_factors_to_TME.html">map_factors_to_TME()</a></code> / <code><a href="reference/annotate_metaprograms_TME.html">annotate_metaprograms_TME()</a></code>
-</td>
-<td>Annotate factors/meta-programs with Bagaev et al. (2021) TME (MFP) subtypes</td>
 </tr><tr><td><code><a href="reference/compute.metadata.association.html">compute.metadata.association()</a></code></td>
 <td>Clinical trait association + visualization</td>
 </tr><tr><td><code><a href="reference/compute.survival.analysis.html">compute.survival.analysis()</a></code></td>
@@ -157,7 +144,7 @@
 </div>
 <div class="section level2">
 <h2 id="dependencies">Dependencies<a class="anchor" aria-label="anchor" href="#dependencies"></a></h2>
-<p>Heavy dependencies are in <code>Imports</code> (always loaded): <code>multideconv</code>, <code>decoupleR</code>, <code>WGCNA</code>, <code>limma</code>, <code>GSVA</code>, <code>ggplot2</code>, and several tidyverse packages (<code>dplyr</code>, <code>tidyr</code>, <code>tibble</code>, <code>purrr</code>). <code>multideconv</code> functions are imported via <code>@importFrom</code> in <code>R/CellTFusion.R</code>; reference data in <code>inst/extdata/</code> is always located with <code><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file()</a></code> (never hardcoded paths).</p>
+<p>Heavy dependencies are in <code>Imports</code> (always loaded): <code>multideconv</code>, <code>decoupleR</code>, <code>WGCNA</code>, <code>GSVA</code>, <code>ggplot2</code>, and several tidyverse packages (<code>dplyr</code>, <code>tidyr</code>, <code>tibble</code>, <code>purrr</code>). <code>multideconv</code> functions are imported via <code>@importFrom</code> in <code>R/CellTFusion.R</code>; reference data in <code>inst/extdata/</code> is always located with <code><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file()</a></code> (never hardcoded paths).</p>
 <p><code>OmnipathR</code> (needed by <code>decoupleR</code> to fetch CollecTRI and PROGENy), <code>dorothea</code> (Dorothea TF collection), <code>RcppML</code> (NMF), <code>survival</code>/<code>survminer</code>/<code>gridExtra</code> (survival analysis) and <code>caret</code> (machine-learning vignette) are in <code>Suggests</code> (optional, loaded only when the relevant code path is used).</p>
 </div>
 <div class="section level2">

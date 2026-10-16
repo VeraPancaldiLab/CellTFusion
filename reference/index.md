@@ -43,25 +43,7 @@ Cell group construction, NMF latent factors and cell niches
 - [`compute.latent_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.latent_factors.md)
   : Compute latent factors from cell group scores using NMF
 - [`compute_cells_niches()`](https://verapancaldilab.github.io/CellTFusion/reference/compute_cells_niches.md)
-  : Identify cell-type niches from NMF latent factors
-
-## TME state characterization
-
-Hallmark GSEA, TCGA meta-programs and TME subtypes
-
-- [`compute_factor_gsea()`](https://verapancaldilab.github.io/CellTFusion/reference/compute_factor_gsea.md)
-  : Run multivariate feature-based GSEA using limma and Hallmark gene
-  sets
-- [`build_nes_matrix()`](https://verapancaldilab.github.io/CellTFusion/reference/build_nes_matrix.md)
-  : Build a Hallmarks x factors NES matrix from GSEA results
-- [`derive_meta_programs()`](https://verapancaldilab.github.io/CellTFusion/reference/derive_meta_programs.md)
-  : Derive TME meta-programs by clustering Hallmarks across NMF factors
-- [`map_factors_to_metaprograms()`](https://verapancaldilab.github.io/CellTFusion/reference/map_factors_to_metaprograms.md)
-  : Map study factors to TCGA meta-programs
-- [`map_factors_to_TME()`](https://verapancaldilab.github.io/CellTFusion/reference/map_factors_to_TME.md)
-  : Annotate NMF factors with Bagaev et al. (2021) MFP subtypes
-- [`annotate_metaprograms_TME()`](https://verapancaldilab.github.io/CellTFusion/reference/annotate_metaprograms_TME.md)
-  : Annotate meta-programs with Bagaev TME subtypes
+  : Identify cell niches from NMF latent factors
 
 ## Statistical analysis
 
@@ -92,8 +74,6 @@ data
 
 - [`prepare_celltfusion_folds()`](https://verapancaldilab.github.io/CellTFusion/reference/prepare_celltfusion_folds.md)
   : Prepare CellTFusion cross-validation folds for pipeML
-- [`project_test_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/project_test_factors.md)
-  : Project test-set samples onto training NMF factors
 - [`compute.test.set()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.test.set.md)
   : Compute composite scores on test set based on previous cell groups
 - [`project_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/project_factors.md)

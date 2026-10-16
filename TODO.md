@@ -304,12 +304,11 @@ the `scores.*` tests and
 
 **Setting arguments in snake_case.** `file.name` and `dendrogram_file`
 -\> `file_name`; `cancer.type` and `cancer_name`
-([`map_factors_to_TME()`](https://verapancaldilab.github.io/CellTFusion/reference/map_factors_to_TME.md))
--\> `cancer_type`; `softPower` -\> `soft_power`; `network.type` -\>
-`network_type`; `plot.grid` -\> `plot_grid`; `ncol.grid` and `ncol`
+(`map_factors_to_TME()`) -\> `cancer_type`; `softPower` -\>
+`soft_power`; `network.type` -\> `network_type`; `plot.grid` -\>
+`plot_grid`; `ncol.grid` and `ncol`
 ([`compute.metadata.association()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.metadata.association.md))
--\> `ncol_grid`; `plot_dot` -\> `plot`
-([`compute_factor_gsea()`](https://verapancaldilab.github.io/CellTFusion/reference/compute_factor_gsea.md));
+-\> `ncol_grid`; `plot_dot` -\> `plot` (`compute_factor_gsea()`);
 `MM_thresh` -\> `mm_thresh`; `cbsx.mail` / `cbsx.token` -\> `cbsx_mail`
 / `cbsx_token`; `doParallel` -\> `do_parallel`
 ([`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md));
@@ -331,11 +330,8 @@ Done 15 October 2026 (second pass):
 **Saving:** one switch `return` (default `TRUE`) everywhere saves a
 function’s tables and figures. `plot` was renamed `return` in
 [`compute.modules.relationship()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.modules.relationship.md),
-[`compute_factor_gsea()`](https://verapancaldilab.github.io/CellTFusion/reference/compute_factor_gsea.md),
-[`derive_meta_programs()`](https://verapancaldilab.github.io/CellTFusion/reference/derive_meta_programs.md),
-[`map_factors_to_metaprograms()`](https://verapancaldilab.github.io/CellTFusion/reference/map_factors_to_metaprograms.md)
-and
-[`map_factors_to_TME()`](https://verapancaldilab.github.io/CellTFusion/reference/map_factors_to_TME.md);
+`compute_factor_gsea()`, `derive_meta_programs()`,
+`map_factors_to_metaprograms()` and `map_factors_to_TME()`;
 `return_dendrogram` was folded into `return`
 ([`construct_cell_groups()`](https://verapancaldilab.github.io/CellTFusion/reference/construct_cell_groups.md),
 [`cell.groups.computation()`](https://verapancaldilab.github.io/CellTFusion/reference/cell.groups.computation.md));
@@ -357,9 +353,7 @@ row order.
 
 **`seed`:** only where something is random:
 [`compute.latent_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.latent_factors.md)
-(NMF),
-[`compute_factor_gsea()`](https://verapancaldilab.github.io/CellTFusion/reference/compute_factor_gsea.md)
-(fgsea permutations) and
+(NMF), `compute_factor_gsea()` (fgsea permutations) and
 [`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md)
 (new `seed`, default 123, passed to both and used for the deconvolution
 methods with random steps). TF and pathway scoring are deterministic
@@ -435,17 +429,15 @@ the lists given on 15 October 2026.
 
 ## Deferred: to do after the review of `CellTFusion()` (noted October 2026)
 
-**TCGA references.** Regenerate
-`inst/extdata/TCGA_meta_programs_*.RData` and
-`CellTFusion_TCGA_*.RData`: they were built while cell groups were
-mislabelled (2026-04-29 to 2026-10-05), so `TME_states` maps against
-references from wrong cell groups. They must also be rebuilt with the
-current defaults (12 October 2026): ulm TF activities, TF tree on the
-TOM dissimilarity with average linkage, merging repeated until no pair
-is above `corr_mod`, cell groups cut into single ranges of correlation,
-rank limited to the number of cell groups, GSEA with the cohort
-covariate and a fixed seed. The current blca reference labels 5 of its 7
-meta-programs as IE.
+**TCGA references.** On 16 October 2026 the Hallmark GSEA
+(`compute_factor_gsea()`), the TCGA meta-program mapping
+(`derive_meta_programs()`, `build_nes_matrix()`,
+`map_factors_to_metaprograms()`, `annotate_metaprograms_TME()`) and
+`inst/extdata/TCGA_meta_programs_*.RData` were removed (user: the
+mapping was too coarse). `inst/extdata/CellTFusion_TCGA_*.RData` are no
+longer used by any function: decide whether to delete them or rebuild
+them (they were built while cell groups were mislabelled, 2026-04-29 to
+2026-10-05, and with older defaults).
 
 **Shiny app.** Done 15 October 2026: new controls (scoring method,
 clustering method, BH adjustment, consensus quantile, seed, cancer
@@ -527,7 +519,13 @@ separated ranges of correlation), and whether the step added that splits
 clusters into single ranges and joins small pieces to their closest
 neighbour is the right answer.
 
-**Cell niches: more or fewer cells.**
+**Cell niches: more or fewer cells.** Since 15 October 2026 the factors
+use only the positive part of the cell group scores (high-activity side
+of the TF modules, no `_pos` / `_neg` split). A high-activity cell group
+can still mean more or fewer cells (depending on whether its features
+are positively or negatively related to its TF module), which
+[`compute_cells_niches()`](https://verapancaldilab.github.io/CellTFusion/reference/compute_cells_niches.md)
+does not take into account. Earlier note:
 [`compute_cells_niches()`](https://verapancaldilab.github.io/CellTFusion/reference/compute_cells_niches.md)
 adds together the selected cell group parts that mean more cells and
 those that mean fewer (it uses neither `_pos` / `_neg` nor the relation

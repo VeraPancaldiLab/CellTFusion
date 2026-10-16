@@ -40,7 +40,6 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="../articles/a1_feature_computation.html">Feature computation</a></li>
     <li><a class="dropdown-item" href="../articles/a2_cell_groups.html">Cell groups and latent factors</a></li>
-    <li><a class="dropdown-item" href="../articles/a3_tme_states.html">TME state characterization</a></li>
     <li><a class="dropdown-item" href="../articles/a4_statistical_analysis.html">Statistical analysis</a></li>
     <li><a class="dropdown-item" href="../articles/a5_machine_learning.html">Machine learning workflows</a></li>
     <li><a class="dropdown-item" href="../articles/a6_batch_analysis.html">Multi-cohort analysis</a></li>
@@ -349,14 +348,13 @@ analysis</a>).</li>
 <strong>Running the full pipeline</strong><a class="anchor" aria-label="anchor" href="#running-the-full-pipeline"></a>
 </h2>
 <p><code><a href="../reference/CellTFusion.html">CellTFusion()</a></code> runs all the steps above, then builds cell
-groups and latent factors and characterizes TME states:</p>
+groups, latent factors and cell niches:</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/CellTFusion.html">CellTFusion</a></span><span class="op">(</span></span>
 <span>  raw_counts     <span class="op">=</span> <span class="va">raw.counts</span>,</span>
 <span>  normalized     <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  deconv_methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Quantiseq"</span>, <span class="st">"Epidish"</span><span class="op">)</span>,</span>
 <span>  TF.collection  <span class="op">=</span> <span class="st">"CollecTRI"</span>,</span>
-<span>  cancer_type    <span class="op">=</span> <span class="st">"blca"</span>,   <span class="co"># the example data are bladder cancer samples</span></span>
 <span>  corr           <span class="op">=</span> <span class="fl">0.7</span>,</span>
 <span>  corr_mod       <span class="op">=</span> <span class="fl">0.9</span>,</span>
 <span>  pval           <span class="op">=</span> <span class="fl">0.05</span>,</span>
@@ -372,9 +370,9 @@ CIBERSORTx is only run when <code>cbsx_mail</code> and
 <code>cbsx_token</code> are given; without them it is skipped with a
 message.</li>
 <li>
-<code>cancer_type</code> selects the TCGA meta-program reference
-(<code>"blca"</code>, <code>"luad"</code> or <code>"skcm"</code>); if
-<code>NULL</code>, the meta-program mapping step is skipped.</li>
+<code>cancer_type</code> is only used with
+<code>TF.collection = "ARACNE"</code>, to locate the ARACNe
+network.</li>
 <li>Precomputed <code>deconv</code>, <code>dt</code>, <code>tfs</code>
 and <code>pathways</code> can be passed to skip the corresponding steps
 (see <a href="a2_cell_groups.html">Cell groups and latent
@@ -384,8 +382,7 @@ factors</a>).</li>
 <code>$Deconvolution</code>, <code>$TFs_matrix</code>,
 <code>$TF_network</code>, <code>$Pathways_scores</code>,
 <code>$Processed_deconvolution</code>, <code>$Cell_groups</code>,
-<code>$Latent_spaces</code>, <code>$Cells_niches</code>,
-<code>$TME_states</code> and <code>$Metaprograms_reference</code>.</p>
+<code>$Latent_spaces</code> and <code>$Cells_niches</code>.</p>
 <p>Next: <a href="a2_cell_groups.html">Cell groups and latent
 factors</a>.</p>
 </div>

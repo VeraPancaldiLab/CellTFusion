@@ -48,12 +48,10 @@ res <- CellTFusion(
   raw_counts     = CellTFusion::raw.counts.tuto,
   normalized     = TRUE,
   deconv_methods = c("Quantiseq", "Epidish"),
-  cancer_type    = "blca",   # the example data are bladder cancer samples
   file_name      = "Tutorial"
 )
 
 head(res$Latent_spaces$Z)  # latent factor scores (samples x factors)
-res$TME_states             # mapping of each latent factor to a TCGA meta-program
 ```
 
 ## Pipeline
@@ -67,13 +65,10 @@ res$TME_states             # mapping of each latent factor to a TCGA meta-progra
 | Cell groups | [`construct_cell_groups()`](https://verapancaldilab.github.io/CellTFusion/reference/construct_cell_groups.md) | [Cell groups and latent factors](https://verapancaldilab.github.io/CellTFusion/articles/a2_cell_groups.md) |
 | Latent factors | [`compute.latent_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.latent_factors.md) | [Cell groups and latent factors](https://verapancaldilab.github.io/CellTFusion/articles/a2_cell_groups.md) |
 | Cell niches | [`compute_cells_niches()`](https://verapancaldilab.github.io/CellTFusion/reference/compute_cells_niches.md) | [Cell groups and latent factors](https://verapancaldilab.github.io/CellTFusion/articles/a2_cell_groups.md) |
-| Hallmark GSEA per factor | [`compute_factor_gsea()`](https://verapancaldilab.github.io/CellTFusion/reference/compute_factor_gsea.md) | [TME state characterization](https://verapancaldilab.github.io/CellTFusion/articles/a3_tme_states.md) |
-| Meta-program mapping | [`map_factors_to_metaprograms()`](https://verapancaldilab.github.io/CellTFusion/reference/map_factors_to_metaprograms.md) | [TME state characterization](https://verapancaldilab.github.io/CellTFusion/articles/a3_tme_states.md) |
-| TME subtype annotation | [`map_factors_to_TME()`](https://verapancaldilab.github.io/CellTFusion/reference/map_factors_to_TME.md) | [TME state characterization](https://verapancaldilab.github.io/CellTFusion/articles/a3_tme_states.md) |
 | Clinical associations | [`scores.stat.analysis()`](https://verapancaldilab.github.io/CellTFusion/reference/scores.stat.analysis.md) | [Statistical analysis](https://verapancaldilab.github.io/CellTFusion/articles/a4_statistical_analysis.md) |
 | Survival analysis | [`compute.survival.analysis()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.survival.analysis.md) | [Statistical analysis](https://verapancaldilab.github.io/CellTFusion/articles/a4_statistical_analysis.md) |
 | Cross-validation with `pipeML` | [`prepare_celltfusion_folds()`](https://verapancaldilab.github.io/CellTFusion/reference/prepare_celltfusion_folds.md) | [Machine learning workflows](https://verapancaldilab.github.io/CellTFusion/articles/a5_machine_learning.md) |
-| Projection of new cohorts | [`project_test_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/project_test_factors.md) | [Machine learning workflows](https://verapancaldilab.github.io/CellTFusion/articles/a5_machine_learning.md) |
+| Projection of new cohorts | [`compute.test.set()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.test.set.md) (cell groups), [`project_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/project_factors.md) (latent factors) | [Machine learning workflows](https://verapancaldilab.github.io/CellTFusion/articles/a5_machine_learning.md) |
 | Multi-cohort analysis | `CellTFusion(batch = ...)` | [Multi-cohort analysis](https://verapancaldilab.github.io/CellTFusion/articles/a6_batch_analysis.md) |
 
 ## Tutorials
@@ -89,15 +84,12 @@ navigation bar:
   factors](https://verapancaldilab.github.io/CellTFusion/articles/a2_cell_groups.md)**
   — build cell groups, extract latent factors and characterize cell
   niches
-- **[TME state
-  characterization](https://verapancaldilab.github.io/CellTFusion/articles/a3_tme_states.md)**
-  — Hallmark GSEA, TCGA meta-programs and TME subtypes
 - **[Statistical
   analysis](https://verapancaldilab.github.io/CellTFusion/articles/a4_statistical_analysis.md)**
   — associations with clinical variables and survival
 - **[Machine learning
   workflows](https://verapancaldilab.github.io/CellTFusion/articles/a5_machine_learning.md)**
-  — use latent factors as features and project independent cohorts
+  — use cell group scores as features and score independent cohorts
 - **[Multi-cohort
   analysis](https://verapancaldilab.github.io/CellTFusion/articles/a6_batch_analysis.md)**
   — correct for cohort effects with `batch`

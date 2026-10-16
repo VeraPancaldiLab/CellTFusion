@@ -86,7 +86,7 @@ res <- CellTFusion(
   cbsx_mail = "your_email",       # Needed to run CBSX (CIBERSORTx)
   cbsx_token = "your_token",      # Needed to run CBSX (CIBERSORTx)
   TF.collection = "CollecTRI",    # "CollecTRI", "Dorothea", or "ARACNE"
-  cancer_type = "skcm",           # TCGA cancer type, used for meta-program mapping
+  cancer_type = NULL,             # only used with TF.collection = "ARACNE" (input/ARACNE/<cancer_type>/)
   file_name = "TestRun",
   min_targets_size = 5,
   min_module_size = 5,
@@ -132,8 +132,8 @@ them it is skipped with a message.
 [`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md)
 returns a named list with the outputs of each pipeline stage — cell-type
 deconvolution, TF activity, TF module network, pathway scores, cell
-groups, latent factors, cell niches, and TME state mapping. Cell groups
-are derived internally via
+groups, latent factors and cell niches. Cell groups are derived
+internally via
 [`construct_cell_groups()`](https://verapancaldilab.github.io/CellTFusion/reference/construct_cell_groups.md)
 and are available at `res$Cell_groups`:
 
@@ -153,9 +153,10 @@ section.
 ## Replicate cell groups on an independent dataset
 
 Use this function to apply the trained cell groups to an external test
-set and calculate group-specific composite scores. To directly obtain
-the latent factors of new samples, use
-`project_test_factors(res, deconv_test)` (see the [Machine learning
+set and calculate group-specific composite scores. To obtain the latent
+factors of new samples, project their cell group scores with
+`project_factors(res$Latent_spaces, test_scores)` (see the [Machine
+learning
 workflows](https://VeraPancaldiLab.github.io/CellTFusion/articles/a5_machine_learning.html)
 article).
 
@@ -193,8 +194,9 @@ ml_res <- pipeML::compute_features.training.ML(
   fold_construction_args_fixed = list(deconv = deconv, raw_counts = raw.counts)
 )
 
-# Features of new samples, projected onto the final model
-features_test <- project_test_factors(ml_res$Custom_output, deconv_test)
+# Features of new samples: cell group scores on the cell groups of the final model
+features_test <- compute.test.set(ml_res$Custom_output$Processed_deconvolution, ml_res$Custom_output$Cell_groups,
+                                  deconv_test = deconv_test)
 ```
 
 See the [Machine learning
@@ -270,25 +272,7 @@ Cell group construction, NMF latent factors and cell niches
 - [`compute.latent_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.latent_factors.md)
   : Compute latent factors from cell group scores using NMF
 - [`compute_cells_niches()`](https://verapancaldilab.github.io/CellTFusion/reference/compute_cells_niches.md)
-  : Identify cell-type niches from NMF latent factors
-
-## TME state characterization
-
-Hallmark GSEA, TCGA meta-programs and TME subtypes
-
-- [`compute_factor_gsea()`](https://verapancaldilab.github.io/CellTFusion/reference/compute_factor_gsea.md)
-  : Run multivariate feature-based GSEA using limma and Hallmark gene
-  sets
-- [`build_nes_matrix()`](https://verapancaldilab.github.io/CellTFusion/reference/build_nes_matrix.md)
-  : Build a Hallmarks x factors NES matrix from GSEA results
-- [`derive_meta_programs()`](https://verapancaldilab.github.io/CellTFusion/reference/derive_meta_programs.md)
-  : Derive TME meta-programs by clustering Hallmarks across NMF factors
-- [`map_factors_to_metaprograms()`](https://verapancaldilab.github.io/CellTFusion/reference/map_factors_to_metaprograms.md)
-  : Map study factors to TCGA meta-programs
-- [`map_factors_to_TME()`](https://verapancaldilab.github.io/CellTFusion/reference/map_factors_to_TME.md)
-  : Annotate NMF factors with Bagaev et al. (2021) MFP subtypes
-- [`annotate_metaprograms_TME()`](https://verapancaldilab.github.io/CellTFusion/reference/annotate_metaprograms_TME.md)
-  : Annotate meta-programs with Bagaev TME subtypes
+  : Identify cell niches from NMF latent factors
 
 ## Statistical analysis
 
@@ -319,8 +303,6 @@ data
 
 - [`prepare_celltfusion_folds()`](https://verapancaldilab.github.io/CellTFusion/reference/prepare_celltfusion_folds.md)
   : Prepare CellTFusion cross-validation folds for pipeML
-- [`project_test_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/project_test_factors.md)
-  : Project test-set samples onto training NMF factors
 - [`compute.test.set()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.test.set.md)
   : Compute composite scores on test set based on previous cell groups
 - [`project_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/project_factors.md)
@@ -353,8 +335,6 @@ Example data
   computation](https://verapancaldilab.github.io/CellTFusion/articles/a1_feature_computation.md):
 - [Cell groups and latent
   factors](https://verapancaldilab.github.io/CellTFusion/articles/a2_cell_groups.md):
-- [TME state
-  characterization](https://verapancaldilab.github.io/CellTFusion/articles/a3_tme_states.md):
 - [Statistical
   analysis](https://verapancaldilab.github.io/CellTFusion/articles/a4_statistical_analysis.md):
 - [Machine learning

@@ -2,9 +2,7 @@
 
 Runs the full CellTFusion pipeline in a single call: cell-type
 deconvolution, TF activity inference, TF module construction, pathway
-activity, cell group construction, NMF latent factors, cell niches and
-TME state characterization (Hallmark GSEA per factor and mapping to TCGA
-meta-programs).
+activity, cell group construction, NMF latent factors and cell niches.
 
 ## Usage
 
@@ -40,8 +38,8 @@ CellTFusion(
   pval = 0.05,
   padj = FALSE,
   min_cluster_size = 3,
-  enrich_thresh = 1.5,
-  quantile_cutoff = 0.7,
+  compute_factors = TRUE,
+  top_n = 5,
   cancer_type = NULL,
   return = TRUE,
   verbose = TRUE,
@@ -55,10 +53,9 @@ CellTFusion(
 
   A matrix of raw gene expression counts (genes as rows, samples as
   columns). If `normalized = FALSE`, a matrix of TPM-normalized values
-  instead (not log-transformed). Always required: even when `dt`, `tfs`
-  and `pathways` are all supplied precomputed, the (normalized)
-  expression matrix is still needed for the downstream GSEA-based TME
-  state characterization step.
+  instead (not log-transformed). Always required, also when `dt`, `tfs`
+  and `pathways` are all supplied precomputed (its samples are checked
+  against them).
 
 - deconv:
 
@@ -289,27 +286,30 @@ CellTFusion(
   [`construct_cell_groups()`](https://verapancaldilab.github.io/CellTFusion/reference/construct_cell_groups.md).
   Default is 3.
 
-- enrich_thresh:
+- compute_factors:
 
-  Numeric. Minimum enrichment ratio (foreground/background cell-type
-  frequency) required to include a cell type in a latent factor's niche.
-  Default is 1.5.
+  Logical. If TRUE (default), the NMF latent factors
+  ([`compute.latent_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.latent_factors.md))
+  and the cell niches
+  ([`compute_cells_niches()`](https://verapancaldilab.github.io/CellTFusion/reference/compute_cells_niches.md))
+  are computed from the cell group scores. If FALSE, they are skipped
+  (`Latent_spaces` and `Cells_niches` are `NULL`), e.g. in the
+  cross-validation folds of
+  [`prepare_celltfusion_folds()`](https://verapancaldilab.github.io/CellTFusion/reference/prepare_celltfusion_folds.md),
+  where only the cell group scores are used.
 
-- quantile_cutoff:
+- top_n:
 
-  Numeric between 0 and 1. Quantile threshold for selecting
-  top-contributing cell groups per NMF factor. Default is 0.7.
+  Integer. Number of top-contributing cell groups per NMF factor in the
+  cell niches (see
+  [`compute_cells_niches()`](https://verapancaldilab.github.io/CellTFusion/reference/compute_cells_niches.md)).
+  Default is 5.
 
 - cancer_type:
 
-  Character. TCGA cancer type abbreviation (one of `"blca"`, `"luad"`,
-  `"skcm"`). Used for two purposes: (1) loading TCGA meta-programs for
-  TME state mapping, and (2) when `TF.collection = "ARACNE"`, locating
-  the ARACNe network at
-  `input/ARACNE/<cancer_type>/network/network.txt`. If `NULL`, or if no
-  TCGA meta-programs exist for that cancer type (a warning is given),
-  the meta-program mapping step is skipped (`TME_states` and
-  `Metaprograms_reference` are `NULL`). For ARACNE, if `NULL`, the
+  Character. Cancer type abbreviation (e.g. `"skcm"`), only used when
+  `TF.collection = "ARACNE"`, to locate the ARACNe network at
+  `input/ARACNE/<cancer_type>/network/network.txt`. If `NULL`, the
   network is auto-detected when only one exists under `input/ARACNE/`.
 
 - return:
@@ -325,8 +325,8 @@ CellTFusion(
 - seed:
 
   Integer. Random seed of the pipeline (deconvolution methods with
-  random steps, NMF and the GSEA permutations), so that results are
-  reproducible. Default is 123.
+  random steps and NMF), so that results are reproducible. Default is
+  123.
 
 ## Value
 
@@ -374,23 +374,15 @@ A list containing:
 - Latent_spaces:
 
   NMF latent factors returned by
-  [`compute.latent_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.latent_factors.md).
+  [`compute.latent_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.latent_factors.md)
+  (`NULL` with `compute_factors = FALSE`).
 
 - Cells_niches:
 
-  Enriched cell types per latent factor (see
-  [`compute_cells_niches()`](https://verapancaldilab.github.io/CellTFusion/reference/compute_cells_niches.md)).
-
-- TME_states:
-
-  Factor-to-meta-program mapping (`factor_mapping` from
-  [`map_factors_to_metaprograms()`](https://verapancaldilab.github.io/CellTFusion/reference/map_factors_to_metaprograms.md)),
-  or `NULL` if the mapping was skipped (see `cancer_type`).
-
-- Metaprograms_reference:
-
-  The TCGA meta-program reference used for mapping, or `NULL` if the
-  mapping was skipped.
+  Top cell groups of each latent factor, with their deconvolution
+  features and CCA coefficients (see
+  [`compute_cells_niches()`](https://verapancaldilab.github.io/CellTFusion/reference/compute_cells_niches.md);
+  `NULL` with `compute_factors = FALSE`).
 
 ## Details
 

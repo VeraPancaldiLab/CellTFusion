@@ -117,13 +117,27 @@ res_rerun <- CellTFusion(
 
 [`compute.latent_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.latent_factors.md)
 decomposes the cell group scores into non-negative latent factors with
-NMF. Each score is first split into a positive and a negative part
-(`_pos` and `_neg` columns: samples on the active and on the inactive
-side of the group’s TF module), so that both directions can contribute
-to the factors. If `rank = NULL`, the number of factors is chosen at the
-elbow of the reconstruction error across ranks 2 to 8, never more than
-the number of cell groups (with fewer than 4 cell groups, `rank = 2` is
-used, and `rank = 1` with a single cell group).
+NMF. Only the positive part of each score is used, `max(score, 0)`: how
+far the sample is on the active side of the group’s TF module (negative
+scores become 0), so the factors describe the high-activity direction of
+the cell groups. If `rank = NULL`, the number of factors is chosen among
+`ranks` (2 to 15 by default, never more than the number of cell groups)
+with bootstrap NMF: for each rank, NMF is fitted on all the patients and
+on `n_boot` (100) bootstrap samples of the patients, and the factors of
+each run are matched to the reference factors by the cosine similarity
+of their profiles (their weights on the cell groups). Each factor gets
+its recovery frequency (proportion of runs in which it is found,
+similarity \>= `similarity_thresh`) and its mean similarity; a factor is
+robust when both pass the thresholds (`recovery_thresh = 0.7` and
+`similarity_thresh = 0.8` by default, starting points rather than
+universal cutoffs). Two factors of the same rank with very similar
+profiles are flagged as redundant. The selected rank is the largest one
+whose factors are all robust and none redundant: as many factors as the
+data support reliably (low ranks capture the dominant patterns and are
+almost always stable, so the smallest stable rank would favour 2).
+`rank_selection` reports every candidate rank and `stability` the
+factors of the selected one; when two adjacent ranks are similarly good,
+check whether the main factors persist at the neighbouring rank.
 
 ``` r
 
@@ -135,16 +149,28 @@ latent_spaces <- compute.latent_factors(
   return    = TRUE
 )
 
-head(latent_spaces$Z)  # samples x factors
+head(latent_spaces$Z)          # samples x factors
+latent_spaces$rank_selection   # stability and redundancy of each candidate rank
+latent_spaces$stability        # recovery and mean similarity of each factor
 ```
 
+With `return = TRUE`, the stability of each candidate rank is plotted
+(`Results/NMF_rank_stability_<file_name>.pdf`, followed by a page with
+the recovery and mean similarity of each factor of the selected rank).
+On the tutorial data, ranks 2 to 5 have all their factors robust and
+none redundant, and stability drops from rank 6, so 5 factors are kept:
+
+![Lowest recovery, lowest mean similarity and highest similarity between
+factors of each candidate NMF rank, with the thresholds and the selected
+rank](figures/nmf_rank_stability.png)
+
 The result contains `Z` (factor scores, samples x factors — the input
-for statistics and machine learning), `W` (weights of each cell group
-part in each factor), `nmf_input`, the NMF model and the per-sample
-factor proportions. Each factor (column of `Z`) sums to 1 over the
-samples; the size of each factor is in `nmf_model$d`. The factor
-proportions of each sample take these sizes into account. With
-`return = TRUE`, the mixture of factors in each sample is plotted:
+for statistics and machine learning), `W` (weights of each cell group in
+each factor), `nmf_input`, the NMF model and the per-sample factor
+proportions. Each factor (column of `Z`) sums to 1 over the samples; the
+size of each factor is in `nmf_model$d`. The factor proportions of each
+sample take these sizes into account. With `return = TRUE`, the mixture
+of factors in each sample is plotted:
 
 ![Stacked bar plot of latent factor proportions per
 sample](figures/nmf_patient_mixture.png)
@@ -152,41 +178,53 @@ sample](figures/nmf_patient_mixture.png)
 ## **Cell niches**
 
 [`compute_cells_niches()`](https://verapancaldilab.github.io/CellTFusion/reference/compute_cells_niches.md)
-characterizes each latent factor by the cell types enriched among the
-cell groups that contribute most to it: the top-weighted cell groups are
-selected (`quantile_cutoff`) and cell types more frequent in them than
-in all cell groups (`enrich_thresh`) are kept. A niche lists the cell
-types associated with the factor; it does not yet say whether the factor
-has more or fewer of them (the `_pos` and `_neg` parts of the cell
-groups are added together).
+characterizes each latent factor by the cell groups that contribute most
+to it: the `top_n` cell groups with the highest weight in the factor
+(`W`), described by their deconvolution features and the CCA
+coefficients of these features in the cell group scores. The
+deconvolution features are kept as they are (subgroups are not expanded
+into their members).
 
 ``` r
 
 cells_niches <- compute_cells_niches(
-  latent_factors  = latent_spaces,
-  dt              = dt,
-  cell_groups     = cell_groups,
-  enrich_thresh   = 1.5,
-  quantile_cutoff = 0.7,
-  return          = TRUE,
-  file_name       = "Tutorial"
+  latent_factors = latent_spaces,
+  cell_groups    = cell_groups,
+  top_n          = 5,
+  return         = TRUE,
+  file_name      = "Tutorial"
 )
 ```
 
-For each factor, a star network of its enriched cell types is saved
-(edge width reflects the weight of the cell type in the factor):
+The result has one row per factor, cell group and feature (`factor`,
+`cell_group`, `module`, `weight`, `feature`, `coefficient`). For each
+factor, a tree network is saved (one page per factor): the factor on the
+left, its top cell groups in the middle (coloured by their TF module)
+and their features listed on the right. Edges are the CCA coefficients:
+red when the feature is higher in samples where the cell group is
+active, blue when it is lower; coefficients close to zero are thin.
+Features correlated with each other (e.g. several estimates of the same
+cell type) share their weight, so a single small edge with the opposite
+colour of its cell group should be read together with the rest of the
+group.
 
-![Star network of the cell types enriched in latent factor
-1](figures/niche_network_factor1.png)
+![Tree network of the top cell groups of latent factor 1 and their
+deconvolution features](figures/niche_network_factor1.png)
+
+A heatmap shows the NMF weights of all the cell groups in all factors
+(cell groups ordered by the factor where their weight is highest;
+outlined: the top cell groups of each factor), so that cell groups
+shared between factors can be seen:
+
+![Heatmap of the NMF weights of the top cell groups in each latent
+factor](figures/niche_weights_heatmap.png)
 
 ## **Next steps**
 
-With the latent factors you can:
+With the cell group scores and the latent factors you can:
 
-- characterize TME states with Hallmark GSEA and meta-programs — [TME
-  state
-  characterization](https://verapancaldilab.github.io/CellTFusion/articles/a3_tme_states.md);
 - test associations with clinical variables — [Statistical
   analysis](https://verapancaldilab.github.io/CellTFusion/articles/a4_statistical_analysis.md);
-- use them as features for prediction — [Machine learning
+- use the cell group scores as features for prediction — [Machine
+  learning
   workflows](https://verapancaldilab.github.io/CellTFusion/articles/a5_machine_learning.md).

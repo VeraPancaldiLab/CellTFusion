@@ -20,7 +20,6 @@
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/a1_feature_computation.html">Feature computation</a></li>
     <li><a class="dropdown-item" href="../articles/a2_cell_groups.html">Cell groups and latent factors</a></li>
-    <li><a class="dropdown-item" href="../articles/a3_tme_states.html">TME state characterization</a></li>
     <li><a class="dropdown-item" href="../articles/a4_statistical_analysis.html">Statistical analysis</a></li>
     <li><a class="dropdown-item" href="../articles/a5_machine_learning.html">Machine learning workflows</a></li>
     <li><a class="dropdown-item" href="../articles/a6_batch_analysis.html">Multi-cohort analysis</a></li>
@@ -169,58 +168,7 @@
           <code><a href="compute_cells_niches.html">compute_cells_niches()</a></code>
 
         </dt>
-        <dd>Identify cell-type niches from NMF latent factors</dd>
-      </dl></div><div class="section level2">
-      <h2 id="tme-state-characterization">TME state characterization<a class="anchor" aria-label="anchor" href="#tme-state-characterization"></a></h2>
-
-      <div class="section-desc"><p>Hallmark GSEA, TCGA meta-programs and TME subtypes</p></div>
-
-      <dl></dl></div><div class="section level2">
-
-
-
-
-      <dl><dt>
-
-          <code><a href="compute_factor_gsea.html">compute_factor_gsea()</a></code>
-
-        </dt>
-        <dd>Run multivariate feature-based GSEA using limma and Hallmark gene sets</dd>
-
-        <dt>
-
-          <code><a href="build_nes_matrix.html">build_nes_matrix()</a></code>
-
-        </dt>
-        <dd>Build a Hallmarks x factors NES matrix from GSEA results</dd>
-
-        <dt>
-
-          <code><a href="derive_meta_programs.html">derive_meta_programs()</a></code>
-
-        </dt>
-        <dd>Derive TME meta-programs by clustering Hallmarks across NMF factors</dd>
-
-        <dt>
-
-          <code><a href="map_factors_to_metaprograms.html">map_factors_to_metaprograms()</a></code>
-
-        </dt>
-        <dd>Map study factors to TCGA meta-programs</dd>
-
-        <dt>
-
-          <code><a href="map_factors_to_TME.html">map_factors_to_TME()</a></code>
-
-        </dt>
-        <dd>Annotate NMF factors with Bagaev et al. (2021) MFP subtypes</dd>
-
-        <dt>
-
-          <code><a href="annotate_metaprograms_TME.html">annotate_metaprograms_TME()</a></code>
-
-        </dt>
-        <dd>Annotate meta-programs with Bagaev TME subtypes</dd>
+        <dd>Identify cell niches from NMF latent factors</dd>
       </dl></div><div class="section level2">
       <h2 id="statistical-analysis">Statistical analysis<a class="anchor" aria-label="anchor" href="#statistical-analysis"></a></h2>
 
@@ -302,13 +250,6 @@
 
         </dt>
         <dd>Prepare CellTFusion cross-validation folds for pipeML</dd>
-
-        <dt>
-
-          <code><a href="project_test_factors.html">project_test_factors()</a></code>
-
-        </dt>
-        <dd>Project test-set samples onto training NMF factors</dd>
 
         <dt>
 

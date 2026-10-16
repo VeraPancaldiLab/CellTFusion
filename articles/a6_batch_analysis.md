@@ -26,7 +26,6 @@ at each step and how to use it.
 | `compute.modules.relationship(batch = batch_vec)` | Cohort vector | TF module-feature correlations are **partial correlations** controlling for cohort (one indicator variable per cohort beyond the first), Pearson or Spearman according to `corr_type`. |
 | `construct_cell_groups(batch = batch_vec)` | Cohort vector | Passes the cohort vector to the correlations and to the composite scores. Required for a network built with `compute.WTCNA(batch = batch_vec)`; it can be named by sample. |
 | `compute_composite_score(batch = batch_vec)` | Cohort vector | Removes each cohort’s mean from the cell group features and TF activities before the CCA, so composite scores are **corrected for cohort**. |
-| `compute_factor_gsea(batch = batch_vec)` | Cohort vector | Adds the cohort to the `limma` model of each gene, so that expression differences between cohorts are not attributed to the latent factors in the Hallmark GSEA. |
 
 In short, only in
 [`compute.WTCNA()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.WTCNA.md)
@@ -78,7 +77,6 @@ res <- CellTFusion(
   batch          = coldata$Cohort,
   deconv_methods = c("Quantiseq", "Epidish"),
   TF.collection  = "CollecTRI",
-  cancer_type    = "skcm",
   corr           = 0.7,
   corr_mod       = 0.9,
   pval           = 0.05,
@@ -104,9 +102,6 @@ Internally, this:
     [`construct_cell_groups()`](https://verapancaldilab.github.io/CellTFusion/reference/construct_cell_groups.md),
     so subgroups, module-feature correlations and cell group scores are
     all cohort-corrected.
-4.  Passes it to
-    [`compute_factor_gsea()`](https://verapancaldilab.github.io/CellTFusion/reference/compute_factor_gsea.md),
-    so the Hallmark GSEA of each latent factor is corrected for cohort.
 
 ## **Example: running the steps individually**
 

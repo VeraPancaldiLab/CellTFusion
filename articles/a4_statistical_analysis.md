@@ -23,7 +23,6 @@ traitdata  <- CellTFusion::traitdata.tuto
 res <- CellTFusion(
   raw_counts  = raw.counts,
   normalized  = TRUE,
-  cancer_type = "blca",   # the example data are bladder cancer samples
   return      = TRUE
 )
 ```
