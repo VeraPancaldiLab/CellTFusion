@@ -84,10 +84,6 @@ data("deconv_subgroups.tuto")
 data("deconv.tuto")
 cell_groups <- construct_cell_groups(network.tuto, deconv_subgroups.tuto)
 #> Warning: Length of color vector was shorter than the number of clusters - color vector was recycled
-#> Warning: Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.
-#> ℹ Please use `linewidth` instead.
-#> ℹ The deprecated feature was likely used in the dendextend package.
-#>   Please report the issue at <https://github.com/talgalili/dendextend/issues>.
 #> Warning: Length of color vector was shorter than the number of clusters - color vector was recycled
 #> Warning: Length of color vector was shorter than the number of clusters - color vector was recycled
 #> Warning: Length of color vector was shorter than the number of clusters - color vector was recycled

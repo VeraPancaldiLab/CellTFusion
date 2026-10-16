@@ -197,7 +197,8 @@ computed before the others start in parallel, so that the TF and pathway collect
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Features of new samples: scored on the cell groups learned on all the training samples</span></span></span>
-<span class="r-in"><span><span class="va">features_test</span> <span class="op">&lt;-</span> <span class="fu"><a href="compute.test.set.html">compute.test.set</a></span><span class="op">(</span><span class="va">ml_res</span><span class="op">$</span><span class="va">Custom_output</span><span class="op">$</span><span class="va">Processed_deconvolution</span>, <span class="va">ml_res</span><span class="op">$</span><span class="va">Custom_output</span><span class="op">$</span><span class="va">Cell_groups</span>,</span></span>
+<span class="r-in"><span><span class="va">final</span> <span class="op">&lt;-</span> <span class="va">ml_res</span><span class="op">$</span><span class="va">Custom_output</span></span></span>
+<span class="r-in"><span><span class="va">features_test</span> <span class="op">&lt;-</span> <span class="fu"><a href="compute.test.set.html">compute.test.set</a></span><span class="op">(</span><span class="va">final</span><span class="op">$</span><span class="va">Processed_deconvolution</span>, <span class="va">final</span><span class="op">$</span><span class="va">Cell_groups</span>,</span></span>
 <span class="r-in"><span>                                  deconv_test <span class="op">=</span> <span class="va">deconv_test</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Survival (time and event of each sample)</span></span></span>
