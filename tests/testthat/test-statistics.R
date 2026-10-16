@@ -39,8 +39,3 @@ test_that("compute.survival.analysis() works on the tutorial overall survival", 
   expect_true(is.numeric(res$p_value) && length(res$p_value) == 1)
   expect_error(compute.survival.analysis(traitdata.tuto, time_column = "os", event_column = "censOS", group_column = "binaryResponse", padj = "BH"), "padj")
 })
-
-test_that("extract_cells() reads cell types from feature and subgroup names", {
-  expect_setequal(extract_cells(c("Epidish_BPRNACan_Monocytes", "Monocytes_Subgroup.2", "Quantiseq_B.cells")), c("Monocytes", "B.cells"))
-  expect_identical(extract_cells("Method_Signature_Unknown.cells"), character(0))
-})

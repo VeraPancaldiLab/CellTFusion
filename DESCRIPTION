@@ -41,7 +41,6 @@ Imports:
     utils,
     WGCNA,
     pheatmap,
-    purrr,
     RColorBrewer,
     colorspace,
     ppcor,
@@ -60,7 +59,8 @@ Suggests:
     survival,
     survminer,
     gridExtra,
-    RcppML
+    RcppML,
+    shiny
 Config/testthat/edition: 3
 LazyData: true
 LazyDataCompression: xz

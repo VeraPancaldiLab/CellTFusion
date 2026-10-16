@@ -192,7 +192,8 @@ server <- function(input, output, session) {
       padj = isTRUE(input$padj),
       consensus_quantile = input$consensus_quantile,
       seed = input$seed,
-      cancer_type = if (is.null(input$cancer_type) || input$cancer_type == "none") NULL else input$cancer_type,
+      top_n = input$top_n,
+      cancer_type = if (input$TF.collection != "ARACNE" || is.null(input$cancer_type) || input$cancer_type == "none") NULL else input$cancer_type,
       return = TRUE,
       verbose = TRUE
     )
@@ -247,10 +248,12 @@ server <- function(input, output, session) {
     utils::head(flatten_cell_groups(rv$res$Cell_groups), 12)
   }, rownames = FALSE)
 
-  output$tme_out <- renderTable({
+  output$niches_out <- renderTable({
     req(rv$res)
-    as_preview_df(rv$res$TME_states)
-  }, rownames = TRUE)
+    niches <- rv$res$Cells_niches
+    validate(need(is.data.frame(niches) && nrow(niches) > 0, "No cell niches found."))
+    unique(niches[, c("factor", "cell_group", "module", "weight")]) # one row per factor and cell group (features in the download)
+  }, rownames = FALSE, digits = 4)
 
   output$network_out <- renderPrint({
     req(rv$res)
@@ -422,14 +425,6 @@ server <- function(input, output, session) {
     tme <- as.data.frame(rv$res$Latent_spaces$Z, check.names = FALSE)
     validate(need(nrow(tme) > 0 && ncol(tme) > 0, "No latent factor scores found."))
     tme <- as.data.frame(scale(tme), check.names = FALSE) # each factor z-scored across samples for display
-    mapping <- rv$res$TME_states
-    if (!is.null(mapping) && nrow(mapping) > 0) {
-      lab <- ifelse(is.na(mapping$best_MP), mapping$factor,
-                    paste0(mapping$factor, " (", mapping$best_MP,
-                           if ("TME_subtype" %in% names(mapping)) paste0(", ", mapping$TME_subtype) else "", ")"))
-      idx <- match(colnames(tme), mapping$factor)
-      colnames(tme)[!is.na(idx)] <- lab[idx[!is.na(idx)]]
-    }
 
     samples <- rownames(tme)
     states <- colnames(tme)
@@ -458,7 +453,7 @@ server <- function(input, output, session) {
         axis.text.x = ggplot2::element_text(angle = 35, hjust = 1),
         panel.grid = ggplot2::element_blank()
       ) +
-      ggplot2::labs(x = "Latent factor (meta-program, TME subtype)", y = "Sample", fill = "Factor score (z)")
+      ggplot2::labs(x = "Latent factor", y = "Sample", fill = "Factor score (z)")
   })
 
   output$tme_interaction <- renderPrint({
@@ -525,7 +520,7 @@ server <- function(input, output, session) {
       "<p><strong>Maintainer:</strong> ", maintainer, "</p>",
       "<p><strong>Authors:</strong> ", authors, "</p>",
       "<p><strong>Package:</strong> ", desc$Package, " (v", desc$Version, ")</p>",
-      "<p>This Shiny interface follows the workflow described in the README and vignette, including deconvolution, TF activity, WTCNA modules, cell groups, and TME states.</p>"
+      "<p>This Shiny interface follows the workflow described in the README and vignette, including deconvolution, TF activity, WTCNA modules, cell groups, latent factors and cell niches.</p>"
     ))
   })
 
@@ -548,7 +543,7 @@ server <- function(input, output, session) {
 
   download_data("download_deconv", "deconvolution", function(x) x$Deconvolution)
   download_data("download_tfs", "tf_activity", function(x) all_frames(x$TFs_matrix))
-  download_data("download_tme", "tme_states", function(x) x$TME_states)
+  download_data("download_niches", "cell_niches", function(x) x$Cells_niches)
 
   output$download_groups <- downloadHandler(
     filename = function() {

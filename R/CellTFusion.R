@@ -1,21 +1,17 @@
 
-utils::globalVariables(c("Trait", "Value" ,"level", ".", "Cells_level", "PC1", "Features", "tf", "Module", "shap_value", "mean_shap", "direction", "Feature", "Impact", "values", "ind", "Freq", "new_column", ".data", "id", "value", "P", "p", "sig_p", "r", "i",
-                         ":=", "MFP", "MP", "NES", "Regulator", "TME_subtype", "Target", "as.hclust",
-                         "condition", "dist", "feature_label",
-                         "group", "gs_name", "hclust", "kruskal.test",
-                         "lm", "meta_programs", "module", "mor", "mtext", "order.dendrogram", "padj",
-                         "pathway", "proportion", "quantile", "read.delim", "residuals", "score",
-                         "score_level", "setNames", "svg", "target", "title",
-                         "n", "n_distinct", "xg", "yg", "x", "y", "coefficient", "feature", "weight", "top", "y0"))
+utils::globalVariables(c("Trait", "Value", ".", "tf", "Module", "values", ".data", "value", "p", "r", "i",
+                         "Regulator", "Target", "as.hclust", "condition", "feature_label", "group", "lm", "module",
+                         "mor", "mtext", "order.dendrogram", "padj", "pathway", "proportion", "score", "score_level",
+                         "setNames", "svg", "target", "n", "n_distinct", "yg", "x", "y", "coefficient", "feature",
+                         "weight", "top", "y0"))
 
 #' @importFrom grDevices colorRampPalette svg
-#' @importFrom graphics mtext title
-#' @importFrom stats as.hclust dist hclust kruskal.test lm order.dendrogram quantile residuals setNames
-#' @importFrom utils read.delim
+#' @importFrom graphics mtext
+#' @importFrom stats as.hclust lm order.dendrogram setNames
 #' @importFrom RColorBrewer brewer.pal
 #' @importFrom colorspace rainbow_hcl
 #' @importFrom ppcor pcor.test
-#' @importFrom multideconv compute.deconvolution compute.deconvolution.analysis get_cell_type_nomenclature replicate_deconvolution_subgroups
+#' @importFrom multideconv compute.deconvolution compute.deconvolution.analysis replicate_deconvolution_subgroups
 #' @rawNamespace export(compute.TFs.activity)
 #' @rawNamespace export(compute.WTCNA)
 #' @rawNamespace export(compute.pathway.activity)
@@ -23,7 +19,6 @@ utils::globalVariables(c("Trait", "Value" ,"level", ".", "Cells_level", "PC1", "
 #' @rawNamespace export(compute.latent_factors)
 #' @rawNamespace export(compute.modules.relationship)
 #' @rawNamespace export(compute.modules.enrichment)
-#' @rawNamespace export(compute.composition.matrix)
 #' @rawNamespace export(compute.test.set)
 #' @rawNamespace export(compute.survival.analysis)
 #' @rawNamespace export(identify.cell.groups)
@@ -55,7 +50,7 @@ NULL
 #'   element returned by a previous \code{CellTFusion()} run or by \code{compute.pathway.activity()}.
 #'   If supplied, pathway activity inference is skipped.
 #' @param normalized Logical; if TRUE (default), \code{raw_counts} are raw counts and are normalized to
-#'   log2(TPM + 1) for the TF activity, pathway activity and GSEA steps (for deconvolution they are normalized to
+#'   log2(TPM + 1) for the TF activity and pathway activity steps (for deconvolution they are normalized to
 #'   TPM only). If FALSE, \code{raw_counts} must already be TPM-normalized and \strong{not} log-transformed: the
 #'   TPM values are used as they are for deconvolution and log2(TPM + 1) is computed internally for the other
 #'   steps. Do not pass log-transformed values, as they would be log-transformed a second time (a warning is
@@ -2109,95 +2104,6 @@ identify.cell.groups = function(relationship, clustering_method = "ward.D2", fil
 
 }
 
-#' Compute a cell-type composition matrix from deconvolution subgroups
-#'
-#' Builds a binary presence matrix indicating which original cell types are present in each cell group. Each feature
-#' of a cell group is opened down to its original deconvolution features (a subgroup is replaced by its members), and
-#' the cell type of each feature is read from its name with the cell type vocabulary of multideconv
-#' (\code{multideconv::get_cell_type_nomenclature()}). Cell types are therefore named as in that vocabulary: for example
-#' the LM22 features \code{Plasma.cells} and \code{T.cells.CD4.memory.activated} are counted as \code{Plasma} and
-#' \code{CD4.memory.activated}, as in the names of the deconvolution subgroups.
-#'
-#' @param dt Deconvolution subgroups as returned by
-#'   \code{multideconv::compute.deconvolution.analysis()} (the elements \code{Deconvolution matrix} and
-#'   \code{Deconvolution subgroups composition} are used).
-#' @param cell_groups The cell groups returned by \code{construct_cell_groups()}: its element \code{Composition} (the
-#'   features of each cell group) is used. An unnamed list whose second element holds the composition is also accepted.
-#' @param cells_extra Optional character vector of additional cell type names, added to the vocabulary used to
-#'   recognise cell types in the feature names.
-#'
-#' @return A binary matrix (data.frame) where rows are cell groups and columns are cell types (1 = present, 0 = absent).
-#'   Rows are named as the cell groups, as the features of \code{compute.latent_factors()}. Cell types not present in
-#'   any cell group are dropped, and cell groups whose cell types are not recognised (their row is all zeros) are
-#'   listed, each with a message.
-#'
-#' @examples
-#' data("network.tuto")
-#' data("deconv_subgroups.tuto")
-#' cell_groups <- construct_cell_groups(network.tuto, deconv_subgroups.tuto)
-#' composition <- compute.composition.matrix(deconv_subgroups.tuto, cell_groups)
-#' composition[1:4, 1:5]
-#'
-compute.composition.matrix = function(dt, cell_groups, cells_extra = NULL){
-
-  if(!is.list(dt) || is.null(dt[["Deconvolution matrix"]]) ||
-     is.null(dt[["Deconvolution subgroups composition"]])){
-    stop("dt must be the output of multideconv::compute.deconvolution.analysis() (elements 'Deconvolution matrix' and 'Deconvolution subgroups composition')")
-  }
-  # Features of each cell group (element Composition of construct_cell_groups())
-  composition = if(is.list(cell_groups) && !is.null(cell_groups[["Composition"]])) cell_groups[["Composition"]] else if(is.list(cell_groups) && is.null(names(cell_groups)) && length(cell_groups) >= 2) cell_groups[[2]] else NULL
-  if(!is.list(composition) || length(composition) == 0 || is.null(names(composition)) || !all(sapply(composition, is.character))){
-    stop("cell_groups must be the output of construct_cell_groups(), with at least one cell group (element 'Composition': the features of each cell group)")
-  }
-
-  # Initialize composition matrix
-  cells_types = extract_cells(colnames(dt[["Deconvolution matrix"]]), cells_extra = cells_extra)
-  presence_matrix <- data.frame(matrix(data = 0, nrow = length(composition), ncol = length(cells_types)))
-  colnames(presence_matrix) <- cells_types
-
-  #Members of every deconvolution subgroup (subgroup name -> features)
-  deconv_subgroups = list()
-  contador = 1
-  subgroups = dt[["Deconvolution subgroups composition"]]
-  for (i in seq_along(subgroups)) {
-    if(length(subgroups[[i]])!=0){ #Whether a specific cell type does not contains subgroups
-      for (j in 1:length(subgroups[[i]])) {
-        deconv_subgroups[[contador]] = subgroups[[i]][[j]]
-        names(deconv_subgroups)[contador] = names(subgroups[[i]])[j]
-        contador = contador + 1
-      }
-    }
-  }
-
-  # Cell types of each cell group
-  for (j in seq_along(composition)) {
-    features <- composition[[j]] #Features of cell group j
-    for (cell_feature in features) {
-      cells <- get_all_cells(cell_feature, deconv_subgroups) #Use recursive function to extract all nested cell features from different subgroup levels
-      cells_types = extract_cells(cells, cells_extra = cells_extra)
-      presence_matrix[j, cells_types] <- 1 #Set 1 if cell feature is present in subgroup
-    }
-  }
-
-  rownames(presence_matrix) = names(composition)
-
-  not_recognised = rownames(presence_matrix)[rowSums(presence_matrix) == 0]
-  if(length(not_recognised) > 0){
-    message("Cell groups whose cell types are not recognised in the feature names (no cell type in the composition matrix; see cells_extra): ",
-            paste(not_recognised, collapse = ", "))
-  }
-
-  idy = which(colSums(presence_matrix)==0)
-
-  if(length(idy)!=0){
-    message("Cell types not present in any cell group (left out of the composition matrix): ", paste0(names(idy), collapse = ", "))
-    presence_matrix = presence_matrix[, -idy, drop = FALSE]
-  }
-
-  return(presence_matrix)
-
-}
-
 #' Construct cell groups based on TF networks and deconvolution
 #'
 #' A cell group is a set of deconvolution features with a similar biological activity: features related to the
@@ -2418,58 +2324,6 @@ compute.test.set = function(dt, cell_groups, group_names = NULL, deconv_test){
 
   return(data.frame(cell_dendrogram, check.names = FALSE))
 
-}
-
-#' Extract cell types from deconvolution feature names
-#'
-#' Reads the cell type of each deconvolution feature from its name, with the cell type vocabulary of multideconv
-#' (\code{multideconv::get_cell_type_nomenclature()}, plus \code{cells_extra}). The first vocabulary name found in the
-#' feature name is kept, and a \code{_Subgroup.<n>} suffix (or \code{.Iteration.<n>} of multideconv < 0.2.0) is removed.
-#' Vocabulary names are matched literally (a "." only matches a ".").
-#'
-#' @param features A character vector of deconvolution feature names: raw features (\code{<method>_<signature>_<cell type>},
-#'   or \code{<method>_<cell type>}) or subgroups (\code{<cell type>_Subgroup.<n>}).
-#' @param cells_extra Optional character vector of additional cell type names, added to the vocabulary.
-#'
-#' @return A character vector of the distinct cell types found (\code{character(0)} if none). Feature names without
-#'   any vocabulary cell type are ignored.
-#'
-#' @examples
-#' extract_cells(c("Epidish_BPRNACan_Monocytes", "Monocytes_Subgroup.2", "Quantiseq_B.cells"))
-#' extract_cells("Method_Signature_Mesenchymal.cells", cells_extra = "Mesenchymal.cells")
-#'
-#' @export
-#'
-extract_cells = function(features, cells_extra = NULL){
-  # Cell type vocabulary is sourced from multideconv so it stays in sync with that
-  # package's deconvolution column naming (see multideconv::get_cell_type_nomenclature)
-  names_cells = get_cell_type_nomenclature(cells_extra = cells_extra)
-  names_cells = gsub("([][{}()+*^$|\\\\?.])", "\\\\\\1", names_cells) # Matched literally ("." or "+" are not regex symbols)
-
-  # Create regex to capture base cell type + cluster
-  # Matches known cell type, optionally followed by _Subgroup.x (or _Subgroup.x.Iteration.x from multideconv < 0.2.0)
-  regex_pattern <- paste0(
-    "(",
-    paste(names_cells, collapse = "|"),
-    ")",
-    "((?:[._](?:Subgroup|Iteration)\\.[0-9]+)*)"
-  )
-
-
-  normalized_names <- vapply(features, function(x) {
-    m <- regexpr(regex_pattern, x, perl = TRUE)
-    if (m != -1) {
-      matched <- regmatches(x, m)
-      # remove Iteration / Subgroup artifacts
-      gsub("([._](Subgroup|Iteration)\\.[0-9]+)+", "", matched)
-    } else {
-      NA_character_
-    }
-  }, character(1), USE.NAMES = FALSE)
-
-  normalized_names <- unique(normalized_names[!is.na(normalized_names)])
-
-  return(normalized_names)
 }
 
 #' Merge highly correlated TF modules
@@ -2875,33 +2729,6 @@ compute_composite_score = function(cell_group, module, network, batch = NULL){
 
   return(list(weighted_cell_group_matrix, projection_params))
 
-}
-
-#' Recursively retrieve the original deconvolution features of a subgroup
-#'
-#' Replaces a deconvolution subgroup by its member features, going down through nested subgroups, and returns the
-#' original deconvolution feature names (e.g. \code{B.cells_Subgroup.1} gives \code{CBSX_BPRNACan_B.cells},
-#' \code{CBSX_BPRNACan3DProMet_B.cells}, ...). A name that is not a subgroup is returned unchanged. The cell types are
-#' read from the returned names afterwards with \code{extract_cells()}.
-#'
-#' @param subgroup_name Character. A single deconvolution feature name: a subgroup or an original feature.
-#' @param cell_subgroups A named list mapping subgroup names to vectors of member
-#'   names (which can themselves be subgroup names), e.g. the flattened \code{Deconvolution subgroups composition}
-#'   of \code{multideconv::compute.deconvolution.analysis()}.
-#'
-#' @return A character vector of the unique original deconvolution feature names contained in
-#'   \code{subgroup_name} (the name itself if it is not a subgroup).
-#'
-#' @keywords internal
-get_all_cells <- function(subgroup_name, cell_subgroups) {
-  if (subgroup_name %in% names(cell_subgroups)) { #Check if subgroup_name is key in cell_subgroups
-    # If the subgroup contains further subgroups, retrieve their base elements
-    nested_cells <- unlist(lapply(cell_subgroups[[subgroup_name]], get_all_cells, cell_subgroups = cell_subgroups))
-    return(unique(nested_cells)) # Only return base elements
-  } else {
-    # If subgroup_name is not a key in cell_subgroups, it is considered a base composition
-    return(subgroup_name)
-  }
 }
 
 #' Project test-set cell group scores using training CCA parameters

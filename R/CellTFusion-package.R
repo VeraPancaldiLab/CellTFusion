@@ -52,7 +52,6 @@
 #' @importFrom GSVA gsva
 #' @importFrom org.Hs.eg.db org.Hs.eg.db
 #' @importFrom pheatmap pheatmap
-#' @importFrom purrr map
 #' @importFrom rstatix anova_test
 #' @importFrom stats as.dendrogram
 #' @importFrom stats as.formula

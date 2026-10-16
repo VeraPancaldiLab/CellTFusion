@@ -69,7 +69,7 @@ element returned by a previous \code{CellTFusion()} run or by \code{compute.path
 If supplied, pathway activity inference is skipped.}
 
 \item{normalized}{Logical; if TRUE (default), \code{raw_counts} are raw counts and are normalized to
-log2(TPM + 1) for the TF activity, pathway activity and GSEA steps (for deconvolution they are normalized to
+log2(TPM + 1) for the TF activity and pathway activity steps (for deconvolution they are normalized to
 TPM only). If FALSE, \code{raw_counts} must already be TPM-normalized and \strong{not} log-transformed: the
 TPM values are used as they are for deconvolution and log2(TPM + 1) is computed internally for the other
 steps. Do not pass log-transformed values, as they would be log-transformed a second time (a warning is

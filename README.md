@@ -159,19 +159,19 @@ article).
 test_scores <- compute.test.set(
   dt = res$Processed_deconvolution,        # deconvolution subgroups of the training set
   cell_groups = res$Cell_groups,                   # trained cell groups
-  features = names(res$Cell_groups$Composition),   # cell groups to replicate
+  group_names = names(res$Cell_groups$Composition), # cell groups to replicate (all by default)
   deconv_test = deconv_test                 # deconvolution matrix of the test set (before subgrouping)
 )
 ```
 
 ## Machine learning with pipeML
 
-To use the latent factors as features in
+To use the cell group scores as features in
 [pipeML](https://github.com/VeraPancaldiLab/pipeML) without information
 leakage, pass `prepare_celltfusion_folds()` as the fold construction
 function: `CellTFusion()` is then run on the training samples of each
-cross-validation fold, and the test samples are projected onto the
-resulting latent factors. It works for classification and survival
+cross-validation fold, and the test samples are scored on the resulting
+cell groups. It works for classification and survival
 tasks.
 
 ``` r

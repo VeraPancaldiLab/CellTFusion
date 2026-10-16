@@ -60,8 +60,6 @@ reference:
   - identify.cell.groups
   - cell.groups.computation
   - compute_composite_score
-  - compute.composition.matrix
-  - extract_cells
   - compute.latent_factors
   - compute_cells_niches
 - title: Statistical analysis

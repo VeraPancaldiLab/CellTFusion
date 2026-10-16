@@ -153,7 +153,10 @@ ui <- fluidPage(
         class = "control-card",
         div(class = "section-title", "Model Parameters"),
         selectInput("TF.collection", "TF collection", choices = c("CollecTRI", "Dorothea", "ARACNE"), selected = "CollecTRI"),
-        selectInput("cancer_type", "Cancer type (TCGA meta-programs for TME states)", choices = c("none", "blca", "luad", "skcm"), selected = "none"),
+        conditionalPanel(
+          condition = "input['TF.collection'] == 'ARACNE'",
+          selectInput("cancer_type", "Cancer type (ARACNe network in input/ARACNE/<cancer type>/)", choices = c("none", "blca", "luad", "skcm"), selected = "none")
+        ),
         selectInput("method", "TF and pathway scoring statistic", choices = c("ulm", "mlm", "wsum", "consensus"), selected = "ulm"),
         numericInput("min_targets_size", "Minimum TF targets", value = 5, min = 1),
         numericInput("min_module_size", "Minimum module size", value = 5, min = 2),
@@ -163,6 +166,7 @@ ui <- fluidPage(
         selectInput("clustering_method", "Clustering method", choices = c("ward.D2", "average", "complete", "single", "mcquitty", "median", "centroid", "ward.D"), selected = "ward.D2"),
         numericInput("pval", "P-value threshold", value = 0.05, min = 0, max = 1, step = 0.01),
         checkboxInput("padj", "Adjust p-values (Benjamini-Hochberg)", value = FALSE),
+        numericInput("top_n", "Top cell groups per latent factor (cell niches)", value = 5, min = 1),
         textInput("cells_extra", "Additional cell labels (comma separated)", value = "")
       ),
 
@@ -196,7 +200,7 @@ ui <- fluidPage(
             tags$h4("CellTFusion Workflow"),
             tags$img(src = "CellTFusion_pipeline.png", style = "width:100%; border-radius:10px;"),
             tags$p(
-              "This app follows the package pipeline: deconvolution, TF activity inference, WTCNA module construction, pathway scoring, cell-group computation, latent-space projection, and TME-state definition."
+              "This app follows the package pipeline: deconvolution, TF activity inference, WTCNA module construction, pathway scoring, cell-group computation, NMF latent factors and cell niches."
             )
           )
         ),
@@ -233,7 +237,7 @@ ui <- fluidPage(
           div(class = "main-card", tags$h4("Cell Groups (summary)"), tableOutput("cell_groups_out")),
           div(
             class = "main-card",
-            tags$h4("Latent factor scores (labelled with their TME state)"),
+            tags$h4("Latent factor scores"),
             plotOutput(
               "tme_heatmap_plot",
               height = "380px",
@@ -242,7 +246,7 @@ ui <- fluidPage(
             ),
             verbatimTextOutput("tme_interaction")
           ),
-          div(class = "main-card", tags$h4("TME states: factor to meta-program mapping"), tableOutput("tme_out")),
+          div(class = "main-card", tags$h4("Cell niches: top cell groups of each latent factor"), tableOutput("niches_out")),
           div(class = "main-card", tags$h4("TF Network Structure"), verbatimTextOutput("network_out"))
         ),
         tabPanel(
@@ -258,7 +262,7 @@ ui <- fluidPage(
             br(),
             fluidRow(
               column(6, downloadButton("download_groups", "Download Cell Groups")),
-              column(6, downloadButton("download_tme", "Download TME States"))
+              column(6, downloadButton("download_niches", "Download Cell Niches"))
             ),
             br(),
             fluidRow(

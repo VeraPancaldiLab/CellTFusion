@@ -74,7 +74,7 @@ The package implements a multi-step pipeline (see `vignettes/CellTFusion.Rmd` fo
 | `compute.modules.relationship()` | Correlate TF modules with other continuous features (pathways, deconvolution features); returns correlations, p-values and significant pairs |
 | `compute.modules.enrichment()` | Pathway enrichment of TF modules |
 
-This is a curated subset — see `NAMESPACE` or the [pkgdown reference](https://verapancaldilab.github.io/CellTFusion/reference/index.html) for the full list, which also includes the `scores.*` statistical-test family and lower-level helpers (`cell.groups.computation()`, `compute_composite_score()`, `extract_cells()`, etc.).
+This is a curated subset — see `NAMESPACE` or the [pkgdown reference](https://verapancaldilab.github.io/CellTFusion/reference/index.html) for the full list, which also includes the `scores.*` statistical-test family and lower-level helpers (`cell.groups.computation()`, `compute_composite_score()`, etc.).
 
 ### Tutorial Data (in `data/`)
 
@@ -82,9 +82,9 @@ Pre-built `.rda` objects for examples and testing: `raw.counts.tuto`, `counts.no
 
 ## Dependencies
 
-Heavy dependencies are in `Imports` (always loaded): `multideconv`, `decoupleR`, `WGCNA`, `GSVA`, `ggplot2`, and several tidyverse packages (`dplyr`, `tidyr`, `tibble`, `purrr`). `multideconv` functions are imported via `@importFrom` in `R/CellTFusion.R`; reference data in `inst/extdata/` is always located with `system.file()` (never hardcoded paths).
+Heavy dependencies are in `Imports` (always loaded): `multideconv`, `decoupleR`, `WGCNA`, `GSVA`, `ggplot2`, and several tidyverse packages (`dplyr`, `tidyr`, `tibble`). `multideconv` functions are imported via `@importFrom` in `R/CellTFusion.R`.
 
-`OmnipathR` (needed by `decoupleR` to fetch CollecTRI and PROGENy), `dorothea` (Dorothea TF collection), `RcppML` (NMF), `survival`/`survminer`/`gridExtra` (survival analysis) and `caret` (machine-learning vignette) are in `Suggests` (optional, loaded only when the relevant code path is used).
+`OmnipathR` (needed by `decoupleR` to fetch CollecTRI and PROGENy), `dorothea` (Dorothea TF collection), `RcppML` (NMF), `survival`/`survminer`/`gridExtra` (survival analysis), `caret` (machine-learning vignette) and `shiny` (the app in `inst/shiny`) are in `Suggests` (optional, loaded only when the relevant code path is used).
 
 ## CI/CD
 
