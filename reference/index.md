@@ -36,10 +36,6 @@ Cell group construction, NMF latent factors and cell niches
   : Compute cell group scores from deconvolution and TF module network
 - [`compute_composite_score()`](https://verapancaldilab.github.io/CellTFusion/reference/compute_composite_score.md)
   : Compute composite score for cell groups
-- [`compute.composition.matrix()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.composition.matrix.md)
-  : Compute a cell-type composition matrix from deconvolution subgroups
-- [`extract_cells()`](https://verapancaldilab.github.io/CellTFusion/reference/extract_cells.md)
-  : Extract cell types from deconvolution feature names
 - [`compute.latent_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.latent_factors.md)
   : Compute latent factors from cell group scores using NMF
 - [`compute_cells_niches()`](https://verapancaldilab.github.io/CellTFusion/reference/compute_cells_niches.md)

@@ -10,9 +10,9 @@ library(CellTFusion)
 #> 
 ```
 
-`CellTFusion` latent factors can be used as features to predict clinical
-outcomes with the [`pipeML`](https://github.com/VeraPancaldiLab/pipeML)
-package:
+`CellTFusion` cell group scores can be used as features to predict
+clinical outcomes with the
+[`pipeML`](https://github.com/VeraPancaldiLab/pipeML) package:
 
 ``` r
 
@@ -102,8 +102,8 @@ ml_res <- pipeML::compute_features.training.ML(
 )
 ```
 
-The final model is trained on the latent factors learned on all the
-training samples. The corresponding
+The final model is trained on the cell group scores of all the training
+samples (cell groups learned on all of them). The corresponding
 [`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md)
 result is returned in `ml_res$Custom_output`.
 

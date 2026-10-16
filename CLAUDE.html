@@ -135,7 +135,7 @@
 <td>Correlate TF modules with other continuous features (pathways, deconvolution features); returns correlations, p-values and significant pairs</td>
 </tr><tr><td><code><a href="reference/compute.modules.enrichment.html">compute.modules.enrichment()</a></code></td>
 <td>Pathway enrichment of TF modules</td>
-</tr></tbody></table><p>This is a curated subset — see <code>NAMESPACE</code> or the <a href="https://verapancaldilab.github.io/CellTFusion/reference/index.html">pkgdown reference</a> for the full list, which also includes the <code>scores.*</code> statistical-test family and lower-level helpers (<code><a href="reference/cell.groups.computation.html">cell.groups.computation()</a></code>, <code><a href="reference/compute_composite_score.html">compute_composite_score()</a></code>, <code><a href="reference/extract_cells.html">extract_cells()</a></code>, etc.).</p>
+</tr></tbody></table><p>This is a curated subset — see <code>NAMESPACE</code> or the <a href="https://verapancaldilab.github.io/CellTFusion/reference/index.html">pkgdown reference</a> for the full list, which also includes the <code>scores.*</code> statistical-test family and lower-level helpers (<code><a href="reference/cell.groups.computation.html">cell.groups.computation()</a></code>, <code><a href="reference/compute_composite_score.html">compute_composite_score()</a></code>, etc.).</p>
 </div>
 <div class="section level3">
 <h3 id="tutorial-data-in-data">Tutorial Data (in <code>data/</code>)<a class="anchor" aria-label="anchor" href="#tutorial-data-in-data"></a></h3>
@@ -144,8 +144,8 @@
 </div>
 <div class="section level2">
 <h2 id="dependencies">Dependencies<a class="anchor" aria-label="anchor" href="#dependencies"></a></h2>
-<p>Heavy dependencies are in <code>Imports</code> (always loaded): <code>multideconv</code>, <code>decoupleR</code>, <code>WGCNA</code>, <code>GSVA</code>, <code>ggplot2</code>, and several tidyverse packages (<code>dplyr</code>, <code>tidyr</code>, <code>tibble</code>, <code>purrr</code>). <code>multideconv</code> functions are imported via <code>@importFrom</code> in <code>R/CellTFusion.R</code>; reference data in <code>inst/extdata/</code> is always located with <code><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file()</a></code> (never hardcoded paths).</p>
-<p><code>OmnipathR</code> (needed by <code>decoupleR</code> to fetch CollecTRI and PROGENy), <code>dorothea</code> (Dorothea TF collection), <code>RcppML</code> (NMF), <code>survival</code>/<code>survminer</code>/<code>gridExtra</code> (survival analysis) and <code>caret</code> (machine-learning vignette) are in <code>Suggests</code> (optional, loaded only when the relevant code path is used).</p>
+<p>Heavy dependencies are in <code>Imports</code> (always loaded): <code>multideconv</code>, <code>decoupleR</code>, <code>WGCNA</code>, <code>GSVA</code>, <code>ggplot2</code>, and several tidyverse packages (<code>dplyr</code>, <code>tidyr</code>, <code>tibble</code>). <code>multideconv</code> functions are imported via <code>@importFrom</code> in <code>R/CellTFusion.R</code>.</p>
+<p><code>OmnipathR</code> (needed by <code>decoupleR</code> to fetch CollecTRI and PROGENy), <code>dorothea</code> (Dorothea TF collection), <code>RcppML</code> (NMF), <code>survival</code>/<code>survminer</code>/<code>gridExtra</code> (survival analysis), <code>caret</code> (machine-learning vignette) and <code>shiny</code> (the app in <code>inst/shiny</code>) are in <code>Suggests</code> (optional, loaded only when the relevant code path is used).</p>
 </div>
 <div class="section level2">
 <h2 id="cicd">CI/CD<a class="anchor" aria-label="anchor" href="#cicd"></a></h2>

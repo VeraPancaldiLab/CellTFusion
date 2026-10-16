@@ -95,9 +95,9 @@ CellTFusion(
 - normalized:
 
   Logical; if TRUE (default), `raw_counts` are raw counts and are
-  normalized to log2(TPM + 1) for the TF activity, pathway activity and
-  GSEA steps (for deconvolution they are normalized to TPM only). If
-  FALSE, `raw_counts` must already be TPM-normalized and **not**
+  normalized to log2(TPM + 1) for the TF activity and pathway activity
+  steps (for deconvolution they are normalized to TPM only). If FALSE,
+  `raw_counts` must already be TPM-normalized and **not**
   log-transformed: the TPM values are used as they are for deconvolution
   and log2(TPM + 1) is computed internally for the other steps. Do not
   pass log-transformed values, as they would be log-transformed a second

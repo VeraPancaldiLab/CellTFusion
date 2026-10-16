@@ -130,12 +130,8 @@ res <- compute.metadata.association(
   file_name = 'Tutorial',
   plot_grid = TRUE
 )
+#> Error in ggplot2::ggsave(paste0("Results/ANOVA_boxplot_summary", if (!is.null(file_name)) paste0("_",     file_name), "_", gsub("[^A-Za-z0-9._ -]", "_", tr), ".svg"),     plot = p, device = grDevices::svg, width = max(5, 3.2 * min(ncol_trait,         n_panels) + 0.5), height = 3.4 * ceiling(n_panels/ncol_trait) +         1.4, limitsize = FALSE): Cannot find directory Results.
+#> ℹ Please supply an existing directory or use `create.dir = TRUE`.
 head(res$anova)
-#>                             trait module     F     p p_adjusted
-#> 1 Best.Confirmed.Overall.Response  black 4.404 0.037      0.037
-#> 2 Best.Confirmed.Overall.Response   blue 0.164 0.686      0.686
-#> 3 Best.Confirmed.Overall.Response  brown 0.954 0.330      0.330
-#> 4 Best.Confirmed.Overall.Response  green 0.807 0.370      0.370
-#> 5 Best.Confirmed.Overall.Response   pink 8.859 0.003      0.003
-#> 6 Best.Confirmed.Overall.Response    red 1.008 0.317      0.317
+#> Error: object 'res' not found
 ```

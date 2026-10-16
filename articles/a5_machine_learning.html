@@ -79,7 +79,7 @@
 <span><span class="co">#&gt; Warning: replacing previous import 'S4Arrays::makeNindexFromArrayViewport' by</span></span>
 <span><span class="co">#&gt; 'DelayedArray::makeNindexFromArrayViewport' when loading 'SummarizedExperiment'</span></span>
 <span><span class="co">#&gt; </span></span></code></pre></div>
-<p><code>CellTFusion</code> latent factors can be used as features to
+<p><code>CellTFusion</code> cell group scores can be used as features to
 predict clinical outcomes with the <a href="https://github.com/VeraPancaldiLab/pipeML" class="external-link"><code>pipeML</code></a>
 package:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
@@ -164,9 +164,10 @@ e.g. <code>TF.collection</code>, <code>min_module_size</code> or
 <span>                                      raw_counts <span class="op">=</span> <span class="va">raw.counts_train</span>,</span>
 <span>                                      TF.collection <span class="op">=</span> <span class="st">"CollecTRI"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p>The final model is trained on the latent factors learned on all the
-training samples. The corresponding <code><a href="../reference/CellTFusion.html">CellTFusion()</a></code> result is
-returned in <code>ml_res$Custom_output</code>.</p>
+<p>The final model is trained on the cell group scores of all the
+training samples (cell groups learned on all of them). The corresponding
+<code><a href="../reference/CellTFusion.html">CellTFusion()</a></code> result is returned in
+<code>ml_res$Custom_output</code>.</p>
 </div>
 <div class="section level2">
 <h2 id="prediction-on-an-independent-cohort">

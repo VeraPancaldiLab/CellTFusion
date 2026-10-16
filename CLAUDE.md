@@ -134,7 +134,6 @@ for the full list, which also includes the `scores.*` statistical-test
 family and lower-level helpers
 ([`cell.groups.computation()`](https://verapancaldilab.github.io/CellTFusion/reference/cell.groups.computation.md),
 [`compute_composite_score()`](https://verapancaldilab.github.io/CellTFusion/reference/compute_composite_score.md),
-[`extract_cells()`](https://verapancaldilab.github.io/CellTFusion/reference/extract_cells.md),
 etc.).
 
 ### Tutorial Data (in `data/`)
@@ -149,17 +148,14 @@ with overall survival, `tfs.tuto`, `network.tuto`).
 
 Heavy dependencies are in `Imports` (always loaded): `multideconv`,
 `decoupleR`, `WGCNA`, `GSVA`, `ggplot2`, and several tidyverse packages
-(`dplyr`, `tidyr`, `tibble`, `purrr`). `multideconv` functions are
-imported via `@importFrom` in `R/CellTFusion.R`; reference data in
-`inst/extdata/` is always located with
-[`system.file()`](https://rdrr.io/r/base/system.file.html) (never
-hardcoded paths).
+(`dplyr`, `tidyr`, `tibble`). `multideconv` functions are imported via
+`@importFrom` in `R/CellTFusion.R`.
 
 `OmnipathR` (needed by `decoupleR` to fetch CollecTRI and PROGENy),
 `dorothea` (Dorothea TF collection), `RcppML` (NMF),
-`survival`/`survminer`/`gridExtra` (survival analysis) and `caret`
-(machine-learning vignette) are in `Suggests` (optional, loaded only
-when the relevant code path is used).
+`survival`/`survminer`/`gridExtra` (survival analysis), `caret`
+(machine-learning vignette) and `shiny` (the app in `inst/shiny`) are in
+`Suggests` (optional, loaded only when the relevant code path is used).
 
 ## CI/CD
 

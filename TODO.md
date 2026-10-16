@@ -395,11 +395,10 @@ score matrices `X` / `scores_test` / `features` / `features_df` / `Z` /
 ([`identify.cell.groups()`](https://verapancaldilab.github.io/CellTFusion/reference/identify.cell.groups.md))
 and `group_names`
 ([`compute.test.set()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.test.set.md));
-`groups` -\> `features`
-([`extract_cells()`](https://verapancaldilab.github.io/CellTFusion/reference/extract_cells.md));
-`module_group` -\> `module`; `hub_genes*` / `tfs_universe*` -\>
-`hub_tfs` / `universe`. Output element names (e.g. `Latent_spaces`) and
-`matA` / `matB` unchanged.
+`groups` -\> `features` (`extract_cells()`); `module_group` -\>
+`module`; `hub_genes*` / `tfs_universe*` -\> `hub_tfs` / `universe`.
+Output element names (e.g. `Latent_spaces`) and `matA` / `matB`
+unchanged.
 
 **Parallel workers:**
 [`prepare_celltfusion_folds()`](https://verapancaldilab.github.io/CellTFusion/reference/prepare_celltfusion_folds.md)
@@ -429,15 +428,11 @@ the lists given on 15 October 2026.
 
 ## Deferred: to do after the review of `CellTFusion()` (noted October 2026)
 
-**TCGA references.** On 16 October 2026 the Hallmark GSEA
-(`compute_factor_gsea()`), the TCGA meta-program mapping
-(`derive_meta_programs()`, `build_nes_matrix()`,
-`map_factors_to_metaprograms()`, `annotate_metaprograms_TME()`) and
-`inst/extdata/TCGA_meta_programs_*.RData` were removed (user: the
-mapping was too coarse). `inst/extdata/CellTFusion_TCGA_*.RData` are no
-longer used by any function: decide whether to delete them or rebuild
-them (they were built while cell groups were mislabelled, 2026-04-29 to
-2026-10-05, and with older defaults).
+**TCGA references.** Closed 16 October 2026: the Hallmark GSEA, the TCGA
+meta-program mapping, `map_factors_to_TME()` and all the reference data
+in `inst/extdata/` (`TCGA_meta_programs_*.RData`,
+`CellTFusion_TCGA_*.RData`, `annotation.tsv`) were removed (user: the
+mapping was too coarse).
 
 **Shiny app.** Done 15 October 2026: new controls (scoring method,
 clustering method, BH adjustment, consensus quantile, seed, cancer
@@ -518,25 +513,3 @@ numbers (on the tutorial data, 55 of 123 cell groups were made of
 separated ranges of correlation), and whether the step added that splits
 clusters into single ranges and joins small pieces to their closest
 neighbour is the right answer.
-
-**Cell niches: more or fewer cells.** Since 15 October 2026 the factors
-use only the positive part of the cell group scores (high-activity side
-of the TF modules, no `_pos` / `_neg` split). A high-activity cell group
-can still mean more or fewer cells (depending on whether its features
-are positively or negatively related to its TF module), which
-[`compute_cells_niches()`](https://verapancaldilab.github.io/CellTFusion/reference/compute_cells_niches.md)
-does not take into account. Earlier note:
-[`compute_cells_niches()`](https://verapancaldilab.github.io/CellTFusion/reference/compute_cells_niches.md)
-adds together the selected cell group parts that mean more cells and
-those that mean fewer (it uses neither `_pos` / `_neg` nor the relation
-of each group to its TF module). Measured 12 October 2026 on the
-tutorial data (3 factors): the selected parts meaning more / fewer cells
-are 41 / 25, 29 / 40 and 38 / 17; the top cell type of Factor1, CAF
-(weight 0.14), gets 0.11 from parts meaning fewer CAFs and 0.03 from
-parts meaning more. Proposed: give each part its direction (from the
-relation of its group to the TF module; `Module_relation`, which gave
-it, was removed on 14 October 2026, so it would have to be computed
-here), compute weights and enrichment separately for more and fewer,
-return per factor a table (cell type, direction, weight, enrichment) and
-colour the plot edges by direction; this changes the structure of
-`Cells_niches`.
