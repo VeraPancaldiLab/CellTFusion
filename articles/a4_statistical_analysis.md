@@ -154,15 +154,15 @@ compares Kaplan-Meier survival curves with a log-rank test (packages
 `survival`, `survminer` and `gridExtra`). It works in two modes:
 
 1.  **Predefined groups** (`group_column`) — e.g. a clinical risk group
-    or a cluster assignment in the clinical data.
+    or a cluster assignment in the clinical data. Samples without a
+    value for `group_column` are left out.
 2.  **Feature screening** (`scores`) — e.g. `res$Latent_spaces$Z`. Each
     feature is split into High/Low at a quantile (`quantile_cutoff`),
     and the features with a significant log-rank test (`pval`,
     optionally corrected with `padj = TRUE`) are returned, with a
-    `Statistics` table giving the test of every feature. Samples without
-    a value for `group_column` are left out. The rows of `features` must
-    be the same samples, in the same order, as the rows of the clinical
-    data.
+    `Statistics` table giving the test of every feature. The rows of
+    `scores` must be the same samples, in the same order, as the rows of
+    the clinical data.
 
 Both modes need a time-to-event column and an event column (1 = event, 0
 = censored) in the clinical data. The tutorial `traitdata` includes the

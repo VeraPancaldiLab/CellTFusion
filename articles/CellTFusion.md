@@ -8,9 +8,11 @@ data.
 Starting from a count matrix, `CellTFusion` builds **cell groups** —
 sets of deconvolution features related to the same TF co-activity module
 to the same degree (a similar correlation with the module activity) —
-and summarizes them into **latent factors**, a compact representation of
-the TME that can be annotated as TME states, tested against clinical
-variables and used as features for machine learning.
+and scores them in each sample. The cell group scores can be tested
+against clinical variables and used as features for machine learning,
+and they are summarized into **latent factors**, a compact
+representation of the TME described by their cell niches (the cell
+groups that contribute most to each factor).
 
 ## Installation
 

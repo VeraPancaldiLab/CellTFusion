@@ -79,10 +79,12 @@ data.</p>
 <p>Starting from a count matrix, <code>CellTFusion</code> builds
 <strong>cell groups</strong> — sets of deconvolution features related to
 the same TF co-activity module to the same degree (a similar correlation
-with the module activity) — and summarizes them into <strong>latent
-factors</strong>, a compact representation of the TME that can be
-annotated as TME states, tested against clinical variables and used as
-features for machine learning.</p>
+with the module activity) — and scores them in each sample. The cell
+group scores can be tested against clinical variables and used as
+features for machine learning, and they are summarized into
+<strong>latent factors</strong>, a compact representation of the TME
+described by their cell niches (the cell groups that contribute most to
+each factor).</p>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>

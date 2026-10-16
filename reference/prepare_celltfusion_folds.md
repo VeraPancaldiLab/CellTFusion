@@ -81,8 +81,8 @@ prepare_celltfusion_folds(
   [`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md)
   runs in multi-cohort mode (see
   [`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md))
-  and the test samples of each cohort are projected separately, z-scored
-  on their own means and SDs. Default `NULL` (single cohort).
+  and the test samples of each cohort are scored separately, z-scored on
+  their own means and SDs. Default `NULL` (single cohort).
 
 - do_parallel:
 
@@ -148,11 +148,12 @@ argument) through `fold_construction_args_fixed`. Tunable arguments
 (`fold_construction_args_tunable`) are not supported. With `batch`, a
 warning names the folds and cohorts with fewer than 10 test samples
 (their test samples are z-scored on their own means and SDs, which is
-unreliable with few samples; leave-one-cohort-out folds avoid it). With
-`do_parallel = TRUE`, the first fold is computed before the others start
-in parallel, so that the TF and pathway collections cached in `Results/`
-are downloaded only once; the package must be installed for the parallel
-workers.
+unreliable with few samples; folds that hold out whole cohorts avoid it,
+whereas `pipeML`'s `LODO = TRUE` stratifies the folds by cohort, so
+every fold tests part of each cohort). With `do_parallel = TRUE`, the
+first fold is computed before the others start in parallel, so that the
+TF and pathway collections cached in `Results/` are downloaded only
+once; the package must be installed for the parallel workers.
 
 ## Examples
 
@@ -184,8 +185,8 @@ features_test <- compute.test.set(final$Processed_deconvolution, final$Cell_grou
 surv_res <- pipeML::compute_features.training.ML(
   features_train = t(raw_counts),
   task_type      = "survival",
-  time_var       = time,
-  event_var      = event,
+  time_var       = traitdata$os,
+  event_var      = traitdata$censOS,
   k_folds        = 5,
   n_rep          = 1,
   fold_construction_fun        = prepare_celltfusion_folds,

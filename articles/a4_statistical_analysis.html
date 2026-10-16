@@ -222,17 +222,16 @@ modes:</p>
 <ol style="list-style-type: decimal">
 <li>
 <strong>Predefined groups</strong> (<code>group_column</code>) —
-e.g. a clinical risk group or a cluster assignment in the clinical
-data.</li>
+e.g. a clinical risk group or a cluster assignment in the clinical data.
+Samples without a value for <code>group_column</code> are left out.</li>
 <li>
 <strong>Feature screening</strong> (<code>scores</code>) —
 e.g. <code>res$Latent_spaces$Z</code>. Each feature is split into
 High/Low at a quantile (<code>quantile_cutoff</code>), and the features
 with a significant log-rank test (<code>pval</code>, optionally
 corrected with <code>padj = TRUE</code>) are returned, with a
-<code>Statistics</code> table giving the test of every feature. Samples
-without a value for <code>group_column</code> are left out. The rows of
-<code>features</code> must be the same samples, in the same order, as
+<code>Statistics</code> table giving the test of every feature. The rows
+of <code>scores</code> must be the same samples, in the same order, as
 the rows of the clinical data.</li>
 </ol>
 <p>Both modes need a time-to-event column and an event column (1 =

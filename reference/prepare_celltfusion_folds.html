@@ -121,7 +121,7 @@ gene sets; passing <code>raw_counts</code> keeps the original gene symbols. If <
 <dt id="arg-batch">batch<a class="anchor" aria-label="anchor" href="#arg-batch"></a></dt>
 <dd><p>Optional vector with the cohort of each sample, in the same order as <code>data</code> (e.g.
 <code>coldata$Cohort</code>). If given, <code><a href="CellTFusion.html">CellTFusion()</a></code> runs in multi-cohort mode (see <code><a href="CellTFusion.html">CellTFusion()</a></code>)
-and the test samples of each cohort are projected separately, z-scored on their own means and SDs. Default
+and the test samples of each cohort are scored separately, z-scored on their own means and SDs. Default
 <code>NULL</code> (single cohort).</p></dd>
 
 
@@ -171,7 +171,8 @@ the outcome columns, (2) the <code><a href="CellTFusion.html">CellTFusion()</a><
 and any <code><a href="CellTFusion.html">CellTFusion()</a></code> argument) through <code>fold_construction_args_fixed</code>. Tunable
 arguments (<code>fold_construction_args_tunable</code>) are not supported. With <code>batch</code>, a warning names the folds and cohorts
 with fewer than 10 test samples (their test samples are z-scored on their own means and SDs, which is unreliable with
-few samples; leave-one-cohort-out folds avoid it). With <code>do_parallel = TRUE</code>, the first fold is
+few samples; folds that hold out whole cohorts avoid it, whereas <code>pipeML</code>'s <code>LODO = TRUE</code> stratifies the
+folds by cohort, so every fold tests part of each cohort). With <code>do_parallel = TRUE</code>, the first fold is
 computed before the others start in parallel, so that the TF and pathway collections cached in
 <code>Results/</code> are downloaded only once; the package must be installed for the parallel workers.</p>
     </div>
@@ -205,8 +206,8 @@ computed before the others start in parallel, so that the TF and pathway collect
 <span class="r-in"><span><span class="va">surv_res</span> <span class="op">&lt;-</span> <span class="fu">pipeML</span><span class="fu">::</span><span class="fu">compute_features.training.ML</span><span class="op">(</span></span></span>
 <span class="r-in"><span>  features_train <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">raw_counts</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>  task_type      <span class="op">=</span> <span class="st">"survival"</span>,</span></span>
-<span class="r-in"><span>  time_var       <span class="op">=</span> <span class="va">time</span>,</span></span>
-<span class="r-in"><span>  event_var      <span class="op">=</span> <span class="va">event</span>,</span></span>
+<span class="r-in"><span>  time_var       <span class="op">=</span> <span class="va">traitdata</span><span class="op">$</span><span class="va">os</span>,</span></span>
+<span class="r-in"><span>  event_var      <span class="op">=</span> <span class="va">traitdata</span><span class="op">$</span><span class="va">censOS</span>,</span></span>
 <span class="r-in"><span>  k_folds        <span class="op">=</span> <span class="fl">5</span>,</span></span>
 <span class="r-in"><span>  n_rep          <span class="op">=</span> <span class="fl">1</span>,</span></span>
 <span class="r-in"><span>  fold_construction_fun        <span class="op">=</span> <span class="va">prepare_celltfusion_folds</span>,</span></span>

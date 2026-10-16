@@ -53,7 +53,7 @@ samples x method-signature-cell type features.
 
 Key arguments:
 
-- `raw_counts` — count matrix (genes x samples).
+- `raw.counts` — count matrix (genes x samples).
 - `methods` — deconvolution methods to run.
 - `normalized` — whether to TPM-normalize the counts before
   deconvolution.

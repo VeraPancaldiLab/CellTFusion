@@ -169,10 +169,12 @@ training sample, in the same order as `features_train`.
 [`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md)
 then corrects for cohort in each fold (see [Multi-cohort
 analysis](https://verapancaldilab.github.io/CellTFusion/articles/a6_batch_analysis.md)),
-and the test samples of each cohort are projected separately, z-scored
-on their own means and SDs. A cohort with fewer than 10 test samples in
-a fold gives a warning, as its scores are then based on few samples.
-With `LODO = TRUE`, `pipeML` leaves one cohort out in each fold:
+and the test samples of each cohort are scored separately, z-scored on
+their own means and SDs. A cohort with fewer than 10 test samples in a
+fold gives a warning, as its scores are then based on few samples. With
+`LODO = TRUE`, `pipeML` stratifies the folds by cohort and outcome
+(`batch_var`), so that every fold keeps samples of each cohort in its
+training and test sets:
 
 ``` r
 

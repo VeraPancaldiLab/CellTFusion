@@ -143,18 +143,18 @@ sample.</td>
 <tr class="even">
 <td><code>compute_composite_score(batch = batch_vec)</code></td>
 <td>Cohort vector</td>
-<td>Removes each cohort’s mean from the cell group features and TF
-activities before the CCA, so composite scores are <strong>corrected for
-cohort</strong>.</td>
+<td>Z-scores the cell group features within each cohort before the CCA
+with the TF module score, so composite scores are <strong>corrected for
+cohort</strong>. Only the CCA weights (<code>xcoef</code>) are kept: new
+cohorts are z-scored on their own means and SDs.</td>
 </tr>
 </tbody>
 </table>
-<p>In short, only in <code><a href="../reference/compute.WTCNA.html">compute.WTCNA()</a></code> is <code>batch</code>
-a logical switch (the cohorts are given by the list of TF matrices).
-Everywhere else, including <code><a href="../reference/CellTFusion.html">CellTFusion()</a></code>,
-<code>batch</code> is the cohort vector itself, used to split the
-samples and to remove cohort effects. Cohort is treated as categorical,
-and the samples do not need to be ordered by cohort.</p>
+<p>In every function, including <code><a href="../reference/CellTFusion.html">CellTFusion()</a></code>,
+<code>batch</code> is the cohort vector itself (one value per sample, or
+named by sample), used to split the samples and to remove cohort
+effects. Cohort is treated as categorical, and the samples do not need
+to be ordered by cohort.</p>
 </div>
 <div class="section level2">
 <h2 id="when-to-use-it">

@@ -165,11 +165,18 @@ factors of each candidate NMF rank, with the thresholds and the selected
 rank](figures/nmf_rank_stability.png)
 
 The result contains `Z` (factor scores, samples x factors — the input
-for statistics and machine learning), `W` (weights of each cell group in
-each factor), `nmf_input`, the NMF model and the per-sample factor
-proportions. Each factor (column of `Z`) sums to 1 over the samples; the
-size of each factor is in `nmf_model$d`. The factor proportions of each
-sample take these sizes into account. With `return = TRUE`, the mixture
+for statistics), `W` (weights of each cell group in each factor),
+`nmf_input` (the positive part of the scores), the NMF model, the
+per-sample factor proportions and the stability tables. The NMF
+approximates the transposed input as `W %*% diag(d) %*% t(Z)`: each
+column of `W` and each column of `Z` sums to 1, and the size of each
+factor is in `nmf_model$d`. Tests on one factor at a time do not depend
+on this scaling; the factor proportions of each sample (`Z` multiplied
+by `d`, divided by its sum per sample) take the sizes into account.
+[`project_factors()`](https://verapancaldilab.github.io/CellTFusion/reference/project_factors.md)
+projects the cell group scores of new samples (from
+[`compute.test.set()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.test.set.md))
+onto the factors, on the scale of `Z`. With `return = TRUE`, the mixture
 of factors in each sample is plotted:
 
 ![Stacked bar plot of latent factor proportions per
@@ -216,8 +223,9 @@ A heatmap shows the NMF weights of all the cell groups in all factors
 outlined: the top cell groups of each factor), so that cell groups
 shared between factors can be seen:
 
-![Heatmap of the NMF weights of the top cell groups in each latent
-factor](figures/niche_weights_heatmap.png)
+![Heatmap of the NMF weights of all the cell groups in each latent
+factor, with the top cell groups of each factor
+outlined](figures/niche_weights_heatmap.png)
 
 ## **Next steps**
 

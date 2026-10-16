@@ -71,9 +71,9 @@ setwd('~/path/to/directory')
 library(CellTFusion)
 ```
 
-If you want to run the full pipeline in one step — including
-normalization, deconvolution, TF activity scoring, module construction,
-and pathway scoring — use the
+If you want to run the full pipeline in one step — normalization,
+deconvolution, TF activity scoring, TF module construction, pathway
+scoring, cell groups, NMF latent factors and cell niches — use the
 [`CellTFusion()`](https://verapancaldilab.github.io/CellTFusion/reference/CellTFusion.md)
 wrapper function.
 

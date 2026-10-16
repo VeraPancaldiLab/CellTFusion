@@ -122,7 +122,7 @@ grids), and the y-axis of each boxplot panel from its data.
 data("network.tuto")
 data("traitdata.tuto")
 
-# The clinical traits of the tutorial data are categorical: they are tested with plot_grid = TRUE
+# Categorical traits (response, Enrollment.IC) are tested with plot_grid = TRUE; os and censOS are numeric
 res <- compute.metadata.association(
   scores = network.tuto[[1]],
   coldata = traitdata.tuto,
