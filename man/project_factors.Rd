@@ -12,15 +12,15 @@ containing at minimum \code{W} (features x rank) and the RcppML model
 object with the \code{nmf_model$d} scaling vector.}
 
 \item{scores}{A samples x cell groups matrix of signed CCA composite
-scores for the test cohort. Column names must match those used in training
-(before the _pos/_neg suffix was added).}
+scores for the test cohort (for new samples, computed with \code{compute.test.set()}). Column names must match
+the cell groups used in training.}
 }
 \value{
 A non-negative matrix of size samples x rank containing the
 projected NMF factor scores for the test cohort.
 }
 \description{
-Applies the positive-negative split to new samples and projects them
+Keeps the positive part of the cell group scores of new samples (as in training) and projects them
 onto the latent space learned during training using the Moore-Penrose
 pseudoinverse of the scaled basis matrix W. Negative values of the projection are set to 0 (on the tutorial data
 the result is the same as an exact non-negative projection). Cell groups missing in \code{scores} are

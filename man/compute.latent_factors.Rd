@@ -7,6 +7,10 @@
 compute.latent_factors(
   scores,
   rank = NULL,
+  ranks = 2:15,
+  n_boot = 100,
+  recovery_thresh = 0.7,
+  similarity_thresh = 0.8,
   seed = 123,
   file_name = NULL,
   return = TRUE
@@ -15,20 +19,32 @@ compute.latent_factors(
 \arguments{
 \item{scores}{Numeric matrix of size samples x cell groups (signed CCA composite scores).}
 
-\item{rank}{Integer; number of NMF factors. If NULL, estimated automatically
-at the elbow of the reconstruction MSE across ranks 2:8 (the rank with the largest
-second difference of the MSE curve). Ranks are limited to the number of cell groups (no more factors than cell
-groups); with fewer than 4 cell groups there are too few candidate ranks for an elbow, and rank = 2 is used
-(rank = 1 with a single cell group).}
+\item{rank}{Integer; number of NMF factors. If NULL (default), chosen among \code{ranks} with bootstrap NMF (see
+Details). If given, the stability of its factors is still computed (\code{stability}).}
 
-\item{seed}{Random seed used for the NMF fits. Default 123. The caller's random number generator
-state is restored when the function returns.}
+\item{ranks}{Candidate ranks when \code{rank = NULL}. Default 2:15, limited to the number of cell groups (rank 1 with
+a single cell group).}
+
+\item{n_boot}{Integer; number of bootstrap NMF runs per rank. Default 100.}
+
+\item{recovery_thresh}{Numeric; minimum recovery frequency (proportion of bootstrap runs in which the factor is
+found) for a factor to be robust. Default 0.7.}
+
+\item{similarity_thresh}{Numeric; minimum cosine similarity for a bootstrap factor to count as the same factor, and
+minimum mean similarity for a factor to be robust. Two factors of the same rank more similar than this are
+considered redundant. Default 0.8. Both thresholds are practical starting points, not universal cutoffs.}
+
+\item{seed}{Random seed used for the NMF fits and the bootstrap samples. Default 123. The caller's random number
+generator state is restored when the function returns.}
 
 \item{file_name}{Optional character suffix for the saved patient-mixture plot.}
 
 \item{return}{Logical. If TRUE (default), saves the patient-mixture barplot to
 \code{Results/NMF_patient_mixture_<file_name>.pdf} (\code{Results/NMF_patient_mixture.pdf} if
-\code{file_name} is \code{NULL}).}
+\code{file_name} is \code{NULL}), and the stability plot to \code{Results/NMF_rank_stability_<file_name>.pdf}:
+the lowest recovery, lowest mean similarity and highest similarity between factors of each candidate rank (with
+the thresholds and the selected rank; only when the rank is selected), and the recovery and mean similarity of
+each factor of the selected rank.}
 }
 \value{
 A named list with:
@@ -37,11 +53,19 @@ A named list with:
 samples: the size of each factor is in \code{nmf_model$d} (the NMF is \code{W \%*\% diag(d) \%*\% t(Z)}). Tests
 on one factor at a time do not depend on this scale; to compare factors within a sample, multiply each column
 by its \code{d}, as done for \code{patient_mixture}.}
-\item{W}{Feature weights per factor ((2 x n_CGs) x rank). Non-negative.}
-\item{nmf_input}{The positive-negative split matrix fed to NMF (samples x (2 x n_CGs)).}
+\item{W}{Weights of the cell groups per factor (cell groups x rank). Non-negative.}
+\item{nmf_input}{The matrix fed to NMF: the positive part of the cell group scores (samples x cell groups).
 \item{nmf_model}{The \code{RcppML::nmf()} model object (includes the scaling vector \code{d}).}
 \item{patient_mixture}{Long-format data frame of per-sample factor proportions used for the mixture plot: the
 factor scores multiplied by the size of each factor (\code{nmf_model$d}), divided by their sum in each sample.}
+\item{stability}{One row per factor of the selected rank: \code{recovery} (proportion of bootstrap runs in which a
+matching factor is found, cosine similarity >= \code{similarity_thresh}), \code{mean_similarity} (mean cosine
+similarity of the matched bootstrap factors), \code{max_similarity_other} (highest cosine similarity with another
+factor of the same rank: a high value suggests redundancy) and \code{robust} (recovery >= \code{recovery_thresh}
+and mean similarity >= \code{similarity_thresh}).}
+\item{rank_selection}{One row per candidate rank (\code{NULL} if \code{rank} is given): the number of robust
+factors, the lowest recovery and mean similarity of its factors, the highest similarity between two of its factors,
+and \code{stable_distinct} (all factors robust and none redundant).}
 }
 }
 \description{
@@ -50,21 +74,33 @@ by splitting each score into its positive and negative direction components,
 then applying Non-negative Matrix Factorization via RcppML (fast C++ backend).
 }
 \details{
-Signed CCA scores are decomposed as:
-\itemize{
-\item \code{score_pos = max(score, 0)}: how far the sample is on the active side of the TF module of that
-cell group (aligned with the TF program)
-\item \code{score_neg = max(-score, 0)}: how far the sample is on the inactive side (anti-aligned)
+Only the positive part of the signed cell group scores is used: \code{max(score, 0)}, how far the sample is on the
+active side of the TF module of the cell group (negative scores, on the inactive side, become 0). The factors
+therefore describe the high-activity direction of the cell groups. The scores must not contain missing values.
+
+Rank selection by bootstrap NMF (consensus of the factors across resamples of the patients). The profile of a factor
+is its column of \code{W} (the weights of the cell groups). For each candidate rank:
+\enumerate{
+\item NMF is fitted on all the samples (reference factors) and on \code{n_boot} bootstrap samples of the patients
+(sampled with replacement);
+\item the factors of each bootstrap run are matched one to one to the reference factors by the cosine similarity of
+their profiles (most similar pairs first), as NMF factors can come in any order;
+\item each reference factor gets its recovery frequency and mean similarity across runs, and the factors of the rank
+are compared with each other to detect redundancy (two factors with almost the same profile).
 }
-Both are concatenated column-wise before NMF. Column names are suffixed
-with "_pos" and "_neg" to track direction. The scores must not contain missing values.
+The selected rank is the largest one whose factors are all robust and none redundant: as many factors as the data
+support reliably (low ranks capture the dominant patterns and are almost always stable, so the smallest stable rank
+would favour 2). If no rank qualifies, the rank with the most robust factors is used (the smallest in case of ties),
+with a message; check \code{rank_selection} and whether the main factors persist at the neighbouring ranks.
 }
 \examples{
 data("network.tuto")
 data("deconv_subgroups.tuto")
 cell_groups <- construct_cell_groups(network.tuto, deconv_subgroups.tuto)
-latent <- compute.latent_factors(cell_groups$Cell_groups, return = FALSE)
+latent <- compute.latent_factors(cell_groups$Cell_groups, n_boot = 20, return = FALSE)
 head(latent$Z)
-latent$nmf_model$d # size of each factor
+latent$nmf_model$d     # size of each factor
+latent$rank_selection  # stability and redundancy of each candidate rank
+latent$stability       # stability of the factors of the selected rank
 
 }

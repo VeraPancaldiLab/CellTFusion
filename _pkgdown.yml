@@ -20,8 +20,6 @@ navbar:
         href: articles/a1_feature_computation.html
       - text: "Cell groups and latent factors"
         href: articles/a2_cell_groups.html
-      - text: "TME state characterization"
-        href: articles/a3_tme_states.html
       - text: "Statistical analysis"
         href: articles/a4_statistical_analysis.html
       - text: "Machine learning workflows"
@@ -34,7 +32,6 @@ articles:
   contents:
   - a1_feature_computation
   - a2_cell_groups
-  - a3_tme_states
   - a4_statistical_analysis
   - a5_machine_learning
   - a6_batch_analysis
@@ -67,16 +64,6 @@ reference:
   - extract_cells
   - compute.latent_factors
   - compute_cells_niches
-- title: TME state characterization
-  desc: >
-    Hallmark GSEA, TCGA meta-programs and TME subtypes
-  contents:
-  - compute_factor_gsea
-  - build_nes_matrix
-  - derive_meta_programs
-  - map_factors_to_metaprograms
-  - map_factors_to_TME
-  - annotate_metaprograms_TME
 - title: Statistical analysis
   desc: >
     Associations with clinical variables and survival
@@ -94,7 +81,6 @@ reference:
     Leakage-aware cross-validation with pipeML and projection of independent data
   contents:
   - prepare_celltfusion_folds
-  - project_test_factors
   - compute.test.set
   - project_factors
 - title: Package data

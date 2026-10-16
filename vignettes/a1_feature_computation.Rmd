@@ -184,7 +184,7 @@ dt <- multideconv::compute.deconvolution.analysis(
 
 ## **Running the full pipeline**
 
-`CellTFusion()` runs all the steps above, then builds cell groups and latent factors and characterizes TME states:
+`CellTFusion()` runs all the steps above, then builds cell groups, latent factors and cell niches:
 
 ```{r, eval = FALSE}
 res <- CellTFusion(
@@ -192,7 +192,6 @@ res <- CellTFusion(
   normalized     = TRUE,
   deconv_methods = c("Quantiseq", "Epidish"),
   TF.collection  = "CollecTRI",
-  cancer_type    = "blca",   # the example data are bladder cancer samples
   corr           = 0.7,
   corr_mod       = 0.9,
   pval           = 0.05,
@@ -204,10 +203,10 @@ res <- CellTFusion(
 A few defaults worth knowing:
 
 - `deconv_methods` runs Quantiseq, CIBERSORTx (`"CBSX"`), Epidish, DeconRNASeq and DWLS by default. CIBERSORTx is only run when `cbsx_mail` and `cbsx_token` are given; without them it is skipped with a message.
-- `cancer_type` selects the TCGA meta-program reference (`"blca"`, `"luad"` or `"skcm"`); if `NULL`, the meta-program mapping step is skipped.
+- `cancer_type` is only used with `TF.collection = "ARACNE"`, to locate the ARACNe network.
 - Precomputed `deconv`, `dt`, `tfs` and `pathways` can be passed to skip the corresponding steps (see [Cell groups and latent factors](a2_cell_groups.html)).
 
-`res` contains every intermediate object: `$Deconvolution`, `$TFs_matrix`, `$TF_network`, `$Pathways_scores`, `$Processed_deconvolution`, `$Cell_groups`, `$Latent_spaces`, `$Cells_niches`, `$TME_states` and `$Metaprograms_reference`.
+`res` contains every intermediate object: `$Deconvolution`, `$TFs_matrix`, `$TF_network`, `$Pathways_scores`, `$Processed_deconvolution`, `$Cell_groups`, `$Latent_spaces` and `$Cells_niches`.
 
 Next: [Cell groups and latent factors](a2_cell_groups.html).
 

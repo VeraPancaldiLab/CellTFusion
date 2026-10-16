@@ -87,7 +87,7 @@ res <- CellTFusion(
   cbsx_mail = "your_email",       # Needed to run CBSX (CIBERSORTx)
   cbsx_token = "your_token",      # Needed to run CBSX (CIBERSORTx)
   TF.collection = "CollecTRI",    # "CollecTRI", "Dorothea", or "ARACNE"
-  cancer_type = "skcm",           # TCGA cancer type, used for meta-program mapping
+  cancer_type = NULL,             # only used with TF.collection = "ARACNE" (input/ARACNE/<cancer_type>/)
   file_name = "TestRun",
   min_targets_size = 5,
   min_module_size = 5,
@@ -130,7 +130,7 @@ them it is skipped with a message.
 
 `CellTFusion()` returns a named list with the outputs of each pipeline
 stage — cell-type deconvolution, TF activity, TF module network, pathway
-scores, cell groups, latent factors, cell niches, and TME state mapping.
+scores, cell groups, latent factors and cell niches.
 Cell groups are derived internally via `construct_cell_groups()` and are
 available at `res$Cell_groups`:
 
@@ -149,9 +149,9 @@ section.
 ## Replicate cell groups on an independent dataset
 
 Use this function to apply the trained cell groups to an external test
-set and calculate group-specific composite scores. To directly obtain
-the latent factors of new samples, use
-`project_test_factors(res, deconv_test)` (see the [Machine learning
+set and calculate group-specific composite scores. To obtain the
+latent factors of new samples, project their cell group scores with
+`project_factors(res$Latent_spaces, test_scores)` (see the [Machine learning
 workflows](https://VeraPancaldiLab.github.io/CellTFusion/articles/a5_machine_learning.html)
 article).
 
@@ -185,8 +185,9 @@ ml_res <- pipeML::compute_features.training.ML(
   fold_construction_args_fixed = list(deconv = deconv, raw_counts = raw.counts)
 )
 
-# Features of new samples, projected onto the final model
-features_test <- project_test_factors(ml_res$Custom_output, deconv_test)
+# Features of new samples: cell group scores on the cell groups of the final model
+features_test <- compute.test.set(ml_res$Custom_output$Processed_deconvolution, ml_res$Custom_output$Cell_groups,
+                                  deconv_test = deconv_test)
 ```
 
 See the [Machine learning

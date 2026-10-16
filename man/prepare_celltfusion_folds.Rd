@@ -64,24 +64,28 @@ the number of available cores minus one is used.}
 \value{
 \itemize{
 \item In fold mode (\code{bestune = NULL}): each fold is saved to \code{Results/fold_<fold name>.rds}, which
-\code{pipeML} reads back, as a list with \code{train_data} (latent factors of the training samples plus
-the outcome columns), \code{test_data} (latent factors of the test samples, plus \code{time} and
+\code{pipeML} reads back, as a list with \code{train_data} (cell group scores of the training samples plus
+the outcome columns), \code{test_data} (cell group scores of the test samples, plus \code{time} and
 \code{event} for survival), \code{obs_test} (observed outcome of the test samples), \code{rowIndex} (rows
 of the test samples) and \code{fold_name}. The list of folds is returned invisibly. If \code{CellTFusion()}
-fails in a fold (e.g. no cell groups are found on its training samples), that fold is skipped with a
+fails in a fold (e.g. no cell groups are found on its training samples, or a cell group cannot be scored in
+the test samples), that fold is skipped with a
 warning and is not saved; an error is raised only if all the folds fail.
-\item In final mode (\code{bestune} provided): a list with (1) the latent factors of all the samples plus
+\item In final mode (\code{bestune} provided): a list with (1) the cell group scores of all the samples plus
 the outcome columns, (2) the \code{CellTFusion()} result on all the samples, available as
 \code{Custom_output} in the \code{pipeML} result and used to compute the features of new samples with
-\code{project_test_factors()}, and (3) \code{bestune}.
+\code{compute.test.set()}, and (3) \code{bestune}.
 }
 }
 \description{
 Fold construction function for \code{pipeML::compute_features.training.ML()} (argument
-\code{fold_construction_fun}) that computes \code{CellTFusion} latent factors within each
-cross-validation fold, without information leakage: cell groups and latent factors are learned with
-\code{CellTFusion()} on the training samples of each fold only, and the test samples of the fold are
-projected onto them with \code{project_test_factors()}. It works for classification and survival tasks.
+\code{fold_construction_fun}) that computes \code{CellTFusion} cell group scores within each
+cross-validation fold, without information leakage: cell groups are learned with \code{CellTFusion()} on the
+training samples of each fold only, and the test samples of the fold are scored on them with
+\code{compute.test.set()}. The features of the models are the cell group scores; the latent factors are a
+downstream characterization: they are not computed in the folds, and are computed in final mode (unless
+\code{compute_factors = FALSE} is passed) for the characterization of the final model; new samples can be projected
+onto them with \code{project_factors()}. It works for classification and survival tasks.
 }
 \details{
 Pass the fixed arguments (\code{deconv}, and optionally \code{raw_counts}, \code{batch}
@@ -111,8 +115,9 @@ ml_res <- pipeML::compute_features.training.ML(
   fold_construction_args_fixed = list(deconv = deconv, raw_counts = raw_counts)
 )
 
-# Features of new samples: projected onto the model trained on all the training samples
-features_test <- project_test_factors(ml_res$Custom_output, deconv_test)
+# Features of new samples: scored on the cell groups learned on all the training samples
+features_test <- compute.test.set(ml_res$Custom_output$Processed_deconvolution, ml_res$Custom_output$Cell_groups,
+                                  deconv_test = deconv_test)
 
 # Survival (time and event of each sample)
 surv_res <- pipeML::compute_features.training.ML(

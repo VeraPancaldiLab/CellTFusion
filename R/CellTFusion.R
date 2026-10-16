@@ -6,7 +6,7 @@ utils::globalVariables(c("Trait", "Value" ,"level", ".", "Cells_level", "PC1", "
                          "lm", "meta_programs", "module", "mor", "mtext", "order.dendrogram", "padj",
                          "pathway", "proportion", "quantile", "read.delim", "residuals", "score",
                          "score_level", "setNames", "svg", "target", "title",
-                         "n", "n_distinct"))
+                         "n", "n_distinct", "xg", "yg", "x", "y", "coefficient", "feature", "weight", "top", "y0"))
 
 #' @importFrom grDevices colorRampPalette svg
 #' @importFrom graphics mtext title
@@ -14,7 +14,6 @@ utils::globalVariables(c("Trait", "Value" ,"level", ".", "Cells_level", "PC1", "
 #' @importFrom utils read.delim
 #' @importFrom RColorBrewer brewer.pal
 #' @importFrom colorspace rainbow_hcl
-#' @importFrom fgsea fgsea
 #' @importFrom ppcor pcor.test
 #' @importFrom multideconv compute.deconvolution compute.deconvolution.analysis get_cell_type_nomenclature replicate_deconvolution_subgroups
 #' @rawNamespace export(compute.TFs.activity)
@@ -34,14 +33,12 @@ NULL
 #' Compute one-step CellTFusion
 #'
 #' Runs the full CellTFusion pipeline in a single call: cell-type deconvolution, TF activity inference,
-#' TF module construction, pathway activity, cell group construction, NMF latent factors, cell niches and
-#' TME state characterization (Hallmark GSEA per factor and mapping to TCGA meta-programs).
+#' TF module construction, pathway activity, cell group construction, NMF latent factors and cell niches.
 #'
 #' @param raw_counts A matrix of raw gene expression counts (genes as rows, samples as columns). If
 #'   \code{normalized = FALSE}, a matrix of TPM-normalized values instead (not log-transformed).
-#'   Always required: even when \code{dt}, \code{tfs} and \code{pathways} are all supplied precomputed,
-#'   the (normalized) expression matrix is still needed for the downstream GSEA-based TME state
-#'   characterization step.
+#'   Always required, also when \code{dt}, \code{tfs} and \code{pathways} are all supplied precomputed (its samples
+#'   are checked against them).
 #' @param deconv (Optional) A data frame with deconvolution features (cell-type proportions as columns x samples as rows).
 #'   If \code{NULL} (default), it is computed with \code{multideconv::compute.deconvolution()} using
 #'   \code{deconv_methods}. Ignored if \code{dt} is supplied.
@@ -121,22 +118,21 @@ NULL
 #'   Passed to \code{construct_cell_groups()}. Default is FALSE.
 #' @param min_cluster_size Integer; minimum number of features of a cell group (minimum cluster size of the
 #'   dynamic tree cut), passed to \code{construct_cell_groups()}. Default is 3.
-#' @param enrich_thresh Numeric. Minimum enrichment ratio (foreground/background cell-type frequency)
-#'   required to include a cell type in a latent factor's niche. Default is 1.5.
-#' @param quantile_cutoff Numeric between 0 and 1. Quantile threshold for selecting top-contributing
-#'   cell groups per NMF factor. Default is 0.7.
+#' @param compute_factors Logical. If TRUE (default), the NMF latent factors (\code{compute.latent_factors()}) and the
+#'   cell niches (\code{compute_cells_niches()}) are computed from the cell group scores. If FALSE, they are skipped
+#'   (\code{Latent_spaces} and \code{Cells_niches} are \code{NULL}), e.g. in the cross-validation folds of
+#'   \code{prepare_celltfusion_folds()}, where only the cell group scores are used.
+#' @param top_n Integer. Number of top-contributing cell groups per NMF factor in the cell niches (see
+#'   \code{compute_cells_niches()}). Default is 5.
 #' @param return Logical; if TRUE, intermediate matrices and plots are written to the "Results/" folder. Default is TRUE.
-#' @param cancer_type Character. TCGA cancer type abbreviation (one of \code{"blca"}, \code{"luad"}, \code{"skcm"}).
-#'   Used for two purposes: (1) loading TCGA meta-programs for TME state mapping, and (2) when
-#'   \code{TF.collection = "ARACNE"}, locating the ARACNe network at
-#'   \code{input/ARACNE/<cancer_type>/network/network.txt}. If \code{NULL}, or if no TCGA meta-programs
-#'   exist for that cancer type (a warning is given), the meta-program mapping step is skipped
-#'   (\code{TME_states} and \code{Metaprograms_reference} are \code{NULL}). For ARACNE, if \code{NULL}, the
-#'   network is auto-detected when only one exists under \code{input/ARACNE/}.
+#' @param cancer_type Character. Cancer type abbreviation (e.g. \code{"skcm"}), only used when
+#'   \code{TF.collection = "ARACNE"}, to locate the ARACNe network at
+#'   \code{input/ARACNE/<cancer_type>/network/network.txt}. If \code{NULL}, the network is auto-detected when only
+#'   one exists under \code{input/ARACNE/}.
 #' @param verbose Logical; whether to print the progress and the console output and messages of every step
 #'   (warnings are always shown). Default is TRUE.
-#' @param seed Integer. Random seed of the pipeline (deconvolution methods with random steps, NMF and the GSEA
-#'   permutations), so that results are reproducible. Default is 123.
+#' @param seed Integer. Random seed of the pipeline (deconvolution methods with random steps and NMF), so that results
+#'   are reproducible. Default is 123.
 #'
 #' @details
 #' The pipeline runs with a fixed random seed (\code{seed}) so results are reproducible; the caller's random
@@ -157,10 +153,8 @@ NULL
 #'     z-scored within each cohort with \code{batch} (as \code{TFs_matrix}).}
 #'   \item{Processed_deconvolution}{The processed deconvolution subgroups (output of \code{multideconv::compute.deconvolution.analysis()}).}
 #'   \item{Cell_groups}{Output of \code{construct_cell_groups()}: cell group scores, compositions and projection weights.}
-#'   \item{Latent_spaces}{NMF latent factors returned by \code{compute.latent_factors()}.}
-#'   \item{Cells_niches}{Enriched cell types per latent factor (see \code{compute_cells_niches()}).}
-#'   \item{TME_states}{Factor-to-meta-program mapping (\code{factor_mapping} from \code{map_factors_to_metaprograms()}), or \code{NULL} if the mapping was skipped (see \code{cancer_type}).}
-#'   \item{Metaprograms_reference}{The TCGA meta-program reference used for mapping, or \code{NULL} if the mapping was skipped.}
+#'   \item{Latent_spaces}{NMF latent factors returned by \code{compute.latent_factors()} (\code{NULL} with \code{compute_factors = FALSE}).}
+#'   \item{Cells_niches}{Top cell groups of each latent factor, with their deconvolution features and CCA coefficients (see \code{compute_cells_niches()}; \code{NULL} with \code{compute_factors = FALSE}).}
 #' }
 #'
 #' @export
@@ -197,7 +191,7 @@ NULL
 #'}
 #'
 CellTFusion = function(raw_counts, deconv = NULL, dt = NULL, tfs = NULL, pathways = NULL, normalized = TRUE, batch = NULL, deconv_methods = c("Quantiseq", "CBSX", "Epidish", "DeconRNASeq", "DWLS"), cbsx_mail = NULL, cbsx_token = NULL, do_parallel = FALSE, workers = NULL, file_name = NULL,
-                       TF.collection = "CollecTRI", method = "ulm", min_targets_size = 5, universe = NULL, paths = NULL, gene_sets = NULL, min_module_size = 5, corr_mod = 0.9, soft_power = NULL, consensus_quantile = 0, clustering_method = "ward.D2", corr = 0.7, corr_type = "spearman", cells_extra = NULL, pval = 0.05, padj = FALSE, min_cluster_size = 3, enrich_thresh = 1.5, quantile_cutoff = 0.7, cancer_type = NULL, return = TRUE, verbose = TRUE, seed = 123){
+                       TF.collection = "CollecTRI", method = "ulm", min_targets_size = 5, universe = NULL, paths = NULL, gene_sets = NULL, min_module_size = 5, corr_mod = 0.9, soft_power = NULL, consensus_quantile = 0, clustering_method = "ward.D2", corr = 0.7, corr_type = "spearman", cells_extra = NULL, pval = 0.05, padj = FALSE, min_cluster_size = 3, compute_factors = TRUE, top_n = 5, cancer_type = NULL, return = TRUE, verbose = TRUE, seed = 123){
 
   withr::local_preserve_seed()
   set.seed(seed)
@@ -251,11 +245,6 @@ CellTFusion = function(raw_counts, deconv = NULL, dt = NULL, tfs = NULL, pathway
     on.exit(OmnipathR::omnipath_set_console_loglevel(omnipath_level), add = TRUE)
   }
 
-  #TCGA meta-programs only exist for some cancer types: otherwise the mapping step is skipped
-  map_metaprograms = !is.null(cancer_type) && system.file("extdata", paste0("TCGA_meta_programs_", tolower(cancer_type), ".RData"), package = "CellTFusion") != ""
-  if(!is.null(cancer_type) && !map_metaprograms){
-    warning("No TCGA meta-programs available for cancer type '", cancer_type, "' (available: blca, luad, skcm): the mapping to meta-programs is skipped")
-  }
 
   #Deconvolution (skipped entirely if precomputed cell subgroups `dt` are supplied)
   if(is.null(dt)){
@@ -347,46 +336,20 @@ CellTFusion = function(raw_counts, deconv = NULL, dt = NULL, tfs = NULL, pathway
   }
   cell.groups = quiet(construct_cell_groups(network, dt, batch = batch_vec, pval = pval, padj = padj, corr_type = corr_type, clustering_method = clustering_method, file_name = file_name, return = return, min_cluster_size = min_cluster_size))
 
-  # 5. Cell groups latent spaces
-  if(verbose){
-    cat("\nLatent spaces calculation............................................................\n")
-  }
-  latent_spaces <- quiet(compute.latent_factors(cell.groups[[1]], rank = NULL, seed = seed, file_name = file_name, return = return))
-
-  # 6. Extract cell niches
-  if(verbose){
-    cat("\nExtract cell niches from latent spaces............................................................\n")
-  }
-  cells_niches = compute_cells_niches(latent_spaces, dt, cell.groups, enrich_thresh = enrich_thresh, quantile_cutoff = quantile_cutoff, cells_extra = cells_extra, return = return, file_name = file_name)
-
-  # 7. Find TME states
-  if(verbose){
-    cat("\nCompute TME states............................................................\n")
-  }
-  gsea_results <- quiet(compute_factor_gsea(
-    counts_norm  = counts.norm,          # genes x samples
-    scores       = latent_spaces$Z,      # samples x factors
-    return       = return,
-    top_n        = 10,
-    file_name    = file_name,
-    batch        = batch_vec,            # cohort of each sample (NULL with a single cohort)
-    seed         = seed
-  ))
-
-  if(!map_metaprograms){
+  latent_spaces <- NULL
+  cells_niches <- NULL
+  if(compute_factors){
+    # 5. Cell groups latent spaces
     if(verbose){
-      cat("\nNo cancer_type with TCGA meta-programs given: skipping mapping to TCGA meta-programs.\n")
+      cat("\nLatent spaces calculation............................................................\n")
     }
-    metaprograms_mapping <- list(factor_mapping = NULL, reference = NULL)
-  }else{
+    latent_spaces <- quiet(compute.latent_factors(cell.groups[[1]], rank = NULL, seed = seed, file_name = file_name, return = return))
+
+    # 6. Extract cell niches
     if(verbose){
-      cat("\nMapping to metaprograms............................................................\n")
+      cat("\nExtract cell niches from latent spaces............................................................\n")
     }
-    metaprograms_mapping <- quiet(map_factors_to_metaprograms(
-      gsea_results = gsea_results,
-      cancer_type  = cancer_type,
-      return = return, file_name = file_name
-    ))
+    cells_niches = compute_cells_niches(latent_spaces, cell.groups, top_n = top_n, return = return, file_name = file_name)
   }
 
   if(verbose){
@@ -395,7 +358,7 @@ CellTFusion = function(raw_counts, deconv = NULL, dt = NULL, tfs = NULL, pathway
 
   res = list("Deconvolution" = deconv, "TFs_matrix" = tfs, "TF_network" = network, "Pathways_scores" = pathways,
              "Processed_deconvolution" = dt, "Cell_groups" = cell.groups, "Latent_spaces" = latent_spaces, 
-             "Cells_niches" = cells_niches, "TME_states" = metaprograms_mapping$factor_mapping, "Metaprograms_reference" = metaprograms_mapping$reference)
+             "Cells_niches" = cells_niches)
 
   return(res)
 
@@ -2164,10 +2127,9 @@ identify.cell.groups = function(relationship, clustering_method = "ward.D2", fil
 #'   recognise cell types in the feature names.
 #'
 #' @return A binary matrix (data.frame) where rows are cell groups and columns are cell types (1 = present, 0 = absent).
-#'   Each cell group appears twice, as \code{<group>_pos} and \code{<group>_neg}, to match the feature names used by
-#'   \code{compute.latent_factors()}; both rows have the same composition (the direction of the relation with the TF
-#'   module is not represented). Cell types not present in any cell group are dropped, and cell groups whose cell types
-#'   are not recognised (their row is all zeros) are listed, each with a message.
+#'   Rows are named as the cell groups, as the features of \code{compute.latent_factors()}. Cell types not present in
+#'   any cell group are dropped, and cell groups whose cell types are not recognised (their row is all zeros) are
+#'   listed, each with a message.
 #'
 #' @examples
 #' data("network.tuto")
@@ -2231,12 +2193,6 @@ compute.composition.matrix = function(dt, cell_groups, cells_extra = NULL){
     message("Cell types not present in any cell group (left out of the composition matrix): ", paste0(names(idy), collapse = ", "))
     presence_matrix = presence_matrix[, -idy, drop = FALSE]
   }
-
-  # One row per latent factor feature: <group>_pos and <group>_neg (same composition)
-  presence_matrix = presence_matrix[rep(1:nrow(presence_matrix), each = 2), , drop = FALSE]
-
-  rownames(presence_matrix) = paste0(rep(names(composition), each = 2),
-                                     c("_pos","_neg"))
 
   return(presence_matrix)
 
@@ -3576,18 +3532,26 @@ scores.stat.analysis <- function(scores, coldata, trait,
 #' then applying Non-negative Matrix Factorization via RcppML (fast C++ backend).
 #'
 #' @param scores Numeric matrix of size samples x cell groups (signed CCA composite scores).
-#' @param rank Integer; number of NMF factors. If NULL, estimated automatically
-#'   at the elbow of the reconstruction MSE across ranks 2:8 (the rank with the largest
-#'   second difference of the MSE curve). Ranks are limited to the number of cell groups (no more factors than cell
-#'   groups); with fewer than 4 cell groups there are too few candidate ranks for an elbow, and rank = 2 is used
-#'   (rank = 1 with a single cell group).
-#' @param seed Random seed used for the NMF fits. Default 123. The caller's random number generator
-#'   state is restored when the function returns.
+#' @param rank Integer; number of NMF factors. If NULL (default), chosen among \code{ranks} with bootstrap NMF (see
+#'   Details). If given, the stability of its factors is still computed (\code{stability}).
+#' @param ranks Candidate ranks when \code{rank = NULL}. Default 2:15, limited to the number of cell groups (rank 1 with
+#'   a single cell group).
+#' @param n_boot Integer; number of bootstrap NMF runs per rank. Default 100.
+#' @param recovery_thresh Numeric; minimum recovery frequency (proportion of bootstrap runs in which the factor is
+#'   found) for a factor to be robust. Default 0.7.
+#' @param similarity_thresh Numeric; minimum cosine similarity for a bootstrap factor to count as the same factor, and
+#'   minimum mean similarity for a factor to be robust. Two factors of the same rank more similar than this are
+#'   considered redundant. Default 0.8. Both thresholds are practical starting points, not universal cutoffs.
+#' @param seed Random seed used for the NMF fits and the bootstrap samples. Default 123. The caller's random number
+#'   generator state is restored when the function returns.
 #'
 #' @param file_name Optional character suffix for the saved patient-mixture plot.
 #' @param return Logical. If TRUE (default), saves the patient-mixture barplot to
 #'   \code{Results/NMF_patient_mixture_<file_name>.pdf} (\code{Results/NMF_patient_mixture.pdf} if
-#'   \code{file_name} is \code{NULL}).
+#'   \code{file_name} is \code{NULL}), and the stability plot to \code{Results/NMF_rank_stability_<file_name>.pdf}:
+#'   the lowest recovery, lowest mean similarity and highest similarity between factors of each candidate rank (with
+#'   the thresholds and the selected rank; only when the rank is selected), and the recovery and mean similarity of
+#'   each factor of the selected rank.
 #'
 #' @return A named list with:
 #' \describe{
@@ -3595,32 +3559,53 @@ scores.stat.analysis <- function(scores, coldata, trait,
 #'     samples: the size of each factor is in \code{nmf_model$d} (the NMF is \code{W \%*\% diag(d) \%*\% t(Z)}). Tests
 #'     on one factor at a time do not depend on this scale; to compare factors within a sample, multiply each column
 #'     by its \code{d}, as done for \code{patient_mixture}.}
-#'   \item{W}{Feature weights per factor ((2 x n_CGs) x rank). Non-negative.}
-#'   \item{nmf_input}{The positive-negative split matrix fed to NMF (samples x (2 x n_CGs)).}
+#'   \item{W}{Weights of the cell groups per factor (cell groups x rank). Non-negative.}
+#'   \item{nmf_input}{The matrix fed to NMF: the positive part of the cell group scores (samples x cell groups).
 #'   \item{nmf_model}{The \code{RcppML::nmf()} model object (includes the scaling vector \code{d}).}
 #'   \item{patient_mixture}{Long-format data frame of per-sample factor proportions used for the mixture plot: the
 #'     factor scores multiplied by the size of each factor (\code{nmf_model$d}), divided by their sum in each sample.}
+#'   \item{stability}{One row per factor of the selected rank: \code{recovery} (proportion of bootstrap runs in which a
+#'     matching factor is found, cosine similarity >= \code{similarity_thresh}), \code{mean_similarity} (mean cosine
+#'     similarity of the matched bootstrap factors), \code{max_similarity_other} (highest cosine similarity with another
+#'     factor of the same rank: a high value suggests redundancy) and \code{robust} (recovery >= \code{recovery_thresh}
+#'     and mean similarity >= \code{similarity_thresh}).}
+#'   \item{rank_selection}{One row per candidate rank (\code{NULL} if \code{rank} is given): the number of robust
+#'     factors, the lowest recovery and mean similarity of its factors, the highest similarity between two of its factors,
+#'     and \code{stable_distinct} (all factors robust and none redundant).}
 #' }
 #'
 #' @details
-#' Signed CCA scores are decomposed as:
-#' \itemize{
-#'   \item \code{score_pos = max(score, 0)}: how far the sample is on the active side of the TF module of that
-#'     cell group (aligned with the TF program)
-#'   \item \code{score_neg = max(-score, 0)}: how far the sample is on the inactive side (anti-aligned)
+#' Only the positive part of the signed cell group scores is used: \code{max(score, 0)}, how far the sample is on the
+#' active side of the TF module of the cell group (negative scores, on the inactive side, become 0). The factors
+#' therefore describe the high-activity direction of the cell groups. The scores must not contain missing values.
+#'
+#' Rank selection by bootstrap NMF (consensus of the factors across resamples of the patients). The profile of a factor
+#' is its column of \code{W} (the weights of the cell groups). For each candidate rank:
+#' \enumerate{
+#'   \item NMF is fitted on all the samples (reference factors) and on \code{n_boot} bootstrap samples of the patients
+#'     (sampled with replacement);
+#'   \item the factors of each bootstrap run are matched one to one to the reference factors by the cosine similarity of
+#'     their profiles (most similar pairs first), as NMF factors can come in any order;
+#'   \item each reference factor gets its recovery frequency and mean similarity across runs, and the factors of the rank
+#'     are compared with each other to detect redundancy (two factors with almost the same profile).
 #' }
-#' Both are concatenated column-wise before NMF. Column names are suffixed
-#' with "_pos" and "_neg" to track direction. The scores must not contain missing values.
+#' The selected rank is the largest one whose factors are all robust and none redundant: as many factors as the data
+#' support reliably (low ranks capture the dominant patterns and are almost always stable, so the smallest stable rank
+#' would favour 2). If no rank qualifies, the rank with the most robust factors is used (the smallest in case of ties),
+#' with a message; check \code{rank_selection} and whether the main factors persist at the neighbouring ranks.
 #'
 #' @examples
 #' data("network.tuto")
 #' data("deconv_subgroups.tuto")
 #' cell_groups <- construct_cell_groups(network.tuto, deconv_subgroups.tuto)
-#' latent <- compute.latent_factors(cell_groups$Cell_groups, return = FALSE)
+#' latent <- compute.latent_factors(cell_groups$Cell_groups, n_boot = 20, return = FALSE)
 #' head(latent$Z)
-#' latent$nmf_model$d # size of each factor
+#' latent$nmf_model$d     # size of each factor
+#' latent$rank_selection  # stability and redundancy of each candidate rank
+#' latent$stability       # stability of the factors of the selected rank
 #'
-compute.latent_factors <- function(scores, rank = NULL, seed = 123, file_name = NULL, return = TRUE) {
+compute.latent_factors <- function(scores, rank = NULL, ranks = 2:15, n_boot = 100, recovery_thresh = 0.7, similarity_thresh = 0.8,
+                                   seed = 123, file_name = NULL, return = TRUE) {
 
   if (!requireNamespace("RcppML", quietly = TRUE))
     stop("Install RcppML: install.packages('RcppML')")
@@ -3630,36 +3615,87 @@ compute.latent_factors <- function(scores, rank = NULL, seed = 123, file_name = 
   scores <- as.matrix(scores)
   if (anyNA(scores)) stop("scores has missing values: NMF needs complete cell group scores")
 
-  # -- Positive-negative split -----------------------------------------------
-  X_pos <- pmax(scores, 0)
-  X_neg <- pmax(-scores, 0)
-  colnames(X_pos) <- paste0(colnames(scores), "_pos")
-  colnames(X_neg) <- paste0(colnames(scores), "_neg")
-  nmf_input <- cbind(X_pos, X_neg)
+  # -- Positive part of the scores: high-activity side of the TF module of each cell group (negative scores set to 0)
+  nmf_input <- pmax(scores, 0)
 
   A <- t(nmf_input)   # features x samples (RcppML convention)
 
-  # -- Rank estimation -------------------------------------------------------
-  if (is.null(rank) && ncol(scores) < 4) { # Fewer than 3 candidate ranks (2 to the number of cell groups): no elbow
-    rank <- min(2L, ncol(scores))
-    message("Too few cell groups (", ncol(scores), ") to estimate the rank: using rank = ", rank)
+  # -- Rank selection: bootstrap NMF -----------------------------------------
+  # Profile of a factor = its column of W (weights of the cell groups)
+
+  # Cosine similarity between the profiles (columns) of a and b
+  cosine <- function(a, b) {
+    a <- sweep(a, 2, sqrt(colSums(a^2)), "/")
+    b <- sweep(b, 2, sqrt(colSums(b^2)), "/")
+    sim <- crossprod(a, b)
+    sim[!is.finite(sim)] <- 0 # factor with all weights 0
+    sim
+  }
+
+  # One-to-one matching of reference factors (rows) to bootstrap factors (columns), most similar pairs first:
+  # similarity of the bootstrap factor matched to each reference factor
+  match_factors <- function(sim) {
+    matched <- rep(0, nrow(sim))
+    while (any(!is.na(sim))) {
+      ij <- which(sim == max(sim, na.rm = TRUE), arr.ind = TRUE)[1, ]
+      matched[ij[1]] <- sim[ij[1], ij[2]]
+      sim[ij[1], ] <- NA
+      sim[, ij[2]] <- NA
+    }
+    matched
+  }
+
+  # Stability of the factors of rank k: reference fit on all the samples, n_boot fits on bootstrap samples of the patients
+  rank_stability <- function(k) {
+    ref <- RcppML::nmf(A, k = k, seed = seed, verbose = FALSE)
+    sims <- matrix(unlist(lapply(seq_len(n_boot), function(b) {
+      boot <- sample(ncol(A), replace = TRUE)
+      fit <- RcppML::nmf(A[, boot, drop = FALSE], k = k, seed = seed + b, verbose = FALSE)
+      match_factors(cosine(ref$w, fit$w))
+    })), ncol = k, byrow = TRUE) # n_boot x k
+    within <- cosine(ref$w, ref$w)
+    diag(within) <- NA
+    data.frame(factor = paste0("Factor", seq_len(k)),
+               recovery = colMeans(sims >= similarity_thresh),
+               mean_similarity = colMeans(sims),
+               max_similarity_other = if (k > 1) apply(within, 1, max, na.rm = TRUE) else 0,
+               stringsAsFactors = FALSE)
+  }
+
+  rank_selection <- NULL
+  if (is.null(rank) && ncol(scores) == 1) {
+    rank <- 1L
+    message("A single cell group: using rank = 1")
   }
   if (is.null(rank)) {
-    ranks <- 2:min(8, ncol(scores)) # No more factors than cell groups
-    message("Estimating optimal rank via elbow on reconstruction MSE (ranks ", min(ranks), ":", max(ranks), ")...")
-    .mse <- function(A, fit) {
-      recon <- fit$w %*% diag(fit$d, nrow = length(fit$d)) %*% fit$h
-      mean((A - recon)^2)
+    ranks <- ranks[ranks >= 1 & ranks <= ncol(scores)] # No more factors than cell groups
+    if (length(ranks) == 0) stop("No candidate rank between 1 and the number of cell groups (", ncol(scores), ")")
+    message("Selecting the rank with bootstrap NMF (", n_boot, " runs per rank, ranks ", paste(ranks, collapse = ", "), ")...")
+    stab <- lapply(ranks, rank_stability)
+    robust <- lapply(stab, function(s) s$recovery >= recovery_thresh & s$mean_similarity >= similarity_thresh)
+    rank_selection <- data.frame(
+      rank = ranks,
+      robust_factors = vapply(robust, sum, numeric(1)),
+      min_recovery = vapply(stab, function(s) min(s$recovery), numeric(1)),
+      min_mean_similarity = vapply(stab, function(s) min(s$mean_similarity), numeric(1)),
+      max_similarity_between_factors = vapply(stab, function(s) max(s$max_similarity_other), numeric(1))
+    )
+    rank_selection$stable_distinct <- vapply(robust, all, logical(1)) & rank_selection$max_similarity_between_factors < similarity_thresh
+    if (any(rank_selection$stable_distinct)) {
+      rank <- max(rank_selection$rank[rank_selection$stable_distinct])
+      message("Selected rank: ", rank, " (largest rank with all factors robust and none redundant)")
+    } else {
+      rank <- rank_selection$rank[which.max(rank_selection$robust_factors)]
+      message("No rank has all its factors robust and none redundant: rank ", rank, " has the most robust factors and is used. ",
+              "Check rank_selection and whether its main factors persist at the neighbouring ranks")
     }
-    mse_vals <- vapply(ranks, function(k) {
-      fit <- RcppML::nmf(A, k = k, seed = seed, verbose = FALSE)
-      .mse(A, fit)
-    }, numeric(1))
-    names(mse_vals) <- as.character(ranks)
-    d2   <- diff(diff(mse_vals))
-    rank <- as.integer(names(mse_vals)[which.max(d2) + 1L])
-    message("MSE by rank: ", paste(sprintf("k%s=%.3g", names(mse_vals), mse_vals), collapse = "  "))
-    message("Selected rank (elbow): ", rank)
+    stability <- stab[[match(rank, ranks)]]
+  } else {
+    stability <- rank_stability(rank)
+  }
+  stability$robust <- stability$recovery >= recovery_thresh & stability$mean_similarity >= similarity_thresh
+  if (!all(stability$robust)) {
+    message("Factors not robust across bootstrap runs: ", paste(stability$factor[!stability$robust], collapse = ", "))
   }
 
   # -- NMF fit ---------------------------------------------------------------
@@ -3728,6 +3764,50 @@ compute.latent_factors <- function(scores, rank = NULL, seed = 123, file_name = 
       }
     
       ggplot2::ggsave(fname, p_mixture, width = 14, height = 4)    
+
+    # -- Stability plot: rank selection (if done) and robustness of the factors of the selected rank --
+    plots <- list()
+    if (!is.null(rank_selection)) {
+      metrics <- c("Lowest recovery" = "min_recovery", "Lowest mean similarity" = "min_mean_similarity",
+                   "Highest similarity between factors" = "max_similarity_between_factors")
+      rank_long <- do.call(rbind, lapply(names(metrics), function(m) data.frame(
+        rank = rank_selection$rank, metric = m, value = rank_selection[[metrics[[m]]]],
+        stable_distinct = ifelse(rank_selection$stable_distinct, "yes", "no"))))
+      rank_long$metric <- factor(rank_long$metric, levels = names(metrics))
+      thresholds <- data.frame(metric = factor(names(metrics), levels = names(metrics)),
+                               value = c(recovery_thresh, similarity_thresh, similarity_thresh))
+      plots$ranks <- ggplot2::ggplot(rank_long, ggplot2::aes(x = rank, y = value)) +
+        ggplot2::geom_hline(data = thresholds, ggplot2::aes(yintercept = value), linetype = "dashed", colour = "grey40") +
+        ggplot2::geom_vline(xintercept = rank, colour = "#D55E00") +
+        ggplot2::geom_line(colour = "grey60") +
+        ggplot2::geom_point(ggplot2::aes(fill = stable_distinct), shape = 21, size = 2.5) +
+        ggplot2::scale_fill_manual(values = c(yes = "#0072B2", no = "white"), name = "All factors robust\nand none redundant") +
+        ggplot2::facet_wrap(~ metric, nrow = 1) +
+        ggplot2::scale_x_continuous(breaks = rank_selection$rank) +
+        ggplot2::coord_cartesian(ylim = c(0, 1)) +
+        ggplot2::labs(title = "Bootstrap NMF stability by rank",
+                      subtitle = paste0("Dashed lines: thresholds (redundancy above the line in the third panel). Selected rank: ", rank, " (vertical line)"),
+                      x = "Rank (number of factors)", y = NULL) +
+        ggplot2::theme_bw(base_size = 10)
+    }
+    factor_long <- rbind(
+      data.frame(factor = stability$factor, metric = "Recovery frequency", value = stability$recovery, threshold = recovery_thresh),
+      data.frame(factor = stability$factor, metric = "Mean similarity", value = stability$mean_similarity, threshold = similarity_thresh))
+    factor_long$metric <- factor(factor_long$metric, levels = c("Recovery frequency", "Mean similarity"))
+    factor_long$factor <- factor(factor_long$factor, levels = stability$factor)
+    factor_long$robust <- ifelse(stability$robust[match(factor_long$factor, stability$factor)], "yes", "no")
+    plots$factors <- ggplot2::ggplot(factor_long, ggplot2::aes(x = factor, y = value, fill = robust)) +
+      ggplot2::geom_col(width = 0.6) +
+      ggplot2::geom_hline(ggplot2::aes(yintercept = threshold), linetype = "dashed", colour = "grey40") +
+      ggplot2::scale_fill_manual(values = c(yes = "#0072B2", no = "grey70"), name = "Robust") +
+      ggplot2::facet_wrap(~ metric, nrow = 1) +
+      ggplot2::coord_cartesian(ylim = c(0, 1)) +
+      ggplot2::labs(title = paste0("Robustness of the ", rank, " factors across ", n_boot, " bootstrap runs"),
+                    subtitle = "Dashed lines: thresholds", x = NULL, y = NULL) +
+      ggplot2::theme_bw(base_size = 10)
+    pdf(paste0("Results/NMF_rank_stability", if (!is.null(file_name)) paste0("_", file_name), ".pdf"), width = 11, height = 4)
+    for (pl in plots) print(pl)
+    dev.off()
   }
 
   return(list(
@@ -3735,28 +3815,26 @@ compute.latent_factors <- function(scores, rank = NULL, seed = 123, file_name = 
     W         = W,
     nmf_input = nmf_input,
     nmf_model = nmf_res,
-    patient_mixture = patient_mixture
+    patient_mixture = patient_mixture,
+    stability = stability,
+    rank_selection = rank_selection
   ))
 }
 
 #' Extract top-contributing features from NMF latent factors
 #'
-#' For each NMF factor (column of the W basis matrix), selects the features (cell group parts
-#' \code{<group>_pos} and \code{<group>_neg}) whose weight is at or above the specified quantile of the factor's
-#' positive weights (zero weights are left out before computing the quantile).
+#' For each NMF factor (column of the W basis matrix), selects the \code{top_n} cell groups with the highest weight
+#' (cell groups with zero weight are never selected).
 #'
 #' @param latent_factors A list returned by \code{compute.latent_factors()},
 #'   containing at minimum a matrix \code{W} (features x factors) of NMF basis weights.
-#' @param quantile_cutoff Numeric between 0 and 1. Features with weight at or above
-#'   this quantile of the factor's positive weights are retained. Default 0.7.
+#' @param top_n Integer. Number of cell groups selected per factor. Default 5.
 #'
 #' @return A named list (one element per factor) of named numeric vectors, where
-#'   names are feature names (with their \code{_pos} / \code{_neg} suffix) and values are their NMF basis weights,
-#'   sorted descending.
+#'   names are cell group names and values are their NMF basis weights, sorted descending.
 #'
 #' @keywords internal
-extract_contributing_features <- function(latent_factors,
-  quantile_cutoff = 0.7) {
+extract_contributing_features <- function(latent_factors, top_n = 5) {
 
   W <- latent_factors$W
 
@@ -3772,208 +3850,168 @@ extract_contributing_features <- function(latent_factors,
       next
     }
 
-    # threshold by quantile on all features regardless of _pos/_neg
-    thr <- quantile(w, quantile_cutoff, na.rm = TRUE)
-    sel <- w[w >= thr]
-
-    # sort by weight descending
-    sel <- sort(sel, decreasing = TRUE)
-
-    top_contributors[[factor_name]] <- sel
+    # top_n cell groups by weight, sorted descending
+    top_contributors[[factor_name]] <- utils::head(sort(w, decreasing = TRUE), top_n)
   }
 
   return(top_contributors)
 }
 
-#' Identify cell-type niches from NMF latent factors
+#' Identify cell niches from NMF latent factors
 #'
-#' For each NMF factor, extracts the top-contributing cell group parts (\code{<group>_pos} / \code{<group>_neg}, by
-#' basis weight, see \code{extract_contributing_features()}), maps them to their constituent cell types
-#' (\code{compute.composition.matrix()}), and keeps only cell types enriched relative to the background composition.
-#' Saves a star-network PDF per factor and returns the weighted cell-type associations.
+#' For each NMF factor, selects the cell groups that contribute most to it (the \code{top_n} highest weights of the
+#' factor in \code{W}, see \code{extract_contributing_features()}) and describes them by their deconvolution features
+#' and CCA coefficients. Deconvolution features are kept as they are (subgroups are not expanded into their members).
 #'
-#' For each factor and cell type:
-#' \itemize{
-#'   \item the weight is the sum of the NMF weights of the selected parts whose cell group contains the cell type;
-#'   \item the enrichment is the fraction of selected parts containing the cell type divided by the fraction of all
-#'     cell groups containing it. It is a ratio, not a statistical test: with few selected parts, a cell type
-#'     present in only one of them can pass the threshold.
-#' }
-#' The direction is not taken into account: a selected part can mean more or fewer cells of its group (depending on
-#' \code{_pos} / \code{_neg} and on whether the features of the group are positively or negatively related to its TF
-#' module), and both are added together. A cell type of a niche is therefore associated with
-#' the factor, without saying whether the factor has more or fewer of it.
+#' With \code{return = TRUE}, a tree network of each factor is saved, one page per factor: the factor on the left,
+#' its top cell groups in the middle (filled with the colour of their TF module) and the deconvolution features of each
+#' cell group listed from top to bottom on the right, next to their cell group. The edge between a cell
+#' group and a feature is the CCA coefficient of the feature in the cell group score (\code{xcoef} in \code{Weights},
+#' on the z-scored features): red if positive (the score increases with the feature), blue if negative, and wider for
+#' a larger absolute coefficient (coefficients close to zero are hairlines).
 #'
-#' @param latent_factors A list returned by \code{compute.latent_factors()},
-#'   containing \code{W} (features x factors) and the NMF model object.
-#' @param dt A named list of deconvolution subgroup results, used to build
-#'   the cell-group composition matrix via \code{compute.composition.matrix()}.
-#' @param cell_groups A list of cell group definitions as returned by
-#'   \code{construct_cell_groups()}.
-#' @param enrich_thresh Numeric. Minimum enrichment ratio (see above) for a cell type to be retained per factor.
-#'   Default 1.5.
-#' @param quantile_cutoff Numeric between 0 and 1. Quantile threshold for
-#'   selecting top-contributing cell group parts per factor (see \code{extract_contributing_features()}). Default 0.7.
-#' @param cells_extra Optional character vector of additional cell type names, added to the vocabulary used to recognise
-#'   cell types in the feature names (see \code{compute.composition.matrix()}).
-#' @param return Logical. If \code{TRUE}, saves network PDF plots to
-#'   \code{Results/Network_<factor>_<file_name>.pdf} (\code{Results/Network_<factor>.pdf} without \code{file_name}).
-#'   Default \code{TRUE}.
-#' @param file_name Character. Suffix appended to output file names.
+#' The factors describe the high-activity side of the TF modules of their cell groups (the NMF input is the positive
+#' part of the cell group scores). A red edge therefore means that the feature is higher in samples where the cell
+#' group is active, a blue edge that it is lower. The coefficients of features correlated with each other (e.g.
+#' several estimates of the same cell type) are estimated jointly, so a single coefficient can be small or have the
+#' opposite sign of the others of its cell group even when the feature itself is related to the TF module like them:
+#' read the sign of a single edge together with the rest of its cell group.
 #'
-#' @return A named list (one element per factor with at least one enriched cell type) of named numeric vectors giving
-#'   the enriched cell types and their weights, sorted descending.
+#' @param latent_factors A list returned by \code{compute.latent_factors()} (its \code{W} is used).
+#' @param cell_groups The cell groups, as returned by \code{construct_cell_groups()} (its \code{Weights} are used).
+#' @param top_n Integer. Number of cell groups selected per factor. Default 5.
+#' @param return Logical. If \code{TRUE} (default), saves the networks in
+#'   \code{Results/Cells_niches_<file_name>.pdf} (\code{Results/Cells_niches.pdf} without \code{file_name}), one page
+#'   per factor, and a heatmap of the NMF weights (\code{W}) of all the cell groups (rows: cell groups, ordered by
+#'   the factor where their weight is highest and by decreasing weight; columns: factors; outlined: the top cell
+#'   groups of each factor) in
+#'   \code{Results/Cells_niches_heatmap_<file_name>.pdf}.
+#' @param file_name Character. Suffix appended to the output file name.
+#'
+#' @return A data frame with one row per factor, selected cell group and feature: \code{factor}, \code{cell_group},
+#'   \code{module} (TF module of the cell group), \code{weight} (NMF weight of the cell group in the factor),
+#'   \code{feature} and \code{coefficient} (CCA coefficient of the feature in the cell group score). Rows are ordered by
+#'   factor and by decreasing weight.
 #'
 #' @examples
 #' data("network.tuto")
 #' data("deconv_subgroups.tuto")
-#' cell_groups <- construct_cell_groups(network.tuto, deconv_subgroups.tuto)
+#' cell_groups <- construct_cell_groups(network.tuto, deconv_subgroups.tuto, return = FALSE)
 #' latent <- compute.latent_factors(cell_groups$Cell_groups, return = FALSE)
-#' niches <- compute_cells_niches(latent, deconv_subgroups.tuto, cell_groups, return = FALSE)
-#' niches
+#' niches <- compute_cells_niches(latent, cell_groups, return = FALSE)
+#' head(niches)
 #'
 #' @export
-compute_cells_niches <- function(latent_factors, dt, cell_groups,
-                                 enrich_thresh   = 1.5,
-                                 quantile_cutoff = 0.7,
-                                 cells_extra     = NULL,
+compute_cells_niches <- function(latent_factors, cell_groups, top_n = 5,
                                  return = TRUE, file_name = NULL) {
 
-  if (!dir.exists("Results")) dir.create("Results", recursive = TRUE)
-
-  # -- extract top contributing cell groups per factor -----------------------
-  # returns named list: factor -> named numeric vector
-  # names = cell group parts with their _pos/_neg suffix (as the rows of the composition matrix), values = NMF weights (all > 0)
-  top_features_list <- extract_contributing_features(
-    latent_factors,
-    quantile_cutoff = quantile_cutoff
-  )
-
-  # -- binary composition matrix ---------------------------------------------
-  # rows = cell groups, columns = cell types
-  comp_matrix     <- compute.composition.matrix(dt, cell_groups,
-                                                cells_extra = cells_extra)
-  background_freq <- colMeans(comp_matrix)
-
-  factor_celltype_weights <- list()
-
-  for (factor_name in names(top_features_list)) {
-
-    top_features <- top_features_list[[factor_name]]
-    if (length(top_features) == 0) next
-
-    # restrict composition to contributing cell groups
-    comp_sub <- comp_matrix[
-      rownames(comp_matrix) %in% names(top_features), , drop = FALSE
-    ]
-    if (nrow(comp_sub) == 0) next
-
-    # -- edge weights: factor -> cell types --------------------------------
-    # for each cell type: sum of NMF weights of cell groups containing it
-    # all weights are positive - no direction distinction
-
-    # Interpretation of edge
-    #   Magnitude = cumulative strength of CGs containing it
-
-    edge_weights <- colSums(
-      comp_sub * top_features[rownames(comp_sub)]
-    )
-    edge_weights <- edge_weights[edge_weights > 0]
-
-    if (length(edge_weights) == 0) next
-
-    # -- enrichment relative to background --------------------------------
-    # is this cell type more common in the top cell groups than globally?
-    # enrichment >= enrich_thresh -> cell type enriched across cell groups relative to baseline ("Is this cell type more common in my selected subset than expected based on its overall frequency?")
-
-    fg_freq <- colMeans(comp_sub)
-    enrich  <- fg_freq / background_freq
-    enrich[!is.finite(enrich)] <- NA
-
-    # Interpretation
-    # Suppose CD4.cells appears in 70% of the selected top features (fg_freq = 0.7)
-    # - Its background frequency = 0.34408602
-    # - Enrichment = 0.7 / 0.344 ~= 2.03 -> more than 2x enriched relative to baseline
-
-    keep         <- names(which(enrich >= enrich_thresh))
-    edge_weights <- edge_weights[names(edge_weights) %in% keep]
-
-    if (length(edge_weights) == 0) next
-
-    factor_celltype_weights[[factor_name]] <- sort(edge_weights, decreasing = TRUE)
-
-    # -- network plot ------------------------------------------------------
-    edges <- data.frame(
-      from = factor_name,
-      to   = names(edge_weights),
-      stringsAsFactors = FALSE
-    )
-
-    g <- igraph::graph_from_data_frame(edges, directed = FALSE)
-
-    igraph::V(g)$type <- ifelse(igraph::V(g)$name == factor_name, "factor", "celltype")
-
-    # node size - factor fixed, cell types scaled by edge weight
-    ct_names  <- igraph::V(g)$name[igraph::V(g)$type == "celltype"]
-    ct_sizes  <- scales::rescale(edge_weights[ct_names], to = c(6, 14))
-
-    igraph::V(g)$size <- ifelse(
-      igraph::V(g)$name == factor_name,
-      18,
-      ct_sizes[igraph::V(g)$name]
-    )
-
-    # node color - factor gold, cell types by edge weight magnitude
-    max_ew <- max(edge_weights)
-    igraph::V(g)$color <- sapply(igraph::V(g)$name, function(v) {
-      if (v == factor_name) return("#E69F00")
-      # shade from light to dark orange proportional to weight
-      w <- edge_weights[v] / max_ew
-      colorRampPalette(c("#F5CBA7", "#D55E00"))(100)[round(w * 99) + 1]
-    })
-
-    igraph::V(g)$frame.color <- "grey20"
-    igraph::V(g)$label.color <- "black"
-    igraph::V(g)$label.cex   <- 0.9
-
-    # edge width scaled by weight
-    ew_ordered  <- edge_weights[edges$to]
-    igraph::E(g)$weight <- ew_ordered
-    igraph::E(g)$width  <- scales::rescale(ew_ordered, to = c(1, 5))
-    igraph::E(g)$color  <- "#D55E00"
-
-    # Node size is proportional to the absolute value of edge_weights.
-    #
-    # edge_weights for a cell type represent how strongly the factor is associated with that cell type through the cell groups:
-    #
-    # Magnitude = cumulative contribution across all cell groups for this factor.
-
-    lay <- igraph::layout_as_star(g,
-                           center = which(igraph::V(g)$name == factor_name))
-
-    if(return){
-      pdf(paste0("Results/Network_", factor_name, if(!is.null(file_name)) paste0("_", file_name), ".pdf"))
-      plot(
-        g,
-        layout              = lay,
-        vertex.label.family = "sans",
-        vertex.label.dist   = 2,
-        vertex.label.degree = -pi / 2,
-        main                = paste("Cell-type niche structure of", factor_name),
-        margin              = 0.2
-      )
-      dev.off()
-    }
+  if (!is.list(cell_groups) || is.null(cell_groups[["Weights"]])) {
+    stop("cell_groups must be the output of construct_cell_groups()")
   }
 
-  # Single list of cell types per factor (no more/fewer split), ordered by weight descending
-  return(factor_celltype_weights)
+  # -- top contributing cell groups per factor -------------------------------
+  # named list: factor -> named numeric vector (names = cell groups, values = NMF weights, all > 0)
+  top_features_list <- extract_contributing_features(latent_factors, top_n = top_n)
+
+  # -- features of each selected cell group and their CCA coefficients ------
+  niches <- do.call(rbind, lapply(names(top_features_list), function(factor_name) {
+    top <- top_features_list[[factor_name]]
+    do.call(rbind, lapply(names(top), function(g) {
+      xcoef <- cell_groups[["Weights"]][[g]]$xcoef
+      if (is.null(xcoef)) stop("Cell group ", g, " of the latent factors is not in cell_groups")
+      data.frame(factor = factor_name, cell_group = g, module = sub("^Dendrogram_(.*)_group_[0-9]+$", "\\1", g),
+                 weight = unname(top[g]), feature = rownames(xcoef), coefficient = unname(xcoef[, 1]),
+                 stringsAsFactors = FALSE)
+    }))
+  }))
+  if (is.null(niches)) {
+    niches <- data.frame(factor = character(0), cell_group = character(0), module = character(0), weight = numeric(0),
+                         feature = character(0), coefficient = numeric(0))
+  }
+  rownames(niches) <- NULL
+
+  # -- tree network per factor ------------------------------------------------
+  if (return && nrow(niches) > 0) {
+    if (!dir.exists("Results")) dir.create("Results", recursive = TRUE)
+    modules <- unique(niches$module)
+    module_cols <- stats::setNames(ifelse(modules %in% grDevices::colors(), modules, "grey60"), modules)
+
+    # Features listed top to bottom (one row each, with a gap of 0.6 rows between cell groups), names written
+    # horizontally; the page is sized for the factor with most features and the longest feature name
+    # (about 0.6 x text size mm per character)
+    text_size <- 3.2
+    n_rows <- max(tapply(niches$cell_group, niches$factor, function(g) length(g) + 0.6 * (length(unique(g)) - 1)))
+    label_in <- 0.6 * text_size * max(nchar(niches$feature)) / 25.4 + 0.2
+    pdf(paste0("Results/Cells_niches", if (!is.null(file_name)) paste0("_", file_name), ".pdf"),
+        width = 4 + label_in, height = 2.6 + 0.22 * n_rows)
+    for (factor_name in unique(niches$factor)) {
+      e <- niches[niches$factor == factor_name, ]
+      n <- nrow(e)
+      # Factor at x = 0, cell groups at x = 1 (at the mean height of their features), features at x = 2
+      e$y <- -cumsum(c(0, ifelse(e$cell_group[-1] != e$cell_group[-n], 1.6, 1)))
+      g_y <- tapply(e$y, e$cell_group, mean)[unique(e$cell_group)]
+      nodes <- data.frame(cell_group = names(g_y), yg = as.numeric(g_y))
+      nodes$module <- e$module[match(nodes$cell_group, e$cell_group)]
+      e$yg <- nodes$yg[match(e$cell_group, nodes$cell_group)]
+      y0 <- mean(nodes$yg)
+      e$sign <- factor(ifelse(e$coefficient > 0, "positive", "negative"), levels = c("positive", "negative"))
+
+      p <- ggplot2::ggplot() +
+        ggplot2::geom_segment(data = nodes, ggplot2::aes(x = 0, y = y0, xend = 1, yend = yg), colour = "grey75", linewidth = 0.4) +
+        ggplot2::geom_segment(data = e, ggplot2::aes(x = 1, y = yg, xend = 2, yend = y, colour = sign, linewidth = abs(coefficient))) +
+        ggplot2::scale_colour_manual(values = c(positive = "#B2182B", negative = "#2166AC"), drop = FALSE, name = "Coefficient",
+                                     guide = ggplot2::guide_legend(order = 1)) +
+        # Width proportional to |coefficient| from 0, so coefficients close to zero are hairlines
+        ggplot2::scale_linewidth_continuous(range = c(0.05, 2.5), limits = c(0, max(abs(e$coefficient))), name = "|Coefficient|",
+                                            guide = ggplot2::guide_legend(order = 2)) +
+        ggplot2::geom_point(ggplot2::aes(x = 0, y = y0), size = 14, colour = "grey30") +
+        ggplot2::geom_text(ggplot2::aes(x = 0, y = y0, label = factor_name), size = 3, colour = "white") +
+        ggplot2::geom_point(data = nodes, ggplot2::aes(x = 1, y = yg, fill = module), size = 6, shape = 21, colour = "grey30") +
+        ggplot2::scale_fill_manual(values = module_cols, name = "TF module", guide = ggplot2::guide_legend(order = 3, override.aes = list(size = 4))) +
+        ggplot2::geom_point(data = e, ggplot2::aes(x = 2, y = y), size = 0.9, colour = "grey40") +
+        ggplot2::geom_text(data = e, ggplot2::aes(x = 2.04, y = y, label = feature), hjust = 0, size = text_size) +
+        ggplot2::scale_x_continuous(limits = c(-0.25, 2.05), expand = c(0, 0)) +
+        ggplot2::scale_y_continuous(limits = c(-n_rows - 0.5, 0.5), expand = c(0, 0)) +
+        ggplot2::coord_cartesian(clip = "off") +
+        ggplot2::labs(title = paste0(factor_name, ": top ", nrow(nodes), " cell groups"),
+                      subtitle = "Middle: cell groups (colour: TF module). Right: their features, linked by their CCA coefficient") +
+        ggplot2::theme_void(base_size = 10) +
+        ggplot2::theme(legend.position = "bottom", legend.box = "vertical", legend.justification = "left",
+                       plot.margin = ggplot2::margin(10, label_in * 72.27 + 10, 10, 10))
+      print(p)
+    }
+    dev.off()
+
+    # -- heatmap of the NMF weights of all the cell groups in all factors ------
+    W <- latent_factors$W
+    # Cell groups ordered by the factor where their weight is highest, then by decreasing weight
+    best <- max.col(W, ties.method = "first")
+    sel_groups <- rownames(W)[order(best, -W[cbind(seq_len(nrow(W)), best)])]
+    heat <- data.frame(cell_group = rep(sel_groups, ncol(W)), factor = rep(colnames(W), each = length(sel_groups)),
+                       weight = as.vector(W[sel_groups, , drop = FALSE]), stringsAsFactors = FALSE)
+    heat$cell_group <- factor(heat$cell_group, levels = rev(sel_groups))
+    heat$factor <- factor(heat$factor, levels = colnames(W))
+    heat$top <- paste(heat$factor, heat$cell_group) %in% paste(niches$factor, niches$cell_group)
+    p_heat <- ggplot2::ggplot(heat, ggplot2::aes(x = factor, y = cell_group, fill = weight)) +
+      ggplot2::geom_tile(colour = "grey90") +
+      ggplot2::geom_tile(data = heat[heat$top, ], colour = "black", linewidth = 0.6, fill = NA) +
+      ggplot2::scale_fill_gradient(low = "white", high = "#B2182B", limits = c(0, NA), name = "NMF weight") +
+      ggplot2::labs(title = "NMF weights of the cell groups", subtitle = paste0("Outlined: top ", top_n, " cell groups of each factor"),
+                    x = NULL, y = NULL) +
+      ggplot2::theme_minimal(base_size = 10) +
+      ggplot2::theme(panel.grid = ggplot2::element_blank(), axis.text.y = ggplot2::element_text(size = 6))
+    ggplot2::ggsave(paste0("Results/Cells_niches_heatmap", if (!is.null(file_name)) paste0("_", file_name), ".pdf"), p_heat,
+                    width = 3.5 + 0.5 * ncol(W) + 0.06 * max(nchar(sel_groups)), height = 1.5 + 0.11 * length(sel_groups),
+                    limitsize = FALSE)
+  }
+
+  return(niches)
 }
 
 
 #' Project cell group scores onto trained NMF latent factors
 #'
-#' Applies the positive-negative split to new samples and projects them
+#' Keeps the positive part of the cell group scores of new samples (as in training) and projects them
 #' onto the latent space learned during training using the Moore-Penrose
 #' pseudoinverse of the scaled basis matrix W. Negative values of the projection are set to 0 (on the tutorial data
 #' the result is the same as an exact non-negative projection). Cell groups missing in \code{scores} are
@@ -3984,8 +4022,8 @@ compute_cells_niches <- function(latent_factors, dt, cell_groups,
 #'   containing at minimum \code{W} (features x rank) and the RcppML model
 #'   object with the \code{nmf_model$d} scaling vector.
 #' @param scores A samples x cell groups matrix of signed CCA composite
-#'   scores for the test cohort. Column names must match those used in training
-#'   (before the _pos/_neg suffix was added).
+#'   scores for the test cohort (for new samples, computed with \code{compute.test.set()}). Column names must match
+#'   the cell groups used in training.
 #'
 #' @return A non-negative matrix of size samples x rank containing the
 #'   projected NMF factor scores for the test cohort.
@@ -4008,12 +4046,8 @@ project_factors <- function(latent_factors, scores) {
 
   scores <- as.matrix(scores)
 
-  # -- Step 1: apply same pos-neg split as training ---------------------------
-  test_pos <- pmax(scores, 0)
-  test_neg <- pmax(-scores, 0)
-  colnames(test_pos) <- paste0(colnames(scores), "_pos")
-  colnames(test_neg) <- paste0(colnames(scores), "_neg")
-  nmf_input_test <- cbind(test_pos, test_neg)   # samples x (2 * n_CGs)
+  # -- Step 1: positive part of the scores, as in training --------------------
+  nmf_input_test <- pmax(scores, 0)   # samples x cell groups
 
   # -- Step 2: extract W and absorb d scaling ---------------------------------
   # RcppML stores: A ~= W %*% diag(d) %*% H
@@ -4030,7 +4064,7 @@ project_factors <- function(latent_factors, scores) {
     stop("No overlapping features between training NMF input and test scores. ",
          "Check that column names of scores match training cell group names.")
 
-  missing_groups <- unique(sub("_(pos|neg)$", "", setdiff(rownames(W_scaled), common_features)))
+  missing_groups <- setdiff(rownames(W_scaled), common_features)
   if (length(missing_groups) > 0)
     warning(length(missing_groups), " cell group(s) of the training missing in the test scores, the projection uses the others: ",
             paste(utils::head(missing_groups, 10), collapse = ", "), if (length(missing_groups) > 10) ", ...", call. = FALSE)
@@ -4052,57 +4086,16 @@ project_factors <- function(latent_factors, scores) {
   return(Z_test)
 }
 
-#' Project test-set samples onto training NMF factors
-#'
-#' Convenience wrapper that combines \code{compute.test.set()} and
-#' \code{project_factors()} into a single call. Given a trained
-#' \code{CellTFusion()} result and a test deconvolution matrix, it
-#' (1) reconstructs cell group composite scores for the test samples using
-#' the training CCA loadings, and (2) projects those scores onto the trained
-#' NMF latent space.
-#'
-#' @param train_processed A list returned by \code{CellTFusion()}, containing
-#'   at minimum \code{Processed_deconvolution}, \code{Cell_groups}, and
-#'   \code{Latent_spaces}.
-#' @param deconv_test A numeric matrix or data frame of the deconvolution features of the test samples before
-#'   subgrouping (samples x features; the same kind of matrix as given to \code{CellTFusion()} as \code{deconv}),
-#'   with the column names used during training. If the model was trained with batch correction, the test samples are
-#'   z-scored on their own means and SDs (as each training cohort was), so they should come from a single cohort.
-#'
-#' @return A numeric matrix (test samples x NMF factors) of non-negative
-#'   projected factor scores. Cell groups with features missing in \code{deconv_test} are skipped by
-#'   \code{compute.test.set()} (with a warning), and the projection uses the other cell groups.
-#'
-#' @examples
-#' \dontrun{
-#' res <- CellTFusion(raw.counts_train, deconv = deconv_train)
-#' test_factors <- project_test_factors(res, deconv_test)
-#' }
-#'
-#' @export
-project_test_factors <- function(train_processed, deconv_test) {
-
-  missing_elements <- setdiff(c("Processed_deconvolution", "Cell_groups", "Latent_spaces"), names(train_processed))
-  if (length(missing_elements) > 0)
-    stop("train_processed must be the output of CellTFusion(); missing element(s): ", paste(missing_elements, collapse = ", "))
-
-  cell_groups_scores <- compute.test.set(
-    dt                = train_processed$Processed_deconvolution,
-    cell_groups       = train_processed$Cell_groups,
-    group_names       = names(train_processed$Cell_groups[[2]]),
-    deconv_test       = deconv_test
-  )
-
-  project_factors(train_processed$Latent_spaces, cell_groups_scores)
-}
-
 #' Prepare CellTFusion cross-validation folds for pipeML
 #'
 #' Fold construction function for \code{pipeML::compute_features.training.ML()} (argument
-#' \code{fold_construction_fun}) that computes \code{CellTFusion} latent factors within each
-#' cross-validation fold, without information leakage: cell groups and latent factors are learned with
-#' \code{CellTFusion()} on the training samples of each fold only, and the test samples of the fold are
-#' projected onto them with \code{project_test_factors()}. It works for classification and survival tasks.
+#' \code{fold_construction_fun}) that computes \code{CellTFusion} cell group scores within each
+#' cross-validation fold, without information leakage: cell groups are learned with \code{CellTFusion()} on the
+#' training samples of each fold only, and the test samples of the fold are scored on them with
+#' \code{compute.test.set()}. The features of the models are the cell group scores; the latent factors are a
+#' downstream characterization: they are not computed in the folds, and are computed in final mode (unless
+#' \code{compute_factors = FALSE} is passed) for the characterization of the final model; new samples can be projected
+#' onto them with \code{project_factors()}. It works for classification and survival tasks.
 #'
 #' @param data Data frame provided by \code{pipeML}: samples as rows and genes as columns (the
 #'   \code{features_train} given to \code{compute_features.training.ML()}, i.e. the transposed count matrix),
@@ -4139,16 +4132,17 @@ project_test_factors <- function(train_processed, deconv_test) {
 #' @return
 #' \itemize{
 #'   \item In fold mode (\code{bestune = NULL}): each fold is saved to \code{Results/fold_<fold name>.rds}, which
-#'     \code{pipeML} reads back, as a list with \code{train_data} (latent factors of the training samples plus
-#'     the outcome columns), \code{test_data} (latent factors of the test samples, plus \code{time} and
+#'     \code{pipeML} reads back, as a list with \code{train_data} (cell group scores of the training samples plus
+#'     the outcome columns), \code{test_data} (cell group scores of the test samples, plus \code{time} and
 #'     \code{event} for survival), \code{obs_test} (observed outcome of the test samples), \code{rowIndex} (rows
 #'     of the test samples) and \code{fold_name}. The list of folds is returned invisibly. If \code{CellTFusion()}
-#'     fails in a fold (e.g. no cell groups are found on its training samples), that fold is skipped with a
+#'     fails in a fold (e.g. no cell groups are found on its training samples, or a cell group cannot be scored in
+#'     the test samples), that fold is skipped with a
 #'     warning and is not saved; an error is raised only if all the folds fail.
-#'   \item In final mode (\code{bestune} provided): a list with (1) the latent factors of all the samples plus
+#'   \item In final mode (\code{bestune} provided): a list with (1) the cell group scores of all the samples plus
 #'     the outcome columns, (2) the \code{CellTFusion()} result on all the samples, available as
 #'     \code{Custom_output} in the \code{pipeML} result and used to compute the features of new samples with
-#'     \code{project_test_factors()}, and (3) \code{bestune}.
+#'     \code{compute.test.set()}, and (3) \code{bestune}.
 #' }
 #'
 #' @details
@@ -4179,8 +4173,9 @@ project_test_factors <- function(train_processed, deconv_test) {
 #'   fold_construction_args_fixed = list(deconv = deconv, raw_counts = raw_counts)
 #' )
 #'
-#' # Features of new samples: projected onto the model trained on all the training samples
-#' features_test <- project_test_factors(ml_res$Custom_output, deconv_test)
+#' # Features of new samples: scored on the cell groups learned on all the training samples
+#' features_test <- compute.test.set(ml_res$Custom_output$Processed_deconvolution, ml_res$Custom_output$Cell_groups,
+#'                                   deconv_test = deconv_test)
 #'
 #' # Survival (time and event of each sample)
 #' surv_res <- pipeML::compute_features.training.ML(
@@ -4234,17 +4229,21 @@ prepare_celltfusion_folds <- function(data, folds = NULL, bestune = NULL, deconv
   }
   colnames(counts) <- rownames(deconv)
 
-  # CellTFusion on a subset of samples: cell groups and latent factors are learned on these samples only
-  fit_celltfusion <- function(idx, save) {
-    CellTFusion(raw_counts = counts[, idx, drop = FALSE], deconv = deconv[idx, , drop = FALSE],
-                batch = if (!is.null(batch)) batch[idx], return = save, verbose = verbose, ...)
+  # CellTFusion on a subset of samples: cell groups are learned on these samples only. The latent factors are not
+  # used as features: they are skipped in the folds, and computed in final mode unless compute_factors = FALSE
+  fit_celltfusion <- function(idx, save, compute_factors) {
+    args <- list(...)
+    args$compute_factors <- compute_factors
+    do.call(CellTFusion, c(list(raw_counts = counts[, idx, drop = FALSE], deconv = deconv[idx, , drop = FALSE],
+                                batch = if (!is.null(batch)) batch[idx], return = save, verbose = verbose), args))
   }
 
-  # Latent factors of test samples projected onto a trained CellTFusion result
+  # Cell group scores of test samples projected onto the cell groups of a trained CellTFusion result
   # (with batch, each cohort is projected separately, z-scored on its own means and SDs)
   project_samples <- function(structure, idx) {
     cohorts <- if (!is.null(batch)) batch[idx] else rep("all", length(idx))
-    projected <- lapply(split(idx, cohorts), function(i) withCallingHandlers(project_test_factors(structure, deconv[i, , drop = FALSE]),
+    projected <- lapply(split(idx, cohorts), function(i) withCallingHandlers(
+      compute.test.set(structure$Processed_deconvolution, structure$Cell_groups, deconv_test = deconv[i, , drop = FALSE]),
       warning = function(w) if (grepl("built with batch correction", conditionMessage(w), fixed = TRUE)) invokeRestart("muffleWarning"))) # Already reported per fold and cohort
     do.call(rbind, unname(projected))[rownames(deconv)[idx], , drop = FALSE]
   }
@@ -4253,8 +4252,8 @@ prepare_celltfusion_folds <- function(data, folds = NULL, bestune = NULL, deconv
   # CASE 1: bestune provided - CellTFusion on all the training samples
   # -----------------------------
   if (!is.null(bestune)) {
-    structure <- fit_celltfusion(seq_len(nrow(data)), save = return)
-    train_data_final <- cbind(data.frame(structure$Latent_spaces$Z), outcome)
+    structure <- fit_celltfusion(seq_len(nrow(data)), save = return, compute_factors = !isFALSE(list(...)$compute_factors))
+    train_data_final <- cbind(data.frame(structure$Cell_groups$Cell_groups), outcome)
     return(list(train_data_final, structure, bestune))
   }
 
@@ -4281,12 +4280,15 @@ prepare_celltfusion_folds <- function(data, folds = NULL, bestune = NULL, deconv
     train_idx <- folds[[i]]
     test_idx  <- setdiff(seq_len(nrow(data)), train_idx)
 
-    # TRAIN: cell groups and latent factors learned on the training samples of the fold
-    structure <- fit_celltfusion(train_idx, save = FALSE)
-    train_data <- cbind(data.frame(structure$Latent_spaces$Z), outcome[train_idx, , drop = FALSE])
+    # TRAIN: cell groups learned on the training samples of the fold
+    structure <- fit_celltfusion(train_idx, save = FALSE, compute_factors = FALSE)
+    train_data <- cbind(data.frame(structure$Cell_groups$Cell_groups), outcome[train_idx, , drop = FALSE])
 
-    # TEST: test samples projected onto the latent factors learned on the training samples
+    # TEST: test samples scored on the cell groups learned on the training samples (same columns as train_data)
     test_data <- data.frame(project_samples(structure, test_idx))
+    missing_groups <- setdiff(colnames(structure$Cell_groups$Cell_groups), colnames(test_data))
+    if (length(missing_groups) > 0) stop(length(missing_groups), " cell groups could not be scored in the test samples: ", paste(utils::head(missing_groups, 3), collapse = ", "))
+    test_data <- test_data[, colnames(structure$Cell_groups$Cell_groups), drop = FALSE]
     if (survival) test_data <- cbind(test_data, outcome[test_idx, , drop = FALSE])  # pipeML evaluates each fold with them
 
     list(
@@ -4637,886 +4639,6 @@ compute.metadata.association.boxplot_summary <- function(
   invisible(anova_all)
 }
 
-#' Run multivariate feature-based GSEA using limma and Hallmark gene sets
-#'
-#' This function fits a multivariate linear model for each gene using all features
-#' in \code{scores} as continuous covariates (each feature standardized, and the cohort added when \code{batch}
-#' is given). For each feature, it extracts the moderated t-statistics and p-values, ranks genes, and performs GSEA
-#' (\code{fgsea}) using the human Hallmark gene sets from MSigDB. Optional dotplots for the top enriched
-#' pathways can be saved as PDFs.
-#'
-#' @param counts_norm A numeric matrix or data frame of log-normalized gene expression values (e.g. log2(TPM + 1);
-#'   genes as rows, gene symbols as row names, samples as columns).
-#' @param scores A data frame of continuous features (samples in rows,
-#'   features in columns) to be modeled as covariates. Rows must be the same samples,
-#'   in the same order, as the columns of \code{counts_norm} (checked by name; an error is raised otherwise). Features
-#'   without variation are left out with a message.
-#' @param return Logical; if TRUE, generates and saves dotplots of top
-#'   enriched Hallmark pathways for each feature. Default is TRUE.
-#' @param top_n Integer; number of top pathways to display in the dotplot. Default is 10.
-#' @param file_name Character; optional suffix for saved PDF files
-#'   (\code{Results/GSEA_<feature>_<file_name>.pdf}, or \code{Results/GSEA_<feature>.pdf} without it). Default is NULL.
-#' @param width Numeric; width of the PDF plot in inches. Default is 8.
-#' @param height Numeric; height of the PDF plot in inches. Default is 10.
-#' @param batch Optional vector with the cohort of each sample (in the row order of \code{scores}, or named by
-#'   sample). With two or more cohorts, the cohort is added to the model as a categorical covariate, so that expression
-#'   differences between cohorts are not attributed to the features. Default \code{NULL}.
-#' @param seed Integer. Random seed used by \code{fgsea::fgsea()} (its p-values come from random permutations), so that
-#'   the results are reproducible. Default 123. The caller's random number generator state is not changed.
-#'
-#' @return A list containing:
-#' \describe{
-#'   \item{DE_results}{A named list of \code{topTable} results for each feature,
-#'     including logFC (change in expression per standard deviation of the feature), moderated t-statistics,
-#'     p-values, and adjusted p-values.}
-#'   \item{GSEA_results}{A named list of \code{fgsea::fgsea()} result tables
-#'     (columns include \code{pathway}, \code{pval}, \code{padj}, \code{NES}) for each feature,
-#'     ordered by p-value. fgsea may not be able to estimate the p-value of some pathways: their \code{pval},
-#'     \code{padj} and \code{NES} are then \code{NA} (their \code{ES} is kept).}
-#' }
-#'
-#' @details
-#' The function works as follows:
-#' \enumerate{
-#'   \item Hallmark gene sets are retrieved from MSigDB using \code{msigdbr}.
-#'   \item A multivariate linear model is fitted for each gene using \code{limma::lmFit}: all the features are in
-#'     the same model, so the effect of each feature is adjusted for the others (and for the cohort with \code{batch}).
-#'   \item Empirical Bayes moderation is applied via \code{limma::eBayes}.
-#'   \item For each feature:
-#'     \enumerate{
-#'       \item Differential expression results are extracted using \code{topTable} for
-#'         the coefficient of that feature.
-#'       \item Genes are ranked by moderated t-statistics.
-#'       \item Hallmark GSEA is performed on the ranked gene list with \code{fgsea::fgsea()}.
-#'       \item Optionally, a dotplot of the top enriched pathways is generated.
-#'     }
-#' }
-#'
-#' @examples
-#' \dontrun{
-#'   results <- compute_factor_gsea(counts_norm = expression_matrix,
-#'                               scores = feature_table,
-#'                               return = TRUE,
-#'                               top_n = 10,
-#'                               file_name = "Feature1_vs_all")
-#' }
-#'
-#' @export
-compute_factor_gsea <- function(counts_norm,
-                             scores,
-                             return = TRUE,
-                             top_n = 10,
-                             file_name = NULL,
-                             width = 8,
-                             height = 10,
-                             batch = NULL,
-                             seed = 123) {
-
-
-  scores = data.frame(scores)
-  if(!identical(make.names(rownames(scores)), make.names(colnames(counts_norm)))){
-    stop("Samples must be the same and in the same order in scores rows and counts_norm columns")
-  }
-
-  # Features standardized: logFC per standard deviation of the feature (t-statistics and GSEA do not depend on it)
-  constant <- vapply(scores, function(x) stats::sd(x, na.rm = TRUE) == 0 || all(is.na(x)), logical(1))
-  if(any(constant)){
-    message("Features without variation left out: ", paste(colnames(scores)[constant], collapse = ", "))
-    scores <- scores[, !constant, drop = FALSE]
-  }
-  if(ncol(scores) == 0) stop("No feature with variation in scores")
-  scores[] <- lapply(scores, function(x) as.numeric(scale(x)))
-
-  # Cohort of each sample (by name if named), added to the model as a categorical covariate
-  cohort <- NULL
-  if(!is.null(batch)){
-    if(!is.null(names(batch))){
-      idx <- match(make.names(rownames(scores)), make.names(names(batch)))
-      if(anyNA(idx)) stop("batch is named but has no cohort for some samples of scores")
-      batch <- batch[idx]
-    } else if(length(batch) != nrow(scores)){
-      stop("batch must have one value per sample of scores (", nrow(scores), "), in its row order, or be named by sample")
-    }
-    if(anyNA(batch)) stop("batch has missing values")
-    if(length(unique(batch)) > 1) cohort <- factor(batch)
-  }
-
-  # -----------------------------------------
-  # Retrieve Hallmark gene sets (argument renamed from category to collection in recent msigdbr versions)
-  # -----------------------------------------
-  hallmark_df <- if("collection" %in% names(formals(msigdbr::msigdbr))) msigdbr::msigdbr(species = "Homo sapiens", collection = "H") else
-    msigdbr::msigdbr(species = "Homo sapiens", category = "H")
-  gene_sets <- split(hallmark_df$gene_symbol, hallmark_df$gs_name)
-
-  # -----------------------------------------
-  # Fit multivariate limma model (ALL features, and the cohort if given)
-  # -----------------------------------------
-  design <- if(is.null(cohort)) stats::model.matrix(~ ., data = scores) else
-    stats::model.matrix(~ ., data = cbind(scores, .cohort = cohort))
-
-  fit <- limma::lmFit(counts_norm, design)
-  fit <- limma::eBayes(fit)
-
-  deg_list <- list()
-  gsea_results_list <- list()
-
-  # -----------------------------------------
-  # Loop over features (extract coefficients)
-  # -----------------------------------------
-  for (feature_name in colnames(scores)) {
-
-    message("GSEA for ", feature_name)
-
-    # Extract DE results for this feature
-    deg <- limma::topTable(fit,
-                    coef = feature_name,
-                    number = Inf,
-                    adjust.method = "BH",
-                    sort.by = "P")
-
-    deg_list[[feature_name]] <- deg
-
-    # Rank genes by moderated t-statistic (genes with a name)
-    tstats <- fit$t[, feature_name]
-    names(tstats) <- rownames(counts_norm)
-    tstats <- tstats[nchar(names(tstats)) > 0 & !is.na(names(tstats))]
-    tstats <- sort(tstats, decreasing = TRUE)
-
-    # Run Hallmark GSEA via fgsea
-    gsea_res <- withr::with_seed(seed, fgsea::fgsea( # Fixed seed: reproducible permutation p-values
-      pathways    = gene_sets,
-      stats       = tstats,
-      eps         = 0,
-      nPermSimple = 10000
-    ))
-    gsea_res <- gsea_res[order(gsea_res$pval), ]
-
-    gsea_results_list[[feature_name]] <- gsea_res
-
-    # Optional plotting
-    if (return && !is.null(gsea_res) && nrow(gsea_res) > 0) {
-
-      if (!dir.exists("Results")) dir.create("Results")
-
-      plot_df <- utils::head(gsea_res[order(gsea_res$padj), ], top_n)
-      plot_df$pathway <- sub("^HALLMARK_", "", plot_df$pathway)
-      plot_df$pathway <- factor(plot_df$pathway, levels = rev(plot_df$pathway))
-
-      p <- ggplot2::ggplot(plot_df,
-               ggplot2::aes(x = NES, y = pathway,
-                            size = -log10(padj + 1e-10),
-                            colour = NES)) +
-        ggplot2::geom_point() +
-        ggplot2::scale_colour_gradient2(low = "blue", mid = "white", high = "red") +
-        ggplot2::labs(title = paste("Hallmark GSEA -", feature_name),
-                      x = "NES", y = NULL,
-                      size = "-log10(padj)", colour = "NES") +
-        ggplot2::theme_bw()
-
-      pdf(paste0("Results/GSEA_", feature_name, if(!is.null(file_name)) paste0("_", file_name), ".pdf"),
-          width = width,
-          height = height)
-      print(p)
-      dev.off()
-    }
-  }
-
-  return(list(
-    DE_results = deg_list,
-    GSEA_results = gsea_results_list
-  ))
-}
-
-
-#' Derive TME meta-programs by clustering Hallmarks across NMF factors
-#'
-#' Hierarchically clusters (Ward.D2 on Euclidean distance) Hallmark gene sets by
-#' their NES profile across NMF factors to identify recurrent transcriptional
-#' programs in the TME. Use \code{annotate_metaprograms_TME()} afterwards to label
-#' each meta-program with a Bagaev et al. (2021) MFP subtype. The meta-program numbers (\code{MP1}, \code{MP2}, ...)
-#' follow the order of the clusters and have no meaning of their own.
-#'
-#' @param gsea_results Output of \code{compute_factor_gsea()} (a list with a
-#'   \code{GSEA_results} element, one table per NMF factor). To derive meta-programs from several cohorts, put the
-#'   \code{GSEA_results} lists of the runs together first, with distinct factor names, e.g.
-#'   \code{list(GSEA_results = c(setNames(gsea_A$GSEA_results, paste0("A_", names(gsea_A$GSEA_results))),
-#'   setNames(gsea_B$GSEA_results, paste0("B_", names(gsea_B$GSEA_results)))))}.
-#' @param k Integer. Number of meta-programs (clusters) to extract. If
-#'   \code{NULL} (default), chosen at the elbow of the within-cluster sum of squares
-#'   (the k with the largest second difference) for k = 2 to min(10, n_hallmarks - 1).
-#' @param file_name Optional character suffix for the saved heatmap
-#'   (\code{Results/TCGA_meta_programs_<file_name>.pdf}, or \code{Results/TCGA_meta_programs.pdf} without it).
-#' @param return Logical. If \code{TRUE} (default), saves a clustering heatmap of the NES (Hallmarks x factors); NES
-#'   beyond -3 and 3 are shown with the extreme colours. With a single factor, the factor columns are not clustered.
-#'
-#' @return A data frame with one row per meta-program and columns
-#'   \code{meta_program} (\code{"MP1"}, \code{"MP2"}, ...) and \code{hallmarks}
-#'   (comma-separated Hallmark gene set names).
-#'
-#' @examples
-#' \dontrun{
-#' gsea <- compute_factor_gsea(counts_norm = counts.norm, scores = res$Latent_spaces$Z, return = FALSE)
-#' meta_programs <- derive_meta_programs(gsea, file_name = "my_cohort")
-#' }
-#'
-#' @export
-derive_meta_programs <- function(gsea_results,
-                                 k          = NULL,
-                                 file_name = NULL,
-                                 return     = TRUE) {
-
-  ### Build NES matrix from GSEA results
-  nes_mat <- build_nes_matrix(gsea_results)
-
-  # -- cluster Hallmarks by NES profile across factors -----------------------
-  # distance between Hallmarks = dissimilarity of their NES profiles
-  d  <- dist(nes_mat, method = "euclidean")
-  hc <- hclust(d, method = "ward.D2")
-
-  # -- determine k -----------------------------------------------------------
-  if (is.null(k)) {
-    # use elbow on within-cluster sum of squares
-    max_k <- min(10, nrow(nes_mat) - 1)
-    wss   <- sapply(2:max_k, function(ki) {
-      cuts <- cutree(hc, k = ki)
-      sum(sapply(unique(cuts), function(cl) {
-        members <- nes_mat[cuts == cl, , drop = FALSE]
-        if (nrow(members) == 1) return(0)
-        sum(apply(members, 2, var)) * (nrow(members) - 1)
-      }))
-    })
-    # second derivative elbow
-    d2 <- diff(diff(wss))
-    k  <- which.max(d2) + 2L
-    message("Selected k = ", k, " meta-programs")
-  }
-
-  cluster_assignments <- cutree(hc, k = k)
-
-  # -- build meta-program list -----------------------------------------------
-  meta_programs <- lapply(seq_len(k), function(cl) {
-    names(cluster_assignments)[cluster_assignments == cl]
-  })
-
-  # -- name each meta-program by its dominant Hallmarks ---------------------
-  meta_names <- paste0("MP", seq_len(k))
-  names(meta_programs) <- meta_names
-
-  # -- heatmap ---------------------------------------------------------------
-  if (return) {
-
-    # annotation: which cluster each Hallmark belongs to
-    ann_row <- data.frame(
-      Meta_program = meta_names[cluster_assignments],
-      row.names    = names(cluster_assignments)
-    )
-
-    # color per meta-program
-    mp_colors <- setNames(
-      scales::hue_pal()(k),
-      meta_names
-    )
-
-    pdf(paste0("Results/TCGA_meta_programs", if (!is.null(file_name)) paste0("_", file_name), ".pdf"),
-        width = 8, height = 10)
-    on.exit(dev.off(), add = TRUE) # The file is closed even if the heatmap fails
-    pheatmap::pheatmap(
-      nes_mat,
-      cluster_rows     = hc,
-      cluster_cols     = ncol(nes_mat) > 1, # A single factor cannot be clustered
-      cutree_rows      = k,
-      annotation_row   = ann_row,
-      annotation_colors = list(Meta_program = mp_colors),
-      color            = colorRampPalette(
-                           c("#2471A3", "white", "#C0392B"))(100),
-      breaks           = seq(-3, 3, length.out = 101),
-      fontsize_row     = 8,
-      fontsize_col     = 9,
-      main             = paste0("Hallmark meta-programs across NMF factors\n",
-                                "(k = ", k, ")")
-    )
-
-  }
-
-  df <- data.frame(
-    meta_program = names(meta_programs),
-    hallmarks    = vapply(meta_programs, paste, character(1L), collapse = ", "),
-    stringsAsFactors = FALSE,
-    row.names = NULL
-  )
-
-  return(df)
-}
-
-#' Build a Hallmarks x factors NES matrix from GSEA results
-#'
-#' Combines the per-factor GSEA outputs from \code{compute_factor_gsea()} into
-#' a single matrix. All tested Hallmarks are kept regardless of significance;
-#' Hallmarks absent from a factor's results, or whose NES could not be computed (fgsea may fail to estimate some
-#' pathways, which then have an \code{NA} NES), are filled with 0, i.e. treated as not enriched.
-#'
-#' @param gsea_results Output list from \code{compute_factor_gsea()}, containing
-#'   a \code{GSEA_results} element (named list of \code{fgsea} result tables,
-#'   one per factor), or that \code{GSEA_results} list itself. The factors must be named.
-#'
-#' @return A numeric matrix of NES values with Hallmarks as rows and NMF factors
-#'   as columns. Missing Hallmark-factor combinations are set to 0.
-#'
-#' @examples
-#' \dontrun{
-#' gsea <- compute_factor_gsea(counts_norm = counts.norm, scores = res$Latent_spaces$Z, return = FALSE)
-#' nes <- build_nes_matrix(gsea)
-#' }
-#'
-#' @export
-build_nes_matrix <- function(gsea_results) {
-
-  # Output of compute_factor_gsea(), or its GSEA_results list given directly
-  gsea_list <- if (is.list(gsea_results) && !is.null(gsea_results$GSEA_results)) gsea_results$GSEA_results else gsea_results
-  if (!is.list(gsea_list) || is.data.frame(gsea_list) || length(gsea_list) == 0) {
-    stop("gsea_results must be the output of compute_factor_gsea() (or its GSEA_results list), with at least one factor")
-  }
-  if (is.null(names(gsea_list)) || any(names(gsea_list) == "") || anyDuplicated(names(gsea_list)) > 0) {
-    stop("The factors of gsea_results must have distinct names")
-  }
-
-  # get all Hallmarks seen across any factor
-  all_hallmarks <- unique(unlist(
-    lapply(gsea_list, function(res) {
-      if (is.null(res) || nrow(res) == 0) return(character(0))
-      res$pathway
-    })
-  ))
-
-  # build NES matrix: hallmarks x factors
-  nes_mat <- sapply(names(gsea_list), function(fac) {
-
-    res <- gsea_list[[fac]]
-
-    # empty factor
-    if (is.null(res) || nrow(res) == 0) {
-      return(setNames(rep(0, length(all_hallmarks)), all_hallmarks))
-    }
-
-    # NES per hallmark - fill missing with 0
-    nes <- setNames(res$NES, res$pathway)
-    nes[is.na(nes)] <- 0
-    scores <- setNames(rep(0, length(all_hallmarks)), all_hallmarks)
-    scores[names(nes)] <- nes
-    scores
-  })
-
-  # nes_mat is now hallmarks x factors
-  nes_mat
-}
-
-#' Map study factors to TCGA meta-programs
-#'
-#' For each study NMF factor, scores it against each TCGA meta-program
-#' by computing the mean NES of the meta-program's Hallmarks in that factor (NES read with
-#' \code{build_nes_matrix()}, as for the references: Hallmarks without a NES count as 0).
-#' The meta-program with the highest positive mean NES is the best match (\code{NA} if no
-#' meta-program has a positive score). If the
-#' meta-program reference has a \code{TME_subtype} column (see
-#' \code{annotate_metaprograms_TME()}), it is appended to the output.
-#'
-#' @param gsea_results Output from compute_factor_gsea() on study cohort.
-#' @param cancer_type Character. TCGA cancer type abbreviation identifying which pre-built
-#'   TCGA meta-program reference shipped with the package to use. Available: \code{"blca"},
-#'   \code{"luad"}, \code{"skcm"}. Ignored if \code{mp_file} is given.
-#' @param mp_file Optional. Either a meta-program data frame (as returned by
-#'   \code{derive_meta_programs()} / \code{annotate_metaprograms_TME()}, with columns \code{meta_program} and
-#'   \code{hallmarks}) or the path to an RData file containing such an object, which must be named
-#'   \code{meta_programs}. If NULL, the pre-built reference for \code{cancer_type} is used.
-#' @param return Logical. If TRUE (default), saves a barplot of factor-to-meta-program scores
-#'   to \code{Results/Factor_MP_mapping_<file_name>.pdf} (\code{Results/Factor_MP_mapping.pdf} if
-#'   \code{file_name} is \code{NULL}).
-#' @param file_name Optional character suffix for saving output plots.
-#'
-#' @return A list with:
-#' \itemize{
-#'   \item \code{factor_mapping}: Data frame with one row per study factor, in the order of the factors, and columns
-#'     \code{factor}, \code{best_MP} (\code{NA} if no meta-program has a positive score), \code{best_score},
-#'     \code{all_scores} (all meta-program scores as \code{"MP:score"} pairs) and, if available, \code{TME_subtype}.
-#'   \item \code{reference}: The meta-program reference data frame used.
-#' }
-#'
-#' @examples
-#' \dontrun{
-#' gsea <- compute_factor_gsea(counts_norm = counts.norm, scores = res$Latent_spaces$Z, return = FALSE)
-#' mapping <- map_factors_to_metaprograms(gsea, cancer_type = "blca")
-#' mapping$factor_mapping
-#' }
-#'
-#' @export
-map_factors_to_metaprograms <- function(gsea_results,
-                                cancer_type,
-                                mp_file = NULL,
-                                return = TRUE, file_name = NULL) {
-
-  if(is.null(mp_file)){
-    cancer_type <- tolower(cancer_type)
-
-    mp_file <- system.file("extdata",
-                           paste0("TCGA_meta_programs_", cancer_type, ".RData"),
-                           package = "CellTFusion")
-    if (mp_file == "") {
-      stop("No meta-program file found for cancer type '", cancer_type,
-           "'. Available types: blca, luad, skcm.")
-    }
-  }
-
-  if(is.data.frame(mp_file)){
-    meta_programs <- mp_file
-  }else{
-    reference_env <- new.env()
-    load(mp_file, envir = reference_env)
-    if(!exists("meta_programs", envir = reference_env, inherits = FALSE)){
-      stop("The file ", mp_file, " has no object named 'meta_programs' (objects: ", paste(ls(reference_env), collapse = ", "), ")")
-    }
-    meta_programs <- reference_env$meta_programs
-  }
-  if(!is.data.frame(meta_programs) || !all(c("meta_program", "hallmarks") %in% colnames(meta_programs))){
-    stop("The meta-program reference must be a data frame with the columns 'meta_program' and 'hallmarks' (see derive_meta_programs())")
-  }
-
-  # -- study NES matrix: Hallmarks x study factors, read as for the references
-  nes_study <- build_nes_matrix(gsea_results)
-
-  # -- score each study factor against each meta-program ---------------------
-  # score = mean NES of the meta-program Hallmarks in this study factor
-  results <- lapply(colnames(nes_study), function(fac) {
-    message("Processing: ", fac)
-    fac_nes <- nes_study[, fac]
-
-    mp_scores <- sapply(meta_programs$meta_program, function(mp) {
-      hallmarks <- strsplit(
-        meta_programs$hallmarks[meta_programs$meta_program == mp], ", ")[[1]]
-      h <- intersect(hallmarks, names(fac_nes))
-      if (length(h) == 0) return(NA_real_)
-      mean(fac_nes[h], na.rm = TRUE)
-    })
-
-    idx        <- which.max(mp_scores)
-    best_mp    <- if (length(idx) > 0 && mp_scores[idx] > 0) names(idx)     else NA_character_
-    best_score <- if (length(idx) > 0 && mp_scores[idx] > 0) mp_scores[idx] else NA_real_
-
-    data.frame(
-      factor           = fac,
-      best_MP          = best_mp,
-      best_score       = round(best_score, 3),
-      all_scores       = paste(
-        sprintf("%s:%.3f", names(mp_scores), mp_scores),
-        collapse = ", "
-      ),
-      stringsAsFactors = FALSE
-    )
-  })
-
-  result_df <- do.call(rbind, results)
-
-  # attach TME subtype from reference if available (rows kept in the order of the factors)
-  if ("TME_subtype" %in% colnames(meta_programs)) {
-    result_df$TME_subtype <- meta_programs$TME_subtype[match(result_df$best_MP, meta_programs$meta_program)]
-  }
-  rownames(result_df) <- NULL
-
-  # -- plot: mapping confidence - all MP scores per factor -------------------
-  if (return) {
-
-    if (!dir.exists("Results")) dir.create("Results")
-
-    mfp_colors <- c(
-      "IE"              = "#2166AC",
-      "IE/F"            = "#92C5DE",
-      "F"               = "#F4A582",
-      "D"               = "#B2182B",
-      "uncharacterized" = "#AAAAAA"
-    )
-
-    # parse all_scores back into long format
-    score_long <- do.call(rbind, lapply(seq_len(nrow(result_df)), function(i) {
-      pairs  <- strsplit(result_df$all_scores[i], ", ")[[1]]
-      kv     <- strsplit(pairs, ":")
-      data.frame(
-        factor = result_df$factor[i],
-        MP     = vapply(kv, `[[`, character(1L), 1L),
-        score  = as.numeric(vapply(kv, `[[`, character(1L), 2L)),
-        stringsAsFactors = FALSE
-      )
-    }))
-
-    # mark which MP is the winner for each factor
-    score_long$is_best <- paste(score_long$factor, score_long$MP) %in%
-      paste(result_df$factor, result_df$best_MP)
-
-    # attach TME_subtype label to winner for color
-    tme_lookup <- if ("TME_subtype" %in% colnames(result_df)) {
-      setNames(result_df$TME_subtype, result_df$factor)
-    } else {
-      setNames(rep("uncharacterized", nrow(result_df)), result_df$factor)
-    }
-    score_long$TME_subtype <- ifelse(
-      score_long$is_best,
-      tme_lookup[score_long$factor],
-      NA_character_
-    )
-
-    factor_order <- colnames(nes_study)
-    score_long$factor <- factor(score_long$factor, levels = factor_order)
-    score_long$MP     <- factor(score_long$MP,
-                                levels = unique(meta_programs$meta_program))
-
-    p <- ggplot2::ggplot(score_long,
-                         ggplot2::aes(x = MP, y = score)) +
-      ggplot2::geom_col(fill = "#DDDDDD", width = 0.6) +
-      ggplot2::geom_col(
-        data = score_long[score_long$is_best, ],
-        ggplot2::aes(fill = TME_subtype),
-        width = 0.6
-      ) +
-      ggplot2::scale_fill_manual(values = mfp_colors, name = "TME subtype",
-                                 na.translate = FALSE) +
-      ggplot2::geom_hline(yintercept = 0, linewidth = 0.3, colour = "black") +
-      ggplot2::facet_wrap(~ factor, scales = "free_y") +
-      ggplot2::labs(
-        title    = "Study factor to meta-program mapping confidence",
-        subtitle = "Grey bars = all MP scores. Colored bar = winning MP (color = TME subtype).",
-        x        = "Meta-program",
-        y        = "Mean NES score"
-      ) +
-      ggplot2::theme_bw(base_size = 11) +
-      ggplot2::theme(
-        axis.text.x     = ggplot2::element_text(angle = 40, hjust = 1, size = 7),
-        strip.text      = ggplot2::element_text(size = 8),
-        legend.position = "right"
-      )
-
-    fname <- paste0("Results/Factor_MP_mapping",
-                    if (!is.null(file_name)) paste0("_", file_name) else "",
-                    ".pdf")
-
-    n_fac  <- length(unique(score_long$factor))
-    n_cols <- min(3L, n_fac)
-    n_rows <- ceiling(n_fac / n_cols)
-
-    ggplot2::ggsave(fname, plot = p,
-                    width     = n_cols * 3.5,
-                    height    = n_rows * 3,
-                    device    = grDevices::cairo_pdf,
-                    limitsize = FALSE)
-
-    message("Saved factor-to-MP mapping plot to: ", fname)
-  }
-
-  list(factor_mapping = result_df, reference = meta_programs)
-}
-
-#' Annotate meta-programs with Bagaev TME subtypes
-#'
-#' Assigns each meta-program a TME subtype (IE, IE/F, F, D) by weighted majority vote
-#' across the TCGA factors with a positive score for it: the scores of the factors are
-#' summed per MFP subtype and the subtype with the highest total is assigned. Factors without a subtype in
-#' \code{factor_tme_df} do not vote (a message lists them).
-#'
-#' @param meta_programs_df Data frame output of \code{derive_meta_programs()},
-#'   with columns \code{meta_program} and \code{hallmarks}.
-#' @param factor_tme_df Data frame output of \code{map_factors_to_TME()},
-#'   with columns \code{factor} and \code{best_MFP}.
-#' @param factors_mp_df The \code{factor_mapping} data frame returned by
-#'   \code{map_factors_to_metaprograms()} run on the TCGA factors themselves, with
-#'   columns \code{factor} and \code{all_scores}.
-#'
-#' @return \code{meta_programs_df}, rows in the same order, with an additional (or replaced) \code{TME_subtype}
-#'   column (\code{"IE"}, \code{"IE/F"}, \code{"F"}, \code{"D"}, or \code{"uncharacterized"} when no
-#'   factor with a subtype has a positive score for the meta-program, the vote is tied, or the winning label
-#'   is \code{"uncharacterized"}).
-#'
-#' @examples
-#' \dontrun{
-#' # On a TCGA cohort: factors, their GSEA, meta-programs, and the MFP subtype of each factor
-#' gsea <- compute_factor_gsea(counts_norm = counts.norm, scores = res$Latent_spaces$Z, return = FALSE)
-#' meta_programs <- derive_meta_programs(gsea)
-#' factors_mp <- map_factors_to_metaprograms(gsea, mp_file = meta_programs,
-#'                                           return = FALSE)$factor_mapping
-#' tme <- map_factors_to_TME(cancer_type = "BLCA", Z = res$Latent_spaces$Z)
-#' meta_programs <- annotate_metaprograms_TME(meta_programs, tme, factors_mp)
-#' }
-#'
-#' @export
-annotate_metaprograms_TME <- function(meta_programs_df, factor_tme_df,
-                                      factors_mp_df) {
-
-  if (!is.data.frame(meta_programs_df) || !"meta_program" %in% colnames(meta_programs_df)) {
-    stop("meta_programs_df must be the output of derive_meta_programs() (column 'meta_program')")
-  }
-  if (!is.data.frame(factor_tme_df) || !all(c("factor", "best_MFP") %in% colnames(factor_tme_df))) {
-    stop("factor_tme_df must be the output of map_factors_to_TME() (columns 'factor' and 'best_MFP')")
-  }
-  if (!is.data.frame(factors_mp_df) || !all(c("factor", "all_scores") %in% colnames(factors_mp_df))) {
-    stop("factors_mp_df must be the factor_mapping of map_factors_to_metaprograms() (columns 'factor' and 'all_scores')")
-  }
-  labelled <- factor_tme_df$factor[!is.na(factor_tme_df$best_MFP)]
-  if (!any(factors_mp_df$factor %in% labelled)) {
-    stop("No factor of factors_mp_df has a subtype in factor_tme_df: the factor names of the two tables must match")
-  }
-  unlabelled <- setdiff(factors_mp_df$factor, labelled)
-  if (length(unlabelled) > 0) {
-    message("Factors without a TME subtype in factor_tme_df (they do not vote): ", paste(unlabelled, collapse = ", "))
-  }
-
-  all_mps <- meta_programs_df$meta_program
-
-  # parse all_scores into a factor x MP score matrix
-  score_mat <- do.call(rbind, lapply(seq_len(nrow(factors_mp_df)), function(i) {
-    pairs  <- strsplit(factors_mp_df$all_scores[i], ", ")[[1]]
-    kv     <- strsplit(pairs, ":")
-    scores <- setNames(
-      as.numeric(vapply(kv, `[[`, character(1L), 2L)),
-      vapply(kv, `[[`, character(1L), 1L)
-    )
-    scores[all_mps]
-  }))
-  rownames(score_mat) <- factors_mp_df$factor
-
-  mfp_lookup <- setNames(factor_tme_df$best_MFP, factor_tme_df$factor)
-
-  # for each MP, weighted majority vote across factors with positive score
-  assign_mfp <- function(mp) {
-    w      <- score_mat[, mp]
-    w[is.na(w)] <- 0
-    pos    <- w > 0
-    if (!any(pos)) return("uncharacterized")
-    labels  <- mfp_lookup[rownames(score_mat)[pos]]
-    weights <- w[pos][!is.na(labels)] # Factors without a subtype do not vote
-    labels  <- labels[!is.na(labels)]
-    if (length(labels) == 0) return("uncharacterized")
-    agg    <- tapply(weights, labels, sum)
-    winner <- names(which(agg == max(agg)))
-    if (length(winner) > 1 || winner == "uncharacterized") return("uncharacterized")
-    winner
-  }
-
-  mp_mfp_df <- data.frame(
-    meta_program = all_mps,
-    TME_subtype  = vapply(all_mps, assign_mfp, character(1L)),
-    stringsAsFactors = FALSE
-  )
-
-  # Rows kept in the order of meta_programs_df
-  meta_programs_df$TME_subtype <- mp_mfp_df$TME_subtype[match(meta_programs_df$meta_program, mp_mfp_df$meta_program)]
-  meta_programs_df
-
-}
-
-# -----------------------------------------------------------------------------
-# Bagaev MFP annotation helpers
-# -----------------------------------------------------------------------------
-
-#' Annotate NMF factors with Bagaev et al. (2021) MFP subtypes
-#'
-#' For a single cancer type, matches TCGA patients present in the NMF factor
-#' score matrix \code{scores} to the Bagaev et al. (2021) MFP annotation shipped with the
-#' package, then tests each factor across the four MFP subtypes (IE, IE/F, F, D)
-#' with a Kruskal-Wallis test. Factors with p < 0.05 (fixed threshold, not corrected for the number of factors) are
-#' labelled with the subtype that has the highest median factor score; the others are labelled
-#' \code{"uncharacterized"}.
-#'
-#' Samples are matched to patients by the first three parts of their barcode (\code{TCGA-XX-XXXX}; barcodes written
-#' with "." instead of "-" are accepted). When a patient has several samples, a tumour sample (sample type code 01 to 09,
-#' e.g. \code{-01A}) is kept rather than a normal one (e.g. \code{-11A}), and a message gives how many samples were
-#' left out.
-#'
-#' @param cancer_type Character. Cancer type abbreviation matching the
-#'   \code{TCGA_project} column of the internal annotation (case-insensitive,
-#'   e.g. \code{"skcm"}).
-#' @param scores Numeric matrix. Samples x factors NMF score matrix (row names =
-#'   TCGA barcodes).
-#' @param return Logical. If TRUE (default), saves violin/boxplots of factor scores by MFP group
-#'   to \code{Results/TME_factors_MFP_<cancer_type>_<file_name>.pdf} (\code{cancer_type} in lower case).
-#' @param file_name Optional character suffix for saving output plots.
-#'
-#' @return A data frame with columns \code{factor}, \code{best_MFP},
-#'   \code{kw_pval} (3 significant digits), \code{median_IE}, \code{median_IEF}, \code{median_F},
-#'   \code{median_D}, \code{n_samples}, or \code{NULL} (with a warning) if the
-#'   cancer type is not annotated or fewer than 10 patients are matched.
-#'
-#' @examples
-#' \dontrun{
-#' # scores: latent factors of a TCGA cohort, samples named by their TCGA barcodes
-#' tme <- map_factors_to_TME(cancer_type = "BLCA", scores = res$Latent_spaces$Z)
-#' }
-#'
-#' @export
-map_factors_to_TME <- function(cancer_type, scores, return = TRUE, file_name = NULL) {
-
-  annot_file <- system.file("extdata", "annotation.tsv", package = "CellTFusion")
-  if (annot_file == "") stop("annotation.tsv not found in inst/extdata.")
-  annot <- read.delim(annot_file, row.names = 1, check.names = FALSE,
-                      stringsAsFactors = FALSE)
-  
-  # -- subset annotation to this cancer type --------------------------------
-  annot_ct <- annot[toupper(annot$TCGA_project) == toupper(cancer_type), ,
-                    drop = FALSE]
-  if (nrow(annot_ct) == 0) {
-    warning("No annotation rows found for cancer type '", cancer_type, "'.")
-    return(NULL)
-  }
-
-  # -- harmonize barcodes: keep only first 3 TCGA parts (TCGA-XX-XXXX) -----
-  trunc_barcode <- function(x, sep = "-") {
-    parts <- strsplit(x, sep, fixed = TRUE)
-    vapply(parts, function(p) paste(p[seq_len(min(3L, length(p)))], collapse = "-"),
-           character(1L))
-  }
-
-  # Z rownames may use "." instead of "-" (R coerces "-" in colnames/rownames)
-  z_sep   <- if (any(grepl(".", rownames(scores), fixed = TRUE)) &&
-                 !any(grepl("-", rownames(scores), fixed = TRUE))) "." else "-"
-
-  # Several samples of one patient: tumour samples (sample type 01-09) first, so that they are the ones kept
-  sample_code <- vapply(strsplit(rownames(scores), z_sep, fixed = TRUE), function(p)
-    if (length(p) >= 4) suppressWarnings(as.integer(substr(p[4], 1, 2))) else NA_integer_, integer(1L))
-  tumour <- !is.na(sample_code) & sample_code >= 1 & sample_code <= 9
-  scores <- scores[order(!tumour), , drop = FALSE]
-  rownames(scores) = trunc_barcode(rownames(scores), sep = z_sep)
-  n_duplicated <- sum(duplicated(rownames(scores)))
-  if (n_duplicated > 0) {
-    message(n_duplicated, " samples of patients with several samples were left out (one sample per patient, tumour samples first)")
-  }
-  rownames(annot_ct) = trunc_barcode(rownames(annot_ct), sep = "-")
-
-  # remove duplicates introduced by truncation - keep first occurrence
-  scores        <- scores[!duplicated(rownames(scores)), , drop = FALSE]
-  annot_ct <- annot_ct[!duplicated(rownames(annot_ct)), , drop = FALSE]
-
-  common_short <- intersect(rownames(scores), rownames(annot_ct))
-
-  if (length(common_short) < 10) {
-    warning("Only ", length(common_short), " matched patients for '",
-            cancer_type, "' - skipping Bagaev annotation.")
-    return(NULL)
-  }
-
-  Z_matched    <- scores[rownames(scores) %in% common_short, , drop = FALSE]
-  annot_matched <- annot_ct[rownames(annot_ct) %in% common_short, , drop = FALSE]
-
-  # align rows using truncated barcodes
-  Z_matched    <- Z_matched[rownames(annot_matched), , drop = FALSE]
-
-  if(!isTRUE(all.equal(rownames(Z_matched), rownames(annot_matched)))) {
-    stop("NMF matrix and TME annotation are not aligned")
-  } 
-
-  # -- drop rows with NA/empty MFP ------------------------------------------
-  mfp_vals  <- annot_matched$MFP
-  Z_matched <- Z_matched[!is.na(mfp_vals), , drop = FALSE]
-  mfp_vals  <- factor(mfp_vals[!is.na(mfp_vals)], levels = c("IE", "IE/F", "F", "D"))
-
-  n_samples <- nrow(Z_matched)
-
-  # -- Kruskal-Wallis + median-based labeling --------------------------------
-  result_rows <- lapply(colnames(Z_matched), function(fac) {
-    fac_scores <- Z_matched[, fac]
-
-    # Kruskal-Wallis across the 4 MFP groups
-    kw       <- kruskal.test(fac_scores ~ mfp_vals)
-    kw_pval  <- kw$p.value
-
-    # median factor score per group - label = group with highest median
-    group_medians <- tapply(fac_scores, mfp_vals, median, na.rm = TRUE)
-
-    best_mfp <- if (kw_pval < 0.05) {
-      names(which.max(group_medians))
-    } else {
-      "uncharacterized"
-    }
-
-    data.frame(
-      factor           = fac,
-      best_MFP         = best_mfp,
-      kw_pval          = signif(kw_pval, 3),
-      median_IE        = round(group_medians["IE"],   4),
-      median_IEF       = round(group_medians["IE/F"], 4),
-      median_F         = round(group_medians["F"],    4),
-      median_D         = round(group_medians["D"],    4),
-      n_samples        = n_samples,
-      stringsAsFactors = FALSE,
-      row.names        = NULL
-    )
-  })
-
-  result_df = do.call(rbind, result_rows)
-
-  # -- plot: factor scores by MFP group -------------------------------------
-  if (return) {
-
-    if (!dir.exists("Results")) dir.create("Results")
-
-    # MFP colors consistent with Bagaev palette
-    mfp_colors <- c("IE" = "#2166AC", "IE/F" = "#92C5DE", "F" = "#F4A582", "D" = "#B2182B")
-
-    # build long-format data frame for ggplot
-    plot_df <- data.frame(
-      sample  = rep(rownames(Z_matched), ncol(Z_matched)),
-      factor  = rep(colnames(Z_matched), each = nrow(Z_matched)),
-      score   = as.vector(Z_matched),
-      MFP     = rep(as.character(mfp_vals), ncol(Z_matched)),
-      stringsAsFactors = FALSE
-    )
-    plot_df$MFP    <- factor(plot_df$MFP,    levels = c("IE", "IE/F", "F", "D"))
-    plot_df$factor <- factor(plot_df$factor, levels = colnames(Z_matched))
-
-    # label each facet with KW p-value and best_MFP
-    facet_labels <- setNames(
-      paste0(result_df$factor,
-             "\np = ", result_df$kw_pval,
-             "  [", result_df$best_MFP, "]"),
-      result_df$factor
-    )
-
-    p <- ggplot2::ggplot(plot_df,
-                         ggplot2::aes(x = MFP, y = score, fill = MFP)) +
-      ggplot2::geom_violin(alpha = 0.6, trim = TRUE, scale = "width") +
-      ggplot2::geom_boxplot(width = 0.15, outlier.size = 0.5,
-                            fill = "white", alpha = 0.8) +
-      ggplot2::scale_fill_manual(values = mfp_colors) +
-      ggplot2::facet_wrap(~ factor, scales = "free_y",
-                          labeller = ggplot2::labeller(factor = facet_labels)) +
-      ggplot2::labs(
-        title    = paste0("NMF factor scores by Bagaev MFP subtype - ", toupper(cancer_type)),
-        subtitle = paste0(n_samples, " matched samples"),
-        x        = "MFP subtype",
-        y        = "NMF factor score"
-      ) +
-      ggplot2::theme_bw(base_size = 11) +
-      ggplot2::theme(
-        legend.position  = "none",
-        strip.text       = ggplot2::element_text(size = 8),
-        axis.text.x      = ggplot2::element_text(angle = 30, hjust = 1)
-      )
-
-    fname <- paste0("Results/TME_factors_MFP_",
-                    tolower(cancer_type),
-                    if (!is.null(file_name)) paste0("_", file_name) else "",
-                    ".pdf")
-
-    # dynamic sizing: ~2 columns, height scales with number of factors
-    n_fac  <- ncol(Z_matched)
-    n_cols <- 3L
-    n_rows <- ceiling(n_fac / n_cols)
-
-    ggplot2::ggsave(fname, plot = p,
-                    width  = n_cols * 3,
-                    height = n_rows * 3,
-                    limitsize = FALSE)
-
-    message("Saved TME factor plot to: ", fname)
-  }
-
-  result_df
-}
-
 #' Kaplan-Meier survival analysis on clinical groups or CellTFusion features
 #'
 #' Performs Kaplan-Meier survival analysis and log-rank testing, either on a predefined
@@ -5659,7 +4781,7 @@ compute.survival.analysis = function(coldata, time_column, event_column, file_na
       width = 10,
       height = 5,
       units = "in",
-      device = "svg"
+      device = grDevices::svg
     )
 
     return(list(
@@ -5728,7 +4850,7 @@ compute.survival.analysis = function(coldata, time_column, event_column, file_na
         width = 10,
         height = 5,
         units = "in",
-        device = "svg"
+        device = grDevices::svg
       )
     }
 

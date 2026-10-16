@@ -2,73 +2,64 @@
 % Please edit documentation in R/CellTFusion.R
 \name{compute_cells_niches}
 \alias{compute_cells_niches}
-\title{Identify cell-type niches from NMF latent factors}
+\title{Identify cell niches from NMF latent factors}
 \usage{
 compute_cells_niches(
   latent_factors,
-  dt,
   cell_groups,
-  enrich_thresh = 1.5,
-  quantile_cutoff = 0.7,
-  cells_extra = NULL,
+  top_n = 5,
   return = TRUE,
   file_name = NULL
 )
 }
 \arguments{
-\item{latent_factors}{A list returned by \code{compute.latent_factors()},
-containing \code{W} (features x factors) and the NMF model object.}
+\item{latent_factors}{A list returned by \code{compute.latent_factors()} (its \code{W} is used).}
 
-\item{dt}{A named list of deconvolution subgroup results, used to build
-the cell-group composition matrix via \code{compute.composition.matrix()}.}
+\item{cell_groups}{The cell groups, as returned by \code{construct_cell_groups()} (its \code{Weights} are used).}
 
-\item{cell_groups}{A list of cell group definitions as returned by
-\code{construct_cell_groups()}.}
+\item{top_n}{Integer. Number of cell groups selected per factor. Default 5.}
 
-\item{enrich_thresh}{Numeric. Minimum enrichment ratio (see above) for a cell type to be retained per factor.
-Default 1.5.}
+\item{return}{Logical. If \code{TRUE} (default), saves the networks in
+\code{Results/Cells_niches_<file_name>.pdf} (\code{Results/Cells_niches.pdf} without \code{file_name}), one page
+per factor, and a heatmap of the NMF weights (\code{W}) of all the cell groups (rows: cell groups, ordered by
+the factor where their weight is highest and by decreasing weight; columns: factors; outlined: the top cell
+groups of each factor) in
+\code{Results/Cells_niches_heatmap_<file_name>.pdf}.}
 
-\item{quantile_cutoff}{Numeric between 0 and 1. Quantile threshold for
-selecting top-contributing cell group parts per factor (see \code{extract_contributing_features()}). Default 0.7.}
-
-\item{cells_extra}{Optional character vector of additional cell type names, added to the vocabulary used to recognise
-cell types in the feature names (see \code{compute.composition.matrix()}).}
-
-\item{return}{Logical. If \code{TRUE}, saves network PDF plots to
-\code{Results/Network_<factor>_<file_name>.pdf} (\code{Results/Network_<factor>.pdf} without \code{file_name}).
-Default \code{TRUE}.}
-
-\item{file_name}{Character. Suffix appended to output file names.}
+\item{file_name}{Character. Suffix appended to the output file name.}
 }
 \value{
-A named list (one element per factor with at least one enriched cell type) of named numeric vectors giving
-the enriched cell types and their weights, sorted descending.
+A data frame with one row per factor, selected cell group and feature: \code{factor}, \code{cell_group},
+\code{module} (TF module of the cell group), \code{weight} (NMF weight of the cell group in the factor),
+\code{feature} and \code{coefficient} (CCA coefficient of the feature in the cell group score). Rows are ordered by
+factor and by decreasing weight.
 }
 \description{
-For each NMF factor, extracts the top-contributing cell group parts (\code{<group>_pos} / \code{<group>_neg}, by
-basis weight, see \code{extract_contributing_features()}), maps them to their constituent cell types
-(\code{compute.composition.matrix()}), and keeps only cell types enriched relative to the background composition.
-Saves a star-network PDF per factor and returns the weighted cell-type associations.
+For each NMF factor, selects the cell groups that contribute most to it (the \code{top_n} highest weights of the
+factor in \code{W}, see \code{extract_contributing_features()}) and describes them by their deconvolution features
+and CCA coefficients. Deconvolution features are kept as they are (subgroups are not expanded into their members).
 }
 \details{
-For each factor and cell type:
-\itemize{
-\item the weight is the sum of the NMF weights of the selected parts whose cell group contains the cell type;
-\item the enrichment is the fraction of selected parts containing the cell type divided by the fraction of all
-cell groups containing it. It is a ratio, not a statistical test: with few selected parts, a cell type
-present in only one of them can pass the threshold.
-}
-The direction is not taken into account: a selected part can mean more or fewer cells of its group (depending on
-\code{_pos} / \code{_neg} and on whether the features of the group are positively or negatively related to its TF
-module), and both are added together. A cell type of a niche is therefore associated with
-the factor, without saying whether the factor has more or fewer of it.
+With \code{return = TRUE}, a tree network of each factor is saved, one page per factor: the factor on the left,
+its top cell groups in the middle (filled with the colour of their TF module) and the deconvolution features of each
+cell group listed from top to bottom on the right, next to their cell group. The edge between a cell
+group and a feature is the CCA coefficient of the feature in the cell group score (\code{xcoef} in \code{Weights},
+on the z-scored features): red if positive (the score increases with the feature), blue if negative, and wider for
+a larger absolute coefficient (coefficients close to zero are hairlines).
+
+The factors describe the high-activity side of the TF modules of their cell groups (the NMF input is the positive
+part of the cell group scores). A red edge therefore means that the feature is higher in samples where the cell
+group is active, a blue edge that it is lower. The coefficients of features correlated with each other (e.g.
+several estimates of the same cell type) are estimated jointly, so a single coefficient can be small or have the
+opposite sign of the others of its cell group even when the feature itself is related to the TF module like them:
+read the sign of a single edge together with the rest of its cell group.
 }
 \examples{
 data("network.tuto")
 data("deconv_subgroups.tuto")
-cell_groups <- construct_cell_groups(network.tuto, deconv_subgroups.tuto)
+cell_groups <- construct_cell_groups(network.tuto, deconv_subgroups.tuto, return = FALSE)
 latent <- compute.latent_factors(cell_groups$Cell_groups, return = FALSE)
-niches <- compute_cells_niches(latent, deconv_subgroups.tuto, cell_groups, return = FALSE)
-niches
+niches <- compute_cells_niches(latent, cell_groups, return = FALSE)
+head(niches)
 
 }

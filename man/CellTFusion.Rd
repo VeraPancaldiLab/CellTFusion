@@ -35,8 +35,8 @@ CellTFusion(
   pval = 0.05,
   padj = FALSE,
   min_cluster_size = 3,
-  enrich_thresh = 1.5,
-  quantile_cutoff = 0.7,
+  compute_factors = TRUE,
+  top_n = 5,
   cancer_type = NULL,
   return = TRUE,
   verbose = TRUE,
@@ -46,9 +46,8 @@ CellTFusion(
 \arguments{
 \item{raw_counts}{A matrix of raw gene expression counts (genes as rows, samples as columns). If
 \code{normalized = FALSE}, a matrix of TPM-normalized values instead (not log-transformed).
-Always required: even when \code{dt}, \code{tfs} and \code{pathways} are all supplied precomputed,
-the (normalized) expression matrix is still needed for the downstream GSEA-based TME state
-characterization step.}
+Always required, also when \code{dt}, \code{tfs} and \code{pathways} are all supplied precomputed (its samples
+are checked against them).}
 
 \item{deconv}{(Optional) A data frame with deconvolution features (cell-type proportions as columns x samples as rows).
 If \code{NULL} (default), it is computed with \code{multideconv::compute.deconvolution()} using
@@ -160,27 +159,26 @@ Passed to \code{construct_cell_groups()}. Default is FALSE.}
 \item{min_cluster_size}{Integer; minimum number of features of a cell group (minimum cluster size of the
 dynamic tree cut), passed to \code{construct_cell_groups()}. Default is 3.}
 
-\item{enrich_thresh}{Numeric. Minimum enrichment ratio (foreground/background cell-type frequency)
-required to include a cell type in a latent factor's niche. Default is 1.5.}
+\item{compute_factors}{Logical. If TRUE (default), the NMF latent factors (\code{compute.latent_factors()}) and the
+cell niches (\code{compute_cells_niches()}) are computed from the cell group scores. If FALSE, they are skipped
+(\code{Latent_spaces} and \code{Cells_niches} are \code{NULL}), e.g. in the cross-validation folds of
+\code{prepare_celltfusion_folds()}, where only the cell group scores are used.}
 
-\item{quantile_cutoff}{Numeric between 0 and 1. Quantile threshold for selecting top-contributing
-cell groups per NMF factor. Default is 0.7.}
+\item{top_n}{Integer. Number of top-contributing cell groups per NMF factor in the cell niches (see
+\code{compute_cells_niches()}). Default is 5.}
 
-\item{cancer_type}{Character. TCGA cancer type abbreviation (one of \code{"blca"}, \code{"luad"}, \code{"skcm"}).
-Used for two purposes: (1) loading TCGA meta-programs for TME state mapping, and (2) when
-\code{TF.collection = "ARACNE"}, locating the ARACNe network at
-\code{input/ARACNE/<cancer_type>/network/network.txt}. If \code{NULL}, or if no TCGA meta-programs
-exist for that cancer type (a warning is given), the meta-program mapping step is skipped
-(\code{TME_states} and \code{Metaprograms_reference} are \code{NULL}). For ARACNE, if \code{NULL}, the
-network is auto-detected when only one exists under \code{input/ARACNE/}.}
+\item{cancer_type}{Character. Cancer type abbreviation (e.g. \code{"skcm"}), only used when
+\code{TF.collection = "ARACNE"}, to locate the ARACNe network at
+\code{input/ARACNE/<cancer_type>/network/network.txt}. If \code{NULL}, the network is auto-detected when only
+one exists under \code{input/ARACNE/}.}
 
 \item{return}{Logical; if TRUE, intermediate matrices and plots are written to the "Results/" folder. Default is TRUE.}
 
 \item{verbose}{Logical; whether to print the progress and the console output and messages of every step
 (warnings are always shown). Default is TRUE.}
 
-\item{seed}{Integer. Random seed of the pipeline (deconvolution methods with random steps, NMF and the GSEA
-permutations), so that results are reproducible. Default is 123.}
+\item{seed}{Integer. Random seed of the pipeline (deconvolution methods with random steps and NMF), so that results
+are reproducible. Default is 123.}
 }
 \value{
 A list containing:
@@ -195,16 +193,13 @@ in the sample order of \code{raw_counts} (also in multi-cohort mode).}
 z-scored within each cohort with \code{batch} (as \code{TFs_matrix}).}
 \item{Processed_deconvolution}{The processed deconvolution subgroups (output of \code{multideconv::compute.deconvolution.analysis()}).}
 \item{Cell_groups}{Output of \code{construct_cell_groups()}: cell group scores, compositions and projection weights.}
-\item{Latent_spaces}{NMF latent factors returned by \code{compute.latent_factors()}.}
-\item{Cells_niches}{Enriched cell types per latent factor (see \code{compute_cells_niches()}).}
-\item{TME_states}{Factor-to-meta-program mapping (\code{factor_mapping} from \code{map_factors_to_metaprograms()}), or \code{NULL} if the mapping was skipped (see \code{cancer_type}).}
-\item{Metaprograms_reference}{The TCGA meta-program reference used for mapping, or \code{NULL} if the mapping was skipped.}
+\item{Latent_spaces}{NMF latent factors returned by \code{compute.latent_factors()} (\code{NULL} with \code{compute_factors = FALSE}).}
+\item{Cells_niches}{Top cell groups of each latent factor, with their deconvolution features and CCA coefficients (see \code{compute_cells_niches()}; \code{NULL} with \code{compute_factors = FALSE}).}
 }
 }
 \description{
 Runs the full CellTFusion pipeline in a single call: cell-type deconvolution, TF activity inference,
-TF module construction, pathway activity, cell group construction, NMF latent factors, cell niches and
-TME state characterization (Hallmark GSEA per factor and mapping to TCGA meta-programs).
+TF module construction, pathway activity, cell group construction, NMF latent factors and cell niches.
 }
 \details{
 The pipeline runs with a fixed random seed (\code{seed}) so results are reproducible; the caller's random

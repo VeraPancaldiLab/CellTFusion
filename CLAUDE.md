@@ -46,16 +46,15 @@ The package implements a multi-step pipeline (see `vignettes/CellTFusion.Rmd` fo
 5. **Pathway scoring** — `compute.pathway.activity()`: PROGENy-based pathway activities via `decoupleR` (`method = "ulm"` by default)
 6. **Cell group construction** — `construct_cell_groups()`: TF module–deconvolution correlation, dendrogram cutting and CCA composite scores
 7. **Latent factor extraction** — `compute.latent_factors()`: NMF-based latent factors; `compute_cells_niches()` for cell niche derivation
-8. **TME state characterisation** — Hallmark GSEA per factor (`compute_factor_gsea()`), meta-program derivation/mapping (`derive_meta_programs()`, `map_factors_to_metaprograms()`), and TME subtype annotation against Bagaev et al. (2021) MFP subtypes (`map_factors_to_TME()`, `annotate_metaprograms_TME()`)
-9. **Statistical analysis** — clinical trait association (`scores.stat.analysis()` and the `scores.*` family), survival analysis (`compute.survival.analysis()`)
-10. **Test-set / batch projection** — apply a trained model to new data (`compute.test.set()`, `project_test_factors()`), run leakage-aware cross-validation with `pipeML` (`prepare_celltfusion_folds()`), or run multi-cohort analysis via `batch` (cohort of each sample) in `CellTFusion()`
+8. **Statistical analysis** — clinical trait association (`scores.stat.analysis()` and the `scores.*` family), survival analysis (`compute.survival.analysis()`)
+9. **Test-set / batch projection** — apply a trained model to new data (`compute.test.set()` for cell group scores; `project_factors()` to project those scores onto trained NMF factors), run leakage-aware cross-validation with `pipeML` (`prepare_celltfusion_folds()`), or run multi-cohort analysis via `batch` (cohort of each sample) in `CellTFusion()`
 
 ### Key Source Files
 
 - `R/CellTFusion.R` — All core logic (~4,700 lines); single monolithic file containing every exported function
 - `inst/shiny/server.R` / `ui.R` — Shiny app backend and frontend
 - `vignettes/CellTFusion.Rmd` — Getting-started overview (installation, quick start, pipeline step table, tutorial list)
-- `vignettes/a1_feature_computation.Rmd` … `a6_batch_analysis.Rmd` — In-depth tutorials (feature computation, cell groups, TME states, statistical analysis, machine learning, multi-cohort). They are package vignettes (same layout as `multideconv`); heavy code chunks use `eval = FALSE` and figures live in `vignettes/figures/`. The pkgdown article menu is defined in `_pkgdown.yml`.
+- `vignettes/a1_feature_computation.Rmd` … `a6_batch_analysis.Rmd` — In-depth tutorials (feature computation, cell groups, statistical analysis, machine learning, multi-cohort; there is no `a3` since the TME state functions were removed on 2026-10-16). They are package vignettes (same layout as `multideconv`); heavy code chunks use `eval = FALSE` and figures live in `vignettes/figures/`. The pkgdown article menu is defined in `_pkgdown.yml`.
 
 ### Main Exported Functions
 
@@ -67,12 +66,9 @@ The package implements a multi-step pipeline (see `vignettes/CellTFusion.Rmd` fo
 | `compute.pathway.activity()` | PROGENy pathway scoring |
 | `construct_cell_groups()` | Cell group construction and composite scores |
 | `compute.latent_factors()` | NMF-based latent factor extraction from cell group scores |
-| `compute.test.set()` / `project_test_factors()` | Apply a trained model / project a test set onto trained NMF factors |
-| `prepare_celltfusion_folds()` | `pipeML` fold construction function (`fold_construction_fun`): runs `CellTFusion()` within each CV fold and projects the test samples (classification and survival) |
+| `compute.test.set()` / `project_factors()` | Score new samples on trained cell groups / project cell group scores onto trained NMF factors |
+| `prepare_celltfusion_folds()` | `pipeML` fold construction function (`fold_construction_fun`): runs `CellTFusion()` within each CV fold (cell groups only, `compute_factors = FALSE`) and scores the test samples with `compute.test.set()`; the ML features are the cell group scores (classification and survival) |
 | `identify_hub_TFs()` | Identify driver TFs from modules |
-| `compute_factor_gsea()` | Hallmark GSEA on latent factors |
-| `derive_meta_programs()` / `map_factors_to_metaprograms()` | Derive and map latent factors to TCGA meta-programs |
-| `map_factors_to_TME()` / `annotate_metaprograms_TME()` | Annotate factors/meta-programs with Bagaev et al. (2021) TME (MFP) subtypes |
 | `compute.metadata.association()` | Clinical trait association + visualization |
 | `compute.survival.analysis()` | Kaplan-Meier / log-rank survival analysis (requires `survival`, `survminer`, `gridExtra`) |
 | `compute.modules.relationship()` | Correlate TF modules with other continuous features (pathways, deconvolution features); returns correlations, p-values and significant pairs |
@@ -86,7 +82,7 @@ Pre-built `.rda` objects for examples and testing: `raw.counts.tuto`, `counts.no
 
 ## Dependencies
 
-Heavy dependencies are in `Imports` (always loaded): `multideconv`, `decoupleR`, `WGCNA`, `limma`, `GSVA`, `ggplot2`, and several tidyverse packages (`dplyr`, `tidyr`, `tibble`, `purrr`). `multideconv` functions are imported via `@importFrom` in `R/CellTFusion.R`; reference data in `inst/extdata/` is always located with `system.file()` (never hardcoded paths).
+Heavy dependencies are in `Imports` (always loaded): `multideconv`, `decoupleR`, `WGCNA`, `GSVA`, `ggplot2`, and several tidyverse packages (`dplyr`, `tidyr`, `tibble`, `purrr`). `multideconv` functions are imported via `@importFrom` in `R/CellTFusion.R`; reference data in `inst/extdata/` is always located with `system.file()` (never hardcoded paths).
 
 `OmnipathR` (needed by `decoupleR` to fetch CollecTRI and PROGENy), `dorothea` (Dorothea TF collection), `RcppML` (NMF), `survival`/`survminer`/`gridExtra` (survival analysis) and `caret` (machine-learning vignette) are in `Suggests` (optional, loaded only when the relevant code path is used).
 

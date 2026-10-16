@@ -46,12 +46,10 @@ res <- CellTFusion(
   raw_counts     = CellTFusion::raw.counts.tuto,
   normalized     = TRUE,
   deconv_methods = c("Quantiseq", "Epidish"),
-  cancer_type    = "blca",   # the example data are bladder cancer samples
   file_name      = "Tutorial"
 )
 
 head(res$Latent_spaces$Z)  # latent factor scores (samples x factors)
-res$TME_states             # mapping of each latent factor to a TCGA meta-program
 ```
 
 ## Pipeline
@@ -65,13 +63,10 @@ res$TME_states             # mapping of each latent factor to a TCGA meta-progra
 | Cell groups | `construct_cell_groups()` | [Cell groups and latent factors](a2_cell_groups.html) |
 | Latent factors | `compute.latent_factors()` | [Cell groups and latent factors](a2_cell_groups.html) |
 | Cell niches | `compute_cells_niches()` | [Cell groups and latent factors](a2_cell_groups.html) |
-| Hallmark GSEA per factor | `compute_factor_gsea()` | [TME state characterization](a3_tme_states.html) |
-| Meta-program mapping | `map_factors_to_metaprograms()` | [TME state characterization](a3_tme_states.html) |
-| TME subtype annotation | `map_factors_to_TME()` | [TME state characterization](a3_tme_states.html) |
 | Clinical associations | `scores.stat.analysis()` | [Statistical analysis](a4_statistical_analysis.html) |
 | Survival analysis | `compute.survival.analysis()` | [Statistical analysis](a4_statistical_analysis.html) |
 | Cross-validation with `pipeML` | `prepare_celltfusion_folds()` | [Machine learning workflows](a5_machine_learning.html) |
-| Projection of new cohorts | `project_test_factors()` | [Machine learning workflows](a5_machine_learning.html) |
+| Projection of new cohorts | `compute.test.set()` (cell groups), `project_factors()` (latent factors) | [Machine learning workflows](a5_machine_learning.html) |
 | Multi-cohort analysis | `CellTFusion(batch = ...)` | [Multi-cohort analysis](a6_batch_analysis.html) |
 
 ## Tutorials
@@ -80,9 +75,8 @@ Step-by-step tutorials are available in the **Articles** section of the navigati
 
 - **[Feature computation](a1_feature_computation.html)** — cell type deconvolution, TF activity, TF co-activity modules and pathway activity
 - **[Cell groups and latent factors](a2_cell_groups.html)** — build cell groups, extract latent factors and characterize cell niches
-- **[TME state characterization](a3_tme_states.html)** — Hallmark GSEA, TCGA meta-programs and TME subtypes
 - **[Statistical analysis](a4_statistical_analysis.html)** — associations with clinical variables and survival
-- **[Machine learning workflows](a5_machine_learning.html)** — use latent factors as features and project independent cohorts
+- **[Machine learning workflows](a5_machine_learning.html)** — use cell group scores as features and score independent cohorts
 - **[Multi-cohort analysis](a6_batch_analysis.html)** — correct for cohort effects with `batch`
 
 ## Shiny app
