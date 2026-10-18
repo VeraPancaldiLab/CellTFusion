@@ -12,6 +12,8 @@ pipeline](reference/figures/CellTFusion_pipeline.png)
 
 ## Installation
 
+`CellTFusion` requires R version 4.3.3 or higher.
+
 To avoid GitHub API rate limit issues during installation, we recommend
 setting up GitHub authentication by creating and storing a Personal
 Access Token (PAT). You can do this with the following steps:
