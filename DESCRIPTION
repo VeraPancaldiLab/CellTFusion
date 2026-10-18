@@ -12,7 +12,7 @@ Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
 Depends:
-    R (>= 4.3)
+    R (>= 4.3.3)
 Imports: 
     ADImpute,
     AnnotationDbi,
@@ -35,7 +35,6 @@ Imports:
     stats,
     tibble,
     MASS,
-    ggstatsplot,
     scales,
     tidyr,
     utils,

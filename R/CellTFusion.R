@@ -3253,13 +3253,31 @@ scores.fisher.test = function(scores, coldata, trait, pval = 0.05, padj = FALSE)
     p_value = res$result$Statistics$p_value[j]
     df = data.frame("score_level" = levels_list[[j]], "Trait" = input$trait)
     p_label <- ifelse(p_value < 0.001, "< 0.001", paste0("= ", round(p_value, 4)))
+
+    # Percentage of High/Low samples within each trait group
+    counts <- df %>% dplyr::count(Trait, score_level) %>%
+      dplyr::group_by(Trait) %>% dplyr::mutate(proportion = n / sum(n)) %>% dplyr::ungroup()
+    n_labels  <- df %>% dplyr::count(Trait) %>%
+      dplyr::mutate(label = paste0(as.character(Trait), "\n(n=", n, ")"))
+    label_map <- setNames(n_labels$label, as.character(n_labels$Trait))
+
     pdf(paste0("Results/Fisher_", trait, "_", colnames(X)[j], ".pdf"), width = 8, height = 6)
     print(
-      ggstatsplot::ggbarstats(df, score_level, Trait, results.subtitle = FALSE,
-                              title        = colnames(X)[j],
-                              subtitle     = paste0("Fisher's exact test | p ", p_label, " | ", trait, res$adjusted_text[j]),
-                              xlab         = trait,
-                              legend.title = "Score level") +
+      ggplot2::ggplot(counts, ggplot2::aes(x = Trait, y = proportion, fill = score_level)) +
+        ggplot2::geom_col(width = 0.7, color = "white") +
+        ggplot2::geom_text(ggplot2::aes(label = paste0(round(100 * proportion), "%")),
+                           position = ggplot2::position_stack(vjust = 0.5), size = 4) +
+        ggplot2::scale_x_discrete(labels = label_map) +
+        ggplot2::scale_y_continuous(labels = scales::percent) +
+        ggplot2::scale_fill_brewer(palette = "Set2") +
+        ggplot2::labs(
+          title    = colnames(X)[j],
+          subtitle = paste0("Fisher's exact test | p ", p_label, " | ", trait, res$adjusted_text[j]),
+          x        = trait,
+          y        = "Percentage",
+          fill     = "Score level"
+        ) +
+        ggplot2::theme_classic(base_size = 13) +
         ggplot2::theme(
           plot.title    = ggplot2::element_text(size = 14, face = "bold"),
           plot.subtitle = ggplot2::element_text(size = 10, color = "gray45"),
