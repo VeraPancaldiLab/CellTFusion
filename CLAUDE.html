@@ -145,7 +145,7 @@
 <div class="section level2">
 <h2 id="dependencies">Dependencies<a class="anchor" aria-label="anchor" href="#dependencies"></a></h2>
 <p>Heavy dependencies are in <code>Imports</code> (always loaded): <code>multideconv</code>, <code>decoupleR</code>, <code>WGCNA</code>, <code>GSVA</code>, <code>ggplot2</code>, and several tidyverse packages (<code>dplyr</code>, <code>tidyr</code>, <code>tibble</code>). <code>multideconv</code> functions are imported via <code>@importFrom</code> in <code>R/CellTFusion.R</code>.</p>
-<p><code>OmnipathR</code> (needed by <code>decoupleR</code> to fetch CollecTRI and PROGENy), <code>dorothea</code> (Dorothea TF collection), <code>RcppML</code> (NMF), <code>survival</code>/<code>survminer</code>/<code>gridExtra</code> (survival analysis), <code>caret</code> (machine-learning vignette) and <code>shiny</code> (the app in <code>inst/shiny</code>) are in <code>Suggests</code> (optional, loaded only when the relevant code path is used).</p>
+<p><code>OmnipathR</code> (needed by <code>decoupleR</code> to fetch CollecTRI and PROGENy), <code>dorothea</code> (Dorothea TF collection), <code>RcppML</code> (NMF), <code>ReactomePA</code>/<code>enrichplot</code> (<code><a href="reference/compute.modules.enrichment.html">compute.modules.enrichment()</a></code>), <code>survival</code>/<code>survminer</code>/<code>gridExtra</code> (survival analysis), <code>caret</code> (machine-learning vignette) and <code>shiny</code> (the app in <code>inst/shiny</code>) are in <code>Suggests</code> (optional, loaded only when the relevant code path is used).</p>
 </div>
 <div class="section level2">
 <h2 id="cicd">CI/CD<a class="anchor" aria-label="anchor" href="#cicd"></a></h2>

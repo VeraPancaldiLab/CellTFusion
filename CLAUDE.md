@@ -153,6 +153,8 @@ Heavy dependencies are in `Imports` (always loaded): `multideconv`,
 
 `OmnipathR` (needed by `decoupleR` to fetch CollecTRI and PROGENy),
 `dorothea` (Dorothea TF collection), `RcppML` (NMF),
+`ReactomePA`/`enrichplot`
+([`compute.modules.enrichment()`](https://verapancaldilab.github.io/CellTFusion/reference/compute.modules.enrichment.md)),
 `survival`/`survminer`/`gridExtra` (survival analysis), `caret`
 (machine-learning vignette) and `shiny` (the app in `inst/shiny`) are in
 `Suggests` (optional, loaded only when the relevant code path is used).
