@@ -21,7 +21,6 @@ Imports:
     ggpubr,
     dplyr,
     dynamicTreeCut,
-    enrichplot,
     ggplot2,
     gplots,
     graphics,
@@ -29,7 +28,6 @@ Imports:
     GSVA (>= 1.50.0),
     matrixStats,
     org.Hs.eg.db,
-    ReactomePA,
     multideconv (>= 0.2.0),
     rstatix,
     stats,
@@ -59,6 +57,8 @@ Suggests:
     survminer,
     gridExtra,
     RcppML,
+    ReactomePA,
+    enrichplot,
     shiny
 Config/testthat/edition: 3
 LazyData: true

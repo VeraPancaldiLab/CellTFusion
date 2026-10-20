@@ -747,6 +747,11 @@ compute.metadata.association <- function(
 #' head(enr$enrichment[[1]])
 #' }
 compute.modules.enrichment <- function(counts_norm, hub_tfs, TF.collection = "CollecTRI", universe = NULL, cancer_type = NULL, top_n = 10, file_name = NULL){
+  if (!requireNamespace("ReactomePA", quietly = TRUE) ||
+      !requireNamespace("enrichplot", quietly = TRUE)) {
+    stop("Packages 'ReactomePA' and 'enrichplot' are required for compute.modules.enrichment(). Install them with BiocManager::install(c('ReactomePA', 'enrichplot'))")
+  }
+
   if(length(hub_tfs[[1]]) == 0){
     stop("hub_tfs contains no module with hub TFs (see identify_hub_TFs())")
   }

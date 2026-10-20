@@ -84,7 +84,7 @@ Pre-built `.rda` objects for examples and testing: `raw.counts.tuto`, `counts.no
 
 Heavy dependencies are in `Imports` (always loaded): `multideconv`, `decoupleR`, `WGCNA`, `GSVA`, `ggplot2`, and several tidyverse packages (`dplyr`, `tidyr`, `tibble`). `multideconv` functions are imported via `@importFrom` in `R/CellTFusion.R`.
 
-`OmnipathR` (needed by `decoupleR` to fetch CollecTRI and PROGENy), `dorothea` (Dorothea TF collection), `RcppML` (NMF), `survival`/`survminer`/`gridExtra` (survival analysis), `caret` (machine-learning vignette) and `shiny` (the app in `inst/shiny`) are in `Suggests` (optional, loaded only when the relevant code path is used).
+`OmnipathR` (needed by `decoupleR` to fetch CollecTRI and PROGENy), `dorothea` (Dorothea TF collection), `RcppML` (NMF), `ReactomePA`/`enrichplot` (`compute.modules.enrichment()`), `survival`/`survminer`/`gridExtra` (survival analysis), `caret` (machine-learning vignette) and `shiny` (the app in `inst/shiny`) are in `Suggests` (optional, loaded only when the relevant code path is used).
 
 ## CI/CD
 
